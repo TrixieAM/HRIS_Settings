@@ -58,7 +58,7 @@ import OfficialTimeForm from './components/ATTENDANCE/OfficialTimeForm';
 
 
 //PAYROLL
-import PayrollTable from './components/PAYROLL/PayrollTable';
+import PayrollProcess from './components/PAYROLL/PayrollProcess';
 import Remittances from './components/PAYROLL/Remittances';
 import ItemTable from './components/PAYROLL/ItemTable';
 import SalaryGradeTable from './components/PAYROLL/SalaryGradeTable';
@@ -471,7 +471,7 @@ function App() {
               path="/payroll-table"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <PayrollTable />
+                  <PayrollProcess />
                 </ProtectedRoute>
               }
             />

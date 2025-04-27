@@ -1312,126 +1312,69 @@ app.get("/api/payroll", (req, res) => {
 
 
 
-// Get all payrolls
-app.get("/api/payroll-with-remittance", (req, res) => {
-  const query = `SELECT * FROM payroll`;
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error("Error fetching payroll:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-    res.json(results);
-  });
-});
-
-// Update payroll by ID
-app.put("/api/payroll/:id", (req, res) => {
-  const { id } = req.params;
-  const updatedPayroll = req.body;
-
-  const query = `
-    UPDATE payroll SET ?
-    WHERE id = ?
-  `;
-
-  db.query(query, [updatedPayroll, id], (err, result) => {
-    if (err) {
-      console.error("Error updating payroll:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-    res.json({ message: "Payroll updated successfully" });
-  });
-});
-
-// Delete payroll by ID
-app.delete("/api/payroll/:id", (req, res) => {
-  const { id } = req.params;
-  const query = `DELETE FROM payroll WHERE id = ?`;
-
-  db.query(query, [id], (err, result) => {
-    if (err) {
-      console.error("Error deleting payroll:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-    res.json({ message: "Payroll deleted successfully" });
-  });
-});
-
-
-
-// Example endpoint: GET /api/payroll-with-remittance
 app.get("/api/payroll-with-remittance", (req, res) => {
   const query = `
-    SELECT
-      p.id,
-      p.department,
-      p.employeeNumber,
-      p.startDate,
-      p.endDate,
-      p.name,
-      p.rateNbc188,
-      p.grossSalary,
-      p.abs,
-      p.h,
-      p.m,
-      p.s,
-      p.netSalary,
-      p.withholdingTax,
-      p.personalLifeRetIns,
-      p.totalGsisDeds,
-      p.totalPagibigDeds,
-      p.philhealth,
-      p.totalOtherDeds,
-      p.totalDeductions,
-      p.pay1st,
-      p.pay2nd,
-      p.rtIns,
-      p.ec,
-      p.dateCreated,
-      person_table.firstName,
-      person_table.middleName,
-      person_table.lastName,
+  SELECT
+    p.id,
+    p.department,
+    p.employeeNumber,
+    p.startDate,
+    p.endDate,
+    p.name,
+    p.rateNbc188,
+    p.grossSalary,
+    p.abs,
+    p.h,
+    p.m,
+    p.s,
+    p.netSalary,
+    p.withholdingTax,
+    p.personalLifeRetIns,
+    p.totalGsisDeds,
+    p.totalPagibigDeds,
+    p.philhealth,
+    p.totalOtherDeds,
+    p.totalDeductions,
+    p.pay1st,
+    p.pay2nd,
+    p.rtIns,
+    p.ec,
 
+    p.status,
 
-      r.nbc594,
-      r.increment,
-      r.gsisSalaryLoan,
-      r.gsisPolicyLoan,
-      r.gfal,
-      r.cpl,
-      r.mpl,
-      r.mplLite,
-      r.emergencyLoan,
-      r.pagibigFundCont,
-      r.pagibig2,
-      r.multiPurpLoan,
+    pt.firstName,
+    pt.middleName,
+    pt.lastName,
 
-      pt.position
+    r.nbc594,
+    r.increment,
+    r.gsisSalaryLoan,
+    r.gsisPolicyLoan,
+    r.gfal,
+    r.cpl,
+    r.mpl,
+    r.mplLite,
+    r.emergencyLoan,
+    r.pagibigFundCont,
+    r.pagibig2,
+    r.multiPurpLoan,
+    r.landbankSalaryLoan,
+    r.earistCreditCoop,
+    r.feu,
+    r.disallowance,
 
-    FROM payroll p
-    INNER JOIN person_table
-    ON person_table.agencyEmployeeNum =  p.employeeNumber
-
-    LEFT JOIN (
-      SELECT *
-      FROM remittance_table r1
-      WHERE NOT EXISTS (
-        SELECT 1 FROM remittance_table r2
-        WHERE r2.employeeNumber = r1.employeeNumber AND r2.id > r1.id
-      )
-    ) r ON p.employeeNumber = r.employeeNumber
-
-    LEFT JOIN (
-      SELECT *
-      FROM plantilla_table pt1
-      WHERE NOT EXISTS (
-        SELECT 1 FROM plantilla_table pt2
-        WHERE pt2.employeeNumber = pt1.employeeNumber AND pt2.id > pt1.id
-      )
-    ) pt ON p.employeeNumber = pt.employeeNumber
-
+    pt2.position
     
-  `;
+  FROM payroll_processing p
+  LEFT JOIN person_table pt
+    ON pt.agencyEmployeeNum = p.employeeNumber
+  LEFT JOIN remittance_table r
+    ON p.employeeNumber = r.employeeNumber
+  LEFT JOIN plantilla_table pt2
+    ON p.employeeNumber = pt2.employeeNumber;
+    
+`;
+
 
   db.query(query, (err, results) => {
     if (err) {
@@ -1443,35 +1386,175 @@ app.get("/api/payroll-with-remittance", (req, res) => {
 });
 
 
+
+app.put("/api/payroll-with-remittance/:employeeNumber", (req, res) => {
+  const { employeeNumber } = req.params;
+  const {
+    department,
+    startDate,
+    endDate,
+    name,
+    rateNbc188,
+    grossSalary,
+    abs,
+    h,
+    m,
+    s,
+    netSalary,
+    withholdingTax,
+    personalLifeRetIns,
+    totalGsisDeds,
+    totalPagibigDeds,
+    philhealth,
+    totalOtherDeds,
+    totalDeductions,
+    pay1st,
+    pay2nd,
+    rtIns,
+    ec,
+    status,
+    nbc594,
+
+    increment,
+    gsisSalaryLoan,
+    gsisPolicyLoan,
+    gfal,
+    cpl,
+    mpl,
+    mplLite,
+    emergencyLoan,
+    pagibigFundCont,
+    pagibig2,
+    multiPurpLoan,
+    position
+  } = req.body;
+  
+
+  const query = `
+    UPDATE payroll_processing p
+    LEFT JOIN person_table pt ON pt.agencyEmployeeNum = p.employeeNumber
+    LEFT JOIN remittance_table r ON p.employeeNumber = r.employeeNumber
+    LEFT JOIN plantilla_table pt2 ON p.employeeNumber = pt2.employeeNumber
+    SET
+      p.department = ?, 
+      p.startDate = ?, 
+      p.endDate = ?, 
+      p.name = ?, 
+      p.rateNbc188 = ?, 
+      p.grossSalary = ?, 
+      p.abs = ?, 
+      p.h = ?, 
+      p.m = ?, 
+      p.s = ?, 
+      p.netSalary = ?, 
+      p.withholdingTax = ?, 
+      p.personalLifeRetIns = ?, 
+      p.totalGsisDeds = ?, 
+      p.totalPagibigDeds = ?, 
+      p.philhealth = ?, 
+      p.totalOtherDeds = ?, 
+      p.totalDeductions = ?, 
+      p.pay1st = ?, 
+      p.pay2nd = ?, 
+      p.rtIns = ?, 
+      p.ec = ?, 
+      p.status = ? ,
+      r.nbc594 = ?, 
+      r.increment = ?, 
+      r.gsisSalaryLoan = ?, 
+      r.gsisPolicyLoan = ?, 
+      r.gfal = ?, 
+      r.cpl = ?, 
+      r.mpl = ?, 
+      r.mplLite = ?, 
+      r.emergencyLoan = ?, 
+      r.pagibigFundCont = ?, 
+      r.pagibig2 = ?, 
+      r.multiPurpLoan = ?, 
+      pt2.position = ?
+    WHERE p.employeeNumber = ?
+  `;
+
+  const values = [
+    department, startDate, endDate, name, rateNbc188, grossSalary, abs, h, m, s, netSalary, withholdingTax,
+    personalLifeRetIns, totalGsisDeds, totalPagibigDeds, philhealth, totalOtherDeds, totalDeductions, pay1st,
+    pay2nd, rtIns, ec, status,  nbc594, increment, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
+    pagibigFundCont, pagibig2, multiPurpLoan, position, employeeNumber
+  ];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error("Error updating payroll data:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    res.json({ message: "Payroll record updated successfully" });
+  });
+});
+
+app.delete("/api/payroll-with-remittance/:id", (req, res) => {
+  const { id } = req.params;
+
+  const query = `
+    DELETE FROM payroll_processing
+    WHERE id = ?
+  `;
+
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting payroll data:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Payroll record not found" });
+    }
+
+    res.json({ message: "Payroll record deleted successfully" });
+  });
+});
+
+
 app.post("/api/add-rendered-time", async (req, res) => {
   const attendanceData = req.body;
+
 
   if (!Array.isArray(attendanceData)) {
     return res.status(400).json({ error: "Expected an array of data." });
   }
 
+
   try {
     for (const record of attendanceData) {
       const { employeeNumber, startDate, endDate, overallRenderedOfficialTimeTardiness } = record;
+
 
       // Fetch the department code based on the employee number from department_assignment
       const departmentQuery = `
         SELECT code FROM department_assignment WHERE employeeNumber = ?
       `;
-      
+     
       const [departmentRows] = await db.promise().query(departmentQuery, [employeeNumber]);
+
 
       // Check if a department is found for the employee
       if (departmentRows.length === 0) {
         return res.status(404).json({ error: `Department not found for employee ${employeeNumber}.` });
       }
 
+
       const departmentCode = departmentRows[0].code;
+
 
       // Parse HH:MM:SS into h, m, s
       let h = "00";
       let m = "00";
       let s = "00";
+
 
       if (overallRenderedOfficialTimeTardiness) {
         const parts = overallRenderedOfficialTimeTardiness.split(":");
@@ -1482,22 +1565,128 @@ app.post("/api/add-rendered-time", async (req, res) => {
         }
       }
 
+
       // Insert the record into payroll including the department (code)
       const insertQuery = `
-        INSERT INTO payroll (employeeNumber, startDate, endDate, h, m, s, department)
+        INSERT INTO payroll_processing (employeeNumber, startDate, endDate, h, m, s, department)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
-      
+     
       await db.promise().query(insertQuery, [employeeNumber, startDate, endDate, h, m, s, departmentCode]);
     }
 
+
     res.status(200).json({ message: "Records added to payroll with time data." });
+
 
   } catch (err) {
     console.error("Error inserting into payroll:", err);
     res.status(500).json({ error: "Failed to insert payroll records." });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.post("/api/finalize_payroll", (req, res) => {
+  const payrollData = req.body;
+
+  if (!Array.isArray(payrollData) || payrollData.length === 0) {
+    return res.status(400).json({ error: "No payroll data received." });
+  }
+
+  const values = payrollData.map(entry => ([
+    entry.employeeNumber,
+    entry.department,
+    entry.startDate,
+    entry.endDate,
+    entry.name,
+    entry.rateNbc188,
+    entry.grossSalary,
+    entry.abs,
+    entry.h,
+    entry.m,
+    entry.s,
+    entry.netSalary,
+    entry.withholdingTax,
+    entry.personalLifeRetIns,
+    entry.totalGsisDeds,
+    entry.totalPagibigDeds,
+    entry.philhealth,
+    entry.totalOtherDeds,
+    entry.totalDeductions,
+    entry.pay1st,
+    entry.pay2nd,
+    entry.rtIns,
+    entry.ec,
+    entry.firstName,
+    entry.middleName,
+    entry.lastName,
+    entry.position,
+    entry.nbc594,
+    entry.increment,
+    entry.gsisSalaryLoan,
+    entry.gsisPolicyLoan,
+    entry.gfal,
+    entry.cpl,
+    entry.mpl,
+    entry.mplLite,
+    entry.emergencyLoan,
+    entry.pagibigFundCont,
+    entry.pagibig2,
+    entry.multiPurpLoan,
+    entry.landbankSalaryLoan,
+    entry.earistCreditCoop,
+    entry.feu,
+    entry.disallowance
+  ]));
+
+  const insertQuery = `
+    INSERT INTO finalize_payroll (
+      employeeNumber, department, startDate, endDate, name,
+      rateNbc188, grossSalary, abs, h, m, s, netSalary,
+      withholdingTax, personalLifeRetIns, totalGsisDeds,
+      totalPagibigDeds, philhealth, totalOtherDeds, totalDeductions,
+      pay1st, pay2nd, rtIns, ec,
+      firstName, middleName, lastName,
+      position, nbc594, increment, gsisSalaryLoan,
+      gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
+      pagibigFundCont, pagibig2, multiPurpLoan,
+      landbankSalaryLoan, earistCreditCoop, feu, disallowance
+    ) VALUES ?
+  `;
+
+  db.query(insertQuery, [values], (err, result) => {
+    if (err) {
+      console.error("Error inserting finalized payroll:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    res.json({ message: "Payroll finalized successfully", inserted: result.affectedRows });
+  });
+});
+
+app.get("/api/finalized-payroll", (req, res) => {
+  const query = "SELECT * FROM finalize_payroll ORDER BY dateCreated DESC";
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching finalized payroll:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+    res.json(results);
+  });
+});
+
 
 
 

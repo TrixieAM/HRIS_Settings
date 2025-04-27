@@ -1,0 +1,12 @@
+/* @media (min-width:900px){
+    /* .EditButton{
+        width: 50%;
+    } 
+*/
+.ImageContainer img:hover{
+    cursor: pointer;
+    transform: scale(0.95);
+    transition: transform 0.4s ease;
+    border-color: green;
+    border-width: 3px;
+}

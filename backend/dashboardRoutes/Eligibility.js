@@ -3,7 +3,7 @@ const mysql = require("mysql2");
 
 const multer = require("multer");
 
-const fs = require("fs"); // Import file system module
+const fs = require("fs");
 const xlsx = require("xlsx");
 
 const router = express.Router();
@@ -17,7 +17,7 @@ const db = mysql.createConnection({
 
 const upload = multer({ dest: "uploads/" });
 
-// Convert Excel date to normalized UTC date
+
 function excelDateToUTCDate(excelDate) {
   const date = new Date((excelDate - 25569) * 86400 * 1000);
   return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

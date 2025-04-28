@@ -69,7 +69,7 @@ import HolidaySuspension from './components/PAYROLL/HolidaySuspension';
 import Leave from './components/PAYROLL/Leave';
 import LeaveAssignment from './components/PAYROLL/LeaveAssignment';
 import PayrollEdit from './components/PAYROLL/PayrollEdit';
-
+import PhilHealthTable from './components/PAYROLL/PhilHealth';
 
 
 
@@ -499,6 +499,17 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+
+             <Route
+              path="/philhealth-table"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <PhilHealthTable />
+                </ProtectedRoute>
+              }
+            />
+           
 
 
 

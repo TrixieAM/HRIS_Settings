@@ -1056,6 +1056,33 @@ const Sidebar = ({
                   <ListItemText primary="Remittances" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
+                <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/philhealth-table' 
+                  sx={{
+                    color: selectedItem === 'philhealth-table' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'philhealth-table' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                    },
+                    borderTopRightRadius: selectedItem === 'philhealth-table' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'philhealth-table' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('philhealth-table')} 
+                  >
+                  <ListItemIcon sx={{ marginRight: '-1rem',
+                     color: selectedItem === 'philhealth-table' ? 'white' : 'inherit',
+                     '&:hover': { color: 'white' }
+                   }}>
+                    <PointOfSaleIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="PhilHealth" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+
 
                 <ListItem
                   button

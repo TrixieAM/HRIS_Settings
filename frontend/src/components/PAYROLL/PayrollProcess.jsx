@@ -166,7 +166,7 @@ const PayrollProcess = () => {
   const handleSave = async () => {
     try {
       // Assuming `editRow` contains the current edited data in the modal
-      const response = await axios.post(
+      const response = await axios.put(
         `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`, // employeeNumber is used as the parameter
         editRow // The updated payroll data
       );
@@ -191,7 +191,7 @@ const PayrollProcess = () => {
   const salaryFields = ["rateNbc188", "grossSalary", "abs", "h", "m", "s", "netSalary"];
   const deductionFields = [
     "withholdingTax", "personalLifeRetIns", "totalGsisDeds",
-    "totalPagibigDeds", "philhealth", "totalOtherDeds", "totalDeductions"
+    "totalPagibigDeds", "PhilHealthContribution", "totalOtherDeds", "totalDeductions"
   ];
   const otherFields = ["pay1st", "pay2nd", "rtIns", "ec"];
   const otherFields2 = ["nbc594", "increment", "gsisSalaryLoan", "gsisPolicyLoan", "gfal", "cpl", "mpl", "mplLite", "emergencyLoan", "pagibigFundCont", "pagibig2", "multiPurpLoan", "totalPagibigDeds", "disallowance", "landbankSalaryLoan", "earistCreditCoop", "feu"];
@@ -350,14 +350,14 @@ const PayrollProcess = () => {
                       <TableCell>{row.totalGsisDeds}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
 
-                      <TableCell>{row.philhealth}</TableCell>
+                      <TableCell>{row.PhilHealthContribution}</TableCell>
                       <TableCell>{row.totalOtherDeds}</TableCell>
                       <TableCell>{row.totalDeductions}</TableCell>
                       <TableCell>{row.pay1st}</TableCell>
                       <TableCell>{row.pay2nd}</TableCell>
                       <TableCell>{row.rtIns}</TableCell>
                       <TableCell>{row.ec}</TableCell>
-                      <TableCell>{row.philhealth}</TableCell>
+                      <TableCell>{row.PhilHealthContribution}</TableCell>
                       <TableCell>{row.pagibig}</TableCell>
                       <TableCell>{row.personalLifeRetIns}</TableCell>
                       <TableCell>{row.gsisSalaryLoan}</TableCell>
@@ -371,7 +371,7 @@ const PayrollProcess = () => {
                       <TableCell>{row.pagibig2}</TableCell>
                       <TableCell>{row.multiPurpLoan}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
-                      <TableCell>{row.philhealth}</TableCell>
+                      <TableCell>{row.PhilHealthContribution}</TableCell>
                       <TableCell>{row.disallowance}</TableCell>
                       <TableCell>{row.landbankSalaryLoan}</TableCell>
                       <TableCell>{row.earistCreditCoop}</TableCell>
@@ -380,29 +380,43 @@ const PayrollProcess = () => {
   {row.status || "Unprocessed"}
 </TableCell>
 
+<TableCell>
+  <Button
+    onClick={() => handleEdit(row.id)}
+    variant="contained"
+    color="primary"
+    startIcon={<EditIcon />}
+    style={{
+      backgroundColor: row.status === "Finalized" ? '#D3D3D3' : '#6D2323',  
+      color: row.status === "Finalized" ? '#A9A9A9' : '#FEF9E1', 
+      textTransform: 'none',
+      width: '100px',
+      opacity: row.status === "Finalized" ? 0.6 : 1,  
+      pointerEvents: row.status === "Finalized" ? 'none' : 'auto', 
+    }}
+    disabled={row.status === "Finalized"} 
+  >
+    Edit
+  </Button>
+  <Button
+    onClick={() => handleDelete(row.id)}
+    variant="contained"
+    startIcon={<DeleteIcon />}
+    style={{
+      backgroundColor: row.status === "Finalized" ? '#D3D3D3' : '#000000', 
+      color: row.status === "Finalized" ? '#A9A9A9' : '#ffffff', 
+      textTransform: 'none',
+      width: '100px',
+      marginTop: '5px',
+      opacity: row.status === "Finalized" ? 0.6 : 1, 
+      pointerEvents: row.status === "Finalized" ? 'none' : 'auto', 
+    }}
+    disabled={row.status === "Finalized"}
+  >
+    Delete
+  </Button>
+</TableCell>
 
-                      <TableCell>
-                        <Button onClick={() => handleEdit(row.id)} variant="contained" color="primary" startIcon={<EditIcon />}
-                                                style={{
-                                                  backgroundColor: '#6D2323',
-                                                  color: '#FEF9E1',
-                                                  textTransform: 'none',
-                                                  width: '100px'
-                                                }}>
-                          Edit
-                        </Button>
-                        <Button onClick={() => handleDelete(row.id)} variant="contained"  startIcon={<DeleteIcon />}
-                                                style={{
-                                                  backgroundColor: '#000000',
-                                                  color: '#ffffff',
-                                                  textTransform: 'none',
-                                                  width: '100px',
-                                                  marginTop:'5px'
-                        
-                                                }}>
-                          Delete
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

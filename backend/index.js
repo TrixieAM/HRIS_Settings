@@ -1332,7 +1332,7 @@ app.get("/api/payroll-with-remittance", (req, res) => {
     p.personalLifeRetIns,
     p.totalGsisDeds,
     p.totalPagibigDeds,
-    p.philhealth,
+    p.PhilHealthContribution,
     p.totalOtherDeds,
     p.totalDeductions,
     p.pay1st,
@@ -1363,7 +1363,9 @@ app.get("/api/payroll-with-remittance", (req, res) => {
     r.feu,
     r.disallowance,
 
-    pt2.position
+    pt2.position,
+
+    ph.PhilHealthContribution
     
   FROM payroll_processing p
   LEFT JOIN person_table pt
@@ -1371,8 +1373,9 @@ app.get("/api/payroll-with-remittance", (req, res) => {
   LEFT JOIN remittance_table r
     ON p.employeeNumber = r.employeeNumber
   LEFT JOIN plantilla_table pt2
-    ON p.employeeNumber = pt2.employeeNumber;
-    
+    ON p.employeeNumber = pt2.employeeNumber
+  LEFT JOIN philhealth ph
+    ON p.employeeNumber = ph.employeeNumber; 
 `;
 
 
@@ -1405,14 +1408,13 @@ app.put("/api/payroll-with-remittance/:employeeNumber", (req, res) => {
     personalLifeRetIns,
     totalGsisDeds,
     totalPagibigDeds,
-    philhealth,
+    PhilHealthContribution,
     totalOtherDeds,
     totalDeductions,
     pay1st,
     pay2nd,
     rtIns,
     ec,
-    status,
     nbc594,
 
     increment,
@@ -1435,6 +1437,7 @@ app.put("/api/payroll-with-remittance/:employeeNumber", (req, res) => {
     LEFT JOIN person_table pt ON pt.agencyEmployeeNum = p.employeeNumber
     LEFT JOIN remittance_table r ON p.employeeNumber = r.employeeNumber
     LEFT JOIN plantilla_table pt2 ON p.employeeNumber = pt2.employeeNumber
+    LEFT JOIN philhealth ph ON p.employeeNumber = ph.employeeNumber
     SET
       p.department = ?, 
       p.startDate = ?, 
@@ -1451,14 +1454,14 @@ app.put("/api/payroll-with-remittance/:employeeNumber", (req, res) => {
       p.personalLifeRetIns = ?, 
       p.totalGsisDeds = ?, 
       p.totalPagibigDeds = ?, 
-      p.philhealth = ?, 
+      p.PhilHealthContribution = ?, 
       p.totalOtherDeds = ?, 
       p.totalDeductions = ?, 
       p.pay1st = ?, 
       p.pay2nd = ?, 
       p.rtIns = ?, 
       p.ec = ?, 
-      p.status = ? ,
+    
       r.nbc594 = ?, 
       r.increment = ?, 
       r.gsisSalaryLoan = ?, 
@@ -1471,15 +1474,17 @@ app.put("/api/payroll-with-remittance/:employeeNumber", (req, res) => {
       r.pagibigFundCont = ?, 
       r.pagibig2 = ?, 
       r.multiPurpLoan = ?, 
-      pt2.position = ?
+      pt2.position = ?,
+
+      ph.PhilHealthContribution = ?
     WHERE p.employeeNumber = ?
   `;
 
   const values = [
     department, startDate, endDate, name, rateNbc188, grossSalary, abs, h, m, s, netSalary, withholdingTax,
-    personalLifeRetIns, totalGsisDeds, totalPagibigDeds, philhealth, totalOtherDeds, totalDeductions, pay1st,
-    pay2nd, rtIns, ec, status,  nbc594, increment, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
-    pagibigFundCont, pagibig2, multiPurpLoan, position, employeeNumber
+    personalLifeRetIns, totalGsisDeds, totalPagibigDeds, PhilHealthContribution, totalOtherDeds, totalDeductions, pay1st,
+    pay2nd, rtIns, ec, nbc594, increment, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
+    pagibigFundCont, pagibig2, multiPurpLoan, position, PhilHealthContribution, employeeNumber
   ];
 
   db.query(query, values, (err, result) => {
@@ -1621,7 +1626,7 @@ app.post("/api/finalize_payroll", (req, res) => {
     entry.personalLifeRetIns,
     entry.totalGsisDeds,
     entry.totalPagibigDeds,
-    entry.philhealth,
+    entry.PhilHealthContribution,
     entry.totalOtherDeds,
     entry.totalDeductions,
     entry.pay1st,
@@ -1648,6 +1653,7 @@ app.post("/api/finalize_payroll", (req, res) => {
     entry.earistCreditCoop,
     entry.feu,
     entry.disallowance
+    
   ]));
 
   const insertQuery = `
@@ -1655,7 +1661,7 @@ app.post("/api/finalize_payroll", (req, res) => {
       employeeNumber, department, startDate, endDate, name,
       rateNbc188, grossSalary, abs, h, m, s, netSalary,
       withholdingTax, personalLifeRetIns, totalGsisDeds,
-      totalPagibigDeds, philhealth, totalOtherDeds, totalDeductions,
+      totalPagibigDeds, PhilHealthContribution, totalOtherDeds, totalDeductions,
       pay1st, pay2nd, rtIns, ec,
       firstName, middleName, lastName,
       position, nbc594, increment, gsisSalaryLoan,
@@ -1694,7 +1700,58 @@ app.get("/api/finalized-payroll", (req, res) => {
 
 
 
+app.post('/api/philhealth', (req, res) => {
+  const { employeeNumber, PhilHealthContribution } = req.body;
 
+  const query = 'INSERT INTO philhealth (employeeNumber, PhilHealthContribution) VALUES (?, ?)';
+  db.query(query, [employeeNumber, PhilHealthContribution], (err, results) => {
+      if (err) {
+          return res.status(500).json({ error: err.message });
+      }
+      res.status(201).json({ message: 'PhilHealth contribution added successfully' });
+  });
+});
+
+app.get('/api/philhealth', (req, res) => {
+  db.query('SELECT * FROM philhealth', (err, results) => {
+      if (err) {
+          return res.status(500).json({ error: err.message });
+      }
+      res.json(results);
+  });
+});
+
+
+app.put('/api/philhealth/:id', (req, res) => {
+  const { id } = req.params;
+  const { employeeNumber, PhilHealthContribution } = req.body;
+
+  const query = 'UPDATE philhealth SET employeeNumber = ?, PhilHealthContribution = ? WHERE id = ?';
+  db.query(query, [employeeNumber, PhilHealthContribution, id], (err, results) => {
+      if (err) {
+          return res.status(500).json({ error: err.message });
+      }
+      if (results.affectedRows === 0) {
+          return res.status(404).json({ message: 'Contribution not found' });
+      }
+      res.json({ message: 'PhilHealth contribution updated successfully' });
+  });
+});
+
+app.delete('/api/philhealth/:id', (req, res) => {
+  const { id } = req.params;
+
+  const query = 'DELETE FROM philhealth WHERE id = ?';
+  db.query(query, [id], (err, results) => {
+      if (err) {
+          return res.status(500).json({ error: err.message });
+      }
+      if (results.affectedRows === 0) {
+          return res.status(404).json({ message: 'Contribution not found' });
+      }
+      res.json({ message: 'PhilHealth contribution deleted successfully' });
+  });
+});
 
 app.listen(5000, () => {
   console.log("Server runnning");

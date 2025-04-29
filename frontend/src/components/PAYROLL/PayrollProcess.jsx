@@ -29,6 +29,7 @@ import {
   Save as SaveIcon, Cancel as CancelIcon
 } from '@mui/icons-material';
 
+
 const PayrollProcess = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState("");
@@ -39,11 +40,13 @@ const PayrollProcess = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editRow, setEditRow] = useState(null);  // Added missing state for editRow
 
+
   useEffect(() => {
     const fetchPayrollData = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/payroll-with-remittance");
         console.log(res.data);
+
 
         const seen = new Set();
         const uniqueData = [];
@@ -56,14 +59,17 @@ const PayrollProcess = () => {
           }
         }
 
+
         setData(uniqueData);
         setFilteredData(uniqueData);
+
 
       } catch (err) {
         console.error("Error fetching payroll data:", err);
         setError("An error occurred while fetching the payroll data.");
       }
     };
+
 
     const fetchDepartments = async () => {
       try {
@@ -74,9 +80,11 @@ const PayrollProcess = () => {
       }
     };
 
+
     fetchPayrollData();
     fetchDepartments();
   }, []);
+
 
   const handleDepartmentChange = (event) => {
     const selectedDept = event.target.value;
@@ -84,18 +92,22 @@ const PayrollProcess = () => {
     applyFilters(selectedDept, searchTerm);
   };
 
+
   const handleSearchChange = (event) => {
     const term = event.target.value;
     setSearchTerm(term);
     applyFilters(selectedDepartment, term);
   };
 
+
   const applyFilters = (department, search) => {
     let filtered = [...data];
+
 
     if (department) {
       filtered = filtered.filter((record) => record.department === department);
     }
+
 
     if (search) {
       const lowerSearch = search.toLowerCase();
@@ -106,40 +118,44 @@ const PayrollProcess = () => {
       );
     }
 
+
     setFilteredData(filtered);
   };
+
 
   const handleSubmitPayroll = async () => {
     try {
       // Send all payroll data directly to finalize payroll without checking status
       const response = await axios.post("http://localhost:5000/api/finalize_payroll", filteredData);
-  
-      // Update the status of all payroll entries to "Finalized"
+ 
+      // Update the status of all payroll entries to "Processed"
       const updatedData = filteredData.map(item => ({
         ...item,
-        status: "Finalized"
+        status: "Processed"
       }));
-  
+ 
       setFilteredData(updatedData);
       setData(updatedData);
-  
-      alert("Payroll finalized and submitted successfully!");
-  
+ 
+      alert("Payroll Processed and submitted successfully!");
+ 
     } catch (error) {
       console.error('Error submitting payroll:', error);
       alert("Error submitting payroll.");
     }
   };
-  
-  
-  
-  
+ 
+ 
+ 
+ 
+
 
   const handleEdit = (rowId) => {
     const row = filteredData.find((item) => item.id === rowId);
     setEditRow(row);
     setOpenModal(true);
   };
+
 
   const handleDelete = async (rowId) => {
     try {
@@ -149,7 +165,7 @@ const PayrollProcess = () => {
       console.error("Error deleting payroll data:", error);
     }
   };
-  
+ 
   const handleModalChange = (e) => {
     const { name, value } = e.target;
     setEditRow((prev) => ({
@@ -158,10 +174,12 @@ const PayrollProcess = () => {
     }));
   };
 
+
   const handleCancel = () => {
     setOpenModal(false);
     setEditRow(null);  // Clear the modal data on cancel
   };
+
 
   const handleSave = async () => {
     try {
@@ -170,14 +188,14 @@ const PayrollProcess = () => {
         `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`, // employeeNumber is used as the parameter
         editRow // The updated payroll data
       );
-      
+     
       console.log('Payroll record updated successfully:', response.data);
-      
+     
       // Close the modal after saving
       setOpenModal(false);
-  
+ 
       // Optionally, you can update the filteredData to reflect the changes
-      setFilteredData(prevData => prevData.map(item => 
+      setFilteredData(prevData => prevData.map(item =>
         item.employeeNumber === editRow.employeeNumber ? { ...item, ...editRow } : item
       ));
     } catch (error) {
@@ -185,7 +203,8 @@ const PayrollProcess = () => {
       setError('Failed to update payroll data.');
     }
   };
-  
+ 
+
 
   const employeeFields = ["employeeNumber", "department", "startDate", "endDate", "name", "position"];
   const salaryFields = ["rateNbc188", "grossSalary", "abs", "h", "m", "s", "netSalary"];
@@ -195,6 +214,7 @@ const PayrollProcess = () => {
   ];
   const otherFields = ["pay1st", "pay2nd", "rtIns", "ec"];
   const otherFields2 = ["nbc594", "increment", "gsisSalaryLoan", "gsisPolicyLoan", "gfal", "cpl", "mpl", "mplLite", "emergencyLoan", "pagibigFundCont", "pagibig2", "multiPurpLoan", "totalPagibigDeds", "disallowance", "landbankSalaryLoan", "earistCreditCoop", "feu"];
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -221,6 +241,7 @@ const PayrollProcess = () => {
             </Box>
           </Box>
 
+
           <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
             <FormControl
               variant="outlined"
@@ -246,6 +267,7 @@ const PayrollProcess = () => {
               </Select>
             </FormControl>
 
+
             <TextField
               variant="outlined"
               label="Search Name"
@@ -263,6 +285,7 @@ const PayrollProcess = () => {
           </Box>
         </Box>
       </Paper>
+
 
       {error ? (
         <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
@@ -292,6 +315,7 @@ const PayrollProcess = () => {
                   <TableCell>Total GSIS Deductions</TableCell>
                   <TableCell>Total Pag-ibig Deductions</TableCell>
 
+
                   <TableCell>PhilHealth</TableCell>
                   <TableCell>Total Other Deductions</TableCell>
                   <TableCell>Total Deductions</TableCell>
@@ -299,6 +323,7 @@ const PayrollProcess = () => {
                   <TableCell>2nd Pay</TableCell>
                   <TableCell>RT Ins.</TableCell>
                   <TableCell>EC</TableCell>
+
 
                   <TableCell>PhilHealth</TableCell>
                   <TableCell>PAGIBIG</TableCell>
@@ -310,6 +335,7 @@ const PayrollProcess = () => {
                   <TableCell>MPL</TableCell>
                   <TableCell>MPL LITE</TableCell>
                   <TableCell>Emergency Loan</TableCell>
+
 
                   <TableCell>Pag-ibig Fund Contribution</TableCell>
                   <TableCell>Pag-ibig 2</TableCell>
@@ -323,8 +349,10 @@ const PayrollProcess = () => {
                   <TableCell>Status</TableCell>
                   <TableCell>Actions</TableCell> {/* Added Actions column */}
 
+
                 </TableRow>
               </TableHead>
+
 
               <TableBody>
                 {filteredData.length > 0 ? (
@@ -349,6 +377,7 @@ const PayrollProcess = () => {
                       <TableCell>{row.withholdingTax}</TableCell>
                       <TableCell>{row.totalGsisDeds}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
+
 
                       <TableCell>{row.PhilHealthContribution}</TableCell>
                       <TableCell>{row.totalOtherDeds}</TableCell>
@@ -376,9 +405,12 @@ const PayrollProcess = () => {
                       <TableCell>{row.landbankSalaryLoan}</TableCell>
                       <TableCell>{row.earistCreditCoop}</TableCell>
                       <TableCell>{row.feu}</TableCell>
-                      <TableCell style={{ color: row.status === "Finalized" ? 'green' : 'black' }}>
-  {row.status || "Unprocessed"}
+                      <TableCell style={{ color: row.status === 1 || row.status === "Processed" ? 'green' : 'black' }}>
+  {(row.status === 1 || row.status === "Processed") ? "Processed" : "Unprocessed"}
 </TableCell>
+
+
+
 
 <TableCell>
   <Button
@@ -387,14 +419,14 @@ const PayrollProcess = () => {
     color="primary"
     startIcon={<EditIcon />}
     style={{
-      backgroundColor: row.status === "Finalized" ? '#D3D3D3' : '#6D2323',  
-      color: row.status === "Finalized" ? '#A9A9A9' : '#FEF9E1', 
+      backgroundColor: row.status === "Processed" ? '#D3D3D3' : '#6D2323',  
+      color: row.status === "Processed" ? '#A9A9A9' : '#FEF9E1',
       textTransform: 'none',
       width: '100px',
-      opacity: row.status === "Finalized" ? 0.6 : 1,  
-      pointerEvents: row.status === "Finalized" ? 'none' : 'auto', 
+      opacity: row.status === "Processed" ? 0.6 : 1,  
+      pointerEvents: row.status === "Processed" ? 'none' : 'auto',
     }}
-    disabled={row.status === "Finalized"} 
+    disabled={row.status === "Processed"}
   >
     Edit
   </Button>
@@ -403,19 +435,20 @@ const PayrollProcess = () => {
     variant="contained"
     startIcon={<DeleteIcon />}
     style={{
-      backgroundColor: row.status === "Finalized" ? '#D3D3D3' : '#000000', 
-      color: row.status === "Finalized" ? '#A9A9A9' : '#ffffff', 
+      backgroundColor: row.status === "Processed" ? '#D3D3D3' : '#000000',
+      color: row.status === "Processed" ? '#A9A9A9' : '#ffffff',
       textTransform: 'none',
       width: '100px',
       marginTop: '5px',
-      opacity: row.status === "Finalized" ? 0.6 : 1, 
-      pointerEvents: row.status === "Finalized" ? 'none' : 'auto', 
+      opacity: row.status === "Processed" ? 0.6 : 1,
+      pointerEvents: row.status === "Processed" ? 'none' : 'auto',
     }}
-    disabled={row.status === "Finalized"}
+    disabled={row.status === "Processed"}
   >
     Delete
   </Button>
 </TableCell>
+
 
                     </TableRow>
                   ))
@@ -430,10 +463,12 @@ const PayrollProcess = () => {
             </Table>
 
 
+
+
           </TableContainer>
-          
+         
         </Paper>
-        
+       
       )}
                       <Button
             variant="contained"
@@ -451,6 +486,7 @@ const PayrollProcess = () => {
             Submit Payroll
           </Button>
 
+
       <Modal open={openModal} onClose={handleCancel}>
         <Box sx={{
           position: 'absolute', top: '50%', left: '50%',
@@ -462,21 +498,46 @@ const PayrollProcess = () => {
             <>
               <Typography variant="h5" mb={3}>Edit Payroll Record</Typography>
 
+
               {/* Employee Info */}
               <Typography variant="h6" gutterBottom>Employee Information</Typography>
-              <Grid container spacing={2}>
-                {employeeFields.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ""}
-                      onChange={handleModalChange}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+<Grid container spacing={2}>
+  {employeeFields.map((field) => (
+    <Grid item xs={6} key={field}>
+      {field === "department" ? (
+        // Department field with dropdown
+        <FormControl fullWidth>
+          <InputLabel id="department-label">Department</InputLabel>
+          <Select
+            labelId="department-label"
+            id="department-select"
+            name={field}
+            value={editRow[field] || ""}
+            onChange={handleModalChange}
+            label="Department"
+          >
+            {departments.map((dept) => (
+              <MenuItem key={dept.id} value={dept.code}>
+                {dept.description}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ) : (
+        // Other fields with text input
+        <TextField
+          fullWidth
+          label={field}
+          name={field}
+          value={editRow[field] || ""}
+          onChange={handleModalChange}
+        />
+      )}
+    </Grid>
+  ))}
+</Grid>
+
+
 
               {/* Salary Info */}
               <Typography variant="h6" mt={4} gutterBottom>Salary Information</Typography>
@@ -494,6 +555,7 @@ const PayrollProcess = () => {
                 ))}
               </Grid>
 
+
               {/* Deductions */}
               <Typography variant="h6" mt={4} gutterBottom>Deductions</Typography>
               <Grid container spacing={2}>
@@ -509,6 +571,7 @@ const PayrollProcess = () => {
                   </Grid>
                 ))}
               </Grid>
+
 
               {/* Other Info */}
               <Typography variant="h6" mt={4} gutterBottom>Other Payments / Info</Typography>
@@ -526,6 +589,7 @@ const PayrollProcess = () => {
                 ))}
               </Grid>
 
+
               <Typography variant="h6" mt={4} gutterBottom>Remittance Field / Info</Typography>
               <Grid container spacing={2}>
                 {otherFields2.map((field) => (
@@ -541,9 +605,10 @@ const PayrollProcess = () => {
                 ))}
               </Grid>
 
+
               {/* Save / Cancel */}
               <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>
-                <Button variant="contained" 
+                <Button variant="contained"
                 onClick={handleSave}
                 startIcon={<SaveIcon />}
                                         style={{ textTransform: 'none',
@@ -554,10 +619,10 @@ const PayrollProcess = () => {
                 >
                   Save
                 </Button>
-                <Button variant="outlined" 
+                <Button variant="outlined"
                 onClick={handleCancel}
                 startIcon={<CancelIcon />}
-                                        style={{ 
+                                        style={{
                                           textTransform: 'none',
                                           width: '100px',
                                           backgroundColor: '#000000',
@@ -568,10 +633,14 @@ const PayrollProcess = () => {
             </>
           )}
         </Box>
-        
+       
       </Modal>
     </Container>
   );
 };
 
+
 export default PayrollProcess;
+
+
+

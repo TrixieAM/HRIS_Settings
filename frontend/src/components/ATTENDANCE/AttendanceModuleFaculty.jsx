@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Box, Button, Container, TextField, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
+import { useNavigate } from 'react-router-dom';
+
 
 const AttendanceModuleFaculty = () => {
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [attendanceData, setAttendanceData] = useState([]);
+    const navigate = useNavigate();
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    localStorage.setItem('employeeNumber', employeeNumber);
+    localStorage.setItem('startDate', startDate);
+    localStorage.setItem('endDate', endDate);
+
     try {
       const response = await axios.get("http://localhost:5000/attendance/api/attendance", {
         params: {
@@ -368,6 +376,9 @@ const AttendanceModuleFaculty = () => {
         );
         return;           // stop; prevents duplicate save
       }
+
+      navigate('/attendance_summary');
+
     } catch (e) {
       console.error("Duplicate‑check failed:", e);
       alert("Could not verify duplicates. Saving aborted.");

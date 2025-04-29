@@ -58,24 +58,22 @@ app.use("/SalaryGradeTable", SalaryGradeTable);
 app.use("/Remittance", Remittance);
 
 //MYSQL CONNECTION
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
-})
-
-//MYSQL CONNECTION
-const db2 = mysql.createConnection({
+const db = mysql.createPool({
+  connectionLimit: 10, // You can adjust this limit
   host: "localhost",
   user: "root",
   password: "",
   database: "earist_hris",
 });
 
-db.connect((err) => {
-  if (err) throw err;
+// Test connection
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error("Database connection failed:", err);
+    return;
+  }
   console.log("Database Connected");
+  connection.release(); // Important: release connection back to the pool
 });
 
 //REGISTER
@@ -1523,6 +1521,35 @@ app.delete("/api/payroll-with-remittance/:id", (req, res) => {
   });
 });
 
+app.get("/api/payroll-with-remittance", (req, res) => {
+  const { employeeNumber, startDate, endDate } = req.query;
+
+  if (!employeeNumber || !startDate || !endDate) {
+    return res.status(400).json({ error: "employeeNumber, startDate, and endDate are required" });
+  }
+
+  const query = `
+    SELECT * FROM payroll_processing
+    WHERE employeeNumber = ? AND startDate = ? AND endDate = ?
+  `;
+
+  db.query(query, [employeeNumber, startDate, endDate], (err, result) => {
+    if (err) {
+      console.error("Error retrieving payroll data:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (result.length > 0) {
+      // Found existing record
+      return res.json({ exists: true });
+    }
+
+    res.json({ exists: false });
+  });
+});
+
+
+
 
 app.post("/api/add-rendered-time", async (req, res) => {
   const attendanceData = req.body;
@@ -1605,9 +1632,11 @@ app.post("/api/add-rendered-time", async (req, res) => {
 app.post("/api/finalize_payroll", (req, res) => {
   const payrollData = req.body;
 
+
   if (!Array.isArray(payrollData) || payrollData.length === 0) {
     return res.status(400).json({ error: "No payroll data received." });
   }
+
 
   const values = payrollData.map(entry => ([
     entry.employeeNumber,
@@ -1653,8 +1682,8 @@ app.post("/api/finalize_payroll", (req, res) => {
     entry.earistCreditCoop,
     entry.feu,
     entry.disallowance
-    
   ]));
+
 
   const insertQuery = `
     INSERT INTO finalize_payroll (
@@ -1671,15 +1700,42 @@ app.post("/api/finalize_payroll", (req, res) => {
     ) VALUES ?
   `;
 
+
   db.query(insertQuery, [values], (err, result) => {
     if (err) {
       console.error("Error inserting finalized payroll:", err);
       return res.status(500).json({ error: "Internal server error" });
     }
 
-    res.json({ message: "Payroll finalized successfully", inserted: result.affectedRows });
+
+    // After inserting payroll data, update the status in payroll_processing to "Processed" (1)
+    const updateQuery = `
+      UPDATE payroll_processing
+      SET status = 1
+      WHERE employeeNumber IN (?)
+    `;
+
+
+    const employeeNumbers = payrollData.map(entry => entry.employeeNumber);
+
+
+    db.query(updateQuery, [employeeNumbers], (err, updateResult) => {
+      if (err) {
+        console.error("Error updating payroll status:", err);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+
+
+      res.json({
+        message: "Payroll finalized and status updated to processed successfully",
+        inserted: result.affectedRows,
+        updated: updateResult.affectedRows
+      });
+    });
   });
 });
+
+
 
 app.get("/api/finalized-payroll", (req, res) => {
   const query = "SELECT * FROM finalize_payroll ORDER BY dateCreated DESC";
@@ -1692,6 +1748,8 @@ app.get("/api/finalized-payroll", (req, res) => {
     res.json(results);
   });
 });
+
+
 
 
 

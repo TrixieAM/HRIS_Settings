@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TextField, Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Box, Container } from "@mui/material";
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
   Save as SaveIcon, Cancel as CancelIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+
 
 
 const OverallAttendance = () => {
@@ -13,15 +15,22 @@ const OverallAttendance = () => {
   const [endDate, setEndDate] = useState("");
   const [attendanceData, setAttendanceData] = useState([]);
   const [editRecord, setEditRecord] = useState([]);
+  const navigate = useNavigate();
+  
+
+  useEffect(() => {
+    const storedEmployeeNumber = localStorage.getItem('employeeNumber');
+    const storedStartDate = localStorage.getItem('startDate');
+    const storedEndDate = localStorage.getItem('endDate');
+
+    if (storedEmployeeNumber) setEmployeeNumber(storedEmployeeNumber);
+    if (storedStartDate) setStartDate(storedStartDate);
+    if (storedEndDate) setEndDate(storedEndDate);
+  }, []);
 
 const fetchAttendanceData = async () => {
   // Check for duplicate employee number in current data
-  const duplicate = attendanceData.find(record => record.personID === employeeNumber);
-
-  if (duplicate) {
-    alert("Error: Duplicate entry for employee number.");
-    return;
-  }
+  
 
   console.log("Sending request with params: ", {
     personID: employeeNumber,
@@ -75,24 +84,45 @@ const updateRecord = async () => {
     alert("The Data was Successfully Deleted");
   };
 
-const submitToPayroll = async () => {
-  try {
-    const payload = attendanceData.map(record => ({
-      employeeNumber: record.personID,
-      startDate: record.startDate,
-      endDate: record.endDate,
-      overallRenderedOfficialTimeTardiness: record.overallRenderedOfficialTimeTardiness,
-      department: record.code,
-    }));
+  const submitToPayroll = async () => {
+    try {
+      // Check each record first for duplicates
+      for (const record of attendanceData) {
+        const { personID, startDate, endDate } = record;
+  
+        const response = await axios.get(`http://localhost:5000/api/payroll-with-remittance`, {
+          params: { employeeNumber: personID, startDate, endDate },
+        });
+  
+        if (response.data.exists) {
+          // If record exists, STOP and alert
+          alert(`Existing payroll entry found for Employee Number ${personID} from ${startDate} to ${endDate}. Submission cancelled.`);
+          return;
+        }
+      }
+  
+      // If no duplicates, proceed to submit
+      const payload = attendanceData.map(record => ({
+        employeeNumber: record.personID,
+        startDate: record.startDate,
+        endDate: record.endDate,
+        overallRenderedOfficialTimeTardiness: record.overallRenderedOfficialTimeTardiness,
+        department: record.code,
+      }));
+  
+      await axios.post("http://localhost:5000/api/add-rendered-time", payload);
+  
+      alert("Submitted to payroll successfully!");
+      navigate('/payroll-table');
+    } catch (error) {
+      console.error("Error submitting to payroll:", error);
+      alert("Submission failed.");
+    }
+  };
+  
+  
 
-    await axios.post("http://localhost:5000/api/add-rendered-time", payload);
-
-    alert("Submitted to payroll successfully!");
-  } catch (error) {
-    console.error("Error submitting to payroll:", error);
-    alert("Submission failed.");
-  }
-};
+  
 
   
   

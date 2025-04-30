@@ -5,11 +5,17 @@ const router = express.Router();
 const mysql = require("mysql2");
 const xlsx = require("xlsx");
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
+
+
+//MYSQL CONNECTION
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'earist_hris',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
 // CRUD for Children
@@ -48,5 +54,6 @@ router.delete("/children-table/:id", (req, res) => {
     res.json({ message: "Child deleted" });
   });
 });
+
 
 module.exports = router;

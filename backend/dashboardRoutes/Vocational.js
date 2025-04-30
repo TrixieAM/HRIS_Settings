@@ -7,13 +7,17 @@ const router = express.Router();
 const fs = require("fs");
 //require('dotenv').config(); // Load environment variables
 
-// Database connection
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
+//MYSQL CONNECTION
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'earist_hris',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
+
 
 
 

@@ -5,12 +5,18 @@ const fs = require("fs"); // Import file system module
 const mysql = require("mysql2"); // install this on the node modules of the front end
 const router = express.Router();
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
+
+//MYSQL CONNECTION
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'earist_hris',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
+
 
 // CRUD routes (e.g., Create, Read, Update, Delete)
 router.get("/data", (req, res) => {

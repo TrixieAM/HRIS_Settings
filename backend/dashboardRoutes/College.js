@@ -7,12 +7,18 @@ const xlsx = require("xlsx");
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
+
+//MYSQL CONNECTION
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'earist_hris',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
+
 
 router.get("/data", (req, res) => {
   const query = `SELECT * FROM college_table`;

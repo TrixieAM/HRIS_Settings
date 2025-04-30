@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Button, TextField, Table, TableBody, TableCell, TableHead, TableRow, Container } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { Button, TextField, Table, TableBody, TableCell, TableHead, TableRow, Container, Typography, Box } from '@mui/material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon, Search as SearchIcon } from '@mui/icons-material';
+import ChildFriendlyIcon from '@mui/icons-material/ChildFriendly';
+
+
 
 
 const Children = () => {
@@ -16,11 +19,16 @@ const Children = () => {
   });
   const [editingChildId, setEditingChildId] = useState(null);
   const [editChildData, setEditChildData] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+
+
 
 
   useEffect(() => {
     fetchChildren();
   }, []);
+
+
 
 
   const fetchChildren = async () => {
@@ -31,6 +39,8 @@ const Children = () => {
       console.error('Error fetching children:', error);
     }
   };
+
+
 
 
   const updateChild = async () => {
@@ -44,6 +54,8 @@ const Children = () => {
   };
 
 
+
+
   const deleteChild = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/childrenRoute/children-table/${id}`);
@@ -54,8 +66,10 @@ const Children = () => {
   };
 
 
+
+
   return (
-    <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1' }}>
+    <Container style={{ marginTop: '0px', backgroundColor: '#FEF9E1' }}>
       {/* Red Header Section */}
       <div
   style={{
@@ -79,6 +93,8 @@ const Children = () => {
     <h4 style={{ margin: 0, fontSize: '150%', marginBottom:'2px' }}>Children Information</h4>
     <p style={{ margin: 0, fontSize:'85%', marginLeft:'.25%',}}>Insert Your Children Information</p>
   </div>
+
+
 
 
   {/* Form Section */}
@@ -121,6 +137,8 @@ const Children = () => {
   />
 
 
+
+
   <Button
     onClick={async () => {
       await axios.post('http://localhost:5000/childrenRoute/children-table', newChild);
@@ -151,6 +169,10 @@ const Children = () => {
 
 
 
+
+
+
+
       {/* Children Table Styled Like Personal Info */}
       <div
         style={{
@@ -161,8 +183,42 @@ const Children = () => {
           marginBottom: '20px'
         }}
       >
-        <h3 style={{ marginBottom: '20px' }}>Children List</h3>
+<Box
+  display="flex"
+  alignItems="center"
+  justifyContent="space-between"
+  backgroundColor="#6D2323"
+  padding={2}
+  borderRadius={1}
+  marginBottom={2}
+>
+  <Box display="flex" alignItems="center">
+    <Typography variant="h5" sx={{ margin: 0, color: 'white', fontWeight: 'bold' }}>
+      Children Records
+    </Typography>
+  </Box>
+
+
+  <TextField
+    size="small"
+    variant="outlined"
+    placeholder="Search by Employee Number"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    sx={{ backgroundColor: 'white', borderRadius: 1 }}
+    InputProps={{
+      startAdornment: (
+        <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
+      ),
+    }}
+  />
+</Box>
+
+
+
+
         <Table>
+         
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
@@ -176,7 +232,18 @@ const Children = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {children.map((child) => (
+          {children.filter((child) =>
+            child.person_id?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          ).length === 0 ? (
+            <Typography variant="h6" sx={{ color: '#8B0000', textAlign: 'center', marginTop: 2, alignContent: 'center' }}>
+              No matching records found.
+            </Typography>
+          ) : (
+            children
+              .filter((child) =>
+                child.person_id?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((child) => (
               <TableRow key={child.id}>
                 {editingChildId === child.id ? (
                   <>
@@ -297,6 +364,7 @@ const Children = () => {
                   </>
                 )}
               </TableRow>
+    )
             ))}
           </TableBody>
         </Table>
@@ -306,7 +374,15 @@ const Children = () => {
 };
 
 
+
+
 export default Children;
+
+
+
+
+
+
 
 
 

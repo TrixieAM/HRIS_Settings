@@ -3,12 +3,18 @@ const multer = require("multer");
 const mysql = require("mysql2");
 const router = express.Router();
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
+
+//MYSQL CONNECTION
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'earist_hris',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
+
 
 router.get("/work-experience-table", (req, res) => {
   const query = "SELECT * FROM work_experience_table";

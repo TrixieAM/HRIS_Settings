@@ -50,18 +50,23 @@ import { useNavigate, Link } from 'react-router-dom';
 const drawerWidth = 270;
 const collapsedWidth = 60;
 
-const getUserRole = () => {
+const getUserInfo = () => {
   const token = localStorage.getItem('token');
-  if (!token) return null;
+  if (!token) return {};
 
   try {
     const decoded = JSON.parse(atob(token.split('.')[1]));
-    return decoded.role;
+    return {
+      role: decoded.role,
+      employeeNumber: decoded.employeeNumber,
+      username: decoded.username,
+    };
   } catch (error) {
     console.error('Error decoding token:', error);
-    return null;
+    return {};
   }
 };
+
 
 const Sidebar = ({
   open,
@@ -80,13 +85,17 @@ const Sidebar = ({
   const [username, setUsername] = useState('');
   const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
+  const [employeeNumber, setEmployeeNumber] = useState('');
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('username');
-    const role = getUserRole();
-    setUsername(storedUser || '');
-    setUserRole(role || '');
-  }, []);
+useEffect(() => {
+  const storedUser = localStorage.getItem('username');
+  const { role, employeeNumber, email, username } = getUserInfo();
+  setUsername(storedUser || '');
+  setUserRole(role || '');
+  setEmployeeNumber(employeeNumber || '');
+  setUsername(username || '');
+}, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -171,23 +180,42 @@ const Sidebar = ({
                   alignItems: 'center',
                   gap: 1,
                   cursor: 'pointer',
+                  
 
                 }}
               >
-                <Avatar alt={username} sx={{ width: 32, height: 32, marginLeft: -1, color: 'black' }} />
+                <Avatar alt={username} sx={{ width: 35, height: 35, marginLeft: -1, color: 'black' }} />
                 <Box>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography 
+                  variant="body2" 
+                  fontWeight="bold"
+                  sx={{
+                    fontFamily: 'Poppins',
+                    marginLeft: '9px',
+                    color: 'black'
+                  }}>
                     {username}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Poppins', marginLeft: '9px', color: 'black'}}>
-                    {userRole}
+
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      marginLeft: '9px',
+                      color: 'black'
+                    }}
+                  >
+                    <b>ID: &nbsp;</b>
+                    {employeeNumber}
                   </Typography>
+
                 </Box>
               </Box>
             </Tooltip>
 
             <Tooltip title="Logout">
-              <IconButton onClick={handleLogout} size="small" sx={{ ml: 10, color: 'black' }}>
+              <IconButton onClick={handleLogout} size="small" sx={{ ml: 5.5, color: 'black' }}>
                 <LogoutIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -197,7 +225,7 @@ const Sidebar = ({
         </>
       )}
 
-      <Divider sx={{ marginTop: '7px', marginBottom: '7px'}}/>
+<Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '10px' }} />
    
       <ListItem 
   button 

@@ -2,14 +2,17 @@ const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "earist_hris",
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'earist_hris',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
-// Endpoint to fetch attendance records
+
 // Endpoint to fetch attendance records
 router.get("/api/attendance", (req, res) => {
   const { personId, startDate, endDate } = req.query;
@@ -62,6 +65,9 @@ router.post("/api/update-attendance", (req, res) => {
     .then(() => res.json({ message: "Records updated successfully" }))
     .catch((err) => res.status(500).json({ error: err.message }));
 });
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Additional endpoint for attendance with date filtering
 router.post("/api/attendance", (req, res) => {

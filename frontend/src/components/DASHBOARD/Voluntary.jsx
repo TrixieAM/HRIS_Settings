@@ -11,12 +11,16 @@ import {
   TextField,
   Container,
   Paper,
+  Grid,
+  Typography,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
+import SearchIcon from '@mui/icons-material/Search';
 
 const VoluntaryWork = () => {
   const [data, setData] = useState([]);
@@ -27,6 +31,7 @@ const VoluntaryWork = () => {
   const [newItem5, setNewItem5] = useState('');
   const [newItem6, setNewItem6] = useState('');
   const [editItem, setEditItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchItems();
@@ -105,79 +110,141 @@ const VoluntaryWork = () => {
     <Container>
       {/* Styled Header */}
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          backgroundColor: '#6D2323',
-          padding: '16px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-        }}
-      >
-        <h1 style={{ width: '100%', color: '#FEF9E1', margin: 0 }}>
-          Voluntary Work
-        </h1>
-      </div>
+    style={{
+      backgroundColor: '#6D2323',
+      color: '#ffffff',
+      padding: '20px',
+      borderRadius: '8px',
+      borderBottomLeftRadius: '0px',
+      borderBottomRightRadius: '0px',
+    }}
+    
+  >
+<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
+  <VolunteerActivismIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
 
-      {/* Add New Item Form Box */}
-      <Paper elevation={3} sx={{ padding: 2, marginBottom: 3 }}>
-        <Box display="flex" flexDirection="column" alignItems="flex-start" sx={{ marginBottom: 2 }}>
-          <Box display="flex" alignItems="center" sx={{ marginBottom: 2, flexWrap: 'wrap' }}>
-            <TextField
-              label="Name and Address"
-              value={newItem}
-              sx={{ marginRight: 1 }}
-              onChange={(e) => setNewItem(e.target.value)}
-            />
-            <TextField
-              label="Date From"
-              InputLabelProps={{ shrink: true }}
-              type="date"
-              value={newItem2}
-              sx={{ marginRight: 1 }}
-              onChange={(e) => setNewItem2(e.target.value)}
-            />
-            <TextField
-              label="Date To"
-              InputLabelProps={{ shrink: true }}
-              type="date"
-              value={newItem3}
-              sx={{ marginRight: 1 }}
-              onChange={(e) => setNewItem3(e.target.value)}
-            />
-            <TextField
-              label="Number of Hours"
-              value={newItem4}
-              sx={{ marginRight: 1 }}
-              onChange={(e) => setNewItem4(e.target.value)}
-            />
-            <TextField
-              label="Nature of Works"
-              value={newItem5}
-              sx={{ marginRight: 1 }}
-              onChange={(e) => setNewItem5(e.target.value)}
-            />
-            <TextField
-              label="Person ID"
-              value={newItem6}
-              sx={{ marginRight: 2 }}
-              onChange={(e) => setNewItem6(e.target.value)}
-            />
-          </Box>
-          <Button
-            onClick={addItem}
-            variant="contained"
-            color="primary"
-            style={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: '1120px', marginTop: '5px', marginLeft: '5px' }}
-            startIcon={<AddIcon />}
-          >
-            Add
-          </Button>
-        </Box>
-      </Paper>
+  <div>
+    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+      Voluntary Information
+    </h4>
+    <p style={{ margin: 0, fontSize: '85%' }}>
+      Insert Your Voluntary Information
+    </p>
+  </div>
+</div>
+
+  </div>
+
+
+
+<Paper elevation={3} sx={{ padding: 5, marginBottom: 3 }}>
+  <Box display="flex" flexDirection="column" alignItems="flex-start" sx={{ marginBottom: 2, width: '100%' }}>
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={4}>
+        <TextField
+          fullWidth
+          label="Name and Address"
+          value={newItem}
+          onChange={(e) => setNewItem(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <TextField
+          fullWidth
+          label="Date From"
+          InputLabelProps={{ shrink: true }}
+          type="date"
+          value={newItem2}
+          onChange={(e) => setNewItem2(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <TextField
+          fullWidth
+          label="Date To"
+          InputLabelProps={{ shrink: true }}
+          type="date"
+          value={newItem3}
+          onChange={(e) => setNewItem3(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <TextField
+          fullWidth
+          label="Number of Hours"
+          value={newItem4}
+          onChange={(e) => setNewItem4(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <TextField
+          fullWidth
+          label="Nature of Works"
+          value={newItem5}
+          onChange={(e) => setNewItem5(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <TextField
+          fullWidth
+          label="Person ID"
+          value={newItem6}
+          onChange={(e) => setNewItem6(e.target.value)}
+        />
+      </Grid>
+    </Grid>
+
+    <Button
+      onClick={addItem}
+      variant="contained"
+      color="primary"
+      sx={{
+        backgroundColor: '#6D2323',
+        color: '#FEF9E1',
+        width: '100%',
+        marginTop: 5,
+      }}
+      startIcon={<AddIcon />}
+    >
+      Add
+    </Button>
+  </Box>
+</Paper>
+
 
       {/* Items Table */}
       <Paper elevation={3} sx={{ padding: 2 }}>
+      <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          padding={2}
+          borderRadius={1}
+          marginBottom={2}
+        >
+          <Box display="flex" alignItems="center">
+          <VolunteerActivismIcon sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
+
+            <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
+              Voluntary Records
+            </Typography>
+          </Box>
+
+
+          <TextField
+            size="small"
+            variant="outlined"
+            placeholder="Search by Employee Number"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ backgroundColor: 'white', borderRadius: 1 }}
+            InputProps={{
+              startAdornment: (
+                <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
+              ),
+            }}
+          />
+        </Box>
         <Table>
           <TableHead>
             <TableRow>
@@ -192,148 +259,173 @@ const VoluntaryWork = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.id}</TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <TextField
-                      value={editItem.nameAndAddress}
-                      onChange={(e) =>
-                        setEditItem({ ...editItem, nameAndAddress: e.target.value })
-                      }
-                    />
-                  ) : (
-                    item.nameAndAddress
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <TextField
-                      value={editItem.dateFrom}
-                      onChange={(e) =>
-                        setEditItem({ ...editItem, dateFrom: e.target.value })
-                      }
-                    />
-                  ) : (
-                    item.dateFrom
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <TextField
-                      value={editItem.dateTo}
-                      onChange={(e) =>
-                        setEditItem({ ...editItem, dateTo: e.target.value })
-                      }
-                    />
-                  ) : (
-                    item.dateTo
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <TextField
-                      value={String(editItem.numberOfHours)}
-                      onChange={(e) =>
-                        setEditItem({ ...editItem, numberOfHours: e.target.value })
-                      }
-                    />
-                  ) : (
-                    item.numberOfHours
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <TextField
-                      value={String(editItem.natureOfWork)}
-                      onChange={(e) =>
-                        setEditItem({ ...editItem, natureOfWork: e.target.value })
-                      }
-                    />
-                  ) : (
-                    item.natureOfWork
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <TextField
-                      value={String(editItem.person_id)}
-                      onChange={(e) =>
-                        setEditItem({ ...editItem, person_id: e.target.value })
-                      }
-                    />
-                  ) : (
-                    item.person_id
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItem && editItem.id === item.id ? (
-                    <>
-                      <Button
-                        onClick={updateItem}
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                          width: '100px',
-                          backgroundColor: '#6c0b19',
-                          color: 'white',
-                        }}
-                        startIcon={<SaveIcon />}
-                      >
-                        Update
-                      </Button>
-                      <Button
-                        onClick={() => setEditItem(null)}
-                        variant="outlined"
-                        color="secondary"
-                        sx={{
-                          width: '100px',
-                          color: 'white',
-                          backgroundColor: '#000000',
-                          marginTop: '5px',
-                        }}
-                        startIcon={<CancelIcon />}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => setEditItem(item)}
-                        variant="outlined"
-                        color="primary"
-                        sx={{
-                          marginRight: 2,
-                          width: '100px',
-                          backgroundColor: '#6c0b19',
-                          color: 'white',
-                        }}
-                        startIcon={<EditIcon />}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => deleteItem(item.id)}
-                        variant="outlined"
-                        color="secondary"
-                        sx={{
-                          width: '100px',
-                          color: 'white',
-                          backgroundColor: '#000000',
-                          marginTop: '5px',
-                        }}
-                        startIcon={<DeleteIcon />}
-                      >
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+  {data.filter((item) => {
+    const fullSearchText = `${item.nameAndAddress} ${item.natureOfWork}`.toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return (
+      item.person_id?.toString().includes(search) ||
+      fullSearchText.includes(search)
+    );
+  }).length === 0 ? (
+    <TableRow>
+      <TableCell colSpan={8} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
+        <Typography variant="h6">No matching records found.</Typography>
+      </TableCell>
+    </TableRow>
+  ) : (
+    data
+      .filter((item) => {
+        const fullSearchText = `${item.nameAndAddress} ${item.natureOfWork} ${item.person_id}`.toLowerCase();
+        const search = searchTerm.toLowerCase();
+        return (
+          item.person_id?.toString().includes(search) ||
+          fullSearchText.includes(search)
+        );
+      })
+      .map((item) => (
+        <TableRow key={item.id}>
+          <TableCell>{item.id}</TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <TextField
+                value={editItem.nameAndAddress}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, nameAndAddress: e.target.value })
+                }
+              />
+            ) : (
+              item.nameAndAddress
+            )}
+          </TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <TextField
+                value={editItem.dateFrom}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, dateFrom: e.target.value })
+                }
+              />
+            ) : (
+              item.dateFrom
+            )}
+          </TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <TextField
+                value={editItem.dateTo}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, dateTo: e.target.value })
+                }
+              />
+            ) : (
+              item.dateTo
+            )}
+          </TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <TextField
+                value={String(editItem.numberOfHours)}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, numberOfHours: e.target.value })
+                }
+              />
+            ) : (
+              item.numberOfHours
+            )}
+          </TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <TextField
+                value={String(editItem.natureOfWork)}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, natureOfWork: e.target.value })
+                }
+              />
+            ) : (
+              item.natureOfWork
+            )}
+          </TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <TextField
+                value={String(editItem.person_id)}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, person_id: e.target.value })
+                }
+              />
+            ) : (
+              item.person_id
+            )}
+          </TableCell>
+          <TableCell>
+            {editItem && editItem.id === item.id ? (
+              <>
+                <Button
+                  onClick={updateItem}
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    width: '100px',
+                    backgroundColor: '#6D2323',
+                    color: 'white',
+                  }}
+                  startIcon={<SaveIcon />}
+                >
+                  Update
+                </Button>
+                <Button
+                  onClick={() => setEditItem(null)}
+                  variant="outlined"
+                  color="secondary"
+                  sx={{
+                    width: '100px',
+                    color: 'white',
+                    backgroundColor: '#000000',
+                    marginTop: '5px',
+                  }}
+                  startIcon={<CancelIcon />}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => setEditItem(item)}
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    marginRight: 2,
+                    width: '100px',
+                    backgroundColor: '#6d2323',
+                    color: 'white',
+                  }}
+                  startIcon={<EditIcon />}
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => deleteItem(item.id)}
+                  variant="outlined"
+                  color="secondary"
+                  sx={{
+                    width: '100px',
+                    color: 'white',
+                    backgroundColor: '#000000',
+                    marginTop: '5px',
+                  }}
+                  startIcon={<DeleteIcon />}
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+          </TableCell>
+        </TableRow>
+      ))
+  )}
+</TableBody>
+
         </Table>
       </Paper>
     </Container>

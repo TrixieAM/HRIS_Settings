@@ -20,6 +20,9 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
 import UploadIcon from '@mui/icons-material/Upload';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import SearchIcon from '@mui/icons-material/Search';
+import { Grading } from '@mui/icons-material';
 
 const Eligibility = () => {
   const [data, setData] = useState([]);
@@ -33,6 +36,7 @@ const Eligibility = () => {
     person_id: '',
   });
   const [editEligibility, setEditEligibility] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchEligibility();
@@ -110,20 +114,31 @@ const Eligibility = () => {
 
   return (
     <Container>
-      <Typography
-        variant="h4"
-        gutterBottom
-        style={{
-          fontWeight: 'bold',
-          marginTop: '20px',
-          backgroundColor: '#6D2323',
-          color: '#FEF9E1',
-          padding: '12px 16px',
-          borderRadius: '8px',
-        }}
-      >
-        Eligibility
-      </Typography>
+        <div
+    style={{
+      backgroundColor: '#6D2323',
+      color: '#ffffff',
+      padding: '20px',
+      borderRadius: '8px',
+      borderBottomLeftRadius: '0px',
+      borderBottomRightRadius: '0px',
+    }}
+    
+  >
+<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
+  <FactCheckIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+
+  <div>
+    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+      Eligibility Information
+    </h4>
+    <p style={{ margin: 0, fontSize: '85%' }}>
+      Insert Your Eligibility Information
+    </p>
+  </div>
+</div>
+
+  </div>
 
       {/* Add New Eligibility */}
       <Paper elevation={3} style={{ padding: '16px', marginBottom: '20px' }}>
@@ -175,117 +190,266 @@ const Eligibility = () => {
 
       {/* Eligibility Table */}
       <Paper elevation={3} style={{ padding: '16px' }}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          padding={2}
+          borderRadius={1}
+          marginBottom={2}
+        >
+          <Box display="flex" alignItems="center">
+          <Grading sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
+        
+            <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
+              
+              Eligibility Records
+            </Typography>
+          </Box>
+        
+        
+          <TextField
+            size="small"
+            variant="outlined"
+            placeholder="Search by Employee Number"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ backgroundColor: 'white', borderRadius: 1 }}
+            InputProps={{
+              startAdornment: (
+                <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
+              ),
+            }}
+          />
+        </Box>
         <Table>
           <TableHead>
-            <TableRow style={{ backgroundColor: '#6D2323' }}>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Eligibility Name</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Rating</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Date of Exam</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Place of Exam</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>License Number</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Date of Validity</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Person ID</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>Actions</TableCell>
+            <TableRow>
+              <TableCell style={{  fontWeight: 'bold' }}>ID</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>Eligibility Name</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>Rating</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>Date of Exam</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>Place of Exam</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>License Number</TableCell>
+              <TableCell style={{ fontWeight: 'bold' }}>Date of Validity</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>Person ID</TableCell>
+              <TableCell style={{  fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((eligibility) => (
-              <TableRow key={eligibility.id}>
-                <TableCell>{eligibility.id}</TableCell>
-                {Object.keys(eligibility)
-                  .slice(1, -1)
-                  .map((key) => (
-                    <TableCell key={key}>
-                      {editEligibility && editEligibility.id === eligibility.id ? (
-                        <TextField
-                          value={editEligibility[key]}
-                          onChange={(e) =>
-                            setEditEligibility({
-                              ...editEligibility,
-                              [key]: e.target.value,
-                            })
-                          }
-                          type={key.includes('Date') ? 'date' : 'text'}
-                          InputLabelProps={key.includes('Date') ? { shrink: true } : {}}
-                          fullWidth
-                        />
-                      ) : (
-                        eligibility[key]
-                      )}
-                    </TableCell>
-                  ))}
-                <TableCell>
-                  {editEligibility && editEligibility.id === eligibility.id ? (
-                    <>
-                      <Button
-                        onClick={updateEligibility}
-                        variant="contained"
-                        color="primary"
-                        style={{
-                          backgroundColor: '#6D2323',
-                          color: '#FEF9E1',
-                          width: '100px',
-                          height: '40px',
-                          marginBottom: '5px',
-                        }}
-                        startIcon={<SaveIcon />}
-                      >
-                        Update
-                      </Button>
-                      <Button
-                        onClick={() => setEditEligibility(null)}
-                        variant="outlined"
-                        color="secondary"
-                        style={{
-                          backgroundColor: 'black',
-                          color: 'white',
-                          width: '100px',
-                          height: '40px',
-                          marginBottom: '5px',
-                        }}
-                        startIcon={<CancelIcon />}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => setEditEligibility(eligibility)}
-                        variant="contained"
-                        color="primary"
-                        style={{
-                          backgroundColor: '#6D2323',
-                          color: '#FEF9E1',
-                          width: '100px',
-                          height: '40px',
-                          marginBottom: '5px',
-                        }}
-                        startIcon={<EditIcon />}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => deleteEligibility(eligibility.id)}
-                        variant="contained"
-                        style={{
-                          backgroundColor: 'black',
-                          color: 'white',
-                          width: '100px',
-                          height: '40px',
-                          marginBottom: '5px',
-                        }}
-                        startIcon={<DeleteIcon />}
-                      >
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+  {data
+    .filter((eligibility) => {
+      const search = searchTerm.toLowerCase();
+      const combinedFields = `${eligibility.eligibilityName || ''} ${eligibility.eligibilityRating || ''} ${eligibility.person_id || ''}`.toLowerCase();
+      return combinedFields.includes(search);
+    }).length === 0 ? (
+    <TableRow>
+      <TableCell colSpan={Object.keys(data[0] || {}).length + 1} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
+        <Typography variant="h6">No matching records found.</Typography>
+      </TableCell>
+    </TableRow>
+  ) : (
+    data
+      .filter((eligibility) => {
+        const search = searchTerm.toLowerCase();
+        const combinedFields = `${eligibility.eligibilityName || ''} ${eligibility.eligibilityRating || ''} ${eligibility.person_id || ''}`.toLowerCase();
+        return combinedFields.includes(search);
+      })
+      .map((eligibility) => (
+        <TableRow key={eligibility.id}>
+          <TableCell>{eligibility.id}</TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.eligibilityName}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    eligibilityName: e.target.value,
+                  })
+                }
+                fullWidth
+              />
+            ) : (
+              eligibility.eligibilityName
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.eligibilityRating}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    eligibilityRating: e.target.value,
+                  })
+                }
+                type="text"
+                fullWidth
+              />
+            ) : (
+              eligibility.eligibilityRating
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.eligibilityDateOfExam}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    eligibilityDateOfExam: e.target.value,
+                  })
+                }
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            ) : (
+              eligibility.eligibilityDateOfExam
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.eligibilityPlaceOfExam}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    eligibilityPlaceOfExam: e.target.value,
+                  })
+                }
+                fullWidth
+              />
+            ) : (
+              eligibility.eligibilityPlaceOfExam
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.licenseNumber}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    licenseNumber: e.target.value,
+                  })
+                }
+                fullWidth
+              />
+            ) : (
+              eligibility.licenseNumber
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.DateOfValidity}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    DateOfValidity: e.target.value,
+                  })
+                }
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            ) : (
+              eligibility.DateOfValidity
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <TextField
+                value={editEligibility.person_id}
+                onChange={(e) =>
+                  setEditEligibility({
+                    ...editEligibility,
+                    person_id: e.target.value,
+                  })
+                }
+                type="number"
+                fullWidth
+              />
+            ) : (
+              eligibility.person_id
+            )}
+          </TableCell>
+          <TableCell>
+            {editEligibility && editEligibility.id === eligibility.id ? (
+              <>
+                <Button
+                  onClick={updateEligibility}
+                  variant="contained"
+                  color="primary"
+                  style={{
+                    backgroundColor: '#6D2323',
+                    color: '#FEF9E1',
+                    width: '100px',
+                    height: '40px',
+                    marginBottom: '5px',
+                  }}
+                  startIcon={<SaveIcon />}
+                >
+                  Update
+                </Button>
+                <Button
+                  onClick={() => setEditEligibility(null)}
+                  variant="outlined"
+                  color="secondary"
+                  style={{
+                    backgroundColor: 'black',
+                    color: 'white',
+                    width: '100px',
+                    height: '40px',
+                    marginBottom: '5px',
+                  }}
+                  startIcon={<CancelIcon />}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => setEditEligibility(eligibility)}
+                  variant="contained"
+                  color="primary"
+                  style={{
+                    backgroundColor: '#6D2323',
+                    color: '#FEF9E1',
+                    width: '100px',
+                    height: '40px',
+                    marginBottom: '5px',
+                  }}
+                  startIcon={<EditIcon />}
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => deleteEligibility(eligibility.id)}
+                  variant="contained"
+                  style={{
+                    backgroundColor: 'black',
+                    color: 'white',
+                    width: '100px',
+                    height: '40px',
+                    marginBottom: '5px',
+                  }}
+                  startIcon={<DeleteIcon />}
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+          </TableCell>
+        </TableRow>
+      ))
+  )}
+</TableBody>
+
+
         </Table>
       </Paper>
     </Container>

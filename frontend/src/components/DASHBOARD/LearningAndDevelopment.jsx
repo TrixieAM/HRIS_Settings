@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Button, Box, Table, TableBody, TableCell, TableHead, TableRow, TextField, Container, Typography, Paper } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon, LocalLibrary } from '@mui/icons-material';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import SearchIcon from '@mui/icons-material/Search';
 
 const LearningAndDevelopment = () => {
   const [data, setData] = useState([]);
@@ -13,6 +15,7 @@ const LearningAndDevelopment = () => {
   const [newItem6, setNewItem6] = useState('');
   const [newItem7, setNewItem7] = useState('');
   const [editItem, setEditItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchItems();
@@ -87,16 +90,29 @@ const LearningAndDevelopment = () => {
     <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1' }}>
       {/* Red Header Section */}
       <div
-        style={{
-          backgroundColor: '#6D2323',
-          color: '#FEF9E1',
-          padding: '20px',
-          borderRadius: '8px',
-          marginBottom: '20px',
-        }}
-      >
-        <Typography variant="h5" style={{ margin: 0, fontWeight: 'bold' }}>Learning and Development Dashboard</Typography>
-        <Typography variant="h6" style={{ margin: 0 }}>Add New Program</Typography>
+    style={{
+      backgroundColor: '#6D2323',
+      color: '#ffffff',
+      padding: '20px',
+      borderRadius: '8px',
+      borderBottomLeftRadius: '0px',
+      borderBottomRightRadius: '0px',
+    }}
+    
+  >
+<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
+      <LightbulbIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+
+      <div>
+        <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+          Learning and Development Information
+        </h4>
+        <p style={{ margin: 0, fontSize: '85%' }}>
+          Insert Your Learning and Development Information
+        </p>
+      </div>
+    </div>
+
       </div>
 
       {/* Add New Learning and Development Form Box */}
@@ -110,7 +126,7 @@ const LearningAndDevelopment = () => {
           marginBottom: '20px',
         }}
       >
-        <Box display="flex" flexWrap="wrap" gap={2}>
+        <Box display="flex" flexWrap="wrap" gap={2} style={{ marginLeft: '20px' }}>
           <TextField
             label="Title of Program"
             value={newItem}
@@ -184,7 +200,37 @@ const LearningAndDevelopment = () => {
           marginBottom: '20px',
         }}
       >
-        <Typography variant="h6" style={{ marginBottom: '20px' }}>Programs List</Typography>
+        <Box
+  display="flex"
+  alignItems="center"
+  justifyContent="space-between"
+  padding={2}
+  borderRadius={1}
+  marginBottom={2}
+>
+  <Box display="flex" alignItems="center">
+  <LocalLibrary sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
+
+    <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
+      Program Records
+    </Typography>
+  </Box>
+
+
+  <TextField
+    size="small"
+    variant="outlined"
+    placeholder="Search by Employee Number"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    sx={{ backgroundColor: 'white', borderRadius: 1 }}
+    InputProps={{
+      startAdornment: (
+        <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
+      ),
+    }}
+  />
+</Box>
         <Table>
           <TableHead>
             <TableRow>
@@ -200,77 +246,161 @@ const LearningAndDevelopment = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((item) => (
-              <TableRow key={item.id}>
-                {editItem && editItem.id === item.id ? (
-                  <>
-                    <TableCell>{item.id}</TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.titleOfProgram}
-                        onChange={(e) => setEditItem({ ...editItem, titleOfProgram: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.dateFrom}
-                        onChange={(e) => setEditItem({ ...editItem, dateFrom: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.dateTo}
-                        onChange={(e) => setEditItem({ ...editItem, dateTo: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.numberOfHours}
-                        onChange={(e) => setEditItem({ ...editItem, numberOfHours: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.typeOfLearningDevelopment}
-                        onChange={(e) => setEditItem({ ...editItem, typeOfLearningDevelopment: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.conductedSponsored}
-                        onChange={(e) => setEditItem({ ...editItem, conductedSponsored: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        value={editItem.person_id}
-                        onChange={(e) => setEditItem({ ...editItem, person_id: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button onClick={updateItem} variant="contained" style={{ backgroundColor: '#6D2323', color: '#FEF9E1' }} startIcon={<SaveIcon />}>Save</Button>
-                      <Button onClick={() => setEditItem(null)} variant="contained" style={{ backgroundColor: 'black', color: 'white', marginLeft: '10px' }} startIcon={<CancelIcon />}>Cancel</Button>
-                    </TableCell>
-                  </>
-                ) : (
-                  <>
-                    <TableCell>{item.id}</TableCell>
-                    <TableCell>{item.titleOfProgram}</TableCell>
-                    <TableCell>{item.dateFrom}</TableCell>
-                    <TableCell>{item.dateTo}</TableCell>
-                    <TableCell>{item.numberOfHours}</TableCell>
-                    <TableCell>{item.typeOfLearningDevelopment}</TableCell>
-                    <TableCell>{item.conductedSponsored}</TableCell>
-                    <TableCell>{item.person_id}</TableCell>
-                    <TableCell>
-                      <Button onClick={() => setEditItem(item)} variant="contained" style={{ backgroundColor: '#6D2323', color: '#FEF9E1', marginRight: '10px' }} startIcon={<EditIcon />}>Edit</Button>
-                      <Button onClick={() => deleteItem(item.id)} variant="contained" style={{ backgroundColor: 'black', color: 'white' }} startIcon={<DeleteIcon />}>Delete</Button>
-                    </TableCell>
-                  </>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
+  {data.filter((item) => {
+    const fullTitle = `${item.titleOfProgram} ${item.conductedSponsored}`.toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return (
+      item.person_id?.toString().includes(search) ||
+      fullTitle.includes(search)
+    );
+  }).length === 0 ? (
+    <TableRow>
+      <TableCell colSpan={9} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
+        <Typography variant="h6">No matching records found.</Typography>
+      </TableCell>
+    </TableRow>
+  ) : (
+    data
+      .filter((item) => {
+        const fullTitle = `${item.titleOfProgram} ${item.conductedSponsored} ${item.person_id}  `.toLowerCase();
+        const search = searchTerm.toLowerCase();
+        return (
+          item.person_id?.toString().includes(search) ||
+          fullTitle.includes(search)
+        );
+      })
+      .map((item) => {
+        const isEditing = editItem && editItem.id === item.id;
+        return (
+          <TableRow key={item.id}>
+            {isEditing ? (
+              <>
+                <TableCell>{item.id}</TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.titleOfProgram}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, titleOfProgram: e.target.value })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.dateFrom}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, dateFrom: e.target.value })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.dateTo}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, dateTo: e.target.value })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.numberOfHours}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, numberOfHours: e.target.value })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.typeOfLearningDevelopment}
+                    onChange={(e) =>
+                      setEditItem({
+                        ...editItem,
+                        typeOfLearningDevelopment: e.target.value,
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.conductedSponsored}
+                    onChange={(e) =>
+                      setEditItem({
+                        ...editItem,
+                        conductedSponsored: e.target.value,
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editItem.person_id}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, person_id: e.target.value })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    onClick={updateItem}
+                    variant="contained"
+                    style={{ backgroundColor: '#6D2323', color: '#FEF9E1' }}
+                    startIcon={<SaveIcon />}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    onClick={() => setEditItem(null)}
+                    variant="contained"
+                    style={{
+                      backgroundColor: 'black',
+                      color: 'white',
+                      marginLeft: '10px',
+                    }}
+                    startIcon={<CancelIcon />}
+                  >
+                    Cancel
+                  </Button>
+                </TableCell>
+              </>
+            ) : (
+              <>
+                <TableCell>{item.id}</TableCell>
+                <TableCell>{item.titleOfProgram}</TableCell>
+                <TableCell>{item.dateFrom}</TableCell>
+                <TableCell>{item.dateTo}</TableCell>
+                <TableCell>{item.numberOfHours}</TableCell>
+                <TableCell>{item.typeOfLearningDevelopment}</TableCell>
+                <TableCell>{item.conductedSponsored}</TableCell>
+                <TableCell>{item.person_id}</TableCell>
+                <TableCell>
+                  <Button
+                    onClick={() => setEditItem(item)}
+                    variant="contained"
+                    style={{
+                      backgroundColor: '#6D2323',
+                      color: '#FEF9E1',
+                      marginRight: '10px',
+                    }}
+                    startIcon={<EditIcon />}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={() => deleteItem(item.id)}
+                    variant="contained"
+                    style={{ backgroundColor: 'black', color: 'white' }}
+                    startIcon={<DeleteIcon />}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </>
+            )}
+          </TableRow>
+        );
+      })
+  )}
+</TableBody>
+
         </Table>
       </Paper>
     </Container>

@@ -345,7 +345,6 @@ const PayrollProcess = () => {
     'abs',
     'h',
     'm',
-    's',
     'netSalary',
   ];
   const deductionFields = [
@@ -547,7 +546,6 @@ const computedRows = filteredData.map((item) => {
                   <TableCell>ABS</TableCell>
                   <TableCell>H</TableCell>
                   <TableCell>M</TableCell>
-                  <TableCell>S</TableCell>
                   <TableCell>Net Salary</TableCell>
                   <TableCell>Withholding Tax</TableCell>
                   <TableCell><b>Total GSIS Deductions</b></TableCell>
@@ -619,7 +617,6 @@ const computedRows = filteredData.map((item) => {
                   <TableCell>{row.abs}</TableCell>
                   <TableCell>{row.h}</TableCell>
                   <TableCell>{row.m}</TableCell>
-                  <TableCell>{row.s}</TableCell>
                   <TableCell>{row.netSalary}</TableCell>
                   <TableCell>{row.withholdingTax}</TableCell>
                   <TableCell>{row.totalGsisDeds}</TableCell>
@@ -672,11 +669,7 @@ const computedRows = filteredData.map((item) => {
 
                   <TableCell
                     style={{
-                      color:
-                        row.status === 1 || row.status === 'Processed'
-                          ? 'green'
-                          : 'black',
-                    }}
+                      color: row.status === 1 || row.status === 'Processed' ? 'green': 'black',}}
                   >
                     {row.status === 1 || row.status === 'Processed'
                       ? 'Processed'

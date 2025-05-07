@@ -82,7 +82,6 @@ const FinalizePayroll = () => {
                   <TableCell>ABS</TableCell>
                   <TableCell>H</TableCell>
                   <TableCell>M</TableCell>
-                  <TableCell>S</TableCell>
                   <TableCell>Net Salary</TableCell>
                   <TableCell>Withholding Tax</TableCell>
                   <TableCell>Total GSIS Deductions</TableCell>
@@ -138,7 +137,6 @@ const FinalizePayroll = () => {
                       <TableCell>{row.abs}</TableCell>
                       <TableCell>{row.h}</TableCell>
                       <TableCell>{row.m}</TableCell>
-                      <TableCell>{row.s}</TableCell>
                       <TableCell>{row.netSalary}</TableCell>
                       <TableCell>{row.withholdingTax}</TableCell>
                       <TableCell>{row.totalGsisDeds}</TableCell>

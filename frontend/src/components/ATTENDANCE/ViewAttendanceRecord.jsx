@@ -98,25 +98,37 @@ const ViewAttendanceRecord = () => {
   };
 
   return (
-    <Container sx={{bgcolor: "white", borderRadius: "10px"}}>
+    <Container>
+          <div
+                      style={{
+                        backgroundColor: '#6D2323',
+                        color: '#ffffff',
+                        padding: '20px',
+                        width: '96.5%',
+                        borderRadius: '8px',
+                        borderBottomLeftRadius: '0px',
+                        borderBottomRightRadius: '0px',
+                       
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+                        <SearchIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+                            View Attendance Records
+                          </h4>
+                          <p style={{ margin: 0, fontSize: '85%' }}>
+                          Generate & review attendance records
+             
+                          </p>
+                        </div>
+                      </div>
+                      </div>
+                          
+    <Container sx={{bgcolor: "white", height: "90%", paddingTop: "-5px",  paddingBottom: '-10px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px',}}>
+
     <div style={{ padding: "10px", marginLeft:'-10px', paddingTop:'25px' }}>
-    <Box
-          sx={{
-            backgroundColor: '#6D2323',
-            color: '#fff',
-            p: 2,
-            borderRadius: 2,
-            mb: 2,
-            
-          }}
-        >
-      <Typography variant="h5" sx={{ m: 0}}>
-            Attendance Records
-          </Typography>
-          <Typography variant="body2" sx={{ m: 0 }}>
-            Generate & review attendance records
-          </Typography>
-      </Box>
+
       
       <form onSubmit={handleSubmit} style={{ marginBottom: "16px" }}>
         <TextField
@@ -126,7 +138,7 @@ const ViewAttendanceRecord = () => {
           required
           fullWidth
           margin="normal"
-          sx={{ width: "300px", marginLeft: "10px" }}
+          sx={{ width: "250px", marginLeft: "10px" }}
           slotProps={{
             inputLabel: {
               shrink: true,
@@ -201,10 +213,10 @@ const ViewAttendanceRecord = () => {
                 <TableCell>PersonID</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell>Day</TableCell>
-                <TableCell>Time (State 1)</TableCell>
-                <TableCell>Time (State 2)</TableCell>
-                <TableCell>Time (State 3)</TableCell>
-                <TableCell>Time (State 4)</TableCell>
+                <TableCell>Time IN</TableCell>
+                <TableCell>Breaktime IN</TableCell>
+                <TableCell>Breaktime OUT</TableCell>
+                <TableCell>Time OUT</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -232,6 +244,7 @@ const ViewAttendanceRecord = () => {
         </TableContainer>
       )}
     </div>
+    </Container>
     </Container>
   );
 };

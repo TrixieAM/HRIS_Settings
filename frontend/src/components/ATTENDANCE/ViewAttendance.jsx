@@ -59,30 +59,42 @@ const AttendanceSearch = () => {
   };
 
   return (
-    <Container sx={{bgcolor: "white", height: "90%", paddingTop: "25px", borderRadius: "10px"}}>
+    <Container>
+          <div
+                      style={{
+                        backgroundColor: '#6D2323',
+                        color: '#ffffff',
+                        padding: '20px',
+                        width: '96.5%',
+                        borderRadius: '8px',
+                        borderBottomLeftRadius: '0px',
+                        borderBottomRightRadius: '0px',
+                       
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+                        <SearchIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+                            Attendance Record Search
+                          </h4>
+                          <p style={{ margin: 0, fontSize: '85%' }}>
+                          Generate & review attendance records
+             
+                          </p>
+                        </div>
+                      </div>
+                      </div>
+                          
+    <Container sx={{bgcolor: "white", height: "90%", paddingTop: "25px",  paddingBottom: '30px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px',}}>
+
     <div>
-    <Box
-          sx={{
-            backgroundColor: '#6D2323',
-            color: '#fff',
-            p: 2,
-            borderRadius: 2,
-            mb: 2,
-            
-          }}
-        >
-      <Typography variant="h5" sx={{ m: 0}}>
-            Attendance Search
-          </Typography>
-          <Typography variant="body2" sx={{ m: 0 }}>
-            Search & review attendance records
-          </Typography>
-      </Box> 
+
       <TextField
         label="Person ID"
         value={personID}
         onChange={(e) => setPersonID(e.target.value)}
-        sx={{ width: "300px" }} // Adjust width and add spacing
+        sx={{ width: "250px" }} // Adjust width and add spacing
       />
 
       <TextField
@@ -201,6 +213,7 @@ const AttendanceSearch = () => {
         </>
       )}
     </div>
+    </Container>
     </Container>
   );
 };

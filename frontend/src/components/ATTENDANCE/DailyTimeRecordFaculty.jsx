@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { TextField, Button, Grid, Container, Box, Typography} from "@mui/material";
 import earistLogo from '../../assets/earistLogo.jpg';
+import { AccessTime } from '@mui/icons-material';
 
 const DailyTimeRecordFaculty = () => {
   const [personID, setPersonID] = useState("");
@@ -78,25 +79,32 @@ const DailyTimeRecordFaculty = () => {
           }
         `}
       </style>
-      <Container sx={{ bgcolor: 'white', borderRadius: '10px', paddingBottom: '50px', paddingTop:'25px'}}>
+      <div
+  style={{
+    backgroundColor: '#6D2323',
+    color: '#ffffff',
+    padding: '20px',
+    width: '95.4%',
+    borderRadius: '8px',
+    borderBottomLeftRadius: '0px',
+    borderBottomRightRadius: '0px',
+   
+  }}>
+        <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+          <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+          <div>
+            <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+              Daily Time Record Faculty Search
+            </h4>
+            <p style={{ margin: 0, fontSize: '85%' }}>
+              Filter your DTR records by date
+            </p>
+          </div>
+          </div>     
+        </div>
+      <Container sx={{ bgcolor: 'white', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '50px', paddingTop:'25px'}}>
       <div className="search-container no-print">
-      <Box
-          sx={{
-            backgroundColor: '#6D2323',
-            color: '#fff',
-            p: 2,
-            borderRadius: 2,
-            mb: 2,
-            
-          }}
-        >
-      <Typography variant="h5" sx={{ m: 0}}>
-            Attendance Search
-          </Typography>
-          <Typography variant="body2" sx={{ m: 0 }}>
-            Search & review attendance records
-          </Typography>
-      </Box> 
+
         <div className='textfield-container'>
           <TextField
             sx={{ width: "200px", marginleft: "10px" }}
@@ -356,7 +364,7 @@ const DailyTimeRecordFaculty = () => {
         Print
       </Button>
     </div>
-   
+    
   );
 };
 

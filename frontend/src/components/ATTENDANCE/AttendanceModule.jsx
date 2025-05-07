@@ -4,6 +4,7 @@ import { Box, Button, Container, TextField, Typography, Table, TableBody, TableC
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 import { useNavigate } from 'react-router-dom';
+import { WorkHistory } from "@mui/icons-material";
 
 
 const AttendanceModuleNonTeachingStaff = () => {
@@ -871,33 +872,44 @@ const AttendanceModuleNonTeachingStaff = () => {
     >
 <Container sx={{ mt: 4, bgcolor: '#FEF9E1' }}>
       {/* header card ---------------------------------------------------- */}
+      <div
+                  style={{
+                    backgroundColor: '#6D2323',
+                    color: '#ffffff',
+                    padding: '20px',
+                    width: '96.2%',
+                    borderRadius: '8px',
+                    borderBottomLeftRadius: '0px',
+                    borderBottomRightRadius: '0px',
+                   
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+                    <WorkHistory sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+                        Attendance Report for Non-Teaching Faculty
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '85%' }}>
+                      Generate & review all attendance records of Non-Teaching Faculty
+         
+                      </p>
+                    </div>
+                  </div>
+      </div>
+
       <Box
         sx={{
           bgcolor: 'white',
           p: 3,
-          borderRadius: 2,
+          borderBottomLeftRadius: '5px',
+          borderBottomRightRadius: '5px',          
           boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
           mb: 3,
         }}
       >
         {/* colored banner */}
-        <Box
-          sx={{
-            bgcolor: '#6D2323',
-            color: '#fff',
-            borderRadius: 2,
-            px: 2,
-            py: 1,
-            mb: 3,
-          }}
-        >
-          <Typography variant="h5" sx={{ m: 0 }}>
-            Attendance Report of Non-Teaching Staff
-          </Typography>
-          <Typography variant="subtitle2" sx={{ m: 0, ml: 0.5 }}>
-            Generate &amp; manage faculty attendance records
-          </Typography>
-        </Box>
+
 
         {/* filters row */}
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>

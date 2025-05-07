@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import PrintIcon from '@mui/icons-material/Print'
+
+
+
 
 const PDS1 = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState(""); // State for employee number
+
 
   const [personalInfo, setPersonalInfo] = useState(null); // To store fetched personal info
   const [vocationalInfo, setVocationalInfo] = useState(null);
@@ -27,15 +32,20 @@ const PDS1 = () => {
 
 
 
+
+
+
   // First useEffect: Fetch from localStorage and set the state
   useEffect(() => {
     const storedEmail = localStorage.getItem('email');
     const storedRole = localStorage.getItem('role');
     const storedEmployeeNumber = localStorage.getItem('employeeNumber');
 
+
     console.log("Stored email:", storedEmail);
     console.log("Stored Role:", storedRole);
     console.log("Stored Employee Number:", storedEmployeeNumber);
+
 
     if (storedEmail && storedRole && storedEmployeeNumber) {
       setEmail(storedEmail);
@@ -46,7 +56,9 @@ const PDS1 = () => {
       navigate("/");
     }
 
+
   }, [navigate]);
+
 
   useEffect(() => {
     if (employeeNumber) {
@@ -59,7 +71,7 @@ const PDS1 = () => {
         .catch((err) => {
           console.error('Error loading person data:', err);
         });
-  
+ 
       axios
         .get(`http://localhost:5000/vocational/vocational-table/${employeeNumber}`)
         .then((res) => {
@@ -70,6 +82,7 @@ const PDS1 = () => {
           console.error('Error loading vocational data:', err);
         });
 
+
         axios
         .get(`http://localhost:5000/college/college-table/${employeeNumber}`)
         .then((res) => {
@@ -79,6 +92,7 @@ const PDS1 = () => {
         .catch((err) => {
           console.error('Error loading college data:', err);
         });
+
 
         axios
         .get(`http://localhost:5000/childrenRoute/children-table1/${employeeNumber}`)
@@ -108,6 +122,7 @@ const PDS1 = () => {
           console.error('Error loading children-table3 data:', err);
         });
 
+
       axios
         .get(`http://localhost:5000/childrenRoute/children-table4/${employeeNumber}`)
         .then((res) => {
@@ -117,6 +132,7 @@ const PDS1 = () => {
         .catch((err) => {
           console.error('Error loading children-table4 data:', err);
         });
+
 
       axios
         .get(`http://localhost:5000/childrenRoute/children-table5/${employeeNumber}`)
@@ -128,6 +144,7 @@ const PDS1 = () => {
           console.error('Error loading children-table5 data:', err);
         });
 
+
       axios
         .get(`http://localhost:5000/childrenRoute/children-table6/${employeeNumber}`)
         .then((res) => {
@@ -137,6 +154,7 @@ const PDS1 = () => {
         .catch((err) => {
           console.error('Error loading children-table6 data:', err);
         });
+
 
       axios
         .get(`http://localhost:5000/childrenRoute/children-table7/${employeeNumber}`)
@@ -148,6 +166,7 @@ const PDS1 = () => {
           console.error('Error loading children-table7 data:', err);
         });
 
+
       axios
         .get(`http://localhost:5000/childrenRoute/children-table8/${employeeNumber}`)
         .then((res) => {
@@ -158,6 +177,7 @@ const PDS1 = () => {
           console.error('Error loading children-table8 data:', err);
         });
 
+
       axios
         .get(`http://localhost:5000/childrenRoute/children-table9/${employeeNumber}`)
         .then((res) => {
@@ -167,6 +187,7 @@ const PDS1 = () => {
         .catch((err) => {
           console.error('Error loading children-table9 data:', err);
         });
+
 
       axios
         .get(`http://localhost:5000/childrenRoute/children-table10/${employeeNumber}`)
@@ -198,22 +219,108 @@ const PDS1 = () => {
 
 
 
+
+
+
     }
   }, [employeeNumber]);
-  
+
+
+
+
+
+
+ 
+ 
+ 
+
 
   return (
-    
+   
+<div id="print-section">
+
+
+<style>
+  {`
+    @media print {
+      html, body {
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+        .no-print {
+        display: none !important;
+        }
+      }
+
+
+      body * {
+        visibility: hidden;
+      }
+
+
+      #print-section, #print-section * {
+        visibility: visible;
+      }
+
+
+      #print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 8.5in;
+        height: 15in;
+        overflow: hidden;
+        margin: 0;
+        margin-bottom: 0;
+        padding: 0;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        transform: scale(1); /* ✅ Shrinks content to fit one page */
+        transform-origin: center;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+
+      .print-button {
+        display: none;
+      }
+
+
+      @page {
+        size: Legal;
+        margin: 0;
+      }
+    }
+  `}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', }}>
-        
-      <div style={{ overflow: 'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '16.4in' }}>
-      <div>
-          <Typography variant="h5">Welcome, {email}</Typography>
-          <Typography variant="body1">Role: {role}</Typography>
-          <Typography variant="body1">Employee Number: {employeeNumber}</Typography>
-        </div>
-      
-            <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed' }}>
+
+
+       
+       
+      <div style={{ overflow: 'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '13.4in' }}>
+
+
+       
+     
+     
+            <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed', marginTop: '-10px' }}>
                
                     <tbody>
                        
@@ -221,7 +328,7 @@ const PDS1 = () => {
                             <td colSpan="2" style={{ height: '0.1in', fontSize: '72.5%' }}>
                                 <b><i>CS Form No. 212</i></b>
                             </td>
-                            
+                           
                             <td colSpan="1" style={{ height: '0.1in', fontSize: '72.5%' }}></td>
                             <td colSpan="1" style={{ height: '0.1in', fontSize: '72.5%' }}></td>
                             <td colSpan="1" style={{ height: '0.1in', fontSize: '72.5%' }}></td>
@@ -236,6 +343,8 @@ const PDS1 = () => {
                             <td colSpan="1" style={{ height: '0.1in', fontSize: '72.5%' }}></td>
                             <td colSpan="1" style={{ height: '0.1in', fontSize: '72.5%' }}></td>
                         </tr>
+
+
 
 
                         <tr>
@@ -245,11 +354,15 @@ const PDS1 = () => {
                         </tr>
 
 
+
+
                         <tr>
-                            <td colSpan="15" style={{ height: '0.5in' }}>
-                                <h1 style={{ textAlign: 'center' }}><b>PERSONAL DATA SHEET</b></h1>
+                            <td colSpan="15" style={{ height: '0.3in' }}>
+                                <h1 style={{ textAlign: 'center', marginTop: '-8px', marginBottom: '-1px' }}><b>PERSONAL DATA SHEET</b></h1>
                             </td>
                         </tr>
+
+
 
 
                         <tr>
@@ -259,6 +372,8 @@ const PDS1 = () => {
                             <b> <i> READ THE ATTACHED GUIDE TO FILLING OUT THE PERSONAL DATA SHEET (PDS) BEFORE ACCOMPLISHING THE PDS FORMS.</i></b>
                         </td>
                         </tr>
+
+
 
 
                         <tr>
@@ -274,6 +389,8 @@ const PDS1 = () => {
                         </tr>
 
 
+
+
                         <tr>
                             <td colSpan="15" style={{height: '0.2in', fontSize:'72.5%', backgroundColor: 'gray', color: 'white' }}>
                                 <b> <i> I. PERSONAL INFORMATION</i></b>
@@ -281,7 +398,9 @@ const PDS1 = () => {
                         </tr>
 
 
-                        
+
+
+                       
                         <tr>
                     <td colSpan="3" style={{height: '0.25in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px 1px 0px 1px solid black'}}>
                         2. &emsp; SURNAME
@@ -294,6 +413,10 @@ const PDS1 = () => {
 
 
 
+
+
+
+
                 <tr>
                     <td colSpan="3" rowSpan="2" style={{height:'0.25in', fontSize:'62.5%', backgroundColor:'lightgray', border:'0px 1px 0px 1px solid black'}}>
                         &emsp;&emsp; FIRST NAME
@@ -302,7 +425,13 @@ const PDS1 = () => {
                     {personalInfo ? personalInfo.firstName : ''}
 
 
+
+
                     </td>
+
+
+
+
 
 
 
@@ -311,6 +440,10 @@ const PDS1 = () => {
                     <sup>NAME EXTENSION (JR, SR) </sup>
                     </td>                        
                 </tr>
+
+
+
+
 
 
 
@@ -332,6 +465,10 @@ const PDS1 = () => {
 
 
 
+
+
+
+
                 <tr>
                 <td colSpan="3" rowSpan="2" style={{height:'0.25in', fontSize:'62.5%', backgroundColor:'lightgray', border:'1px solid black'}}>
                 3.&emsp;DATE OF BIRTH <br></br>
@@ -341,10 +478,18 @@ const PDS1 = () => {
 
 
 
+
+
+
+
                 <td colSpan="4" rowSpan="2" style={{height:'0.25in', fontSize:'62.5%', border:'1px solid black'}}>
                    
                 {personalInfo ? personalInfo.birthDate : ''}
                 </td>
+
+
+
+
 
 
 
@@ -362,9 +507,13 @@ const PDS1 = () => {
                 <label>
                 <input type="checkbox" name="config" value="dual" /> Dual
                 </label>
-                
+               
                 </td>
             </tr>
+
+
+
+
 
 
 
@@ -374,6 +523,10 @@ const PDS1 = () => {
                {personalInfo ? personalInfo.citizenship : ''}
                 </td>
             </tr>    
+
+
+
+
 
 
 
@@ -394,6 +547,14 @@ const PDS1 = () => {
 
 
 
+
+
+
+
+
+
+
+
             <tr>
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '62.5%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                 5.&emsp;SEX
@@ -402,6 +563,10 @@ const PDS1 = () => {
                 {personalInfo ? personalInfo.sex: ''}
                 </td>
             </tr>
+
+
+
+
 
 
 
@@ -418,6 +583,10 @@ const PDS1 = () => {
                     <br />
                     17.&emsp;RESIDENTIAL&emsp;&emsp;ADDRESS
                 </td>
+
+
+
+
 
 
 
@@ -490,6 +659,10 @@ const PDS1 = () => {
 
 
 
+
+
+
+
             <tr>
                 <td colSpan="3" rowSpan="2" style={{ height: '0.25in', fontSize: '62.5%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                     9.&emsp;BLOOD TYPE
@@ -518,6 +691,10 @@ const PDS1 = () => {
 
 
 
+
+
+
+
             <tr>
                 <td colSpan="3" rowSpan="2" style={{ height: '0.25in', fontSize: '62.5%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                     10.&emsp;GSIS ID NO.
@@ -541,6 +718,10 @@ const PDS1 = () => {
 
 
 
+
+
+
+
             <tr>
                 <td colSpan="3" rowSpan="2" style={{ height: '0.25in', fontSize: '62.5%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                     11.&emsp;PAG-IBIG ID NO.
@@ -551,8 +732,13 @@ const PDS1 = () => {
                 <td colSpan="6" style={{ height: '0.15in', fontSize: '62.5%', border: '1px solid black', textAlign: 'center' }}>
                 {personalInfo ? personalInfo.permanent_cityOrMunicipality: ''} &emsp; &emsp;&emsp;&emsp; {personalInfo ? personalInfo.permanent_provinceName: ''}
 
+
                 </td>
             </tr>
+
+
+
+
 
 
 
@@ -565,6 +751,10 @@ const PDS1 = () => {
                     <i>Province</i>
                 </td>
             </tr>
+
+
+
+
 
 
 
@@ -634,6 +824,10 @@ const PDS1 = () => {
 
 
 
+
+
+
+
             <tr>
                 <td colSpan="3" rowSpan="4" style={{ height: '0.25in', fontSize: '62.5%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                 22.&emsp;SPOUSE'S SURNAME<br />
@@ -664,7 +858,7 @@ const PDS1 = () => {
                 NAME EXTENSION (JR, SR)
             </td>
             <td colSpan="4" rowSpan="2" style={{ height: '0.125in', fontSize: '60.5%', border: '1px solid black' }}>
-            {childrenInfo1 ? childrenInfo1.childrenLastName: ''}, {childrenInfo1 ? childrenInfo1.childrenFirstName: ''},  {childrenInfo1 ? childrenInfo1.childrenMiddleName : ''} 
+            {childrenInfo1 ? childrenInfo1.childrenLastName: ''}, {childrenInfo1 ? childrenInfo1.childrenFirstName: ''},  {childrenInfo1 ? childrenInfo1.childrenMiddleName : ''}
             </td>
             <td colSpan="2" rowSpan="2" style={{ height: '0.125in', fontSize: '60.5%', border: '1px solid black' }}>
             {childrenInfo1 ? childrenInfo1.dateOfBirth: ''}
@@ -680,7 +874,7 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.spouseMiddleName : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo2 ? childrenInfo2.childrenLastName: ''}, {childrenInfo2 ? childrenInfo2.childrenFirstName: ''}, {childrenInfo2 ? childrenInfo2.childrenMiddleName : ''} 
+            {childrenInfo2 ? childrenInfo2.childrenLastName: ''}, {childrenInfo2 ? childrenInfo2.childrenFirstName: ''}, {childrenInfo2 ? childrenInfo2.childrenMiddleName : ''}
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
            {childrenInfo2 ? childrenInfo2.dateOfBirth: ''}
@@ -694,11 +888,13 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.spouseOccupation : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo3 ? `${childrenInfo3.childrenLastName}, ${childrenInfo3.childrenFirstName}, ${childrenInfo3.childrenMiddleName}` : ''} 
+            {childrenInfo3 ? `${childrenInfo3.childrenLastName}, ${childrenInfo3.childrenFirstName}, ${childrenInfo3.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {childrenInfo3 ? `${childrenInfo3.dateOfBirth}` : ''}
+
 
             </td>      
         </tr>
@@ -710,11 +906,13 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.spouseEmployerBusinessName : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo4 ? `${childrenInfo4.childrenLastName}, ${childrenInfo4.childrenFirstName}, ${childrenInfo4.childrenMiddleName}` : ''} 
+            {childrenInfo4 ? `${childrenInfo4.childrenLastName}, ${childrenInfo4.childrenFirstName}, ${childrenInfo4.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {childrenInfo4 ? `${childrenInfo4.dateOfBirth}` : ''}
+
 
             </td>      
         </tr>
@@ -726,11 +924,13 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.spouseBusinessAddress : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo5 ? `${childrenInfo5.childrenLastName}, ${childrenInfo5.childrenFirstName}, ${childrenInfo5.childrenMiddleName}` : ''} 
+            {childrenInfo5 ? `${childrenInfo5.childrenLastName}, ${childrenInfo5.childrenFirstName}, ${childrenInfo5.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {childrenInfo5 ? `${childrenInfo5.dateOfBirth}` : ''}
+
 
             </td>      
         </tr>
@@ -742,11 +942,13 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.spouseTelephone : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo6 ? `${childrenInfo6.childrenLastName}, ${childrenInfo6.childrenFirstName}, ${childrenInfo6.childrenMiddleName}` : ''} 
+            {childrenInfo6 ? `${childrenInfo6.childrenLastName}, ${childrenInfo6.childrenFirstName}, ${childrenInfo6.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {childrenInfo6 ? `${childrenInfo6.dateOfBirth}` : ''}
+
 
             </td>      
         </tr>
@@ -762,7 +964,8 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.fatherLastName : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo7 ? `${childrenInfo7.childrenLastName}, ${childrenInfo7.childrenFirstName}, ${childrenInfo7.childrenMiddleName}` : ''} 
+            {childrenInfo7 ? `${childrenInfo7.childrenLastName}, ${childrenInfo7.childrenFirstName}, ${childrenInfo7.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
@@ -777,7 +980,8 @@ const PDS1 = () => {
                 NAME EXTENSION (JR, SR)
             </td>
             <td colSpan="4" rowSpan="2" style={{ height: '0.125in', fontSize: '65.5%', border: '1px solid black' }}>
-            {childrenInfo8 ? `${childrenInfo8.childrenLastName}, ${childrenInfo8.childrenFirstName}, ${childrenInfo8.childrenMiddleName}` : ''} 
+            {childrenInfo8 ? `${childrenInfo8.childrenLastName}, ${childrenInfo8.childrenFirstName}, ${childrenInfo8.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" rowSpan="2" style={{ height: '0.125in', fontSize: '65.5%', border: '1px solid black' }}>
@@ -794,7 +998,8 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.fatherMiddleName : ''}
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
-            {childrenInfo9 ? `${childrenInfo9.childrenLastName}, ${childrenInfo9.childrenFirstName}, ${childrenInfo9.childrenMiddleName}` : ''} 
+            {childrenInfo9 ? `${childrenInfo9.childrenLastName}, ${childrenInfo9.childrenFirstName}, ${childrenInfo9.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
@@ -806,11 +1011,13 @@ const PDS1 = () => {
                 25. MOTHER'S MAIDEN NAME
             </td>
             <td colSpan="4" style={{ height: '0.25in', fontSize: '65.5%', border: '1px solid black' }}>
-            {childrenInfo10 ? `${childrenInfo10.childrenLastName}, ${childrenInfo10.childrenFirstName}, ${childrenInfo10.childrenMiddleName}` : ''} 
+            {childrenInfo10 ? `${childrenInfo10.childrenLastName}, ${childrenInfo10.childrenFirstName}, ${childrenInfo10.childrenMiddleName}` : ''}
+
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {childrenInfo10 ? `${childrenInfo10.dateOfBirth}` : ''}
+
 
             </td>      
         </tr>
@@ -826,7 +1033,7 @@ const PDS1 = () => {
         {personalInfo ? personalInfo.motherMaidenLastName : ''}
         </td>
         <td colSpan="4" style={{ height: '0.25in', fontSize: '65.5%', border: '1px solid black' }}>
-        {childrenInfo11 ? `${childrenInfo11.childrenLastName}, ${childrenInfo11.childrenFirstName}, ${childrenInfo11.childrenMiddleName}` : ''} 
+        {childrenInfo11 ? `${childrenInfo11.childrenLastName}, ${childrenInfo11.childrenFirstName}, ${childrenInfo11.childrenMiddleName}` : ''}
         </td>
         <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
         {childrenInfo11 ? `${childrenInfo11.dateOfBirth}` : ''}
@@ -837,7 +1044,7 @@ const PDS1 = () => {
         {personalInfo ? personalInfo.motherMaidenFirstName : ''}
         </td>
         <td colSpan="4" style={{ height: '0.25in', fontSize: '65.5%', border: '1px solid black' }}>
-        {childrenInfo12 ? `${childrenInfo12.childrenLastName}, ${childrenInfo12.childrenFirstName}, ${childrenInfo12.childrenMiddleName}` : ''} 
+        {childrenInfo12 ? `${childrenInfo12.childrenLastName}, ${childrenInfo12.childrenFirstName}, ${childrenInfo12.childrenMiddleName}` : ''}
         </td>
         <td colSpan="2" style={{ height: '0.25in', fontSize: '65.5%', border: '1px solid black' }}>
         {childrenInfo12 ? `${childrenInfo12.dateOfBirth}` : ''}
@@ -851,6 +1058,10 @@ const PDS1 = () => {
             <b><i>(Continue on separate sheet if necessary)</i></b>
         </td>
     </tr>
+
+
+
+
 
 
 
@@ -920,9 +1131,13 @@ const PDS1 = () => {
         {personalInfo ? personalInfo.elementaryPeriodTo : ''}
 
 
+
+
         </td>
         <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
         {personalInfo ? personalInfo.elementaryHighestAttained : ''}
+
+
 
 
         </td>
@@ -930,9 +1145,13 @@ const PDS1 = () => {
         {personalInfo ? personalInfo.elementaryYearGraduated : ''}
 
 
+
+
         </td>
         <td colSpan="1" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
         {personalInfo ? personalInfo.elementaryScholarshipAcademicHonorsReceived : ''}
+
+
 
 
         </td>
@@ -948,9 +1167,13 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.secondaryDegree : ''}
 
 
+
+
             </td>
             <td colSpan="1" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {personalInfo ? personalInfo.secondaryPeriodFrom : ''}
+
+
 
 
             </td>
@@ -958,14 +1181,20 @@ const PDS1 = () => {
             {personalInfo ? personalInfo.secondaryPeriodTo : ''}
 
 
+
+
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {personalInfo ? personalInfo.secondaryHighestAttained : ''}
 
 
+
+
             </td>
             <td colSpan="1" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
             {personalInfo ? personalInfo.secondaryYearGraduated : ''}
+
+
 
 
             </td>
@@ -974,12 +1203,14 @@ const PDS1 = () => {
                 </td>
             </tr>
 
+
                 <tr>
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '62.5%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                     VOCATIONAL/TRADE COURSE
                 </td>
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
                 {vocationalInfo ? vocationalInfo.vocationalNameOfSchool : ''}
+
 
                 </td>
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '62.5%', border: '1px solid black' }}>
@@ -1079,6 +1310,15 @@ const PDS1 = () => {
             </tr>
 
 
+           
+
+
+
+
+
+
+
+
 
 
 
@@ -1086,10 +1326,19 @@ const PDS1 = () => {
         </tbody>
 
 
+
+
        
        
         </table>
+
+
        
+       
+
+
+
+
 
 
 
@@ -1099,8 +1348,44 @@ const PDS1 = () => {
            
         </div>
        
-        </div>
+       
+
+
+   
+    </div>
+    <button
+    onClick={() => window.print()}
+    className="no-print"
+    style={{
+    backgroundColor: '#6D2323',
+    color: '#FFFFFF',
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    marginTop: '20px',
+    fontSize: '14px',  
+    marginLeft: '80%',
+  }}
+>
+  <PrintIcon style={{ fontSize: '24px' }} />
+    Save as PDF
+</button>
+
+
+    </div>
+   
     );
+
+
+   
+
+
+
+
 
 
 };
@@ -1108,7 +1393,21 @@ const PDS1 = () => {
 
 
 
+
+
+
+
+
+
 export default PDS1;
+
+
+
+
+
+
+
+
 
 
 

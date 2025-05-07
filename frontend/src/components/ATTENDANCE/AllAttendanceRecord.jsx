@@ -13,6 +13,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
+import { Search } from "@mui/icons-material";
 
 const AllAttendanceRecord = () => {
   const [personID, setPersonID] = useState("");
@@ -40,19 +41,31 @@ const AllAttendanceRecord = () => {
     
     <Box sx={{ p: 4 }}>
       {/* Header */}
-      <Typography
-        variant="h4"
-        gutterBottom
-        style={{
-          fontWeight: 'bold',
-          backgroundColor: '#6D2323',
-          color: '#FEF9E1',
-          padding: '12px 16px',
-          borderRadius: '8px',
-        }}
-      >
-        Attendance Record Search
-      </Typography>
+      <div
+                  style={{
+                    backgroundColor: '#6D2323',
+                    color: '#ffffff',
+                    padding: '20px',
+                    width: '95%',
+                    borderRadius: '8px',
+                    borderBottomLeftRadius: '0px',
+                    borderBottomRightRadius: '0px',
+                   
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+                    <Search sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+                        Attendance Record Search
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '85%' }}>
+                      Generate & review attendance records
+         
+                      </p>
+                    </div>
+                  </div>
+                      </div>
 
       {/* Form Box (white background) */}
       <Paper
@@ -118,7 +131,7 @@ const AllAttendanceRecord = () => {
       {/* Display submitted Person ID */}
       {submittedID && (
         <Typography variant="h6" sx={{ mt: 4 }}>
-          Records for Person ID: {submittedID}
+          Records for Person ID: <b>{submittedID}</b>
         </Typography>
       )}
 
@@ -152,7 +165,11 @@ const AllAttendanceRecord = () => {
                   <TableCell>{record.PersonID}</TableCell>
                   <TableCell>{record.Date}</TableCell>
                   <TableCell>{record.Time}</TableCell>
-                  <TableCell>{record.AttendanceState}</TableCell>
+                  <TableCell 
+                    style={{ color: record.AttendanceState === 0 || record.AttendanceState === 'Uncategorized' ? 'red' : 'black', fontWeight: 'bold'}} 
+                  >
+                    {record.AttendanceState === 4 ? "Time OUT" : record.AttendanceState === 3 ? "Breaktime OUT" : record.AttendanceState === 2 ? "Breaktime IN" : record.AttendanceState === 1 ? "Time IN" : "Uncategorized" } 
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

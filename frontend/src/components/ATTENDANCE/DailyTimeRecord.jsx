@@ -3,6 +3,9 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { TextField, Button } from "@mui/material";
 import earistLogo from '../../assets/earistLogo.jpg';
+import { AccessTime, Print, SaveOutlined, Search, SearchOutlined } from '@mui/icons-material';
+import PrintIcon from '@mui/icons-material/Print'
+
 
 const DailyTimeRecord = () => {
   const [personID, setPersonID] = useState('');
@@ -130,31 +133,77 @@ const DailyTimeRecord = () => {
           }
         `}
       </style>
-        <h1 style={{marginTop: '-1%'}} className='no-print'>Daily Time Record</h1>
-      <div className="search-container no-print textfield-container" >
-        
-        <TextField sx={{ width: "200px", marginleft: "10px", backgroundColor:'white' }} m disabled value={personID} variant="outlined" />
+      <div
+  style={{
+    backgroundColor: '#6D2323',
+    color: '#ffffff',
+    padding: '20px',
+    width: '97%',
+    borderRadius: '8px',
+    borderBottomLeftRadius: '0px',
+    borderBottomRightRadius: '0px',
+   
+  }}
+>
+  <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+    <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+    <div>
+      <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+        Daily Time Record
+      </h4>
+      <p style={{ margin: 0, fontSize: '85%' }}>
+        Filter your DTR records by date
+      </p>
+    </div>
+  </div>
+      </div>    
+      <div
+  style={{
+    backgroundColor: 'white',
+    padding: '20px',
+    paddingTop: '30px',
+    width: '97%',
+    
+    paddingBottom: '30px',
+    borderRadius: '0px 0px 8px 8px',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
+  }}
+>
 
-        <TextField sx={{ width: "200px", marginleft: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
 
-        <TextField sx={{ width: "200px", marginleft: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+ <div className="search-container no-print textfield-container" >
+       
+        <TextField sx={{ width: "300px", marginleft: "10px", backgroundColor:'white', paddingLeft: '18px' }} m disabled value={personID} variant="outlined" />
+
+
+        <TextField sx={{ width: "300px", marginleft: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+
+
+        <TextField sx={{ width: "300px", marginleft: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+
 
         <Button
           sx={{
-            width: "200px",
+            width: "250px",
             height: "55px",
             marginleft: "10px",
             margintopt: "10px",
-            bgcolor: "#6D2323"
+            bgcolor: "#6D2323",
+            fontWeight: 'bold',
+            fontSize: '17px'
           }}
           variant="contained"
           color="primary"
           onClick={fetchRecords}
           fullWidth
         >
+          <SearchOutlined /> &nbsp;
           Search
         </Button>
       </div>
+      </div>
+
+
       <br />
       <div className="table-container" style={{marginBottom: '3%', backgroundColor:'white'}}>
         <div className="table-wrapper">
@@ -1426,15 +1475,21 @@ const DailyTimeRecord = () => {
         sx={{
           width: "200px",
           height: "55px",
-          marginleft: "10px",
-          margintopt: "10px",
+          marginLeft: '84%',
+          margintop: "10px",
+          bgcolor: '#6D2323',
+          fontSize: '15px',
+          
         }}
         className="no-print"
         variant="contained"
         color="primary"
         onClick={printPage}
         fullWidth
+        
       >
+          <PrintIcon style={{ fontSize: '24px' }} /> &nbsp;
+        
         Print
       </Button>
     </div>

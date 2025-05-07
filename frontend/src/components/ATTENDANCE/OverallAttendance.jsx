@@ -3,7 +3,9 @@ import axios from "axios";
 import { TextField, Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Box, Container } from "@mui/material";
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon
+  Save as SaveIcon, Cancel as CancelIcon,
+  Summarize,
+  SummarizeOutlined
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -130,6 +132,31 @@ const updateRecord = async () => {
 
   return (
     <Container sx={{ mt: 2, backgroundColor: '#FEF9E1', pb: 4 }} maxWidth={false}>
+                        <div
+                                    style={{
+                                      backgroundColor: '#6D2323',
+                                      color: '#ffffff',
+                                      padding: '20px',
+                                      width: '95.5%',
+                                      borderRadius: '8px',
+                                      borderBottomLeftRadius: '0px',
+                                      borderBottomRightRadius: '0px',
+                                     
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+                                      <SummarizeOutlined sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+                                      <div>
+                                        <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+                                          Overall Attendance Report
+                                        </h4>
+                                        <p style={{ margin: 0, fontSize: '85%' }}>
+                                        Generate & review overall records
+                           
+                                        </p>
+                                      </div>
+                                    </div>
+                                    </div>
       <Box
         sx={{
           backgroundColor: '#ffffff',
@@ -139,22 +166,7 @@ const updateRecord = async () => {
           mb: 3,
         }}
       >      
-      <Box
-          sx={{
-            backgroundColor: '#6D2323',
-            color: '#fff',
-            p: 2,
-            borderRadius: 2,
-            mb: 3,
-          }}
-        >
-      <Typography variant="h5" sx={{ m: 0 }}>
-            Overall Attendance Report
-          </Typography>
-          <Typography variant="body2" sx={{ m: 0 }}>
-            Generate & review all attendance records
-          </Typography>
-      </Box>
+
 
       {/* Input Fields */}
 {/* --- filters & fetch button --- */}

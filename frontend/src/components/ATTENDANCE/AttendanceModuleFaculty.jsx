@@ -4,6 +4,7 @@ import { Box, Button, Container, TextField, Typography, Table, TableBody, TableC
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 import { useNavigate } from 'react-router-dom';
+import { WorkHistory } from "@mui/icons-material";
 
 
 const AttendanceModuleFaculty = () => {
@@ -581,32 +582,43 @@ const AttendanceModuleFaculty = () => {
   return (
     <Container sx={{ mt: 2, backgroundColor: '#FEF9E1', pb: 4 }} maxWidth={false}>
     {/* card wrapper */}
+          <div
+                      style={{
+                        backgroundColor: '#6D2323',
+                        color: '#ffffff',
+                        padding: '20px',
+                        width: '95.5%',
+                        borderRadius: '8px',
+                        borderBottomLeftRadius: '0px',
+                        borderBottomRightRadius: '0px',
+                       
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+                        <WorkHistory sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+                            Attendance Report for Faculty (30hrs)
+                          </h4>
+                          <p style={{ margin: 0, fontSize: '85%' }}>
+                          Generate & review all attendance records of Faculty
+             
+                          </p>
+                        </div>
+                      </div>
+          </div>
     <Box
       sx={{
         backgroundColor: '#ffffff',
         p: 3,
-        borderRadius: 2,
+        borderBottomLeftRadius: '5px',
+        borderBottomRightRadius: '5px',
         boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
         mb: 3,
       }}
     >
       {/* header band */}
-      <Box
-        sx={{
-          backgroundColor: '#6D2323',
-          color: '#fff',
-          p: 2,
-          borderRadius: 2,
-          mb: 3,
-        }}
-      >
-        <Typography variant="h5" sx={{ m: 0 }}>
-          Attendance Report of Faculty (30 Hrs)
-        </Typography>
-        <Typography variant="body2" sx={{ m: 0 }}>
-          Generate & review attendance records 
-        </Typography>
-      </Box>
+
 
       {/* filters */}
       <Box display="flex" gap={2}>

@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import PrintIcon from '@mui/icons-material/Print'
+
+
+
 
 const PDS2 = () => {
   const navigate = useNavigate();
@@ -11,14 +15,17 @@ const PDS2 = () => {
   const [eligibilityInfo, setEligibilityInfo] = useState([]);
   const [workexperience, setWorkExperienceInfo] = useState([]);
 
+
   useEffect(() => {
     const storedEmail = localStorage.getItem('email');
     const storedRole = localStorage.getItem('role');
     const storedEmployeeNumber = localStorage.getItem('employeeNumber');
 
+
     console.log("Stored email:", storedEmail);
     console.log("Stored Role:", storedRole);
     console.log("Stored Employee Number:", storedEmployeeNumber);
+
 
     if (storedEmail && storedRole && storedEmployeeNumber) {
       setEmail(storedEmail);
@@ -28,6 +35,7 @@ const PDS2 = () => {
       navigate("/");
     }
   }, [navigate]);
+
 
   useEffect(() => {
     if (employeeNumber) {
@@ -43,6 +51,7 @@ const PDS2 = () => {
         }
       };
 
+
       const fetchWorkExperienceData = async () => {
         try {
           const requests = Array.from({ length: 26 }, (_, i) =>
@@ -55,17 +64,33 @@ const PDS2 = () => {
         }
       };
 
+
       fetchEligibilityData();
       fetchWorkExperienceData();
     }
   }, [employeeNumber]);
 
+
   // Normalize data
   const normalizedEligibility = [...eligibilityInfo.filter(e => e !== null)];
   while (normalizedEligibility.length < 7) normalizedEligibility.push(null);
 
+
   const normalizedWorkExperience = [...workexperience.filter(e => e !== null)];
   while (normalizedWorkExperience.length < 26) normalizedWorkExperience.push(null);
+
+
+
+
+
+
+ 
+ 
+ 
+
+
+
+
 
 
 
@@ -83,9 +108,79 @@ const PDS2 = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
     return (
+        <div id="print-section">
+
+
+<style>
+  {`
+    @media print {
+      html, body {
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+        .no-print {
+        display: none !important;
+        }
+      }
+
+
+      body * {
+        visibility: hidden;
+      }
+
+
+      #print-section, #print-section * {
+        visibility: visible;
+      }
+
+
+      #print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 8.5in;
+        height: 14.1in;
+        overflow: hidden;
+        margin: 0;
+        margin-bottom: 0;
+        padding: 0;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        transform: scale(1); /* ✅ Shrinks content to fit one page */
+        transform-origin: center;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+
+      .print-button {
+        display: none;
+      }
+
+
+      @page {
+        size: Legal;
+        margin: 0;
+      }
+    }
+  `}
+</style>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor:'white'}}>
-            <div style={{ overflow:'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '14in' }}>
+            <div style={{ overflow:'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '13.5in' }}>
                      
                 <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed' }}>
                     <tbody>
@@ -129,14 +224,16 @@ const PDS2 = () => {
                         </td>          
                     </tr>
 
+
                     {normalizedEligibility.map((eligibility, index) => (
                       <tr key={index}>
+
 
                         <td colSpan="6" style={{height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
                        {eligibility ? eligibility.eligibilityName: 'N/A'}
                         </td>
                         <td colSpan="2" style={{height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
-                        {eligibility ? eligibility.eligibilityRating: 'N/A'}                   
+                        {eligibility ? eligibility.eligibilityRating: 'N/A'}                  
                         </td>
                         <td colSpan="2" style={{height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
                         {eligibility ? eligibility.eligibilityDateOfExam: 'N/A'}    
@@ -154,7 +251,13 @@ const PDS2 = () => {
                   ))}
 
 
-                    
+
+
+                   
+
+
+
+
 
 
 
@@ -223,6 +326,9 @@ const PDS2 = () => {
 
 
 
+
+
+
                     {normalizedWorkExperience.map((workexperience, index) => (
                     <tr key={index}>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
@@ -252,7 +358,12 @@ const PDS2 = () => {
                     </tr>
                     ))}
 
-          
+
+         
+
+
+
+
 
 
 
@@ -282,10 +393,38 @@ const PDS2 = () => {
                         </td>
                     </tr>
 
+
                     </tbody>
                 </table>
         </div>
+        </div>
+            <button
+            onClick={() => window.print()}
+            className="no-print"
+            style={{
+            backgroundColor: '#6D2323',
+            color: '#FFFFFF',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            cursor: 'pointer',
+            marginTop: '20px',
+            fontSize: '14px',  
+            marginLeft: '80%',
+          }}
+        >
+          <PrintIcon style={{ fontSize: '24px' }} />
+            Save as PDF
+        </button>
     </div>
+   
+
+
+
+
 
 
 
@@ -300,15 +439,13 @@ const PDS2 = () => {
 
 
 
+
+
+
+
+
+
+
+
 export default PDS2;
-
-
-
-
-
-
-
-
-
-
 

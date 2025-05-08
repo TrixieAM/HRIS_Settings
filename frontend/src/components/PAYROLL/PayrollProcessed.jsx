@@ -13,10 +13,15 @@ import {
   Box,
   CircularProgress,
   Alert,
+  Button,
 } from "@mui/material";
+import {
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
+
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 
-const FinalizePayroll = () => {
+const PayrollProcessed = () => {
   const [finalizedData, setFinalizedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,6 +42,18 @@ const FinalizePayroll = () => {
     fetchFinalizedPayroll();
   }, []);
 
+  
+
+  const handleDelete = async (rowId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/finalized-payroll/${rowId}`);
+      setFinalizedData(prev => prev.filter(item => item.id !== rowId));
+    } catch (error) {
+      console.error('Error deleting payroll data:', error);
+    }
+  };
+  
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Paper
@@ -47,10 +64,10 @@ const FinalizePayroll = () => {
           <BusinessCenterIcon fontSize="large" />
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Finalized Payroll
+              Payroll Dashboard | Processed 
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              Viewing all finalized payroll records
+              Viewing all processed payroll records
             </Typography>
           </Box>
         </Box>
@@ -116,6 +133,7 @@ const FinalizePayroll = () => {
                   <TableCell> Earist Credit COOP.</TableCell>
                   <TableCell> FEU</TableCell>
                   <TableCell>Date Created</TableCell>
+                  <TableCell>Action</TableCell>
                 </TableRow>
               </TableHead>
 
@@ -131,7 +149,7 @@ const FinalizePayroll = () => {
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
                       <TableCell>{row.rateNbc188}</TableCell>
-                      <TableCell>{row.nbc594 || "N/A"}</TableCell>
+                      <TableCell>{row.nbc594 || 0}</TableCell>
                       <TableCell>{row.increment}</TableCell>
                       <TableCell>{row.grossSalary}</TableCell>
                       <TableCell>{row.abs}</TableCell>
@@ -142,14 +160,14 @@ const FinalizePayroll = () => {
                       <TableCell>{row.totalGsisDeds}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
                       
-                      <TableCell>{row.PhilHealthContribution}</TableCell>
-                      <TableCell>{row.totalOtherDeds}</TableCell>
-                      <TableCell>{row.totalDeductions}</TableCell>
+                      <TableCell>{parseFloat(row.PhilHealthContribution).toFixed(2)}</TableCell>
+                      <TableCell>{parseFloat(row.totalOtherDeds).toFixed(2)}</TableCell>
+                      <TableCell>{parseFloat(row.totalDeductions).toFixed(2)}</TableCell>
                       <TableCell>{row.pay1st}</TableCell>
                       <TableCell>{row.pay2nd}</TableCell>
                       <TableCell>{row.rtIns}</TableCell>
                       <TableCell>{row.ec}</TableCell>
-                      <TableCell>{row.PhilHealthContribution}</TableCell>
+                      <TableCell>{parseFloat(row.PhilHealthContribution).toFixed(2)}</TableCell>
                       <TableCell>{row.pagibig}</TableCell>
                       <TableCell>{row.personalLifeRetIns}</TableCell>
                       <TableCell>{row.gsisSalaryLoan}</TableCell>
@@ -163,12 +181,29 @@ const FinalizePayroll = () => {
                       <TableCell>{row.pagibig2}</TableCell>
                       <TableCell>{row.multiPurpLoan}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
-                      <TableCell>{row.PhilHealthContribution}</TableCell>
+                      <TableCell>{parseFloat(row.PhilHealthContribution).toFixed(2)}</TableCell>
                       <TableCell>{row.disallowance}</TableCell>
                       <TableCell>{row.landbankSalaryLoan}</TableCell>
                       <TableCell>{row.earistCreditCoop}</TableCell>
                       <TableCell>{row.feu}</TableCell>
                       <TableCell>{new Date(row.dateCreated).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Button
+                            onClick={() => handleDelete(row.id)}
+                            variant="contained"
+                            startIcon={<DeleteIcon />}
+                            sx={{
+                              bgcolor: '#000000',
+                              borderColor: '#D3D3D3', 
+                              color: '#ffffff',
+                              '&:hover': {
+                                borderColor: '#D3D3D3',
+                              },
+                            }}
+                          >
+                            Delete
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -187,4 +222,4 @@ const FinalizePayroll = () => {
   );
 };
 
-export default FinalizePayroll;
+export default PayrollProcessed;

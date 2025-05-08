@@ -58,6 +58,27 @@ const AttendanceSearch = () => {
     setRecords(updatedRecords);
   };
 
+  const currentYear = new Date().getFullYear();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const year = new Date().getFullYear();
+  
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
+  
+    // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+  
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
+
   return (
     <Container>
           <div
@@ -87,42 +108,64 @@ const AttendanceSearch = () => {
                       </div>
                           
     <Container sx={{bgcolor: "white", height: "90%", paddingTop: "25px",  paddingBottom: '30px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px',}}>
-
+ {/* Month Buttons */}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, pb: 5 }}>
+                {months.map((month, index) => (
+                  <Button
+                    key={month}
+                    variant="contained"
+                    onClick={() => handleMonthClick(index)}
+                    sx={{
+                      backgroundColor: "#6D2323",
+                      color: "white", // optional: text color for contrast
+                      "&:hover": {
+                        backgroundColor: "#d4bd99", // optional: slightly darker hover effect
+                      },
+                    }}
+                  >
+                    {month}
+                  </Button>
+                ))}
+              </Box>
     <div>
 
       <TextField
         label="Person ID"
         value={personID}
         onChange={(e) => setPersonID(e.target.value)}
-        sx={{ width: "250px" }} // Adjust width and add spacing
+        sx={{ width: "250px", marginTop: "14px",  marginLeft: '50px' }} // Adjust width and add spacing
       />
 
       <TextField
-        label="Start Date"
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        sx={{ width: "300px", marginLeft: "10px" }}
-        slotProps={{
-          inputLabel: {
-            shrink: true,
-          },
-        }}
-      />
-      <TextField
-        label="End Date"
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        sx={{ width: "300px", marginLeft: "10px" }}
-        slotProps={{
-          inputLabel: {
-            shrink: true,
-          },
-        }}
-      />
+                 label="Start Date"
+                 type="date"
+                 value={startDate}
+                 onChange={(e) => setStartDate(e.target.value)}
+                 required
+                 sx={{
+                   width: "250px",
+                   height: "54px",
+                   marginLeft: "10px",
+                   marginTop: "14px",
+                 }}
+                 InputLabelProps={{ shrink: true }}
+               />
+               <TextField
+                 label="End Date"
+                 type="date"
+                 value={endDate}
+                 onChange={(e) => setEndDate(e.target.value)}
+                 required
+                 sx={{
+                   width: "250px",
+                   height: "54px",
+                   marginLeft: "10px",
+                   marginTop: "14px",
+                 }}
+                 InputLabelProps={{ shrink: true }}
+               />
       <Button
-        sx={{ width: "200px", height: "55px", marginLeft: "10px", bgcolor: "#6D2323", marginTop:'-3px' }}
+        sx={{marginTop: "14px", width: "200px", height: "55px", marginLeft: "10px", bgcolor: "#6D2323" }}
         margin="normal"
         variant="contained"
         color="primary"

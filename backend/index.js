@@ -158,26 +158,14 @@ app.post("/register", async (req, res) => {
 
 
 
-
-
-
-
-
-
 //LOGIN
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
 
-
-
   const query = `SELECT * FROM users WHERE email = ?
    
     `;
-
-
-
-
   db.query(query, [email], async (err, result) => {
     if (err) return res.status(500).send(err);
     if (result.length === 0)
@@ -986,6 +974,7 @@ app.post('/employee-remittance', (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    pagibig,
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
@@ -997,8 +986,8 @@ app.post('/employee-remittance', (req, res) => {
 
 
 
-  const sql = `INSERT INTO employee_remittance_table (employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO employee_remittance_table (employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibig, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 
 
@@ -1015,6 +1004,7 @@ app.post('/employee-remittance', (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    pagibig,
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
@@ -1054,6 +1044,7 @@ app.put('/employee-remittance/:id', (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    pagibig,
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
@@ -1065,7 +1056,25 @@ app.put('/employee-remittance/:id', (req, res) => {
 
 
 
-  const sql = `UPDATE employee_remittance_table SET employeeNumber = ?, disallowance = ?, gsisSalaryLoan = ?, gsisPolicyLoan = ?, gfal = ?, cpl = ?, mpl = ?, mplLite = ?, emergencyLoan = ?, nbc594 = ?, increment = ?, pagibigFundCont = ?, pagibig2 = ?, multiPurpLoan = ?, landbankSalaryLoan = ?, earistCreditCoop = ?, feu = ?
+  const sql = `UPDATE employee_remittance_table SET 
+  employeeNumber = ?, 
+  disallowance = ?, 
+  gsisSalaryLoan = ?, 
+  gsisPolicyLoan = ?, 
+  gfal = ?, 
+  cpl = ?, 
+  mpl = ?, 
+  mplLite = ?, 
+  emergencyLoan = ?, 
+  nbc594 = ?, 
+  increment = ?, 
+  pagibig = ?,
+  pagibigFundCont = ?, 
+  pagibig2 = ?, 
+  multiPurpLoan = ?, 
+  landbankSalaryLoan = ?, 
+  earistCreditCoop = ?, 
+  feu = ?
                WHERE id = ?`;
 
 
@@ -1083,6 +1092,7 @@ app.put('/employee-remittance/:id', (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    pagibig,
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
@@ -1129,16 +1139,12 @@ app.delete('/employee-remittance/:id', (req, res) => {
 
 /////// ITEM-TABLE
 
-
-
-
 // Get all records (Include `dateCreated`)
 app.get('/api/item-table', (req, res) => {
-  const sql = `SELECT id, item_description, employeeID, item_code, salary_grade, dateCreated FROM item_table`;
-
-
-
-
+  const sql = `
+    SELECT id, item_description, employeeID, item_code, salary_grade, step, effectivityDate, dateCreated
+    FROM item_table
+  `;
   db.query(sql, (err, result) => {
     if (err) {
       console.error('Database Query Error:', err.message);
@@ -1148,27 +1154,17 @@ app.get('/api/item-table', (req, res) => {
   });
 });
 
-
-
-
-// Add new item (`dateCreated` is automatic)
+// Add new item (Do NOT include `dateCreated` — it auto-generates)
 app.post('/api/item-table', (req, res) => {
-  const { item_description, employeeID, item_code, salary_grade } = req.body;
-
-
-
+  const { item_description, employeeID, item_code, salary_grade, step, effectivityDate } = req.body;
 
   const sql = `
-      INSERT INTO item_table (item_description, employeeID, item_code, salary_grade)
-      VALUES (?, ?, ?, ?)
+    INSERT INTO item_table (item_description, employeeID, item_code, salary_grade, step, effectivityDate)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
-
-
-
-
   db.query(
     sql,
-    [item_description, employeeID, item_code, salary_grade],
+    [item_description, employeeID, item_code, salary_grade, step, effectivityDate],
     (err, result) => {
       if (err) {
         console.error('Database Insert Error:', err.message);
@@ -1182,32 +1178,25 @@ app.post('/api/item-table', (req, res) => {
   );
 });
 
-
-
-
-// Update item (`dateCreated` remains unchanged)
+// Update item (Do NOT touch `dateCreated`)
 app.put('/api/item-table/:id', (req, res) => {
   const { id } = req.params;
-  const { item_description, employeeID, item_code, salary_grade } = req.body;
-
-
-
+  const { item_description, employeeID, item_code, salary_grade, step, effectivityDate } = req.body;
 
   const sql = `
     UPDATE item_table SET
       item_description = ?,
       employeeID = ?,
       item_code = ?,
-      salary_grade = ?
+      salary_grade = ?,
+      step = ?,
+      effectivityDate = ?
+   
     WHERE id = ?
   `;
-
-
-
-
   db.query(
     sql,
-    [item_description, employeeID, item_code, salary_grade, id],
+    [item_description, employeeID, item_code, salary_grade, step, effectivityDate, id],
     (err, result) => {
       if (err) {
         console.error('Database Update Error:', err.message);
@@ -1220,9 +1209,6 @@ app.put('/api/item-table/:id', (req, res) => {
     }
   );
 });
-
-
-
 
 // Delete item
 app.delete('/api/item-table/:id', (req, res) => {
@@ -1238,6 +1224,7 @@ app.delete('/api/item-table/:id', (req, res) => {
     res.json({ message: 'Item record deleted successfully' });
   });
 });
+
 
 
 
@@ -2027,7 +2014,7 @@ for (let i = 1; i <= 7; i++) {
 
 // Get all payroll
 app.get('/api/payroll', (req, res) => {
-  db.query('SELECT * FROM payroll', (err, result) => {
+  db.query('SELECT * FROM payroll_processing', (err, result) => {
     if (err) {
       res.status(500).send(err);
     } else {
@@ -2062,23 +2049,16 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     p.totalDeductions,
     p.pay1st,
     p.pay2nd,
+    p.pay1stCompute,
+    p.pay2ndCompute,
     p.rtIns,
     p.ec,
-
-
 
 
     p.status,
 
 
-
-
-    CONCAT(pt.lastName, ', ', CONCAT_WS(' ', pt.firstName, pt.middleName, pt.nameExtension)) AS name,
-
-
-
-
-
+    CONCAT_WS(', ', pt.lastName, CONCAT_WS(' ', pt.firstName, pt.middleName, pt.nameExtension)) AS name,
 
 
 
@@ -2099,19 +2079,32 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     r.feu,
     r.disallowance,
     r.pagibig,
-
+    itt.item_description,
 
 
 
     pt2.position,
-
+    sgt.sg_number,
 
 
 
     ph.PhilHealthContribution,
 
 
-    da.code AS department
+    da.code AS department,
+
+    CASE itt.step
+    WHEN 'step1' THEN sgt.step1
+    WHEN 'step2' THEN sgt.step2
+    WHEN 'step3' THEN sgt.step3
+    WHEN 'step4' THEN sgt.step4
+    WHEN 'step5' THEN sgt.step5
+    WHEN 'step6' THEN sgt.step6
+    WHEN 'step7' THEN sgt.step7
+    WHEN 'step8' THEN sgt.step8
+    -- Add more steps if necessary
+    ELSE NULL
+  END AS rateNbc188
    
   FROM payroll_processing p
   LEFT JOIN person_table pt
@@ -2123,7 +2116,19 @@ app.get('/api/payroll-with-remittance', (req, res) => {
   LEFT JOIN philhealth ph
     ON p.employeeNumber = ph.employeeNumber
   LEFT JOIN department_assignment da
-    ON p.employeeNumber = da.employeeNumber;
+    ON p.employeeNumber = da.employeeNumber
+
+
+  LEFT JOIN item_table as itt
+  ON itt.employeeID = p.employeeNumber
+  
+  LEFT JOIN salary_grade_table sgt
+  ON sgt.sg_number = itt.salary_grade AND sgt.effectivityDate = itt.effectivityDate
+  ;
+  
+  
+
+
 `;
 
 
@@ -2162,6 +2167,8 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     totalDeductions,
     pay1st,
     pay2nd,
+    pay1stCompute,
+    pay2ndCompute,
     rtIns,
     ec,
     nbc594,
@@ -2251,6 +2258,9 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       p.totalDeductions = ?,
       p.pay1st = ?,
       p.pay2nd = ?,
+
+      p.pay1stCompute = ?,
+      p.pay2ndCompute = ?,
       p.rtIns = ?,
       p.ec = ?,
 
@@ -2297,6 +2307,8 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     totalDeductions,
     pay1st,
     pay2nd,
+    pay1stCompute,
+    pay2ndCompute,
     rtIns,
     ec,
     nbc594,
@@ -2598,7 +2610,7 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
-app.post('/api/finalize_payroll', (req, res) => {
+app.post('/api/finalized-payroll', (req, res) => {
   const payrollData = req.body;
 
 
@@ -2719,8 +2731,8 @@ app.post('/api/finalize_payroll', (req, res) => {
       });
     });
   });
+  
 });
-
 
 
 
@@ -2738,6 +2750,24 @@ app.get('/api/finalized-payroll', (req, res) => {
     res.json(results);
   });
 });
+
+
+
+app.delete('/api/finalized-payroll/:id', (req, res) => {
+  const { id } = req.params;
+
+  const query = 'DELETE FROM finalize_payroll WHERE id = ?';
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: 'Payroll record not found' });
+    }
+    res.json({ message: 'Payroll record deleted successfully' });
+  });
+});
+
 
 
 
@@ -2802,6 +2832,8 @@ app.put('/api/philhealth/:id', (req, res) => {
 
 
 
+
+
 app.delete('/api/philhealth/:id', (req, res) => {
   const { id } = req.params;
 
@@ -2823,15 +2855,73 @@ app.delete('/api/philhealth/:id', (req, res) => {
 
 
 
-app.listen(5000, () => {
-  console.log('Server runnning');
+// BULK REGISTER
+app.post("/excel-register", (req, res) => {
+  const { users } = req.body;
+
+  if (!Array.isArray(users) || users.length === 0) {
+    return res.status(400).json({ message: "No users data provided" });
+  }
+
+  const results = [];
+  const errors = [];
+
+  users.forEach((user) => {
+    const queryCheck =
+      "SELECT * FROM users WHERE employeeNumber = ?";
+    db.query(queryCheck, [user.employeeNumber], (err, existingUser) => {
+      if (err) {
+        errors.push(`Error checking user ${user.employeeNumber}: ${err.message}`);
+        return;
+      }
+
+      if (existingUser.length > 0) {
+        errors.push(`Employee number ${user.employeeNumber} already exists`);
+      } else {
+        const hashedPassword = bcrypt.hashSync(user.password, 10);
+        const queryInsert =
+          "INSERT INTO users (username, email, role, password, employeeNumber, employmentCategory, access_level) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        db.query(
+          queryInsert,
+          [
+            user.username,
+            user.email,
+            user.role,
+            hashedPassword,
+            user.employeeNumber,
+            user.employmentCategory,
+            user.access_level,
+          ],
+          (err, result) => {
+            if (err) {
+              errors.push(`Error processing user ${user.employeeNumber}: ${err.message}`);
+            } else {
+              results.push({
+                employeeNumber: user.employeeNumber,
+                username: user.username,
+                status: "success",
+              });
+            }
+          }
+        );
+      }
+    });
+  });
+
+  // Delay sending response to allow for asynchronous processing
+  setTimeout(() => {
+    res.json({
+      message: "Bulk registration completed",
+      successful: results,
+      errors: errors,
+    });
+  }, 1000); // Adjust delay if necessary for your use case
 });
 
 
 
 
-
-
-
-
-
+app.listen(5000, () => {
+  console.log('Server runnning');
+});

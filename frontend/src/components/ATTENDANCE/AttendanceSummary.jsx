@@ -137,7 +137,7 @@ const updateRecord = async () => {
                                       backgroundColor: '#6D2323',
                                       color: '#ffffff',
                                       padding: '20px',
-                                      width: '95.5%',
+                                      width: '96.7%',
                                       borderRadius: '8px',
                                       borderBottomLeftRadius: '0px',
                                       borderBottomRightRadius: '0px',
@@ -161,7 +161,8 @@ const updateRecord = async () => {
         sx={{
           backgroundColor: '#ffffff',
           p: 3,
-          borderRadius: 2,
+          borderBottomLeftRadius: '5px',
+          borderBottomRightRadius: '5px',
           boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
           mb: 3,
         }}

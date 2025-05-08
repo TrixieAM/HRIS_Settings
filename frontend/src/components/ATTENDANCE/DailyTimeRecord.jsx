@@ -113,8 +113,32 @@ const DailyTimeRecord = () => {
 
   const formattedStartDate = formatStartDate(startDate);
   const formattedEndDate = formatEndDate(endDate);
+
+
+  const currentYear = new Date().getFullYear();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const year = new Date().getFullYear();
+  
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
+  
+    // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+  
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
   return (
+    
     <div className="container faculty" style={{transform: 'scale(0.8)', marginTop: '-10rem'}}>
+     
       <style>
         {`
           @media print {
@@ -145,6 +169,7 @@ const DailyTimeRecord = () => {
    
   }}
 >
+  
   <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
     <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
     <div>
@@ -169,6 +194,7 @@ const DailyTimeRecord = () => {
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
   }}
 >
+
 
 
  <div className="search-container no-print textfield-container" >

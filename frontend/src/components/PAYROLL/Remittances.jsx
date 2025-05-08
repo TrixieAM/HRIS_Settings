@@ -10,21 +10,27 @@ import {
 } from '@mui/icons-material';
 
 
+
+
 const EmployeeRemittance = () => {
   const [remittances, setRemittances] = useState([]);
   const [newRemittance, setNewRemittance] = useState({
     employeeNumber: '', disallowance: '', gsisSalaryLoan: '', gsisPolicyLoan: '',
     gfal: '', cpl: '', mpl: '', mplLite: '', emergencyLoan: '', nbc594: '',
-    increment: '', pagibigFundCont: '', pagibig2: '', multiPurpLoan: '',
+    increment: '', pagibig: '', pagibigFundCont: '', pagibig2: '', multiPurpLoan: '',
     landbankSalaryLoan: '', earistCreditCoop: '', feu: ''
   });
   const [editingRemittanceId, setEditingRemittanceId] = useState(null);
   const [editRemittanceData, setEditRemittanceData] = useState({});
 
 
+
+
   useEffect(() => {
     fetchRemittances();
   }, []);
+
+
 
 
   const fetchRemittances = async () => {
@@ -35,6 +41,8 @@ const EmployeeRemittance = () => {
       console.error('Error fetching remittances:', error);
     }
   };
+
+
 
 
   const updateRemittance = async () => {
@@ -48,6 +56,8 @@ const EmployeeRemittance = () => {
   };
 
 
+
+
   const deleteRemittance = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/Remittance/employee-remittance/${id}`);
@@ -56,6 +66,8 @@ const EmployeeRemittance = () => {
       console.error('Error deleting remittance:', error);
     }
   };
+
+
 
 
   return (
@@ -83,6 +95,8 @@ const EmployeeRemittance = () => {
         </div>
 
 
+
+
         <Box display="flex" flexWrap="wrap" gap={2} marginLeft="50px">
           {Object.keys(newRemittance).map((key) => (
             <TextField
@@ -94,6 +108,8 @@ const EmployeeRemittance = () => {
             />
           ))}
         </Box>
+
+
 
 
         <Button
@@ -123,6 +139,8 @@ const EmployeeRemittance = () => {
       </div>
 
 
+
+
       <div
         style={{
           backgroundColor: 'white',
@@ -143,9 +161,13 @@ const EmployeeRemittance = () => {
              
 
 
+
+
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
+
+
 
 
           <TableBody>
@@ -225,7 +247,15 @@ const EmployeeRemittance = () => {
 };
 
 
+
+
 export default EmployeeRemittance;
+
+
+
+
+
+
 
 
 

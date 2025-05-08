@@ -36,6 +36,26 @@ const AllAttendanceRecord = () => {
     }
   };
 
+  const currentYear = new Date().getFullYear();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const year = new Date().getFullYear();
+  
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
+  
+    // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+  
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
   return (
 
     
@@ -46,7 +66,7 @@ const AllAttendanceRecord = () => {
                     backgroundColor: '#6D2323',
                     color: '#ffffff',
                     padding: '20px',
-                    width: '95%',
+                    width: '96.6%',
                     borderRadius: '8px',
                     borderBottomLeftRadius: '0px',
                     borderBottomRightRadius: '0px',
@@ -65,7 +85,9 @@ const AllAttendanceRecord = () => {
                       </p>
                     </div>
                   </div>
+                  
                       </div>
+                      
 
       {/* Form Box (white background) */}
       <Paper
@@ -74,9 +96,30 @@ const AllAttendanceRecord = () => {
           p: 3,
           mb: 4,
           backgroundColor: '#ffffff',
-          borderRadius: '8px',
+          borderBottomLeftRadius: '5px',
+          borderBottomRightRadius: '5px',
         }}
       >
+        {/* Month Buttons */}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, pb: 5 }}>
+                {months.map((month, index) => (
+                  <Button
+                    key={month}
+                    variant="contained"
+                    onClick={() => handleMonthClick(index)}
+                    sx={{
+                      backgroundColor: "#6D2323",
+                      color: "white", // optional: text color for contrast
+                      "&:hover": {
+                        backgroundColor: "#d4bd99", // optional: slightly darker hover effect
+                      },
+                    }}
+                  >
+                    {month}
+                  </Button>
+                ))}
+              </Box>
+        
         <Box
           component="form"
           sx={{
@@ -93,7 +136,7 @@ const AllAttendanceRecord = () => {
             value={personID}
             onChange={(e) => setPersonID(e.target.value)}
             required
-            sx={{ width: "180px" }}
+            sx={{ width: "250px", marginLeft: '15px'  }}
           />
           <TextField
             label="Start Date"
@@ -101,7 +144,12 @@ const AllAttendanceRecord = () => {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
-            sx={{ width: "180px" }}
+            sx={{
+              width: "250px",
+              height: "54px",
+              marginLeft: "10px",
+              marginTop: "14px",
+            }}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
@@ -110,14 +158,19 @@ const AllAttendanceRecord = () => {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             required
-            sx={{ width: "180px" }}
+            sx={{
+              width: "250px",
+              height: "54px",
+              marginLeft: "10px",
+              marginTop: "14px",
+            }}
             InputLabelProps={{ shrink: true }}
           />
           <Button
             variant="contained"
             type="submit"
             style={{
-              width: "200px",
+              width: "250px",
               height: "55px",
               backgroundColor: "#6D2323",
               color: "#FEF9E1",

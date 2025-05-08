@@ -29,22 +29,40 @@ import {
   Psychology as PsychologyIcon,
   SportsKabaddi,
   FileCopy,
-  Settings as SettingsIcon,
   Logout as LogoutIcon,
-  PointOfSale as PointOfSaleIcon,
   Category as CategoryIcon,
-  CurrencyExchange as CurrencyExchangeIcon,
-  Store as StoreIcon,
-  AddBusiness as AddBusinessIcon,
-  Announcement as AnnouncementIcon,
   Summarize as SummarizeIcon,
   Portrait as PortraitIcon,
   ContactPage as ContactPageIcon,
   AddHomeWork as AddHomeWorkIcon,
-  TableView as TableViewIcon,
-  RequestQuote as RequestQuoteIcon,
-
+  Payment as PaymentsIcon,
+  EditNote as EditNoteIcon,
+  AccountBalance as AccountBalanceIcon,
+  LocalHospital as LocalHospitalIcon,
+  TableChart as TableChartIcon,
+  PeopleAlt as PeopleAltIcon,
+  MonetizationOn as MonetizationOnIcon,
+  PriceCheck as PriceCheckIcon,
+  Business as BusinessIcon,
+  BusinessCenter as BusinessCenterIcon,
+  EventNote as EventNoteIcon,
+  AssignmentInd as AssignmentIndIcon,
+  EventBusy as EventBusyIcon,
+  Assignment as AssignmentIcon,
+  Description as DescriptionIcon,
+  AccessTime as AccessTimeIcon,
+  Devices as DevicesIcon
 } from '@mui/icons-material';
+import { 
+  AccessAlarm, 
+  CalendarToday, 
+  CheckCircle,  
+  EventNote, 
+  FolderSpecial, 
+  Search,
+  WorkHistory,
+} from '@mui/icons-material';
+
 import { useNavigate, Link } from 'react-router-dom';
 
 const drawerWidth = 270;
@@ -225,7 +243,7 @@ useEffect(() => {
         </>
       )}
 
-<Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '10px' }} />
+<Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
    
       <ListItem 
   button 
@@ -239,9 +257,13 @@ useEffect(() => {
       color: 'black',
       borderTopRightRadius: '15px',
       borderBottomRightRadius: '15px',
+      '& .MuiListItemIcon-root': {
+        color: 'black',
+      }
     },
     borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
     borderBottomRightRadius: selectedItem === 'home' ? '15px' : 0,
+    
   }}
   onClick={() => handleItemClick('home')}
 >
@@ -263,15 +285,19 @@ useEffect(() => {
           <>
             <ListItem
               button
-              onClick={handleClick}
-              sx={{ color: 'black', cursor: 'pointer',  borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
-                borderBottomRightRadius: selectedItem === 'home' ? '15px' : 0, }}
+              onClick={() => {
+                handleItemClick('Dashboards'); 
+                handleClick();                
+              }}
+              sx={{ color: 'black', cursor: 'pointer',  borderTopRightRadius: selectedItem === 'Dashboards' ? '15px' : 0,
+                borderBottomRightRadius: selectedItem === 'Dashboards' ? '15px' : 0, }}
+                
             >
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
-              <ListItemText primary="Dashboards" sx={{marginLeft: '-10px'}} />
-              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
+              <ListItemText primary="Dashboards" sx={{marginLeft: '-10px', }} />
+              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black',  }}>
                 {open ? <ExpandLess /> : <ExpandMore />}
               </ListItemIcon>
             </ListItem>
@@ -279,10 +305,10 @@ useEffect(() => {
 
             <Collapse in={open} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
-                <ListItem
-                  button 
-                  component={Link} 
-                  to= '/personalinfo' 
+              <ListItem
+                  button
+                  component={Link}
+                  to="/personalinfo"
                   sx={{
                     color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'personalinfo' ? '#A31D1D' : 'inherit',
@@ -291,20 +317,25 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      },
                     },
                     borderTopRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
                   }}
-
-                  onClick={() => handleItemClick('personalinfo')} 
+                  onClick={() => handleItemClick('personalinfo')}
                 >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
+                  <ListItemIcon
+                    sx={{
+                      marginRight: '-1rem',
+                      color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
+                      bgcolor: 'transparent',
+                    }}
+                  >
                     <PortraitIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Personal Information" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Personal Information" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
 
@@ -320,6 +351,10 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                      color: 'black',
+                    }
+
                     },
                     borderTopRightRadius: selectedItem === 'children' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'children' ? '15px' : 0,
@@ -348,6 +383,10 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                      color: 'black',
+                    }
+
                     },
                     borderTopRightRadius: selectedItem === 'college' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'college' ? '15px' : 0,
@@ -367,6 +406,38 @@ useEffect(() => {
                 <ListItem 
                   button 
                   component={Link} 
+                  to= '/graduate' 
+                  sx={{
+                    color: selectedItem === 'graduate' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'graduate' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                      color: 'black',
+                    }
+
+                    },
+                    borderTopRightRadius: selectedItem === 'graduate' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'graduate' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('graduate')} 
+                  >
+                  <ListItemIcon sx={{ marginRight: '-1rem',
+                    color: selectedItem === 'graduate' ? 'white' : 'inherit',
+                    '&:hover': { color: 'white' }
+                   }}>
+                    <School />
+                  </ListItemIcon>
+                  <ListItemText primary="Graduate Studies" sx={{marginLeft: '-10px'}} />
+                </ListItem>
+
+
+                <ListItem 
+                  button 
+                  component={Link} 
                   to= '/other-information' 
                   sx={{
                     color: selectedItem === 'other-information' ? 'white' : 'inherit',
@@ -376,6 +447,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'other-information' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'other-information' ? '15px' : 0,
@@ -404,6 +478,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
@@ -432,6 +509,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'vocational' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'vocational' ? '15px' : 0,
@@ -460,6 +540,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'learningdev' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'learningdev' ? '15px' : 0,
@@ -488,6 +571,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'voluntarywork' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'voluntarywork' ? '15px' : 0,
@@ -516,6 +602,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
@@ -538,11 +627,16 @@ useEffect(() => {
 
         <ListItem
           button
-          onClick={handleClickAttendance}
-          sx={{ color: 'black', cursor: 'pointer',  }}
+          onClick={() => {
+            handleClickAttendance('Records'); 
+            handleClickAttendance();                
+          }}
+          sx={{ color: 'black', cursor: 'pointer',  borderTopRightRadius: selectedItem === 'Records' ? '15px' : 0,
+            borderBottomRightRadius: selectedItem === 'Records' ? '15px' : 0, }}
+            
         >
           <ListItemIcon>
-            <TableViewIcon />
+            <AccessTimeIcon/>
           </ListItemIcon>
           <ListItemText primary="Records" sx={{marginLeft: '-10px'}}/>
           <ListItemIcon sx={{ marginLeft: '10rem', color:'black' }}>
@@ -555,10 +649,10 @@ useEffect(() => {
           <>
             <Collapse in={open2} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
-              <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/view_attendance' 
+              <ListItem
+                  button
+                  component={Link}
+                  to='/view_attendance'
                   sx={{
                     color: selectedItem === 'view_attendance' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'view_attendance' ? '#A31D1D' : 'inherit',
@@ -567,29 +661,24 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'view_attendance' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'view_attendance' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('view_attendance')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'view_attendance' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('view_attendance')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'view_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <DevicesIcon />
                   </ListItemIcon>
-                  <ListItemText primary="View Attendance" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Attendance Device Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-              </List>
-            </Collapse>
 
-            <Collapse in={open2} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding sx={{ pl: 5.4 }}>
-                 <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/search_attendance' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/search_attendance'
                   sx={{
                     color: selectedItem === 'search_attendance' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'search_attendance' ? '#A31D1D' : 'inherit',
@@ -598,31 +687,24 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'search_attendance' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'search_attendance' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('search_attendance')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'search_attendance' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('search_attendance')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'search_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <Search />
                   </ListItemIcon>
-                  <ListItemText primary="Search Attendance" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Attendance Search" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-              </List>
-            </Collapse>
-          </>
-        )}
 
-        <Collapse in={open2} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding sx={{ pl: 5.4 }}>
-             <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/daily_time_record' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/daily_time_record'
                   sx={{
                     color: selectedItem === 'daily_time_record' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'daily_time_record' ? '#A31D1D' : 'inherit',
@@ -631,28 +713,21 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('daily_time_record')} 
-                  >
-              <ListItemIcon sx={{ marginRight: '-1rem',
-                 color: selectedItem === 'daily_time_record' ? 'white' : 'inherit',
-                 '&:hover': { color: 'white' }
-               }}>
-                <BadgeRounded />
-              </ListItemIcon>
-              <ListItemText primary="Daily Time Record" sx={{marginLeft: '-10px'}}/>
-            </ListItem>
-          </List>
-        </Collapse>
+                  onClick={() => handleItemClick('daily_time_record')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'daily_time_record' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </ListItemIcon>
+                  <ListItemText primary="Daily Time Record" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
 
-
-        {userRole !== 'staff' && (
-          <>
-            <Collapse in={open2} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding sx={{ pl: 5.4 }}>
+                
               <ListItem 
                   button 
                   component={Link} 
@@ -665,6 +740,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'daily_time_record_faculty' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'daily_time_record_faculty' ? '15px' : 0,
@@ -679,15 +757,12 @@ useEffect(() => {
                   </ListItemIcon>
                   <ListItemText primary="Daily Faculty Time Record" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
-              </List>
-            </Collapse>
+            
 
-            <Collapse in={open2} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding sx={{ pl: 5.4 }}>
-                 <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/attendance_form' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/attendance_form'
                   sx={{
                     color: selectedItem === 'attendance_form' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'attendance_form' ? '#A31D1D' : 'inherit',
@@ -696,29 +771,24 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('attendance_form')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'attendance_form' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('attendance_form')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_form' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <EventNote />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Form"sx={{marginLeft: '-10px'}} />
+                  <ListItemText primary="Attendance Form" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-              </List>
-            </Collapse>
 
-            <Collapse in={open2} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding sx={{ pl: 5.4 }}>
-              <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/attendance_module' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/attendance_module'
                   sx={{
                     color: selectedItem === 'attendance_module' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'attendance_module' ? '#A31D1D' : 'inherit',
@@ -727,29 +797,28 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'attendance_module' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'attendance_module' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('attendance_module')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'attendance_module' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('attendance_module')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_module' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <WorkHistory />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Module Non-teaching Staff" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Attendance Module Non-teaching Staff" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
             
             <Collapse in={open2} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
-                <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/attendance_module_faculty' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/attendance_module_faculty'
                   sx={{
                     color: selectedItem === 'attendance_module_faculty' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'attendance_module_faculty' ? '#A31D1D' : 'inherit',
@@ -758,29 +827,28 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'attendance_module_faculty' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'attendance_module_faculty' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('attendance_module_faculty')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'attendance_module_faculty' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('attendance_module_faculty')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_module_faculty' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                  <WorkHistory />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Module Faculty (30hrs)" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Attendance Module Faculty (30hrs)" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
 
             <Collapse in={open2} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
-                 <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/attendance_module_faculty_40hrs' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/attendance_module_faculty_40hrs'
                   sx={{
                     color: selectedItem === 'attendance_module_faculty_40hrs' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'attendance_module_faculty_40hrs' ? '#A31D1D' : 'inherit',
@@ -789,29 +857,28 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'attendance_module_faculty_40hrs' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'attendance_module_faculty_40hrs' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('attendance_module_faculty_40hrs')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'attendance_module_faculty_40hrs' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('attendance_module_faculty_40hrs')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_module_faculty_40hrs' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                  <WorkHistory />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Module Faculty (Designated)" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Attendance Module Faculty (Designated)" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
 
             <Collapse in={open2} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
-              <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/attendance_summary' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/attendance_summary'
                   sx={{
                     color: selectedItem === 'attendance_summary' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'attendance_summary' ? '#A31D1D' : 'inherit',
@@ -820,29 +887,28 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'attendance_summary' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'attendance_summary' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('attendance_summary')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'attendance_summary' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('attendance_summary')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_summary' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <FolderSpecial />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Summary" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Attendance Summary" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
 
             <Collapse in={open2} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
-                 <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/official_time' 
+                <ListItem
+                  button
+                  component={Link}
+                  to='/official_time'
                   sx={{
                     color: selectedItem === 'official_time' ? 'white' : 'inherit',
                     bgcolor: selectedItem === 'official_time' ? '#A31D1D' : 'inherit',
@@ -851,19 +917,18 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'official_time' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'official_time' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('official_time')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'official_time' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
-                    <BadgeRounded />
+                  onClick={() => handleItemClick('official_time')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'official_time' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <AccessAlarm />
                   </ListItemIcon>
-                  <ListItemText primary="Official Time Form" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Official Time Form" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
@@ -879,7 +944,7 @@ useEffect(() => {
               sx={{ color: 'black', cursor: 'pointer' }}
             >
               <ListItemIcon>
-                <DashboardIcon />
+              <DescriptionIcon />
               </ListItemIcon>
               <ListItemText primary="PDS Files" sx={{marginLeft: '-10px'}} />
               <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
@@ -901,6 +966,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'pds1' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'pds1' ? '15px' : 0,
@@ -932,6 +1000,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'pds2' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'pds2' ? '15px' : 0,
@@ -963,6 +1034,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'pds3' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'pds3' ? '15px' : 0,
@@ -979,6 +1053,40 @@ useEffect(() => {
           </ListItem>
         </List>
         </Collapse>
+
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds4' 
+                  sx={{
+                    color: selectedItem === 'pds4' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds4' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds4' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds4' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds4')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds4' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS4" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
         </>
         )}
 
@@ -991,7 +1099,7 @@ useEffect(() => {
               sx={{ color: 'black', cursor: 'pointer' }}
             >
               <ListItemIcon>
-                <RequestQuoteIcon />
+                <AccountBalanceIcon />
               </ListItemIcon>
               <ListItemText primary="Payroll Management" sx={{ marginLeft: '-10px' }} />
               <ListItemIcon sx={{ marginLeft: '10rem',
@@ -1015,6 +1123,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'payroll-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'payroll-table' ? '15px' : 0,
@@ -1025,9 +1136,9 @@ useEffect(() => {
                      color: selectedItem === 'payroll-table' ? 'white' : 'inherit',
                      '&:hover': { color: 'white' }
                    }}>
-                    <PointOfSaleIcon />
+                   <EditNoteIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Payroll" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Payroll | Processing" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem 
@@ -1042,6 +1153,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'payroll-edit' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'payroll-edit' ? '15px' : 0,
@@ -1052,9 +1166,9 @@ useEffect(() => {
                      color: selectedItem === 'payroll-edit' ? 'white' : 'inherit',
                      '&:hover': { color: 'white' }
                    }}>
-                    <PointOfSaleIcon />
+                    <PaymentsIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Payroll Edit" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Payroll | Processed" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem
@@ -1069,6 +1183,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'remittance-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'remittance-table' ? '15px' : 0,
@@ -1079,7 +1196,7 @@ useEffect(() => {
                     color: selectedItem === 'remittance-table' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <PointOfSaleIcon />
+                    <AccountBalanceIcon />
                   </ListItemIcon>
                   <ListItemText primary="Remittances" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1096,6 +1213,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'philhealth-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'philhealth-table' ? '15px' : 0,
@@ -1106,7 +1226,7 @@ useEffect(() => {
                      color: selectedItem === 'philhealth-table' ? 'white' : 'inherit',
                      '&:hover': { color: 'white' }
                    }}>
-                    <PointOfSaleIcon />
+                    <LocalHospitalIcon />
                   </ListItemIcon>
                   <ListItemText primary="PhilHealth" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1124,6 +1244,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'plantillia-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'plantillia-table' ? '15px' : 0,
@@ -1134,7 +1257,7 @@ useEffect(() => {
                     color: selectedItem === 'plantillia-table' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <PointOfSaleIcon />
+                    <TableChartIcon />
                   </ListItemIcon>
                   <ListItemText primary="Plantillia" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1152,6 +1275,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'item-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'item-table' ? '15px' : 0,
@@ -1180,6 +1306,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'employee-salary-grade' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'employee-salary-grade' ? '15px' : 0,
@@ -1190,7 +1319,7 @@ useEffect(() => {
                     color: selectedItem === 'employee-salary-grade' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <PointOfSaleIcon />
+                    <PeopleAltIcon />
                   </ListItemIcon>
                   <ListItemText primary="Employee Salary Grade" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1207,6 +1336,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'salary-grade' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'salary-grade' ? '15px' : 0,
@@ -1217,37 +1349,12 @@ useEffect(() => {
                     color: selectedItem === 'salary-grade' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' } 
                   }}>
-                    <CurrencyExchangeIcon />
+                    <MonetizationOnIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Salary Grade Table" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Tranche Salary Grade Table" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
-                <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/salary-grade-status' 
-                  sx={{
-                    color: selectedItem === 'salary-grade-status' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'salary-grade-status' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                    },
-                    borderTopRightRadius: selectedItem === 'salary-grade-status' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'salary-grade-status' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('salary-grade-status')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'salary-grade-status' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
-                    <CurrencyExchangeIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Salary Grade Status" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
+               
 
                 <ListItem 
                   button 
@@ -1261,6 +1368,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'department-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'department-table' ? '15px' : 0,
@@ -1271,7 +1381,7 @@ useEffect(() => {
                     color: selectedItem === 'department-table' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <StoreIcon />
+                    <BusinessIcon />
                   </ListItemIcon>
                   <ListItemText primary="Department" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1288,6 +1398,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'department-assignment' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'department-assignment' ? '15px' : 0,
@@ -1298,7 +1411,7 @@ useEffect(() => {
                     color: selectedItem === 'department-assignment' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <AddBusinessIcon />
+                    <BusinessCenterIcon />
                   </ListItemIcon>
                   <ListItemText primary="Department Assignment" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1315,6 +1428,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'leave-table' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'leave-table' ? '15px' : 0,
@@ -1326,7 +1442,7 @@ useEffect(() => {
                     '&:hover': { color: 'white' }
 
                    }}>
-                    <SummarizeIcon />
+                    <EventNoteIcon />
                   </ListItemIcon>
                   <ListItemText primary="Leave" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1343,6 +1459,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'leave-assignment' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'leave-assignment' ? '15px' : 0,
@@ -1353,7 +1472,7 @@ useEffect(() => {
                     color: selectedItem === 'leave-assignment' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <SummarizeIcon />
+                    <AssignmentIndIcon />
                   </ListItemIcon>
                   <ListItemText primary="Leave Assignment" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1370,6 +1489,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'holiday-suspension' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'holiday-suspension' ? '15px' : 0,
@@ -1380,7 +1502,7 @@ useEffect(() => {
                     color: selectedItem === 'holiday-suspension' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <AnnouncementIcon />
+                    <EventBusyIcon />
                   </ListItemIcon>
                   <ListItemText primary="Holiday and Suspension" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
@@ -1398,7 +1520,7 @@ useEffect(() => {
               sx={{ color: 'black', cursor: 'pointer' }}
             >
               <ListItemIcon>
-                <DashboardIcon />
+                <AssignmentIcon />
               </ListItemIcon>
               <ListItemText primary="Forms" sx={{ marginLeft: '-10px' }} />
               <ListItemIcon sx={{ marginLeft: '10rem' }}>
@@ -1420,6 +1542,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'assessment-clearance' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'assessment-clearance' ? '15px' : 0,
@@ -1447,6 +1572,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'clearance' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'clearance' ? '15px' : 0,
@@ -1474,6 +1602,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'faculty-clearance' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'faculty-clearance' ? '15px' : 0,
@@ -1501,6 +1632,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'hrms-request-forms' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'hrms-request-forms' ? '15px' : 0,
@@ -1528,6 +1662,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'individual-faculty-loading' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'individual-faculty-loading' ? '15px' : 0,
@@ -1555,6 +1692,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'in-service-training' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'in-service-training' ? '15px' : 0,
@@ -1582,6 +1722,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'leave-card' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'leave-card' ? '15px' : 0,
@@ -1610,6 +1753,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'locator-slip' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'locator-slip' ? '15px' : 0,
@@ -1637,6 +1783,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'permission-to-teach' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'permission-to-teach' ? '15px' : 0,
@@ -1665,6 +1814,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'request-for-id' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'request-for-id' ? '15px' : 0,
@@ -1692,6 +1844,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'saln-front' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'saln-front' ? '15px' : 0,
@@ -1719,6 +1874,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'scholarship-agreement' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'scholarship-agreement' ? '15px' : 0,
@@ -1746,6 +1904,9 @@ useEffect(() => {
                       color: 'black',
                       borderTopRightRadius: '15px',
                       borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
                     },
                     borderTopRightRadius: selectedItem === 'subject' ? '15px' : 0,
                     borderBottomRightRadius: selectedItem === 'subject' ? '15px' : 0,

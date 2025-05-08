@@ -42,34 +42,36 @@ import Vocational from './components/DASHBOARD/Vocational';
 import LearningAndDevelopment from './components/DASHBOARD/LearningAndDevelopment';
 import VoluntaryWork from './components/DASHBOARD/Voluntary';
 import Eligibility from './components/DASHBOARD/Eligibility';
+import GraduateTable from './components/DASHBOARD/GraduateStudies';
 
 
 //RECORDS
 import ViewAttendanceRecord from './components/ATTENDANCE/ViewAttendanceRecord';
-import AttendanceSearch from './components/ATTENDANCE/ViewAttendance';
+import AttendanceSearch from './components/ATTENDANCE/SearchAttendance';
 import DailyTimeRecord from './components/ATTENDANCE/DailyTimeRecord';
 import DailyTimeRecordFaculty from './components/ATTENDANCE/DailyTimeRecordFaculty';
-import AttendanceForm from './components/ATTENDANCE/AllAttendanceRecord';
-import AttendanceModule from './components/ATTENDANCE/AttendanceModule';
-import AttendanceModuleFaculty from './components/ATTENDANCE/AttendanceModuleFaculty';
-import AttendanceModuleFaculty40 from './components/ATTENDANCE/AttendanceModuleFaculty40hrs';
-import OverallAttendancePage from './components/ATTENDANCE/OverallAttendance';
+import AttendanceForm from './components/ATTENDANCE/AllAttendanceForm';
+import AttendanceModule from './components/ATTENDANCE/AttendanceModuleNonTeaching';
+import AttendanceModuleFaculty from './components/ATTENDANCE/AttendanceModuleFaculty30hrs';
+import AttendanceModuleFaculty40 from './components/ATTENDANCE/AttendanceModuleFacultyDesignated';
+import OverallAttendancePage from './components/ATTENDANCE/AttendanceSummary';
 import OfficialTimeForm from './components/ATTENDANCE/OfficialTimeForm';
 
 
 //PAYROLL
-import PayrollProcess from './components/PAYROLL/PayrollProcess';
+import PayrollProcess from './components/PAYROLL/PayrollProcessing';
 import Remittances from './components/PAYROLL/Remittances';
 import ItemTable from './components/PAYROLL/ItemTable';
 import SalaryGradeTable from './components/PAYROLL/SalaryGradeTable';
-import SalaryGradeStatusTable from './components/PAYROLL/SalaryGradeStatusTable';
 import DepartmentTable from './components/PAYROLL/DepartmentTable';
 import DepartmentAssignment from './components/PAYROLL/DepartmentAssignment';
 import HolidaySuspension from './components/PAYROLL/HolidaySuspension';
 import Leave from './components/PAYROLL/Leave';
 import LeaveAssignment from './components/PAYROLL/LeaveAssignment';
-import PayrollEdit from './components/PAYROLL/PayrollEdit';
 import PhilHealthTable from './components/PAYROLL/PhilHealth';
+import PayrollProcessed from './components/PAYROLL/PayrollProcessed';
+import PlantillaTable from './components/PAYROLL/Plantillia';
+import EmployeeSalaryGrade from './components/PAYROLL/EmployeeSalaryGrade';
 
 
 
@@ -98,10 +100,11 @@ import PDS1 from './components/PDS1';
 import PDS2 from './components/PDS2';
 import PDS3 from './components/PDS3';
 import PDS4 from './components/PDS4';
+
+
 import { PictureAsPdfOutlined } from '@mui/icons-material';
 import ForgotPassword from './components/ForgotPassword';
-import PlantillaTable from './components/PAYROLL/Plantillia';
-import EmployeeSalaryGrade from './components/PAYROLL/EmployeeSalaryGrade';
+
 
 
 
@@ -286,6 +289,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <College />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/graduate"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <GraduateTable />
                 </ProtectedRoute>
               }
             />
@@ -480,7 +491,7 @@ function App() {
               path="/payroll-edit"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <PayrollEdit />
+                  <PayrollProcessed />
                 </ProtectedRoute>
               }
             />
@@ -534,20 +545,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-
-
-
-            <Route
-              path="/salary-grade-status"
-              element={
-                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <SalaryGradeStatusTable />
-                </ProtectedRoute>
-              }
-            />
-
-
 
 
             <Route

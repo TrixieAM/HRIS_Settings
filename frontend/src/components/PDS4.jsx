@@ -1,5 +1,9 @@
 import React, {useState} from "react";
 import "../pages/css/components.css";
+import PrintIcon from '@mui/icons-material/Print'
+
+
+
 const PDS4 = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedThumbmark, setUploadedThumbmark] = useState(null);
@@ -41,24 +45,76 @@ const PDS4 = () => {
 
 
   return (
-    <div
-      style={{
-        border: "1px solid black",
-        padding: "0.25in",
-        width: "8in",
-        marginBottom: "7%",
-        height: "fit-content",
-      }}
-    >
-      <table
-        style={{
-          border: "1px solid black",
-          borderCollapse: "collapse",
-          fontFamily: "Arial, Helvetica, sans-serif",
-          width: "8in",
-          tableLayout: "fixed",
-        }}
-      >
+    <div id="print-section">
+
+
+    <style>
+      {`
+        @media print {
+          html, body {
+            background: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            margin: 0;
+            padding: 0;
+            .no-print {
+            display: none !important;
+            }
+          }
+   
+          body * {
+            visibility: hidden;
+          }
+   
+          #print-section, #print-section * {
+            visibility: visible;
+          }
+   
+          #print-section {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 8.5in;
+            height: fit-content;
+            overflow: hidden;
+            margin: 0;
+            margin-bottom: 0;
+            padding: 0;
+            background-color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            transform: scale(1); /* ✅ Shrinks content to fit one page */
+            transform-origin: center;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+   
+          .print-button {
+            display: none;
+          }
+   
+          @page {
+            size: Legal;
+            margin: 0;
+          }
+        }
+      `}
+    </style>
+
+   
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', }}>
+
+
+       
+       
+      <div style={{ overflow: 'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: 'fit-content' }}>
+
+
+       
+     
+     
+            <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed', marginTop: '-5px' }}>
+               
         <tbody>
           <tr>
             <td
@@ -1241,6 +1297,32 @@ const PDS4 = () => {
         </tbody>
       </table>
     </div>
+    </div>
+    <button
+    onClick={() => window.print()}
+    className="no-print"
+    style={{
+    backgroundColor: '#6D2323',
+    color: '#FFFFFF',
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    marginTop: '20px',
+    fontSize: '14px',  
+    marginLeft: '80%',
+  }}
+>
+  <PrintIcon style={{ fontSize: '24px' }} />
+    Save as PDF
+</button>
+
+
+    </div>
+    
   );
 };
 

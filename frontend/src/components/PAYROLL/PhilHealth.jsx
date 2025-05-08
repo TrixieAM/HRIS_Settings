@@ -116,7 +116,7 @@ const PhilHealthTable = () => {
             }}
           />
           <input
-            type="number"
+            type="text"
             value={PhilHealthContribution}
             onChange={(e) => setPhilHealthContribution(e.target.value)}
             placeholder="PhilHealth Contribution"
@@ -130,7 +130,7 @@ const PhilHealthTable = () => {
           <Button
             variant="contained"
             sx={{
-              backgroundColor: '#8B0000', // Maroon for primary button
+              backgroundColor: '#6D2323', // Maroon for primary button
               '&:hover': {
                 backgroundColor: '#B22222', // Lighter Maroon on hover
               },
@@ -168,13 +168,13 @@ const PhilHealthTable = () => {
                     <TableRow key={entry.id}>
                       <TableCell>{entry.id}</TableCell>
                       <TableCell>{entry.employeeNumber}</TableCell>
-                      <TableCell>{entry.PhilHealthContribution}</TableCell>
+                      <TableCell>{parseFloat(entry.PhilHealthContribution).toFixed(2)}</TableCell>
                       <TableCell>
                         <Button
                           variant="contained"
                           color="primary"
                           sx={{
-                            backgroundColor: '#8B0000', // Maroon
+                            backgroundColor: '#6D2323', // Maroon
                             '&:hover': {
                               backgroundColor: '#B22222', // Lighter Maroon (for hover)
                             },
@@ -188,10 +188,10 @@ const PhilHealthTable = () => {
                           variant="outlined"
                           color="error"
                           sx={{
+                            bgcolor: '#000000',
                             borderColor: '#D3D3D3', 
-                            color: '#000',
+                            color: '#ffffff',
                             '&:hover': {
-                              backgroundColor: '#F5F5F5',
                               borderColor: '#D3D3D3',
                             },
                           }}

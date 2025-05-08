@@ -50,6 +50,26 @@ const ViewAttendanceRecord = () => {
     }
   };
 
+  const currentYear = new Date().getFullYear();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const year = new Date().getFullYear();
+  
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
+  
+    // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+  
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
   // const handleSaveRecords = async () => {
   //   try {
   //     const formattedRecords = records.map(record => ({
@@ -122,10 +142,30 @@ const ViewAttendanceRecord = () => {
              
                           </p>
                         </div>
+                      </div>                        
                       </div>
-                      </div>
+                      
                           
     <Container sx={{bgcolor: "white", height: "90%", paddingTop: "-5px",  paddingBottom: '-10px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px',}}>
+      {/* Month Buttons */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5 }}>
+        {months.map((month, index) => (
+          <Button
+            key={month}
+            variant="contained"
+            onClick={() => handleMonthClick(index)}
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "white", // optional: text color for contrast
+              "&:hover": {
+                backgroundColor: "#d4bd99", // optional: slightly darker hover effect
+              },
+            }}
+          >
+            {month}
+          </Button>
+        ))}
+      </Box>
 
     <div style={{ padding: "10px", marginLeft:'-10px', paddingTop:'25px' }}>
 
@@ -138,43 +178,42 @@ const ViewAttendanceRecord = () => {
           required
           fullWidth
           margin="normal"
-          sx={{ width: "250px", marginLeft: "10px" }}
+          sx={{ width: "250px", marginLeft: "50px" }}
           slotProps={{
             inputLabel: {
               shrink: true,
             },
           }}
         />
-        <TextField
-          label="Start Date"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          required
-          fullWidth
-          margin="normal"
-          sx={{ width: "300px", marginLeft: "10px" }}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-          }}
-        />
-        <TextField
-          label="End Date"
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          required
-          fullWidth
-          margin="normal"
-          sx={{ width: "300px", marginLeft: "10px" }}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-          }}
-        />
+      
+      <TextField
+        label="Start Date"
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+        required
+        sx={{
+          width: "250px",
+          height: "54px",
+          marginLeft: "10px",
+          marginTop: "14px",
+        }}
+        InputLabelProps={{ shrink: true }}
+      />
+      <TextField
+        label="End Date"
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        required
+        sx={{
+          width: "250px",
+          height: "54px",
+          marginLeft: "10px",
+          marginTop: "14px",
+        }}
+        InputLabelProps={{ shrink: true }}
+      />
         <Button
           variant="contained"
           color="primary"

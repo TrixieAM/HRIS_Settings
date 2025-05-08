@@ -861,6 +861,27 @@ const AttendanceModuleNonTeachingStaff = () => {
   };
   // TIME IN AND TIME OUT END OverTime
 
+
+  const currentYear = new Date().getFullYear();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const year = new Date().getFullYear();
+  
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
+  
+    // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+  
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
   return (
     <Container
       maxWidth={false} // Disable the default maxWidth
@@ -877,7 +898,7 @@ const AttendanceModuleNonTeachingStaff = () => {
                     backgroundColor: '#6D2323',
                     color: '#ffffff',
                     padding: '20px',
-                    width: '96.2%',
+                    width: '96.6%',
                     borderRadius: '8px',
                     borderBottomLeftRadius: '0px',
                     borderBottomRightRadius: '0px',
@@ -910,6 +931,26 @@ const AttendanceModuleNonTeachingStaff = () => {
       >
         {/* colored banner */}
 
+ {/* Month Buttons */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5 }}>
+        {months.map((month, index) => (
+          <Button
+            key={month}
+            variant="contained"
+            onClick={() => handleMonthClick(index)}
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "white", // optional: text color for contrast
+              "&:hover": {
+                backgroundColor: "#d4bd99", // optional: slightly darker hover effect
+              },
+            }}
+          >
+            {month}
+          </Button>
+        ))}
+      </Box>
+
 
         {/* filters row */}
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
@@ -918,31 +959,41 @@ const AttendanceModuleNonTeachingStaff = () => {
             value={employeeNumber}
             onChange={(e) => setEmployeeNumber(e.target.value)}
             required
-            sx={{ width: 300 }}
+            sx={{ width: 300, marginTop: "14px" }}
             slotProps={{ inputLabel: { shrink: true } }}
           />
-          <TextField
-            label="Start Date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            sx={{ width: 220 }}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            label="End Date"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-            sx={{ width: 220 }}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
+         <TextField
+                 label="Start Date"
+                 type="date"
+                 value={startDate}
+                 onChange={(e) => setStartDate(e.target.value)}
+                 required
+                 sx={{
+                   width: "250px",
+                   height: "54px",
+                   marginLeft: "10px",
+                   marginTop: "14px",
+                 }}
+                 InputLabelProps={{ shrink: true }}
+               />
+               <TextField
+                 label="End Date"
+                 type="date"
+                 value={endDate}
+                 onChange={(e) => setEndDate(e.target.value)}
+                 required
+                 sx={{
+                   width: "250px",
+                   height: "54px",
+                   marginLeft: "10px",
+                   marginTop: "14px",
+                 }}
+                 InputLabelProps={{ shrink: true }}
+               />
           <Button
             type="submit"
             variant="contained"
-            sx={{ bgcolor: '#6D2323', flexGrow: 1, minWidth: 200, height: 56 }}
+            sx={{marginTop: "14px", bgcolor: '#6D2323', flexGrow: 1, minWidth: 200, height: 56 }}
           >
             Generate Report
           </Button>

@@ -233,8 +233,8 @@ const PayrollProcess = () => {
           ? (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0) + (parseFloat(item.increment) || 0)
           : (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0);
  
-        const abs = (grossSalary * 0.0040322585897036 * h) + (grossSalary * 0.000067206958107324 * m);
-        const absAdjustment = abs * 0.0145952799;
+        const abs = (grossSalary * 0.0040322585897036 * h) + (grossSalary * 0.000067206958107324 * m); // equivalents of 'H' and 'M'
+        const absAdjustment = abs * 0.0145952799; // adjusments
  
         const PhilHealthContribution = ((grossSalary * 0.05) / 2) || 0;
         const personalLifeRetIns = ((grossSalary) * 0.09);

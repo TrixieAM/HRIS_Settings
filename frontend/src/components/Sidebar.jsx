@@ -782,7 +782,7 @@ useEffect(() => {
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_form' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <EventNote />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Form" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Record State" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem
@@ -1321,7 +1321,7 @@ useEffect(() => {
                    }}>
                     <PeopleAltIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Employee Salary Grade" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Salary Grade | Employee" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem 
@@ -1351,7 +1351,7 @@ useEffect(() => {
                   }}>
                     <MonetizationOnIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Tranche Salary Grade Table" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Salary Grade | Tranche" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                

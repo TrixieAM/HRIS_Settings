@@ -29,6 +29,8 @@ const VocationalRoute = require('./dashboardRoutes/Vocational');
 const PersonalRoute = require('./dashboardRoutes/PersonalInfo');
 const WorkExperienceRoute = require('./dashboardRoutes/WorkExperience');
 const OtherInformation = require('./dashboardRoutes/OtherSkills');
+const GraduateRoute = require('./dashboardRoutes/Graduate')
+
 const AllData = require('./dashboardRoutes/DataRoute');
 const Attendance = require('./dashboardRoutes/Attendance');
 
@@ -64,16 +66,22 @@ app.use('/ChildrenRoute', childrenRouter);
 app.use('/VoluntaryRoute', VoluntaryWork);
 app.use('/eligibilityRoute', EligibilityRoute);
 app.use('/college', CollegeRoute);
+app.use('/GraduateRoute', GraduateRoute);
 app.use('/vocational', VocationalRoute);
 app.use('/personalinfo', PersonalRoute);
 app.use('/WorkExperienceRoute', WorkExperienceRoute);
 app.use('/OtherInfo', OtherInformation);
+
+
 app.use('/allData', AllData);
 app.use('/attendance', Attendance);
+
+
 app.use('/EmployeeSalaryGrade', EmployeeSalaryGrade);
 app.use('/PlantillaTable', PlantillaTable);
 app.use('/SalaryGradeTable', SalaryGradeTable);
 app.use('/Remittance', Remittance);
+
 
 
 
@@ -1865,6 +1873,30 @@ app.get('/college/college-table/:employeeNumber', (req, res) => {
     res.status(200).send(result[0]); // Send first matched result
   });
 });
+
+
+for (let i = 1; i <= 7; i++) {
+  app.get(`/GraduateRoute/graduate-table${i}/:employeeNumber`, (req, res) => {
+    const { employeeNumber } = req.params;
+    const query = `SELECT * FROM graduate_table WHERE person_id = ?`;
+
+
+
+
+    db.query(query, [employeeNumber, i], (err, result) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).send('Internal Server Error');
+      }
+
+
+
+
+      // Always respond with 200. If nothing found, send null
+      res.status(200).send(result.length > 0 ? result[0] : null);
+    });
+  });
+}
 
 
 

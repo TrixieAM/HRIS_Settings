@@ -469,13 +469,13 @@ const PayrollProcess = () => {
  
   const computedRows = filteredData.map((item) => {
     const h = item.h || 0; // Default to 0 if h is not available
-    const m = item.m || 0; // Default to 0 if m is not availabl
+    const m = item.m || 0; // Default to 0 if m is not available
     const grossSalary = item.increment
     ? (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0) + (parseFloat(item.increment) || 0)
     : (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0);
 
-    const abs = (grossSalary * 0.0040322585897036 * h) + (grossSalary * 0.000067206958107324 * m);
-    const absAdjustment = abs * 0.0145952799;
+    const abs = (grossSalary * 0.0040322585897036 * h) + (grossSalary * 0.000067206958107324 * m); // equivalents of 'H' and 'M'
+    const absAdjustment = abs * 0.0145952799; // adjustments to absents
    
     const PhilHealthContribution = ((grossSalary * 0.05) / 2) || 0;
     const personalLifeRetIns = ((grossSalary) * 0.09);
@@ -499,11 +499,10 @@ const PayrollProcess = () => {
     (parseFloat(item.pagibig) || 0);
 
     const totalOtherDeds =
-   
-      (parseFloat(item.disallowance) || 0) +
-      (parseFloat(item.landbankSalaryLoan) || 0) +
-      (parseFloat(item.earistCreditCoop) || 0) +
-      (parseFloat(item.feu) || 0);
+    (parseFloat(item.disallowance) || 0) +
+    (parseFloat(item.landbankSalaryLoan) || 0) +
+    (parseFloat(item.earistCreditCoop) || 0) +
+    (parseFloat(item.feu) || 0);
 
     const totalDeductions =
     (parseFloat(item.withholdingTax) || 0) +
@@ -522,6 +521,12 @@ const PayrollProcess = () => {
 
     const rtIns = grossSalary * 0.12;
  
+
+
+
+// END OF COMPUTATION
+
+
     return {
       ...item,
         totalGsisDeds: totalGsisDeds.toFixed(2),

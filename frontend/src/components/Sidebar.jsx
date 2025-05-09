@@ -898,7 +898,7 @@ useEffect(() => {
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_summary' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <FolderSpecial />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Summary" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Overall Summary" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>

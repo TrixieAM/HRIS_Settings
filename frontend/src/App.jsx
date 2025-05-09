@@ -233,7 +233,7 @@ function App() {
           sx={{
             flexGrow: 1,
             bgcolor: 'transparent',  // etong kupal nato ang naglalagay ng white background
-            p: 10,
+            p: 5,
             marginLeft: `${drawerWidth}px`,
             fontFamily: 'Poppins, sans-serif',
           }}

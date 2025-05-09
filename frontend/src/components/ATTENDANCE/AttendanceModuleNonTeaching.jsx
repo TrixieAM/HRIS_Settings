@@ -862,14 +862,14 @@ const AttendanceModuleNonTeachingStaff = () => {
   // TIME IN AND TIME OUT END OverTime
 
 
-  const currentYear = new Date().getFullYear();
+  const currentYear = 2024;
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
 
   const handleMonthClick = (monthIndex) => {
-    const year = new Date().getFullYear();
+    const year = 2024;
   
     const start = new Date(Date.UTC(year, monthIndex, 1));
     const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month

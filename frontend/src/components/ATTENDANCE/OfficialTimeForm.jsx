@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import SaveIcon from '@mui/icons-material/Save';
+import SearchIcon from '@mui/icons-material/Search';
 import { Typography, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Container } from "@mui/material";
 
 const OfficialTimeForm = () => {
@@ -190,12 +192,10 @@ const OfficialTimeForm = () => {
     <Container sx={{ bgcolor: 'white', paddingBottom: '25px', borderRadius: '10px'}}>
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "2rem" }}>
-        {/* Left side - Title */}
         <div style={{ textAlign: "left", marginRight: '75px' }}>
           <Typography variant="h4">Official Time Schedule</Typography>
         </div>
 
-        {/* Right side - Upload Section */}
         <div style={{ display: "flex", alignItems: "right", gap: "1rem" }}>
           <Typography variant="h6" sx={{ fontSize: '13px'}}>Upload Excel File</Typography>
 
@@ -209,14 +209,27 @@ const OfficialTimeForm = () => {
 
           {file && <Typography variant="body2">{file.name}</Typography>}
 
-          <Button variant="contained" color="primary" onClick={handleUpload} disabled={!file} sx={{ bgcolor: '#6D2323'}}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleUpload}
+            disabled={!file}
+            sx={{ bgcolor: '#6D2323' }}
+          >
+            <CloudUploadIcon sx={{ mr: 1 }} /> {/* Add Upload icon with some right margin */}
             Upload Excel
           </Button>
         </div>
       </div>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
         <TextField label="Employee ID" variant="outlined" size="small" value={employeeID} onChange={(e) => setemployeeID(e.target.value)} />
-        <Button variant="contained" sx={{bgcolor: '#6D2323'}} color="primary" onClick={handleSearch}>
+        <Button
+          variant="contained"
+          sx={{ bgcolor: '#6D2323' }}
+          color="primary"
+          onClick={handleSearch}
+        >
+          <SearchIcon sx={{ mr: 1 }} /> {/* Add Search icon with some right margin */}
           Search
         </Button>
       </div>
@@ -289,9 +302,15 @@ const OfficialTimeForm = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-            {found ? "Update" : "Save"}
-          </Button>
+          <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2, bgcolor: '#6D2323', marginLeft: '89.9%' }}
+        >
+          <SaveIcon sx={{ mr: 1 }} /> {/* Add Save icon with some right margin */}
+          {found ? "Update" : "Save"}
+        </Button>
         </form>
       )}
     </div>

@@ -1861,11 +1861,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     }}
   >
     <Typography variant="h6" mb={2}>
-      Are you sure you're submitting your data?
+      Are you sure all the data are correct?
     </Typography>
     <Box display="flex" justifyContent="center" gap={2}>
       <Button
-        variant="outlined"
         style={{color: 'black'}}
         onClick={() => setShowConfirmation(false)}
         disabled={isSubmitting}

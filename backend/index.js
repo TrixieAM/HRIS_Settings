@@ -1103,7 +1103,7 @@ app.delete('/employee-remittance/:id', (req, res) => {
 // Get all records (Include `dateCreated`)
 app.get('/api/item-table', (req, res) => {
   const sql = `
-    SELECT id, item_description, employeeID, item_code, salary_grade, step, effectivityDate, dateCreated
+    SELECT id, item_description, employeeID, name, item_code, salary_grade, step, effectivityDate, dateCreated
     FROM item_table
   `;
   db.query(sql, (err, result) => {
@@ -1117,15 +1117,15 @@ app.get('/api/item-table', (req, res) => {
 
 // Add new item (Do NOT include `dateCreated` — it auto-generates)
 app.post('/api/item-table', (req, res) => {
-  const { item_description, employeeID, item_code, salary_grade, step, effectivityDate } = req.body;
+  const { item_description, employeeID, name, item_code, salary_grade, step, effectivityDate } = req.body;
 
   const sql = `
-    INSERT INTO item_table (item_description, employeeID, item_code, salary_grade, step, effectivityDate)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO item_table (item_description, employeeID, name, item_code, salary_grade, step, effectivityDate)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
   db.query(
     sql,
-    [item_description, employeeID, item_code, salary_grade, step, effectivityDate],
+    [item_description, employeeID, name, item_code, salary_grade, step, effectivityDate],
     (err, result) => {
       if (err) {
         console.error('Database Insert Error:', err.message);
@@ -1142,12 +1142,13 @@ app.post('/api/item-table', (req, res) => {
 // Update item (Do NOT touch `dateCreated`)
 app.put('/api/item-table/:id', (req, res) => {
   const { id } = req.params;
-  const { item_description, employeeID, item_code, salary_grade, step, effectivityDate } = req.body;
+  const { item_description, employeeID, name, item_code, salary_grade, step, effectivityDate } = req.body;
 
   const sql = `
     UPDATE item_table SET
       item_description = ?,
       employeeID = ?,
+      name = ?,
       item_code = ?,
       salary_grade = ?,
       step = ?,
@@ -1157,7 +1158,7 @@ app.put('/api/item-table/:id', (req, res) => {
   `;
   db.query(
     sql,
-    [item_description, employeeID, item_code, salary_grade, step, effectivityDate, id],
+    [item_description, employeeID, name, item_code, salary_grade, step, effectivityDate, id],
     (err, result) => {
       if (err) {
         console.error('Database Update Error:', err.message);

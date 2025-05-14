@@ -381,9 +381,9 @@ const handlePasskeySubmit = async () => {
 
       {/* Confirm Deletion Dialog */}
 <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
-  <DialogTitle>Are you sure?</DialogTitle>
+  <DialogTitle>Delete this record?</DialogTitle>
   <DialogContent>
-    <Typography>Do you really want to delete this record?</Typography>
+    <Typography>Are you sure you want to delete this record?</Typography>
   </DialogContent>
   <DialogActions>
     <Button onClick={() => setOpenConfirm(false)} style={{color: 'black'}}>Cancel</Button>
@@ -394,12 +394,12 @@ const handlePasskeySubmit = async () => {
 
 {/* Passkey Prompt Dialog */}
 <Dialog open={openPasskey} onClose={() => setOpenPasskey(false)}>
-  <DialogTitle>Enter Passkey</DialogTitle>
+  <DialogTitle>Passkey</DialogTitle>
   <DialogContent>
     <TextField
       autoFocus
       margin="dense"
-      label="Passkey"
+      label="Enter a Passkey"
       type="password"
       fullWidth
       value={passkeyInput}

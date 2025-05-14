@@ -97,10 +97,10 @@ const AttendanceSearch = () => {
                         <SearchIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
                         <div>
                           <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-                            Attendance Record Search
+                            Attendance Record
                           </h4>
                           <p style={{ margin: 0, fontSize: '85%' }}>
-                          Generate & review attendance records
+                          Generate and review attendance records
              
                           </p>
                         </div>
@@ -130,7 +130,7 @@ const AttendanceSearch = () => {
     <div>
 
       <TextField
-        label="Person ID"
+        label="Employee Number"
         value={personID}
         onChange={(e) => setPersonID(e.target.value)}
         sx={{ width: "250px", marginTop: "14px",  marginLeft: '50px' }} // Adjust width and add spacing
@@ -183,7 +183,7 @@ const AttendanceSearch = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Person ID</TableCell>
+                  <TableCell>Employee Number</TableCell>
                   <TableCell>Date</TableCell>
                   <TableCell>Day</TableCell>
                   <TableCell>Time IN</TableCell>

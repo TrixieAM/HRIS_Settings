@@ -131,7 +131,7 @@ const AllAttendanceRecord = () => {
           onSubmit={handleSubmit}
         >
           <TextField
-            label="Person ID"
+            label="Employee Number"
             variant="outlined"
             value={personID}
             onChange={(e) => setPersonID(e.target.value)}
@@ -199,7 +199,7 @@ const AllAttendanceRecord = () => {
             <TableHead>
               <TableRow style={{ backgroundColor: '#6D2323' }}>
                 <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>
-                  Person ID
+                  Employee Number
                 </TableCell>
                 <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>
                   Date

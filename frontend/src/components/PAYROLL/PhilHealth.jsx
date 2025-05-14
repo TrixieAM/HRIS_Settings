@@ -14,8 +14,12 @@ import {
   Button,
   CircularProgress,
   Alert,
+  TextField,
 } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
+import { InputAdornment } from '@mui/material';
+import { Search } from '@mui/icons-material';
+
 
 const PhilHealthTable = () => {
   const [philhealthData, setPhilhealthData] = useState([]);
@@ -24,6 +28,8 @@ const PhilHealthTable = () => {
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/philhealth')
@@ -38,8 +44,10 @@ const PhilHealthTable = () => {
       });
   }, []);
 
+
   const handleSubmit = () => {
     const newContribution = { employeeNumber, PhilHealthContribution: parseFloat(PhilHealthContribution) };
+
 
     if (editId) {
       axios.put(`http://localhost:5000/api/philhealth/${editId}`, newContribution)
@@ -58,6 +66,7 @@ const PhilHealthTable = () => {
     }
   };
 
+
   const handleDelete = (id) => {
     axios.delete(`http://localhost:5000/api/philhealth/${id}`)
       .then(() => {
@@ -66,6 +75,7 @@ const PhilHealthTable = () => {
       .catch((error) => console.error('Error deleting contribution:', error));
   };
 
+
   const handleEdit = (id) => {
     const contribution = philhealthData.find((item) => item.id === id);
     setEmployeeNumber(contribution.employeeNumber);
@@ -73,17 +83,25 @@ const PhilHealthTable = () => {
     setEditId(id);
   };
 
+
   const resetForm = () => {
     setEmployeeNumber('');
     setPhilHealthContribution('');
     setEditId(null);
   };
 
+
+  // Filter the records based on the search query
+  const filteredData = philhealthData.filter((entry) =>
+    entry.employeeNumber.includes(searchQuery)
+  );
+
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{  }}>
       <Paper
         elevation={6}
-        sx={{ backgroundColor: 'rgb(109, 35, 35)', color: '#fff', p: 3, borderRadius: 3, mb: 3 }}
+        sx={{ backgroundColor: 'rgb(109, 35, 35)', color: '#fff', p: 3, borderRadius: 3, borderEndEndRadius: '0', borderEndStartRadius: '0' }}
       >
         <Box display="flex" alignItems="center" gap={2}>
           <WorkIcon fontSize="large" />
@@ -98,7 +116,8 @@ const PhilHealthTable = () => {
         </Box>
       </Paper>
 
-      <Box mt={4} sx={{ backgroundColor: '#fff', p: 3, borderRadius: 2, boxShadow: 3, marginBottom: '15px' }}>
+
+      <Box mt={4} sx={{ backgroundColor: '#fff', p: 3, boxShadow: 3, marginBottom: '15px', marginTop: '0px' }}>
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
           {editId ? 'Edit Contribution' : 'Add New Contribution'}
         </Typography>
@@ -144,6 +163,25 @@ const PhilHealthTable = () => {
         </Box>
       </Box>
 
+
+      {/* Search Section */}
+       <TextField
+        size="small"
+        variant="outlined"
+        placeholder="Search by Employee Number"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        sx={{ backgroundColor: 'white', borderRadius: 1, marginLeft: '870px' }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search sx={{ color: '#6D2323', marginRight: 1 }} />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+
       {loading ? (
         <Box display="flex" justifyContent="center" mt={10}>
           <CircularProgress />
@@ -163,8 +201,8 @@ const PhilHealthTable = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {philhealthData.length > 0 ? (
-                  philhealthData.map((entry) => (
+                {filteredData.length > 0 ? (
+                  filteredData.map((entry) => (
                     <TableRow key={entry.id}>
                       <TableCell>{entry.id}</TableCell>
                       <TableCell>{entry.employeeNumber}</TableCell>
@@ -189,7 +227,7 @@ const PhilHealthTable = () => {
                           color="error"
                           sx={{
                             bgcolor: '#000000',
-                            borderColor: '#D3D3D3', 
+                            borderColor: '#D3D3D3',
                             color: '#ffffff',
                             '&:hover': {
                               borderColor: '#D3D3D3',
@@ -204,7 +242,7 @@ const PhilHealthTable = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} align="center">
+                    <TableCell colSpan={4} align="center" sx={{ color: 'red' }}>
                       No PhilHealth contributions available.
                     </TableCell>
                   </TableRow>
@@ -214,10 +252,11 @@ const PhilHealthTable = () => {
           </TableContainer>
         </Paper>
       )}
-
-     
     </Container>
   );
 };
 
+
 export default PhilHealthTable;
+ 
+

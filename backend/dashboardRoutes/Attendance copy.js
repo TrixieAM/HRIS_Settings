@@ -114,7 +114,7 @@ router.post("/api/attendance", (req, res) => {
 
 // Endpoint to fetch all attendance records with specific time columns
 router.post("/api/all-attendance", (req, res) => {
-  const { personID, startDate, endDate } = req.body;
+  const { personName, startDate, endDate } = req.body;
 
   const query = `
     SELECT 
@@ -125,14 +125,14 @@ router.post("/api/all-attendance", (req, res) => {
       MIN(CASE WHEN AttendanceState = 3 THEN AttendanceDateTime END) AS Time3,
       MAX(CASE WHEN AttendanceState = 4 THEN AttendanceDateTime END) AS Time4
     FROM AttendanceRecordInfo
-    WHERE PersonID = ? AND AttendanceDateTime BETWEEN ? AND ?
+    WHERE PersonName = ? AND AttendanceDateTime BETWEEN ? AND ?
     GROUP BY Date, PersonID, PersonName;
   `;
 
   const startTimestamp = new Date(startDate).getTime();
   const endTimestamp = new Date(endDate).getTime();
 
-  db.query(query, [personID, startTimestamp, endTimestamp], (err, results) => {
+  db.query(query, [personName, startTimestamp, endTimestamp], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -233,22 +233,18 @@ router.post("/api/view-attendance", (req, res) => {
   const { personID, startDate, endDate } = req.body;
 
   const query = `
-    SELECT 
-      ar.personID, 
-      ar.date, 
-      DAYNAME(ar.date) AS Day, 
-      ar.timeIN, ar.breaktimeIN, ar.breaktimeOUT, ar.timeOUT, 
-      p.*, 
-      ot.officialTimeIN, ot.officialTimeOUT
-    FROM attendanceRecord ar
-    INNER JOIN profile p ON ar.personID = p.employeeID
-    INNER JOIN (
-      SELECT day, MIN(officialTimeIN) AS officialTimeIN, MIN(officialTimeOUT) AS officialTimeOUT
-      FROM officialtime
-      GROUP BY day
-    ) ot ON DAYNAME(ar.date) = ot.day
-    WHERE ar.personID = ? AND ar.date BETWEEN ? AND ?
-    ORDER BY ar.date ASC;
+    SELECT attendanceRecord.personID, attendanceRecord.date, 
+    DAYNAME(date) AS Day, 
+    attendanceRecord.timeIN, attendanceRecord.breaktimeIN, 
+    attendanceRecord.breaktimeOUT, attendanceRecord.timeOUT, 
+    profile.*, 
+    officialtime.officialTimeIN, officialtime.officialTimeOUT
+    FROM attendanceRecord
+    INNER JOIN profile ON attendanceRecord.personID = profile.employeeID
+    INNER JOIN officialtime ON DAYNAME(attendanceRecord.date) = officialtime.day
+    WHERE attendanceRecord.personID = ? AND attendanceRecord.date BETWEEN ? AND ?
+    ORDER BY attendanceRecord.date ASC;
+
   `;
 
   db.query(query, [personID, startDate, endDate], (err, results) => {
@@ -256,7 +252,6 @@ router.post("/api/view-attendance", (req, res) => {
     res.send(results);
   });
 });
-
 
 // Update records
 router.put("/api/view-attendance", (req, res) => {

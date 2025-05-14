@@ -10,7 +10,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import earistLogo from "../assets/earistLogo.jpg";
+import logo from "../assets/earistLogo.jpg";
 
 const ForgotPassword = () => {
   const [formData, setFormData] = useState({
@@ -62,65 +62,66 @@ const ForgotPassword = () => {
       maxWidth="sm"
       sx={{
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
+        minHeight: "70vh",
+        marginLeft: "-20%",
+        backgroundColor: "#fff8e1",
       }}
     >
       <Paper
-        elevation={3}
+        elevation={4}
         sx={{
           padding: 4,
-          width: "68%",
+          width: "100%",
+          maxWidth: 400,
           borderRadius: 2,
           textAlign: "center",
-          marginLeft: "-40%",
-          marginTop: "-115%"
         }}
       >
-        <Box sx={{ mb: 2 }}>
-          <Box
-            sx={{
-              backgroundColor: "#A31D1D",
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              paddingY: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              marginX: "-32px",
-              marginTop: "-32px",
+        {/* Logo Section */}
+        <Box
+          sx={{
+            backgroundColor: "#A31D1D",
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            py: 2,
+            display: "flex",
+            justifyContent: "center",
+            mb: 2,
+            mx: -4,
+            mt: -4,
+          }}
+        >
+          <img
+            src={logo}
+            alt="E.A.R.I.S.T Logo"
+            style={{
+              height: 80,
+              borderRadius: "50%",
+              backgroundColor: "white",
+              padding: 4,
             }}
-          >
-            <img
-              src={earistLogo}
-              alt="E.A.R.I.S.T Logo"
-              style={{
-                height: 90,
-                borderRadius: "50%",
-                backgroundColor: "white",
-                padding: "4px",
-              }}
-            />
-          </Box>
+          />
         </Box>
 
-        <Typography variant="h6" gutterBottom>
-          <b>Reset Password</b>
+        {/* Header */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 5 }}>
+          <b>Reset Your Password</b>
         </Typography>
 
+        {/* Error Message */}
         {errMessage && (
           <Alert sx={{ mb: 2 }} severity="error">
             {errMessage}
           </Alert>
         )}
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
           <TextField
             name="name"
             label="Name"
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, mt: 5 }}
             onChange={handleChanges}
           />
           <TextField
@@ -137,16 +138,25 @@ const ForgotPassword = () => {
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ bgcolor: "#A31D1D" }}
+            sx={{ bgcolor: "#A31D1D", mt: 3 }}
           >
             Send Reset Link
           </Button>
         </form>
 
-        <Typography variant="body2" sx={{ mt: 2 }}>
+        {/* Back to login link */}
+        <Typography variant="body2" sx={{ mt: 2, fontSize: "13px" }}>
           Remember your password?{" "}
-          <Link href="/" underline="hover">
-            <b>Login</b>
+          <Link
+            href="/"
+            underline="hover"
+            sx={{
+              color: "black",
+              fontWeight: "bold",
+              fontSize: "13px",
+            }}
+          >
+            Login
           </Link>
         </Typography>
       </Paper>

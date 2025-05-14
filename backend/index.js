@@ -132,28 +132,34 @@ module.exports = db;
 
 // REGISTER
 app.post("/register", async (req, res) => {
-  const { employeeNumber, username, email, role, password } = req.body;
-
-
+  const { username, password, employeeNumber } = req.body;
 
 
   try {
+    // hash the password
     const hashedPass = await bcrypt.hash(password, 10);
 
 
-
-
     const query = `
-      INSERT INTO users (employeeNumber, username, email, role, password)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (
+        username,
+        role,
+        password,
+        employeeNumber,
+        employmentCategory,
+        access_level
+      ) VALUES (?, ?, ?, ?, ?, ?)
     `;
 
 
-
-
-    await db.query(query, [employeeNumber, username, email, role, hashedPass]);
-
-
+     db.query(query, [
+      username,
+      'staff',       // default role
+      hashedPass,
+      employeeNumber,
+      1,             // default employmentCategory
+      'user'         // default access_level
+    ]);
 
 
     res.status(200).send({ message: "User Registered Successfully" });
@@ -166,15 +172,16 @@ app.post("/register", async (req, res) => {
 
 
 
+
 //LOGIN
 app.post('/login', (req, res) => {
-  const { email, password } = req.body;
+  const { employeeNumber, password } = req.body;
 
 
-  const query = `SELECT * FROM users WHERE email = ?
+  const query = `SELECT * FROM users WHERE employeeNumber = ?
    
     `;
-  db.query(query, [email], async (err, result) => {
+  db.query(query, [employeeNumber], async (err, result) => {
     if (err) return res.status(500).send(err);
     if (result.length === 0)
       return res
@@ -722,20 +729,18 @@ app.post('/officialtimetable', (req, res) => {
 
 
 
- app.post("/upload-excel-faculty-official-time", (req, res) => {
- if (!req.files || !req.files.file) {
-     return res.status(400).json({ message: "No file uploaded." });
-   }
 
 
+app.post("/upload-excel-faculty-official-time", async (req, res) => {
+  if (!req.files || !req.files.file) {
+    return res.status(400).json({ message: "No file uploaded." });
+  }
 
 
   const file = req.files.file;
   const workbook = xlsx.read(file.data, { type: "buffer" });
   const sheetName = workbook.SheetNames[0];
-  const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-
+  const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
 
 
   if (!sheet.length) {
@@ -743,143 +748,24 @@ app.post('/officialtimetable', (req, res) => {
   }
 
 
-
-
-  const values = sheet.map((row) => [
-    row.employeeID,
-    row.day,
-    row.officialTimeIN,
-    row.officialBreaktimeIN,
-    row.officialBreaktimeOUT,
-    row.officialTimeOUT,
-    row.officialHonorariumTimeIN,
-    row.officialHonorariumTimeOUT,
-    row.officialServiceCreditTimeIN,
-    row.officialServiceCreditTimeOUT,
-    row.officialOverTimeIN,
-    row.officialOverTimeOUT,
-  ]);
-
-
-
-
-  const sql = `
-    INSERT INTO officialtime (
-      employeeID, day,
-      officialTimeIN,
-      officialBreaktimeIN,
-      officialBreaktimeOUT,
-      officialTimeOUT,
-      officialHonorariumTimeIN,
-      officialHonorariumTimeOUT,
-      officialServiceCreditTimeIN,
-      officialServiceCreditTimeOUT,
-      officialOverTimeIN,
-      officialOverTimeOUT
-
-
-
-
-    )
-    VALUES ?
-    ON DUPLICATE KEY UPDATE
-      officialTimeIN = VALUES(officialTimeIN),
-      officialBreaktimeIN = VALUES(officialBreaktimeIN),
-      officialBreaktimeOUT = VALUES(officialBreaktimeOUT),
-      officialTimeOUT = VALUES(officialTimeOUT),
-      officialHonorariumTimeIN = VALUES(officialHonorariumTimeIN),
-      officialHonorariumTimeOUT = VALUES(officialHonorariumTimeOUT),
-      officialServiceCreditTimeIN = VALUES(officialServiceCreditTimeIN),
-      officialServiceCreditTimeOUT = VALUES(officialServiceCreditTimeOUT),
-      officialOverTimeIN = VALUES(officialOverTimeIN),
-      officialOverTimeOUT = VALUES(officialOverTimeOUT)
-
-
-
-
-  `;
-
-
-
-
-  db.query(sql, [values], (err, result) => {
-    if (err) {
-      console.error("Error inserting/updating records:", err);
-      return res.status(500).json({ error: err.message });
+  const cleanedSheet = sheet.map((row) => {
+    const cleanedRow = {};
+    for (const key in row) {
+      const cleanKey = key.replace(/\u00A0/g, "").trim();
+      cleanedRow[cleanKey] = row[key];
     }
-    res.json({ message: "Excel data uploaded successfully", affectedRows: result.affectedRows });
+    return cleanedRow;
   });
-});
 
 
+  let insertedCount = 0;
+  let updatedCount = 0;
 
 
-app.post('/upload-excel-faculty-official-time', (req, res) => {
-  if (!req.files || !req.files.file) {
-    console.error('No file uploaded.');
-    return res.status(400).json({ message: 'No file uploaded.' });
-  }
-
-
-
-
-  const file = req.files.file;
-  console.log('Uploaded file:', file.name);
-
-
-
-
-  const workbook = xlsx.read(file.data, { type: 'buffer' });
-  const sheetName = workbook.SheetNames[0];
-  const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-
-
-
-  console.log('Extracted Data:', sheet);
-
-
-
-
-  if (!sheet.length) {
-    console.error('Excel file is empty.');
-    return res.status(400).json({ message: 'Excel file is empty.' });
-  }
-
-
-
-
-  const values = sheet
-    .map((row) => [
-      row.employeeID?.toString().trim(),
-      row.day,
-      row.officialTimeIN || null,
-      row.officialBreaktimeIN || null,
-      row.officialBreaktimeOUT || null,
-      row.officialTimeOUT || null,
-      row.officialHonorariumTimeIN || null,
-      row.officialHonorariumTimeOUT || null,
-      row.officialServiceCreditTimeIN || null,
-      row.officialServiceCreditTimeOUT || null,
-      row.officialOverTimeIN || null,
-      row.officialOverTimeOUT || null,
-    ])
-    .filter((row) => row[0]); // Remove rows without employeeID
-
-
-
-
-  if (values.length === 0) {
-    console.error('No valid data to insert.');
-    return res.status(400).json({ message: 'No valid data to insert.' });
-  }
-
-
-
-
-  const sql = `
-    INSERT INTO officialtime (
-      employeeID, day,
+  for (const row of cleanedSheet) {
+    const {
+      employeeID,
+      day,
       officialTimeIN,
       officialBreaktimeIN,
       officialBreaktimeOUT,
@@ -889,40 +775,106 @@ app.post('/upload-excel-faculty-official-time', (req, res) => {
       officialServiceCreditTimeIN,
       officialServiceCreditTimeOUT,
       officialOverTimeIN,
-      officialOverTimeOUT
-    )
-    VALUES ?
-    ON DUPLICATE KEY UPDATE
-      officialTimeIN = VALUES(officialTimeIN),
-      officialBreaktimeIN = VALUES(officialBreaktimeIN),
-      officialBreaktimeOUT = VALUES(officialBreaktimeOUT),
-      officialTimeOUT = VALUES(officialTimeOUT),
-      officialHonorariumTimeIN = VALUES(officialHonorariumTimeIN),
-      officialHonorariumTimeOUT = VALUES(officialHonorariumTimeOUT),
-      officialServiceCreditTimeIN = VALUES(officialServiceCreditTimeIN),
-      officialServiceCreditTimeOUT = VALUES(officialServiceCreditTimeOUT),
-      officialOverTimeIN = VALUES(officialOverTimeIN),
-      officialOverTimeOUT = VALUES(officialOverTimeOUT)
-  `;
+      officialOverTimeOUT,
+    } = row;
 
 
+    if (!employeeID || !day) continue;
 
 
-  console.log('SQL Query:', sql);
-  console.log('Values:', values);
+    const checkQuery = `SELECT id FROM officialtime WHERE employeeID = ? AND day = ?`;
+    const checkValues = [employeeID, day];
 
 
+    try {
+      const [rows] = await db.promise().query(checkQuery, checkValues);
 
 
-  db.query(sql, [values], (err, result) => {
-    if (err) {
-      console.error('MySQL Error:', err);
-      return res.status(500).json({ error: err.message });
+      if (rows.length > 0) {
+        // Exists – perform UPDATE
+        const updateQuery = `
+          UPDATE officialtime SET
+            officialTimeIN = ?,
+            officialBreaktimeIN = ?,
+            officialBreaktimeOUT = ?,
+            officialTimeOUT = ?,
+            officialHonorariumTimeIN = ?,
+            officialHonorariumTimeOUT = ?,
+            officialServiceCreditTimeIN = ?,
+            officialServiceCreditTimeOUT = ?,
+            officialOverTimeIN = ?,
+            officialOverTimeOUT = ?
+          WHERE employeeID = ? AND day = ?
+        `;
+
+
+        const updateValues = [
+          officialTimeIN,
+          officialBreaktimeIN,
+          officialBreaktimeOUT,
+          officialTimeOUT,
+          officialHonorariumTimeIN,
+          officialHonorariumTimeOUT,
+          officialServiceCreditTimeIN,
+          officialServiceCreditTimeOUT,
+          officialOverTimeIN,
+          officialOverTimeOUT,
+          employeeID,
+          day,
+        ];
+
+
+        const [result] = await db.promise().query(updateQuery, updateValues);
+        if (result.affectedRows > 0) updatedCount++;
+      } else {
+        // Not found – perform INSERT
+        const insertQuery = `
+          INSERT INTO officialtime (
+            employeeID, day,
+            officialTimeIN,
+            officialBreaktimeIN,
+            officialBreaktimeOUT,
+            officialTimeOUT,
+            officialHonorariumTimeIN,
+            officialHonorariumTimeOUT,
+            officialServiceCreditTimeIN,
+            officialServiceCreditTimeOUT,
+            officialOverTimeIN,
+            officialOverTimeOUT
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+
+        const insertValues = [
+          employeeID,
+          day,
+          officialTimeIN,
+          officialBreaktimeIN,
+          officialBreaktimeOUT,
+          officialTimeOUT,
+          officialHonorariumTimeIN,
+          officialHonorariumTimeOUT,
+          officialServiceCreditTimeIN,
+          officialServiceCreditTimeOUT,
+          officialOverTimeIN,
+          officialOverTimeOUT,
+        ];
+
+
+        const [result] = await db.promise().query(insertQuery, insertValues);
+        if (result.affectedRows > 0) insertedCount++;
+      }
+    } catch (err) {
+      
+      console.error(`Error processing row for employeeID: ${employeeID}, day: ${day}`, err.message);
     }
-    res.json({
-      message: 'Excel data uploaded successfully',
-      affectedRows: result.affectedRows,
-    });
+  }
+
+
+  res.json({
+    message: "Upload complete.",
+    inserted: insertedCount,
+    updated: updatedCount,
   });
 });
 
@@ -2059,6 +2011,10 @@ app.get('/api/payroll', (req, res) => {
 
 
 
+
+
+
+
 app.get('/api/payroll-with-remittance', (req, res) => {
   const query = `
   SELECT
@@ -2067,7 +2023,9 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     p.employeeNumber,
     p.startDate,
     p.endDate,
-    p.rateNbc188,
+    p.rateNbc584,
+    p.rateNbc594,
+    p.nbcDiffl597,
     p.grossSalary,
     p.abs,
     p.h,
@@ -2088,10 +2046,17 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     p.ec,
 
 
+
+
     p.status,
 
 
+
+
     CONCAT_WS(', ', pt.lastName, CONCAT_WS(' ', pt.firstName, pt.middleName, pt.nameExtension)) AS name,
+
+
+
 
 
 
@@ -2099,9 +2064,10 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     r.increment,
     r.gsisSalaryLoan,
     r.gsisPolicyLoan,
-    r.gfal,
+    r.gsisArrears,
     r.cpl,
     r.mpl,
+    r.eal,
     r.mplLite,
     r.emergencyLoan,
     r.pagibigFundCont,
@@ -2110,9 +2076,11 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     r.landbankSalaryLoan,
     r.earistCreditCoop,
     r.feu,
-    r.disallowance,
-    r.pagibig,
+    r.liquidatingCash,
     itt.item_description,
+
+
+
 
 
 
@@ -2121,10 +2089,16 @@ app.get('/api/payroll-with-remittance', (req, res) => {
 
 
 
+
+
+
     ph.PhilHealthContribution,
 
 
+
+
     da.code AS department,
+
 
     CASE itt.step
     WHEN 'step1' THEN sgt.step1
@@ -2137,7 +2111,7 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     WHEN 'step8' THEN sgt.step8
     -- Add more steps if necessary
     ELSE NULL
-  END AS rateNbc188
+  END AS rateNbc594
    
   FROM payroll_processing p
   LEFT JOIN person_table pt
@@ -2152,17 +2126,25 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     ON p.employeeNumber = da.employeeNumber
 
 
+
+
   LEFT JOIN item_table as itt
   ON itt.employeeID = p.employeeNumber
-  
+ 
   LEFT JOIN salary_grade_table sgt
   ON sgt.sg_number = itt.salary_grade AND sgt.effectivityDate = itt.effectivityDate
   ;
-  
-  
+ 
+ 
+
+
 
 
 `;
+
+
+
+
 
 
 
@@ -2179,13 +2161,19 @@ app.get('/api/payroll-with-remittance', (req, res) => {
 
 
 
+
+
+
+
 app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   const { employeeNumber } = req.params;
   const {
     startDate,
     endDate,
     name,
-    rateNbc188,
+    rateNbc584,
+    rateNbc594,
+    nbcDiffl597,
     grossSalary,
     abs,
     h,
@@ -2208,17 +2196,17 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     increment,
     gsisSalaryLoan,
     gsisPolicyLoan,
-    gfal,
+    gsisArrears,
     cpl,
     mpl,
+    eal,
     mplLite,
     emergencyLoan,
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
     position,
-    pagibig,
-    disallowance,
+    liquidatingCash,
     landbankSalaryLoan,
     earistCreditCoop,
     feu,
@@ -2227,7 +2215,11 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   } = req.body;
 
 
+
+
   const nameExtensionCandidates = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
+
+
 
 
   let lastName = '';
@@ -2236,18 +2228,26 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   let nameExtension = '';
 
 
+
+
   if (typeof name === 'string') {
     const [last, firstMiddle] = name.split(',').map(part => part.trim());
+
+
 
 
     if (last && firstMiddle) {
       lastName = last;
 
 
+
+
       const nameParts = firstMiddle.split(' ').filter(Boolean);
       if (nameParts.length > 0) {
         firstName = nameParts[0];
         const middleParts = [];
+
+
 
 
         for (let i = 1; i < nameParts.length; i++) {
@@ -2259,12 +2259,16 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
         }
 
 
+
+
         middleName = middleParts.join(' ');
       }
     }
   } else {
     console.error('Invalid name input:', name);
   }
+
+
 
 
   const query = `
@@ -2276,7 +2280,9 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       p.startDate = ?,
       p.endDate = ?,
       p.name = ?,
-      p.rateNbc188 = ?,
+      p.rateNbc584 =?,
+      p.rateNbc594 = ?,
+      p.nbcDiffl597 =?,
       p.grossSalary = ?,
       p.abs = ?,
       p.h = ?,
@@ -2292,27 +2298,30 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       p.pay1st = ?,
       p.pay2nd = ?,
 
+
       p.pay1stCompute = ?,
       p.pay2ndCompute = ?,
       p.rtIns = ?,
       p.ec = ?,
 
 
+
+
       r.nbc594 = ?,
       r.increment = ?,
       r.gsisSalaryLoan = ?,
       r.gsisPolicyLoan = ?,
-      r.gfal = ?,
+      r.gsisArrears = ?,
       r.cpl = ?,
       r.mpl = ?,
+      r.eal =?,
       r.mplLite = ?,
       r.emergencyLoan = ?,
       r.pagibigFundCont = ?,
       r.pagibig2 = ?,
       r.multiPurpLoan = ?,
-      pt2.position = ?,
-      r.pagibig = ?,
-      r.disallowance = ?,
+      pt2.position = ?,      
+      r.liquidatingCash = ?,
       r.landBankSalaryLoan = ?,
       r.earistCreditCoop = ?,
       r.feu = ?
@@ -2320,12 +2329,16 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   `;
 
 
+
+
   const values = [
     department,
     startDate,
     endDate,
     name,
-    rateNbc188,
+    rateNbc584,
+    rateNbc594,
+    nbcDiffl597,
     grossSalary,
     abs,
     h,
@@ -2348,22 +2361,24 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     increment,
     gsisSalaryLoan,
     gsisPolicyLoan,
-    gfal,
+    gsisArrears,
     cpl,
     mpl,
+    eal,
     mplLite,
     emergencyLoan,
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
     position,
-    pagibig,
-    disallowance,
+    liquidatingCash,
     landbankSalaryLoan,
     earistCreditCoop,
     feu,
     employeeNumber
   ];
+
+
 
 
   db.query(query, values, (err, result) => {
@@ -2373,9 +2388,13 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     }
 
 
+
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
+
+
 
 
     // Update person_table
@@ -2384,6 +2403,8 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       SET firstName = ?, middleName = ?, lastName = ?, nameExtension = ?
       WHERE agencyEmployeeNum = ?
     `;
+
+
 
 
     db.query(
@@ -2396,12 +2417,16 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
         }
 
 
+
+
         // Update PhilHealth contribution
         const philHealthQuery = `
           UPDATE philhealth
           SET PhilHealthContribution = ?
           WHERE employeeNumber = ?
         `;
+
+
 
 
         db.query(
@@ -2414,12 +2439,16 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
             }
 
 
+
+
             // Update department_assignment table
             const departmentAssignmentQuery = `
               UPDATE department_assignment
               SET code = ?
               WHERE employeeNumber = ?
             `;
+
+
 
 
             db.query(
@@ -2430,6 +2459,8 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
                   console.error('Error updating department assignment:', err4);
                   return res.status(500).json({ error: 'Internal server error' });
                 }
+
+
 
 
                 res.json({ message: 'Payroll record updated successfully' });
@@ -2447,8 +2478,18 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
 
 
 
+
+
+
+
+
+
 app.delete('/api/payroll-with-remittance/:id', (req, res) => {
   const { id } = req.params;
+
+
+
+
 
 
 
@@ -2457,6 +2498,10 @@ app.delete('/api/payroll-with-remittance/:id', (req, res) => {
     DELETE FROM payroll_processing
     WHERE id = ?
   `;
+
+
+
+
 
 
 
@@ -2470,9 +2515,17 @@ app.delete('/api/payroll-with-remittance/:id', (req, res) => {
 
 
 
+
+
+
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Payroll record not found' });
     }
+
+
+
+
 
 
 
@@ -2484,8 +2537,16 @@ app.delete('/api/payroll-with-remittance/:id', (req, res) => {
 
 
 
+
+
+
+
 app.get('/api/payroll-with-remittance', (req, res) => {
   const { employeeNumber, startDate, endDate } = req.query;
+
+
+
+
 
 
 
@@ -2499,10 +2560,18 @@ app.get('/api/payroll-with-remittance', (req, res) => {
 
 
 
+
+
+
+
   const query = `
     SELECT * FROM payroll_processing
     WHERE employeeNumber = ? AND startDate = ? AND endDate = ?
   `;
+
+
+
+
 
 
 
@@ -2516,10 +2585,18 @@ app.get('/api/payroll-with-remittance', (req, res) => {
 
 
 
+
+
+
+
     if (result.length > 0) {
       // Found existing record
       return res.json({ exists: true });
     }
+
+
+
+
 
 
 
@@ -2531,8 +2608,16 @@ app.get('/api/payroll-with-remittance', (req, res) => {
 
 
 
+
+
+
+
 app.post('/api/add-rendered-time', async (req, res) => {
   const attendanceData = req.body;
+
+
+
+
 
 
 
@@ -2540,6 +2625,10 @@ app.post('/api/add-rendered-time', async (req, res) => {
   if (!Array.isArray(attendanceData)) {
     return res.status(400).json({ error: 'Expected an array of data.' });
   }
+
+
+
+
 
 
 
@@ -2556,6 +2645,10 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
+
+
+
+
       // Fetch the department code based on the employee number from department_assignment
       const departmentQuery = `
         SELECT code FROM department_assignment WHERE employeeNumber = ?
@@ -2564,9 +2657,17 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
+
+
+
+
       const [departmentRows] = await db
         .promise()
         .query(departmentQuery, [employeeNumber]);
+
+
+
+
 
 
 
@@ -2581,7 +2682,15 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
+
+
+
+
       const departmentCode = departmentRows[0].code;
+
+
+
+
 
 
 
@@ -2590,6 +2699,10 @@ app.post('/api/add-rendered-time', async (req, res) => {
       let h = '00';
       let m = '00';
       let s = '00';
+
+
+
+
 
 
 
@@ -2606,11 +2719,19 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
+
+
+
+
       // Insert the record into payroll including the department (code)
       const insertQuery = `
         INSERT INTO payroll_processing (employeeNumber, startDate, endDate, h, m, s, department)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
+
+
+
+
 
 
 
@@ -2631,6 +2752,10 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
+
+
+
+
     res
       .status(200)
       .json({ message: 'Records added to payroll with time data.' });
@@ -2643,10 +2768,12 @@ app.post('/api/add-rendered-time', async (req, res) => {
 
 
 
+
+
+
+
 app.post('/api/finalized-payroll', (req, res) => {
   const payrollData = req.body;
-
-
 
 
   if (!Array.isArray(payrollData) || payrollData.length === 0) {
@@ -2654,15 +2781,15 @@ app.post('/api/finalized-payroll', (req, res) => {
   }
 
 
-
-
   const values = payrollData.map((entry) => [
     entry.employeeNumber,
-    entry.department,
     entry.startDate,
     entry.endDate,
     entry.name,
-    entry.rateNbc188,
+    entry.rateNbc584,
+    entry.nbc594,
+    entry.rateNbc594,
+    entry.nbcDiffl597,
     entry.grossSalary,
     entry.abs,
     entry.h,
@@ -2673,54 +2800,47 @@ app.post('/api/finalized-payroll', (req, res) => {
     entry.personalLifeRetIns,
     entry.totalGsisDeds,
     entry.totalPagibigDeds,
-    entry.PhilHealthContribution,
     entry.totalOtherDeds,
     entry.totalDeductions,
     entry.pay1st,
     entry.pay2nd,
+    entry.pay1stCompute,
+    entry.pay2ndCompute,
     entry.rtIns,
     entry.ec,
-    entry.firstName,
-    entry.middleName,
-    entry.lastName,
-    entry.position,
-    entry.nbc594,
     entry.increment,
     entry.gsisSalaryLoan,
     entry.gsisPolicyLoan,
-    entry.gfal,
+    entry.gsisArrears,
     entry.cpl,
     entry.mpl,
+    entry.eal,
     entry.mplLite,
     entry.emergencyLoan,
     entry.pagibigFundCont,
     entry.pagibig2,
     entry.multiPurpLoan,
+    entry.position,
+    entry.liquidatingCash,
     entry.landbankSalaryLoan,
     entry.earistCreditCoop,
     entry.feu,
-    entry.disallowance,
+    entry.PhilHealthContribution,
+    entry.department
   ]);
-
-
 
 
   const insertQuery = `
     INSERT INTO finalize_payroll (
-      employeeNumber, department, startDate, endDate, name,
-      rateNbc188, grossSalary, abs, h, m, s, netSalary,
-      withholdingTax, personalLifeRetIns, totalGsisDeds,
-      totalPagibigDeds, PhilHealthContribution, totalOtherDeds, totalDeductions,
-      pay1st, pay2nd, rtIns, ec,
-      firstName, middleName, lastName,
-      position, nbc594, increment, gsisSalaryLoan,
-      gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
-      pagibigFundCont, pagibig2, multiPurpLoan,
-      landbankSalaryLoan, earistCreditCoop, feu, disallowance
+      employeeNumber, startDate, endDate, name, rateNbc584, nbc594, rateNbc594, nbcDiffl597, grossSalary,
+      abs, h, m, s, netSalary, withholdingTax, personalLifeRetIns, totalGsisDeds,
+      totalPagibigDeds, totalOtherDeds, totalDeductions, pay1st, pay2nd,
+      pay1stCompute, pay2ndCompute, rtIns, ec, increment, gsisSalaryLoan,
+      gsisPolicyLoan, gsisArrears, cpl, mpl, eal, mplLite, emergencyLoan,
+      pagibigFundCont, pagibig2, multiPurpLoan, position, liquidatingCash,
+      landbankSalaryLoan, earistCreditCoop, feu, PhilHealthContribution, department
     ) VALUES ?
   `;
-
-
 
 
   db.query(insertQuery, [values], (err, result) => {
@@ -2730,47 +2850,46 @@ app.post('/api/finalized-payroll', (req, res) => {
     }
 
 
+    // Extract names to update status
+    const employeeNames = payrollData.map(entry => entry.name);
 
 
-    // After inserting payroll data, update the status in payroll_processing to "Processed" (1)
     const updateQuery = `
       UPDATE payroll_processing
       SET status = 1
-      WHERE employeeNumber IN (?)
+      WHERE name IN (?)
     `;
 
 
-
-
-    const employeeNumbers = payrollData.map((entry) => entry.employeeNumber);
-
-
-
-
-    db.query(updateQuery, [employeeNumbers], (err, updateResult) => {
-      if (err) {
-        console.error('Error updating payroll status:', err);
-        return res.status(500).json({ error: 'Internal server error' });
+    db.query(updateQuery, [employeeNames], (updateErr, updateResult) => {
+      if (updateErr) {
+        console.error('Error updating status in payroll_processing:', updateErr);
+        return res.status(500).json({ error: 'Payroll inserted, but failed to update status.' });
       }
 
 
-
-
       res.json({
-        message:
-          'Payroll finalized and status updated to processed successfully',
+        message: 'Finalized payroll inserted and status updated successfully.',
         inserted: result.affectedRows,
-        updated: updateResult.affectedRows,
+        updated: updateResult.affectedRows
       });
     });
   });
-  
 });
+
+
+
+
+
 
 
 
 app.get('/api/finalized-payroll', (req, res) => {
   const query = 'SELECT * FROM finalize_payroll ORDER BY dateCreated DESC';
+
+
+
+
 
 
 
@@ -2786,20 +2905,46 @@ app.get('/api/finalized-payroll', (req, res) => {
 
 
 
+
 app.delete('/api/finalized-payroll/:id', (req, res) => {
   const { id } = req.params;
+  const { employeeNumber, name } = req.body;
 
-  const query = 'DELETE FROM finalize_payroll WHERE id = ?';
-  db.query(query, [id], (err, results) => {
+
+  const deleteQuery = 'DELETE FROM finalize_payroll WHERE id = ?';
+  const updateQuery = `
+    UPDATE payroll_processing
+    SET status = 0
+    WHERE name = ?
+  `;
+
+
+  // First delete
+  db.query(deleteQuery, [id], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
     if (results.affectedRows === 0) {
       return res.status(404).json({ message: 'Payroll record not found' });
     }
-    res.json({ message: 'Payroll record deleted successfully' });
+
+
+    // Then update status
+    db.query(updateQuery, [name], (updateErr, updateResult) => {
+      if (updateErr) {
+        return res.status(500).json({ error: 'Deleted but failed to update status.' });
+      }
+
+
+      res.json({
+        message: 'Deleted and status updated.',
+        deleted: results.affectedRows,
+        updated: updateResult.affectedRows
+      });
+    });
   });
 });
+
 
 
 

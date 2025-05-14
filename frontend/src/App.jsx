@@ -209,7 +209,7 @@ function App() {
 
 
 
-        {!['/', '/login', '/Register', '/forgot-password'].includes(location.pathname) && (
+        {!['/', '/login', '/register', '/forgot-password'].includes(location.pathname) && (
           <Sidebar
             open={open}
             handleClick={handleClick}
@@ -385,7 +385,7 @@ function App() {
               }
             />
             <Route
-              path="/attendance_module"
+              path="/attendance_module" //non-teaching
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <AttendanceModule />
@@ -393,7 +393,7 @@ function App() {
               }
             />
             <Route
-              path="/attendance_module_faculty"
+              path="/attendance_module_faculty" //30hrs
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <AttendanceModuleFaculty />
@@ -405,7 +405,7 @@ function App() {
 
 
             <Route
-              path="/attendance_module_faculty_40hrs"
+              path="/attendance_module_faculty_40hrs" //40hrs
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <AttendanceModuleFaculty40 />

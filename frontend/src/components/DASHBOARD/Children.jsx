@@ -148,7 +148,7 @@ const Children = () => {
     style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px' }}
   />
   <TextField
-    label="Person ID"
+    label="Employee Number"
     value={newChild.person_id}
     onChange={(e) => setNewChild({ ...newChild, person_id: e.target.value })}
     style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px' }}

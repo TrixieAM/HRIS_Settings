@@ -7,43 +7,38 @@ import {
   Container,
   Link,
   Box,
-  MenuItem,
   Paper,
   Typography,
 } from "@mui/material";
 import earistLogo from "../assets/earistLogo.jpg";
 
+
 const Register = () => {
   const [formData, setFormData] = useState({
-    employeeNumber: "",
     username: "",
-    email: "",
-    role: "administrator",
+    employeeNumber: "",
     password: "",
   });
   const [errMessage, setErrorMessage] = useState();
   const navigate = useNavigate();
 
+
   const handleChanges = (e) => {
     const { name, value } = e.target;
-    setFormData((formData) => ({
-      ...formData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
 
-    if (
-      !formData.employeeNumber ||
-      !formData.username ||
-      !formData.email ||
-      !formData.password
-    ) {
-      setErrorMessage("Please fill all asked credentials");
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const { username, employeeNumber, password } = formData;
+
+
+    if (!username || !employeeNumber || !password) {
+      setErrorMessage("Please fill all required fields.");
       return;
     }
+
 
     try {
       const response = await fetch("http://localhost:5000/register", {
@@ -52,68 +47,70 @@ const Register = () => {
         body: JSON.stringify(formData),
       });
 
+
       if (response.ok) {
         navigate("/");
       } else {
-        setErrorMessage("Invalid Credentials");
+        setErrorMessage("Registration failed. Try again.");
       }
-    } catch (error) {
-      console.error("Registration Error", error);
-      setErrorMessage("Something went wrong");
+    } catch (err) {
+      console.error("Registration Error", err);
+      setErrorMessage("Something went wrong.");
     }
   };
 
+
   return (
-    <Container
-      maxWidth="sm"
+<Container
+  maxWidth="sm"
+  sx={{
+    display: "flex",
+    minHeight: "70vh", // Use full viewport height
+    marginLeft: "-20%",
+    backgroundColor: "#fff8e1", // Soft background
+  }}
+>
+  <Paper
+    elevation={4}
+    sx={{
+      padding: 4,
+      width: "100%",
+      maxWidth: 400, // Limit width to prevent over-expansion
+      borderRadius: 2,
+      textAlign: "center",
+    }}
+  >
+    {/* Logo and header */}
+    <Box
       sx={{
+        backgroundColor: "#A31D1D",
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
+        py: 2,
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
-        height: "56vh",
+        mb: 2,
+        mx: -4, // stretch to full Paper width
+        mt: -4, // lift up to top edge
       }}
     >
-      <Paper
-        elevation={3}
-        sx={{
+      <img
+        src={earistLogo}
+        alt="E.A.R.I.S.T Logo"
+        style={{
+          height: 80,
+          borderRadius: "50%",
+          backgroundColor: "white",
           padding: 4,
-          width: "68%",
-          borderRadius: 2,
-          textAlign: "center",
-          marginLeft: "-40%"
-          
         }}
-      >
-        <Box sx={{ mb: 2 }}>
-          <Box
-            sx={{
-              backgroundColor: "#A31D1D",
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              paddingY: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              marginX: "-32px",
-              marginTop: "-32px",
-            }}
-          >
-            <img
-              src={earistLogo}
-              alt="E.A.R.I.S.T Logo"
-              style={{
-                height: 90,
-                borderRadius: "50%",
-                backgroundColor: "white",
-                padding: "4px",
-              }}
-            />
-          </Box>
-        </Box>
+      />
+    </Box>
 
-        <Typography variant="h6" gutterBottom>
-          <b>Create an Account</b>
-        </Typography>
+
+    <Typography variant="h6" gutterBottom sx={{ mt: 5}}>
+      <b>Create an Account</b>
+    </Typography>
+
 
         {errMessage && (
           <Alert sx={{ mb: 2 }} severity="error">
@@ -121,7 +118,15 @@ const Register = () => {
           </Alert>
         )}
 
+
         <form onSubmit={handleRegister}>
+          <TextField
+            name="username"
+            label="Username"
+            fullWidth
+            sx={{ mb: 2, mt: 4 }}
+            onChange={handleChanges}
+          />
           <TextField
             name="employeeNumber"
             label="Employee Number"
@@ -129,34 +134,6 @@ const Register = () => {
             sx={{ mb: 2 }}
             onChange={handleChanges}
           />
-          <TextField
-            name="username"
-            label="Username"
-            fullWidth
-            sx={{ mb: 2 }}
-            onChange={handleChanges}
-          />
-          <TextField
-            name="email"
-            label="Email"
-            type="email"
-            fullWidth
-            sx={{ mb: 2 }}
-            autoComplete="email"
-            onChange={handleChanges}
-          />
-          <TextField
-            name="role"
-            select
-            label="Role"
-            value={formData.role}
-            onChange={handleChanges}
-            fullWidth
-            sx={{ mb: 2 }}
-          >
-            <MenuItem value="administrator">Admin</MenuItem>
-            <MenuItem value="staff">Staff</MenuItem>
-          </TextField>
           <TextField
             name="password"
             label="Password"
@@ -167,19 +144,27 @@ const Register = () => {
             onChange={handleChanges}
           />
 
+
           <Button
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ bgcolor: "#A31D1D" }}
+            sx={{ bgcolor: "#A31D1D", mt: 4 }}
           >
             Register
           </Button>
         </form>
 
+
         <Typography variant="body2" sx={{ mt: 2 }}>
           Already have an account?{" "}
-          <Link href="/" underline="hover">
+          <Link 
+            href="/" 
+            underline="hover"
+            sx={{
+                color: "black",
+                fontSize: "13px",
+              }}>
             <b>Login</b>
           </Link>
         </Typography>
@@ -188,4 +173,8 @@ const Register = () => {
   );
 };
 
+
 export default Register;
+
+
+

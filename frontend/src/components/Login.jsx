@@ -7,20 +7,19 @@ import {
   Container,
   Link,
   Box,
+  Paper,
+  Typography,
 } from "@mui/material";
 import logo from "../assets/logo.PNG";
 
-
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    employeeNumber: "",
     password: "",
   });
 
-
   const [errMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-
 
   const handleChanges = (e) => {
     const { name, value } = e.target;
@@ -30,16 +29,13 @@ const Login = () => {
     }));
   };
 
-
   const handleLogin = async (event) => {
     event.preventDefault();
 
-
-    if (!formData.email || !formData.password) {
+    if (!formData.employeeNumber || !formData.password) {
       setErrorMessage("Please fill all asked credentials");
       return;
     }
-
 
     try {
       const response = await fetch("http://localhost:5000/login", {
@@ -48,41 +44,16 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-
-      console.log("Login response status:", response.status);
-
-
       if (response.ok) {
         const data = await response.json();
-        console.log("Login response data:", data);
-
 
         if (data.token) {
           localStorage.setItem("token", data.token);
-
-
           const decoded = JSON.parse(atob(data.token.split(".")[1]));
-          console.log("Decoded JWT:", decoded);
 
-
-          // Store required info in localStorage
-          localStorage.setItem("email", decoded.email || data.email || "");
+          localStorage.setItem("employeeNumber", decoded.employeeNumber || data.employeeNumber || "");
           localStorage.setItem("role", decoded.role || data.role || "");
-          localStorage.setItem(
-            "employeeNumber",
-            decoded.employeeNumber || data.employeeNumber || ""
-          );
 
-
-          // Sanity log
-          console.log("Saved to localStorage:", {
-            email: localStorage.getItem("email"),
-            role: localStorage.getItem("role"),
-            employeeNumber: localStorage.getItem("employeeNumber"),
-          });
-
-
-          // Navigate based on role
           const role = decoded.role || data.role;
           if (role === "superadmin" || role === "administrator") {
             navigate("/home");
@@ -104,32 +75,39 @@ const Login = () => {
     }
   };
 
-
   return (
     <Container
+      maxWidth="sm"
       sx={{
-        width: "90%",
-        height: "90%",
-        backgroundColor: "#ffffff",
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        marginLeft: "-18%",
-        marginBottom: "25px",
-        paddingBottom: "40px",
+        minHeight: "70vh",
+        marginLeft: "-20%",
+        backgroundColor: "#fff8e1",
       }}
     >
-      <form className="Form" onSubmit={handleLogin}>
+      {/* Paper component wrapping the entire login form */}
+      <Paper
+        elevation={4}
+        sx={{
+          padding: 4,
+          width: "100%",
+          maxWidth: 400,
+          borderRadius: 2,
+          textAlign: "center",
+        }}
+      >
+        {/* Logo Section */}
         <Box
           sx={{
             backgroundColor: "#A31D1D",
-            borderRadius: 4,
-            padding: 3,
-            marginTop: "-81px",
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            py: 2,
+            display: "flex",
             justifyContent: "center",
-            width: "calc(80% + 25%)",
-            marginLeft: "-33px",
-            marginBottom: "30px",
+            mb: 2,
+            mx: -4,
+            mt: -4,
           }}
         >
           <img
@@ -139,67 +117,87 @@ const Login = () => {
               height: 80,
               borderRadius: "50%",
               backgroundColor: "white",
-              padding: "2px 3px",
+              padding: 4,
             }}
           />
         </Box>
-        <h2>Login to your Account</h2>
 
+        {/* Header */}
+        <Typography variant="h6" gutterBottom sx={{ mt: 5}}>
+          <b>Login to your Account</b>
+        </Typography>
 
+        {/* Error message alert */}
         {errMessage && (
-          <Alert sx={{ textAlign: "center" }} severity="error">
+          <Alert sx={{ mb: 2 }} severity="error">
             {errMessage}
           </Alert>
         )}
 
+        {/* Form fields */}
+        <form onSubmit={handleLogin}>
+          <TextField
+            name="employeeNumber"
+            label="Employee Number"
+            fullWidth
+            sx={{ mb: 2, mt: 5 }}
+            autoComplete="employeeNumber"
+            onChange={handleChanges}
+          />
+          <TextField
+            name="password"
+            label="Password"
+            type="password"
+            fullWidth
+            sx={{ mb: 1 }}
+            autoComplete="current-password"
+            onChange={handleChanges}
+          />
 
-        <TextField
-          name="email"
-          label="Email"
-          sx={{ margin: "5% 0", width: "100%" }}
-          autoComplete="email"
-          onChange={handleChanges}
-        />
-        <TextField
-          name="password"
-          label="Password"
-          type="password"
-          sx={{ marginBottom: "5%", width: "100%" }}
-          autoComplete="current-password"
-          onChange={handleChanges}
-        />
+          {/* Forgot password link */}
+          <Box sx={{ textAlign: "left", mb: 3 }}>
+            <Link
+              onClick={() => navigate("/forgot-password")}
+              underline="hover"
+              sx={{
+                cursor: "pointer",
+                color: "black",
+                fontSize: "13px",
+              }}
+            >
+              Forgot your password?
+            </Link>
+          </Box>
 
+          {/* Login button */}
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ bgcolor: "#A31D1D", mt: 5 }}
+          >
+            Login
+          </Button>
+        </form>
 
-        <p>
+   
+        <Typography variant="body2" sx={{ mt: 2, fontSize: "13px" }}>
+          Don’t have an account?{" "}
           <Link
-            onClick={() => navigate("/forgot-password")} 
-            underline= "hover"
+            href="/register"
+            underline="hover"
             sx={{
-              cursor: "pointer",
               color: "black",
-              fontSize: "12px",
-              textDecoration: "none",
+              fontWeight: "bold",
+              fontSize: "13px",
             }}
           >
-            Forgot your Password?
+            Register
           </Link>
-        </p>
-
-
-        <Button
-          type="submit"
-          variant="contained"
-          sx={{ width: "100%", bgcolor: "#A31D1D", marginBottom: "-15%" }}
-        >
-          Login
-        </Button>
-      </form>
+        </Typography>
+      </Paper>
     </Container>
   );
 };
 
-
 export default Login;
-
-
-

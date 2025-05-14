@@ -121,7 +121,7 @@ const OfficialTimeForm = () => {
 
   const handleSearch = () => {
     if (!employeeID) {
-      alert("Please enter a Employee ID.");
+      alert("Please enter an Employee ID.");
       return;
     }
     setLoading(true);
@@ -222,7 +222,7 @@ const OfficialTimeForm = () => {
         </div>
       </div>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <TextField label="Employee ID" variant="outlined" size="small" value={employeeID} onChange={(e) => setemployeeID(e.target.value)} />
+        <TextField label="Employee Number" variant="outlined" size="small" value={employeeID} onChange={(e) => setemployeeID(e.target.value)} />
         <Button
           variant="contained"
           sx={{ bgcolor: '#6D2323' }}
@@ -240,7 +240,7 @@ const OfficialTimeForm = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: "100px", minWidth: "100px" }}>Employee UID</TableCell>
+                  <TableCell sx={{ width: "100px", minWidth: "100px" }}>Employee Number</TableCell>
                   <TableCell sx={{ width: "100px", minWidth: "100px" }}>Day</TableCell>
                   <TableCell sx={{ width: "125px", minWidth: "125px" }}>Time In</TableCell>
                   <TableCell sx={{ width: "125px", minWidth: "125px" }}>Break In</TableCell>

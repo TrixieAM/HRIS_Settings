@@ -109,7 +109,7 @@ const DailyTimeRecordFaculty = () => {
           <TextField
             sx={{ width: "200px", marginleft: "10px" }}
             m
-            label="Enter Person ID"
+            label="Employee Number"
             value={personID}
             onChange={(e) => setPersonID(e.target.value)}
             variant="outlined"

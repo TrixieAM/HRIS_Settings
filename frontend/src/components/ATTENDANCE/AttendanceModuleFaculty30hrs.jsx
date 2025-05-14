@@ -1244,7 +1244,7 @@ const AttendanceModuleFaculty = () => {
                   >
                     {calculateTotalRenderedTimeTardinessOT()}
                   </TableCell>
-                  <TableCell colSpan={3} sx={{ fontWeight: "bold", textAlign: "right" }}>
+                  {/* <TableCell colSpan={3} sx={{ fontWeight: "bold", textAlign: "right" }}>
                     Total Rendered Time (ALL Overtime):
                   </TableCell>
                   <TableCell
@@ -1266,7 +1266,7 @@ const AttendanceModuleFaculty = () => {
                     }}
                   >
                     DUMMY
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={2} sx={{ fontWeight: "bold", textAlign: "right" }}>

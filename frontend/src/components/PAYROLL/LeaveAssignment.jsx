@@ -104,7 +104,7 @@ const LeaveAssignment = () => {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
             <TextField
-              label="Employee ID"
+              label="Employee Number"
               type="number"
               name="employeeID"
               value={form.employeeID}
@@ -159,7 +159,7 @@ const LeaveAssignment = () => {
           <TableHead>
             <TableRow style={{ backgroundColor: '#6D2323' }}>
               <TableCell sx={{ color: '#FEF9E1', fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ color: '#FEF9E1', fontWeight: 'bold' }}>Employee ID</TableCell>
+              <TableCell sx={{ color: '#FEF9E1', fontWeight: 'bold' }}>Employee Number</TableCell>
               <TableCell sx={{ color: '#FEF9E1', fontWeight: 'bold' }}>Leave ID</TableCell>
               <TableCell sx={{ color: '#FEF9E1', fontWeight: 'bold' }}>No. of Leaves</TableCell>
               <TableCell sx={{ color: '#FEF9E1', fontWeight: 'bold' }}>Actions</TableCell>

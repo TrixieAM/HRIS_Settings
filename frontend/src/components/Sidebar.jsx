@@ -672,7 +672,7 @@ useEffect(() => {
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'view_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <DevicesIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Device Record" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance View Device Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem
@@ -698,7 +698,7 @@ useEffect(() => {
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'search_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <Search />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Search" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem

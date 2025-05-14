@@ -13,13 +13,13 @@ import {
   Paper,
   Container,
   Typography,
-  MenuItem,
-  Select,
-  InputLabel,
   FormControl,
+  InputAdornment  
 } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
-import { Add, Edit, Save, Cancel, Delete, Label } from "@mui/icons-material";
+import { Add, Edit, Save, Cancel, Delete, Label, Search } from "@mui/icons-material";
+
+
 
 
 const ItemTable = () => {
@@ -27,6 +27,7 @@ const ItemTable = () => {
   const [newItem, setNewItem] = useState({
     item_description: "",
     employeeID: "",
+    name: "",
     item_code: "",
     salary_grade: "",
     step: "",
@@ -34,6 +35,13 @@ const ItemTable = () => {
   });
   const [editItemId, setEditItemId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+
+
+  const filteredItems = items.filter((item) =>
+    (item?.employeeID?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+    (item?.name?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+  );
 
 
   useEffect(() => {
@@ -42,8 +50,12 @@ const ItemTable = () => {
 
 
   const fetchItems = async () => {
-    const response = await axios.get("http://localhost:5000/api/item-table");
-    setItems(response.data);
+    try {
+      const response = await axios.get("http://localhost:5000/api/item-table");
+      setItems(response.data);
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
   };
 
 
@@ -67,10 +79,7 @@ const ItemTable = () => {
     e.preventDefault();
     try {
       if (editItemId) {
-        await axios.put(
-          `http://localhost:5000/api/item-table/${editItemId}`,
-          editedRowData
-        );
+        await axios.put(`http://localhost:5000/api/item-table/${editItemId}`, editedRowData);
         setEditItemId(null);
         setEditedRowData({});
       } else {
@@ -79,7 +88,7 @@ const ItemTable = () => {
       }
       fetchItems();
     } catch (error) {
-      console.error("Error submitting item data", error);
+      console.error("Error submitting data", error);
     }
   };
 
@@ -110,6 +119,7 @@ const ItemTable = () => {
     setNewItem({
       item_description: "",
       employeeID: "",
+      name: "",
       item_code: "",
       salary_grade: "",
       step: "",
@@ -120,257 +130,213 @@ const ItemTable = () => {
 
   return (
     <Container>
-              <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      borderBottomLeftRadius: '0px',
-      borderBottomRightRadius: '0px',
-    }}
-   
-  >
-<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-  <Label sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+      {/* Header */}
+      <Box sx={{ backgroundColor: "#6D2323", color: "#fff", padding: 2, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
+        <Box display="flex" alignItems="center">
+          <Label sx={{ fontSize: 40, mr: 2 }} />
+          <Box>
+            <Typography variant="h6" sx={{ mb: 0.5 }}>Item Table</Typography>
+            <Typography variant="body2">Insert Your Item Table</Typography>
+          </Box>
+        </Box>
+      </Box>
 
 
-  <div>
-    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-      Item Table
-    </h4>
-    <p style={{ margin: 0, fontSize: '85%' }}>
-      Insert Your Item Table
-    </p>
-  </div>
-</div>
+      {/* Form */}
+      <Paper elevation={3} sx={{ p: 3, borderRadius: "0 0 8px 8px", mb: 3 }}>
+        <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
+          <TextField label="Item Description" name="item_description" value={newItem.item_description} onChange={handleChange} sx={{ width: "23%" }} />
+          <TextField label="Employee Number" name="employeeID" value={newItem.employeeID} onChange={handleChange} sx={{ width: "23%" }} />
+          <TextField label="Name" name="name" value={newItem.name} onChange={handleChange} sx={{ width: "23%" }} />
+          <TextField label="Item Code" name="item_code" value={newItem.item_code} onChange={handleChange} sx={{ width: "23%" }} />
 
 
-  </div>
-      <Paper elevation={3} sx={{ padding: 3, borderRadius: "8px", marginBottom: "24px" }}>
-        <Box display="flex" flexWrap="wrap" sx={{ marginBottom: 3, gap: 2 }}>
-          <TextField
-            label="Item Description"
-            name="item_description"
-            value={newItem.item_description}
-            onChange={handleChange}
-            sx={{ width: "23%" }}
-          />
-          <TextField
-            label="Employee ID"
-            name="employeeID"
-            value={newItem.employeeID}
-            onChange={handleChange}
-            sx={{ width: "23%" }}
-          />
-          <TextField
-            label="Item Code"
-            name="item_code"
-            value={newItem.item_code}
-            onChange={handleChange}
-            sx={{ width: "23%" }}
-          />
-          <Autocomplete
-            freeSolo
-            options={[...Array(33)].map((_, index) => `${index + 1}`)}
-            value={newItem.salary_grade}
-            onChange={(event, newValue) =>
-              setNewItem({ ...newItem, salary_grade: newValue || "" })
-            }
-            onInputChange={(event, newInputValue) =>
-              setNewItem({ ...newItem, salary_grade: newInputValue })
-            }
-            renderInput={(params) => (
-              <TextField {...params} label="Salary Grade" sx={{ width: "250%" }} />
-            )}
-          />
           <FormControl sx={{ width: "23%" }}>
-            <InputLabel>Step</InputLabel>
-            <Select
-              name="step"
-              value={newItem.step}
-              onChange={handleChange}
-              label="Step"
-            >
-              {[...Array(8)].map((_, index) => (
-                <MenuItem key={index + 1} value={`Step${index + 1}`}>
-                  Step{index + 1}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <Autocomplete
+                freeSolo
+                options={[...Array(33)].map((_, index) => `${index + 1}`)}
+                value={newItem.salary_grade}
+                onChange={(event, newValue) =>
+                  setNewItem({ ...newItem, salary_grade: newValue || "" })
+                }
+                onInputChange={(event, newInputValue) =>
+                  setNewItem({ ...newItem, salary_grade: newInputValue })
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Salary Grade" />
+                )}
+              />
+            </FormControl>
+
+
+
+
+          <FormControl sx={{ width: "23%" }}>
+              <Autocomplete
+                freeSolo
+                options={[...Array(8)].map((_, index) => `step${index + 1}`)}
+                value={newItem.step}
+                onChange={(event, newValue) =>
+                  setNewItem({ ...newItem, step: newValue || "" })
+                }
+                onInputChange={(event, newInputValue) =>
+                  setNewItem({ ...newItem, step: newInputValue })
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Step" />
+                )}
+              />
+            </FormControl>
+
+
+
+
+
+
           <TextField
-            label="effectivityDate"
+            label="Effectivity Date"
             name="effectivityDate"
             value={newItem.effectivityDate}
             onChange={handleChange}
             sx={{ width: "23%" }}
           />
+
+
           <Button
             onClick={handleSubmit}
             variant="contained"
-            sx={{
-              backgroundColor: "#6D2323",
-              color: "#ffffff",
-              "&:hover": {
-                backgroundColor: "#9C2A2A",
-              },
-              width: "250px",
-              height: "55px",
-            }}
+            sx={{ backgroundColor: "#6D2323", color: "#fff", width: "250px", height: "55px" }}
           >
-            <Add sx={{ marginRight: "5px" }} />
+            <Add sx={{ mr: 1 }} />
             Add New Item
           </Button>
         </Box>
       </Paper>
 
 
+      {/* Search Bar */}
+
+
+<Box mb={2} position={"relative"} display="flex" justifyContent="flex-end">
+  <TextField
+    label="Search by ID or Name"
+    variant="outlined"
+    size="medium"
+    sx={{ backgroundColor: "white", borderRadius: 1, width: "250px" }}
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    fullWidth
+    InputProps={{
+      endAdornment: (
+        <InputAdornment position="end" style={{ color: "#6D2323" }}>
+          <Search />
+        </InputAdornment>
+      ),
+    }}
+  />
+</Box>
+
+
+
+
+      {/* Table */}
       <TableContainer component={Paper} sx={{ maxHeight: 500 }}>
         <Table stickyHeader>
           <TableHead>
-            <TableRow style={{ backgroundColor: "#6D2323" }}>
-              <TableCell>ID</TableCell>
-              <TableCell>Item Description</TableCell>
-              <TableCell>Employee ID</TableCell>
-              <TableCell>Item Code</TableCell>
-              <TableCell>Salary Grade</TableCell>
-              <TableCell>Step</TableCell>
-              <TableCell>Effectivity Date</TableCell>
-              <TableCell>Actions</TableCell>
+            <TableRow>
+              {["ID", "Item Description", "Employee Number", "Name", "Item Code", "Salary Grade", "Step", "Effectivity Date", "Actions"].map((head) => (
+                <TableCell key={head}>{head}</TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.id}</TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <TextField
-                      name="item_description"
-                      value={editedRowData.item_description || ""}
-                      onChange={handleRowChange}
-                      size="small"
-                    />
-                  ) : (
-                    item.item_description
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <TextField
-                      name="employeeID"
-                      value={editedRowData.employeeID || ""}
-                      onChange={handleRowChange}
-                      size="small"
-                    />
-                  ) : (
-                    item.employeeID
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <TextField
-                      name="item_code"
-                      value={editedRowData.item_code || ""}
-                      onChange={handleRowChange}
-                      size="small"
-                    />
-                  ) : (
-                    item.item_code
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <Autocomplete
-                      freeSolo
-                      options={[...Array(33)].map((_, index) => `${index + 1}`)}
-                      value={editedRowData.salary_grade || ""}
-                      onChange={(event, newValue) =>
-                        setEditedRowData({ ...editedRowData, salary_grade: newValue || "" })
-                      }
-                      renderInput={(params) => (
-                        <TextField {...params} size="small" />
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.id}</TableCell>
+                  {["item_description", "employeeID", "name", "item_code", ].map((field) => (
+                    <TableCell key={field}>
+                      {editItemId === item.id ? (
+                        <TextField name={field} value={editedRowData[field] || ""} onChange={handleRowChange} size="small" />
+                      ) : (
+                        item[field]
                       )}
-                    />
-                  ) : (
-                    item.salary_grade
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <FormControl size="small">
-                      <Select
-                        name="step"
-                        value={editedRowData.step ||""}
-                        onChange={handleRowChange}
-                      >
-                        {[...Array(8)].map((_, index) => (
-                          <MenuItem key={index + 1} value={`Step${index + 1}`}>
-                            Step{index + 1}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  ) : (
-                    item.step
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <TextField
-                      name="effectivityDate"
-                      value={editedRowData.effectivityDate || ""}
-                      onChange={handleRowChange}
-                      size="small"
-                    />
-                  ) : (
-                    item.effectivityDate
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editItemId === item.id ? (
-                    <>
-                      <Button
-                        onClick={handleSubmit}
-                        variant="contained"
-                        sx={{ backgroundColor: "#6D2323", color: "#fff", marginRight: 1, width: "100px", marginBottom: 1 }}
-                      >
-                        <Save sx={{ marginRight: 1 }} />
-                        Save
-                      </Button>
-                      <Button
-                        onClick={handleCancel}
-                        variant="contained"
-                        sx={{ backgroundColor: "#000", color: "#fff", width: "100px" }}
-                      >
-                        <Cancel sx={{ marginRight: 1 }} />
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => handleEdit(item)}
-                        variant="contained"
-                        sx={{ backgroundColor: "#6D2323", color: "#fff", marginRight: 1, width: "100px" }}
-                      >
-                        <Edit sx={{ marginRight: 1 }} />
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(item.id)}
-                        variant="contained"
-                        sx={{ backgroundColor: "#000", color: "#fff", width: "100px" }}
-                      >
-                        <Delete sx={{ marginRight: 1 }} />
-                        Delete
-                      </Button>
-                    </>
-                  )}
+                    </TableCell>
+                  ))}
+                  <TableCell>
+                    {editItemId === item.id ? (
+                      <Autocomplete
+                        freeSolo
+                        options={[...Array(33)].map((_, index) => `${index + 1}`)}
+                        value={editedRowData.salary_grade || ""}
+                        onChange={(e, val) => setEditedRowData({ ...editedRowData, salary_grade: val || "" })}
+                        renderInput={(params) => <TextField {...params} size="small" />}
+                      />
+                    ) : (
+                      item.salary_grade
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editItemId === item.id ? (
+                      <Autocomplete
+                        freeSolo
+                        options={[...Array(8)].map((_, index) => `step${index + 1}`)}
+                        value={editedRowData.step || ""}
+                        onChange={(e, val) => setEditedRowData({ ...editedRowData, step: val || "" })}
+                        renderInput={(params) => <TextField {...params} size="small" />}
+                      />
+                    ) : (
+                      item.step
+                    )}
+                  </TableCell>
+                    <TableCell>
+          {editItemId === item.id ? (
+            <TextField
+              name="effectivityDate"
+              value={editedRowData.effectivityDate || ""}
+              onChange={handleRowChange}
+              size="small"
+            />
+          ) : (
+            item.effectivityDate
+          )}
+        </TableCell>
+                 
+                 
+                  <TableCell>
+                    {editItemId === item.id ? (
+                      <>
+                        <Button onClick={handleSubmit} variant="contained" sx={{ mr: 1, mb: 1, width: 100, backgroundColor: "#6D2323", color: "#fff" }}>
+                          <Save sx={{ mr: 1 }} />
+                          Save
+                        </Button>
+                        <Button onClick={handleCancel} variant="contained" sx={{ width: 100, backgroundColor: "#000", color: "#fff" }}>
+                          <Cancel sx={{ mr: 1 }} />
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button onClick={() => handleEdit(item)} variant="contained" sx={{ mr: 1, width: 100, backgroundColor: "#6D2323", color: "#fff" }}>
+                          <Edit sx={{ mr: 1 }} />
+                          Edit
+                        </Button>
+                        <Button onClick={() => handleDelete(item.id)} variant="contained" sx={{ width: 100, backgroundColor: "#000", color: "#fff" }}>
+                          <Delete sx={{ mr: 1 }} />
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={9} align="center" sx={{ color: "red" }}>
+                  No matching records found.
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

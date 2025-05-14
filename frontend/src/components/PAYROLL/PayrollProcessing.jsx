@@ -35,6 +35,10 @@ import {
 
 
 
+
+
+
+
 const PayrollProcess = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState('');
@@ -47,6 +51,16 @@ const PayrollProcess = () => {
   const [isPayrollProcessed, setIsPayrollProcessed] = useState(false);
   const [finalizedPayroll, setFinalizedPayroll] = useState([]);
   const [duplicateEmployeeNumbers, setDuplicateEmployeeNumbers] = useState([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+
+
+
+
+
+
 
 
 
@@ -69,6 +83,10 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   const isAlreadyFinalized = filteredData.some(fd =>
     finalizedPayroll.some(fp =>
       fp.employeeNumber === fd.employeeNumber &&
@@ -76,6 +94,12 @@ const PayrollProcess = () => {
       fp.endDate === fd.endDate
     )
   );
+
+
+
+
+
+
 
 
 
@@ -91,8 +115,12 @@ const PayrollProcess = () => {
     console.log(res.data);
 
 
+
+
     const seen = new Set();
     const duplicates = new Set(); // newly add
+
+
 
 
     res.data.forEach(item => {
@@ -106,6 +134,10 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
      const allData = res.data.map(item => ({
       ...item,
       status: item.status === 'Processed' || item.status === 1 ? 'Processed' : 'Unprocessed',
@@ -114,8 +146,17 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
     setDuplicateEmployeeNumbers([...duplicates]);
     setFilteredData(allData);
+    setData(allData); // ✅ Add this line here
+
+
+
+
 
 
     const allProcessed = allData.every(
@@ -123,12 +164,18 @@ const PayrollProcess = () => {
     );
 
 
+
+
     const allUnprocessed = allData.every(
       (item) => item.status === 'Unprocessed' || item.status === 0
     );
 
 
+
+
     setIsPayrollProcessed(allProcessed);
+
+
 
 
   } catch (err) {
@@ -136,6 +183,18 @@ const PayrollProcess = () => {
     setError('An error occurred while fetching the payroll data.');
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -162,9 +221,29 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
     fetchPayrollData();
     fetchDepartments();
   }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -194,19 +273,27 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
   const handleSearchChange = (event) => {
     const term = event.target.value;
     setSearchTerm(term);
     applyFilters(selectedDepartment, term);
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -229,33 +316,19 @@ const PayrollProcess = () => {
 
 
 
+    /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
     if (department) {
       filtered = filtered.filter((record) => record.department === department);
     }
 
 
-
-
-
-
-    if (search) {
+      if (search) {
       const lowerSearch = search.toLowerCase();
       filtered = filtered.filter((record) =>
-        `${record.firstName} ${record.middleName} ${record.lastName}`
-          .toLowerCase()
-          .includes(lowerSearch)
+        (record.name || '').toLowerCase().includes(lowerSearch) ||
+        (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
       );
     }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -280,59 +353,108 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleSubmitPayroll = async () => {
     try {
       const updatedData = filteredData.map((item) => {
-        const h = item.h || 0;
-        const m = item.m || 0;
-        const grossSalary = item.increment
-          ? (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0) + (parseFloat(item.increment) || 0)
-          : (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0);
- 
-        const abs = (grossSalary * 0.0040322585897036 * h) + (grossSalary * 0.000067206958107324 * m); // equivalents of 'H' and 'M'
-        const absAdjustment = abs * 0.0145952799; // adjustments
- 
-        const PhilHealthContribution = ((grossSalary * 0.05) / 2) || 0;
-        const personalLifeRetIns = ((grossSalary) * 0.09);
- 
-        const netSalary = grossSalary - (abs);
- 
-        const totalGsisDeds =
-          (parseFloat(personalLifeRetIns) || 0) +
-          (parseFloat(item.gsisSalaryLoan) || 0) +
-          (parseFloat(item.gsisPolicyLoan) || 0) +
-          (parseFloat(item.gfal) || 0) +
-          (parseFloat(item.cpl) || 0) +
-          (parseFloat(item.mpl) || 0) +
-          (parseFloat(item.mplLite) || 0) +
-          (parseFloat(item.emergencyLoan) || 0);
- 
-        const totalPagibigDeds =
-          (parseFloat(item.pagibigFundCont) || 0) +
-          (parseFloat(item.pagibig2) || 0) +
-          (parseFloat(item.multiPurpLoan) || 0) +
-          (parseFloat(item.pagibig) || 0);
- 
-        const totalOtherDeds =
-          (parseFloat(item.disallowance) || 0) +
-          (parseFloat(item.landbankSalaryLoan) || 0) +
-          (parseFloat(item.earistCreditCoop) || 0) +
-          (parseFloat(item.feu) || 0);
- 
-        const totalDeductions =
-          (parseFloat(item.withholdingTax) || 0) +
-          (parseFloat(PhilHealthContribution) || 0) +
-          (parseFloat(totalGsisDeds) || 0) +
-          (parseFloat(totalPagibigDeds) || 0) +
-          (parseFloat(totalOtherDeds) || 0);
- 
-        const pay1stCompute = netSalary - totalDeductions;
-        const pay2ndCompute = (netSalary - totalDeductions) / 2;
- 
-        const pay1st = pay2ndCompute;
-        const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
- 
-        const rtIns = grossSalary * 0.12;
+ const h = item.h || 0; // Default to 0 if h is not available
+    const m = item.m || 0; // Default to 0 if m is not availabl
+
+
+    const grossSalary = item.increment
+    ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
+    : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
+
+
+
+
+    const abs = (grossSalary *  0.0058341725167354* h) + (grossSalary *   0.00009723557208532  * m);   
+
+    const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
+    const personalLifeRetIns = ((grossSalary) * 0.09);
+
+
+
+
+    const netSalary = grossSalary - (abs);
+
+
+
+
+    const totalGsisDeds =
+    (parseFloat(personalLifeRetIns) || 0) +
+    (parseFloat(item.gsisSalaryLoan) || 0) +
+    (parseFloat(item.gsisPolicyLoan) || 0) +
+    (parseFloat(item.gsisArrears) || 0) +
+    (parseFloat(item.cpl) || 0) +
+    (parseFloat(item.mpl) || 0) +
+    (parseFloat(item.eal) || 0) +
+    (parseFloat(item.mplLite) || 0) +
+    (parseFloat(item.emergencyLoan) || 0);
+
+
+
+
+    const totalPagibigDeds =
+    (parseFloat(item.pagibigFundCont) || 0) +
+    (parseFloat(item.pagibig2) || 0) +
+    (parseFloat(item.multiPurpLoan) || 0);
+
+
+
+
+    const totalOtherDeds =
+   
+      (parseFloat(item.liquidatingCash) || 0) +
+      (parseFloat(item.landbankSalaryLoan) || 0) +
+      (parseFloat(item.earistCreditCoop) || 0) +
+      (parseFloat(item.feu) || 0);
+
+
+
+
+    const totalDeductions =
+    (parseFloat(item.withholdingTax) || 0) +
+    (parseFloat(PhilHealthContribution) || 0) +
+    (parseFloat(totalGsisDeds) || 0) +
+    (parseFloat(totalPagibigDeds) || 0) +
+    (parseFloat(totalOtherDeds) || 0);
+
+
+
+
+    const pay1stCompute = netSalary - totalDeductions;
+    const pay2ndCompute = (netSalary - totalDeductions) / 2;
+
+
+
+
+
+
+
+
+    const pay1st = pay2ndCompute;
+    const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+
+
+    const rtIns = grossSalary * 0.12;
  
         return {
           ...item,
@@ -343,7 +465,6 @@ const PayrollProcess = () => {
           abs: abs.toFixed(2),
           netSalary: netSalary.toFixed(2),
           totalDeductions: totalDeductions.toFixed(2),
-          absAdjustment: absAdjustment.toFixed(2),
           PhilHealthContribution: PhilHealthContribution.toFixed(2),
           personalLifeRetIns: personalLifeRetIns.toFixed(2),
           pay1stCompute: pay1stCompute.toFixed(2),
@@ -359,11 +480,19 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
  
       await axios.post(
         'http://localhost:5000/api/finalized-payroll',
         updatedData
       );
+
+
+
+
 
 
 
@@ -385,11 +514,17 @@ const PayrollProcess = () => {
  
 
 
+
+
   const handleEdit = (rowId) => {
     const row = computedRows.find((item) => item.id === rowId);
     setEditRow(row);
     setOpenModal(true);
   };
+
+
+
+
 
 
 
@@ -403,9 +538,13 @@ const PayrollProcess = () => {
         setFilteredData(newData);
 
 
+
+
         // Recalculate duplicates
         const seen = {};
         const updatedDuplicates = new Set();
+
+
 
 
         newData.forEach(item => {
@@ -417,13 +556,21 @@ const PayrollProcess = () => {
         });
 
 
+
+
         setDuplicateEmployeeNumbers([...updatedDuplicates]);
+
+
 
 
       } catch (error) {
         console.error('Error deleting payroll data:', error);
       }
     };      
+
+
+
+
 
 
 
@@ -439,10 +586,18 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   const handleCancel = () => {
     setOpenModal(false);
     setEditRow(null); // Clear the modal data on cancel
   };
+
+
+
+
 
 
 
@@ -456,7 +611,7 @@ const PayrollProcess = () => {
           (parseFloat(editRow.personalLifeRetIns) || 0) +
           (parseFloat(editRow.gsisSalaryLoan) || 0) +
           (parseFloat(editRow.gsisPolicyLoan) || 0) +
-          (parseFloat(editRow.gfal) || 0) +
+          (parseFloat(editRow.gsisArrears) || 0) +
           (parseFloat(editRow.cpl) || 0) +
           (parseFloat(editRow.mpl) || 0) +
           (parseFloat(editRow.mplLite) || 0) +
@@ -465,16 +620,23 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
         totalPagibigDeds:
           (parseFloat(editRow.pagibigFundCont) || 0) +
           (parseFloat(editRow.pagibig2) || 0) +
-          (parseFloat(editRow.multiPurpLoan) || 0) +
-          (parseFloat(editRow.pagibig) || 0),
+          (parseFloat(editRow.multiPurpLoan) || 0) ,
+
+
         totalOtherDeds:
-          (parseFloat(editRow.disallowance) || 0) +
+          (parseFloat(editRow.liquidatingCash) || 0) +
           (parseFloat(editRow.landbankSalaryLoan) || 0) +
           (parseFloat(editRow.earistCreditCoop) || 0) +
           (parseFloat(editRow.feu) || 0),
+
+
         totalDeductions:
           (parseFloat(editRow.withholdingTax) || 0) +
           (parseFloat(editRow.totalGsisDeds) || 0) +
@@ -484,6 +646,8 @@ const PayrollProcess = () => {
       };
 
 
+
+
       // Send the updated data to the backend
       const response = await axios.put(
         `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`,
@@ -491,11 +655,17 @@ const PayrollProcess = () => {
       );
 
 
+
+
       console.log('Payroll record updated successfully:', response.data);
+
+
 
 
       // Close the modal after saving
       setOpenModal(false);
+
+
 
 
       // Update state with the new data
@@ -513,52 +683,93 @@ const PayrollProcess = () => {
   };
 
 
+
+
   const employeeFields = [
     'employeeNumber',
+    'name',
+    'position',
     'department',
     'startDate',
     'endDate',
-    'name',
-    'position',
+   
   ];
-  const salaryFields = [
-    'rateNbc188',
-    'grossSalary',
+  const salaryRateandAdjustments = [
+    'rateNbc584',
+    'nbc594',
+    'rateNbc594',
+    'nbcDiffl597',
+    'increment',
+  ];
+  const SalaryComputation = [
     'abs',
     'h',
     'm',
-    'netSalary',
+   
   ];
-  const deductionFields = [
+  const MandatoryDeductions = [
     'withholdingTax',
-    'personalLifeRetIns',
     'totalGsisDeds',
-    'pagibig',
     'totalPagibigDeds',
     'PhilHealthContribution',
     'totalOtherDeds',
     'totalDeductions',
+
+
+   
   ];
-  const otherFields = ['pay1st', 'pay2nd', 'rtIns', 'ec'];
-  const otherFields2 = [
-    'nbc594',
-    'increment',
-    'gsisSalaryLoan',
-    'gsisPolicyLoan',
-    'gfal',
-    'cpl',
-    'mpl',
-    'mplLite',
-    'emergencyLoan',
-    'pagibigFundCont',
-    'pagibig2',
-    'multiPurpLoan',
-    'totalPagibigDeds',
-    'disallowance',
-    'landbankSalaryLoan',
-    'earistCreditCoop',
-    'feu',
+  const PayrollDisbursement = [
+
+
+  'pay1st',
+  'pay2nd',
+
+
   ];
+
+
+  const GsisDeductions = [
+
+
+
+
+  'personalLifeRetIns',
+  'gsisSalaryLoan',
+  'gsisPolicyLoan',
+  'gsisArrears',
+  'mpl',
+  'eal',
+  'cpl',
+  'mplLite',
+  'emergencyLoan'
+
+
+  ];
+
+
+  const PagIbigDeductions = [
+
+
+  'pagibigFundCont',
+  'multiPurpLoan',
+  'pagibig2'
+
+
+  ];
+
+
+  const totalOtherDeductions = [
+
+
+  'liquidatingCash',
+  'earistCreditCoop',
+  'feu',
+  'landbankSalaryLoan'
+
+
+  ];
+
+
 
 
 
@@ -568,45 +779,58 @@ const PayrollProcess = () => {
   const computedRows = filteredData.map((item) => {
     const h = item.h || 0; // Default to 0 if h is not available
     const m = item.m || 0; // Default to 0 if m is not availabl
+
+
     const grossSalary = item.increment
-    ? (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0) + (parseFloat(item.increment) || 0)
-    : (parseFloat(item.rateNbc188) || 0) + (parseFloat(item.nbc594) || 0);
+    ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
+    : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
 
 
-    const abs = (grossSalary * 0.0041666537447666 * h) + (grossSalary *   0.00014555383263452 * m);
-    const absAdjustment = abs * 0.0145952799;
-   
-    const PhilHealthContribution = ((grossSalary * 0.05) / 2) || 0;
+
+
+    const abs = (grossSalary *  0.0058341725167354* h) + (grossSalary *   0.00009723557208532  * m);
+
+    const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
     const personalLifeRetIns = ((grossSalary) * 0.09);
 
 
+
+
     const netSalary = grossSalary - (abs);
+
+
 
 
     const totalGsisDeds =
     (parseFloat(personalLifeRetIns) || 0) +
     (parseFloat(item.gsisSalaryLoan) || 0) +
     (parseFloat(item.gsisPolicyLoan) || 0) +
-    (parseFloat(item.gfal) || 0) +
+    (parseFloat(item.gsisArrears) || 0) +
     (parseFloat(item.cpl) || 0) +
     (parseFloat(item.mpl) || 0) +
+    (parseFloat(item.eal) || 0) +
     (parseFloat(item.mplLite) || 0) +
     (parseFloat(item.emergencyLoan) || 0);
+
+
 
 
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
-    (parseFloat(item.multiPurpLoan) || 0) +
-    (parseFloat(item.pagibig) || 0);
+    (parseFloat(item.multiPurpLoan) || 0);
 
 
-    const totalOtherDeds =
+
+
+     const totalOtherDeds =
    
-      (parseFloat(item.disallowance) || 0) +
+      (parseFloat(item.liquidatingCash) || 0) +
       (parseFloat(item.landbankSalaryLoan) || 0) +
       (parseFloat(item.earistCreditCoop) || 0) +
       (parseFloat(item.feu) || 0);
+
+
 
 
     const totalDeductions =
@@ -617,8 +841,14 @@ const PayrollProcess = () => {
     (parseFloat(totalOtherDeds) || 0);
 
 
+
+
     const pay1stCompute = netSalary - totalDeductions;
     const pay2ndCompute = (netSalary - totalDeductions) / 2;
+
+
+
+
 
 
 
@@ -630,6 +860,7 @@ const PayrollProcess = () => {
 
 
     const rtIns = grossSalary * 0.12;
+   
  
     return {
       ...item,
@@ -640,8 +871,7 @@ const PayrollProcess = () => {
         abs: abs.toFixed(2),
         netSalary: netSalary.toFixed(2),
         totalDeductions: totalDeductions.toFixed(2),
-        absAdjustment: absAdjustment.toFixed(2),      
-        PhilHealthContribution:PhilHealthContribution.toFixed,
+        PhilHealthContribution:PhilHealthContribution.toFixed(2),
         personalLifeRetIns: personalLifeRetIns.toFixed(2),
         pay1stCompute: pay1stCompute.toFixed(2),
         pay2ndCompute: pay2ndCompute.toFixed(2),
@@ -650,9 +880,15 @@ const PayrollProcess = () => {
         rtIns:rtIns.toFixed(2)
 
 
+
+
  
     };
   });
+
+
+
+
 
 
 
@@ -681,13 +917,15 @@ const PayrollProcess = () => {
             <BusinessCenterIcon fontSize="large" />
             <Box>
               <Typography variant="h4" fontWeight="bold">
-                Payroll Dashboard
+                Payroll Dashboard | Processing
               </Typography>
               <Typography variant="body2" color="rgba(255,255,255,0.7)">
                 Manage employee payroll records effectively
               </Typography>
             </Box>
           </Box>
+
+
 
 
           <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
@@ -720,6 +958,10 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
             <TextField
               variant="outlined"
               label="Search Name"
@@ -741,12 +983,18 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
       {error ? (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       ) : (
         <>
+
+
 
 
         {duplicateEmployeeNumbers.length > 0 && (
@@ -756,6 +1004,8 @@ const PayrollProcess = () => {
         )}
         <Box sx={{ width: '100%' }}>
          <Box display="flex" gap={3} alignItems="flex-start" minWidth="1300px">
+
+
 
 
         <Paper elevation={4} sx={{ borderRadius: 3 }}> {/*TABLE HEADER */}
@@ -770,8 +1020,10 @@ const PayrollProcess = () => {
                   <TableCell>End Date</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Position</TableCell>
-                  <TableCell>Rate NBC 188</TableCell>
+                  <TableCell>Rate NBC 584</TableCell>
                   <TableCell>NBC 594</TableCell>
+                  <TableCell>Rate NBC 594</TableCell>
+                  <TableCell>NBC DIFF'L 597</TableCell>
                   <TableCell>Increment</TableCell>
                   <TableCell>Gross Salary</TableCell>
                   <TableCell><b>ABS</b></TableCell>
@@ -798,8 +1050,14 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
                   <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
                
+
+
 
 
                   <TableCell>No.</TableCell>
@@ -809,9 +1067,10 @@ const PayrollProcess = () => {
                   <TableCell>Personal Life Ret Ins</TableCell>
                   <TableCell>GSIS Salary Loan</TableCell>
                   <TableCell>GSIS Policy Loan</TableCell>
-                  <TableCell>GFAL</TableCell>
+                  <TableCell>gsisArrears</TableCell>
                   <TableCell>CPL</TableCell>
                   <TableCell>MPL</TableCell>
+                  <TableCell> EAL</TableCell>
                   <TableCell>MPL LITE</TableCell>
                   <TableCell>Emergency Loan (ELA)</TableCell>
                   <TableCell>Total GSIS Deductions</TableCell>
@@ -820,7 +1079,7 @@ const PayrollProcess = () => {
                   <TableCell>Multi-Purpose Loan</TableCell>
                   <TableCell>Total Pag-Ibig Deduction</TableCell>
                   <TableCell> PhilHealth</TableCell>
-                  <TableCell> Disallowance</TableCell>
+                  <TableCell> liquidatingCash</TableCell>
                   <TableCell>LandBank Salary Loan</TableCell>
                   <TableCell> Earist Credit COOP.</TableCell>
                   <TableCell> FEU</TableCell>
@@ -845,14 +1104,34 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               <TableBody>
-              {filteredData.length > 0 ? (
-                  computedRows.map((row, index) => {
+              {filteredData.length > 0 &&
+                computedRows.map((row, index) => {
                     const isFinalized = finalizedPayroll.some(fp =>
                       fp.employeeNumber === row.employeeNumber &&
                       fp.startDate === row.startDate &&
                       fp.endDate === row.endDate
                     );
+
+
+
+
 
 
 
@@ -873,11 +1152,13 @@ const PayrollProcess = () => {
                       <TableCell>{row.endDate}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
-                      <TableCell>{row.rateNbc188}</TableCell>
-                      <TableCell>{row.nbc594 || '0' }</TableCell>
+                      <TableCell>{row.rateNbc584}</TableCell>
+                      <TableCell>{row.nbc594}</TableCell>
+                      <TableCell>{row.rateNbc594 || '0' }</TableCell>
+                      <TableCell>{row.nbcDiffl597 || '0' }</TableCell>
                       <TableCell>{row.increment}</TableCell>
                       <TableCell>{row.grossSalary}</TableCell>
-                      <TableCell>{row.abs}</TableCell>
+                      <TableCell><b>{row.abs}</b></TableCell>
                       <TableCell>{row.h}</TableCell>
                       <TableCell>{row.m}</TableCell>
                       <TableCell>{row.netSalary} </TableCell>    
@@ -889,10 +1170,8 @@ const PayrollProcess = () => {
                       <TableCell>{row.totalDeductions}</TableCell>
                       <TableCell sx={{color: 'red', fontWeight:'bold'}}>{row.pay1st} </TableCell>
                       <TableCell sx={{color:'red', fontWeight:'bold'}}>{row.pay2nd }</TableCell>
-                    
+                   
                       <TableCell>{index + 1}</TableCell>
-
-
 
 
 
@@ -904,22 +1183,10 @@ const PayrollProcess = () => {
                       <TableCell>{row.PhilHealthContribution}</TableCell>
 
 
-
-
-
-
-
-
-                      <TableCell>{row.pagibig}</TableCell>
+                      <TableCell>{row.pagibigFundCont}</TableCell>
                       <TableCell>{row.pay1stCompute}</TableCell>
                       <TableCell>{row.pay2ndCompute}</TableCell>
                       <br />
-
-
-
-
-
-
 
 
                       <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
@@ -938,9 +1205,10 @@ const PayrollProcess = () => {
                       <TableCell>{row.personalLifeRetIns}</TableCell>
                       <TableCell>{row.gsisSalaryLoan}</TableCell>
                       <TableCell>{row.gsisPolicyLoan}</TableCell>
-                      <TableCell>{row.gfal}</TableCell>
+                      <TableCell>{row.gsisArrears}</TableCell>
                       <TableCell>{row.cpl}</TableCell>
                       <TableCell>{row.mpl}</TableCell>
+                      <TableCell>{row.eal}</TableCell>
                       <TableCell>{row.mplLite}</TableCell>
                       <TableCell>{row.emergencyLoan}</TableCell>
                       <TableCell>{row.totalGsisDeds}</TableCell>
@@ -949,7 +1217,7 @@ const PayrollProcess = () => {
                       <TableCell>{row.multiPurpLoan}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
                       <TableCell>{row.PhilHealthContribution}</TableCell>
-                      <TableCell>{row.disallowance}</TableCell>
+                      <TableCell>{row.liquidatingCash}</TableCell>
                       <TableCell>{row.landbankSalaryLoan}</TableCell>
                       <TableCell>{row.earistCreditCoop}</TableCell>
                       <TableCell>{row.feu}</TableCell>              
@@ -957,35 +1225,41 @@ const PayrollProcess = () => {
                       <TableCell>{row.totalDeductions}</TableCell>
                       <TableCell>{row.status}</TableCell>
 
+
                     </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={34} align="left">
-                      Loading or No Data Available
-                    </TableCell>
-                  </TableRow>
-                )}
-
-
+             );
+    })}
 
 
               </TableBody>
             </Table>
           </TableContainer>
+           {}
+                    {filteredData.length === 0 && (
+            <Typography
+              variant="h6"
+              align="center"
+              color="error"
+              sx={{ mt: 2 }}
+            >
+              Loading or No Data Available
+            </Typography>
+          )}
         </Paper>
+
 
         <Paper elevation={4} sx={{ borderRadius: 1, pt: 2.5, width: 150 }}>
           <TableContainer component={Box} sx={{ maxHeight: 600, width: 150, overflow: 'hidden' }}>
             <Table stickyHeader>
               <TableHead sx={{ backgroundColor: '#F1F1F1' }}>
                 <TableRow>
-                
+               
                   <TableCell style={{alignItems: 'center', marginTop: '10px', paddingBottom: '40px', paddingLeft: '45px'}}>Actions</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               </TableHead>
+
+
 
 
           <TableBody>
@@ -998,9 +1272,12 @@ const PayrollProcess = () => {
                 );
 
 
+
+
             return (
               <TableRow key={`actions-${row.employeeNumber}-${row.dateCreated}`}>
                
+
 
                 {/* Edit column */}
                 <TableCell>
@@ -1020,17 +1297,20 @@ const PayrollProcess = () => {
                       marginLeft: '15px',
                       padding: '4px'
 
+
                    
                     }}
                     disabled={isFinalized}
                   >
                     Edit
                   </Button>
-                
+               
+
+
 
 
                 {/* Delete column */}
-                
+               
                   <Button
                     onClick={() => handleDelete(row.id)}
                     variant="contained"
@@ -1047,6 +1327,7 @@ const PayrollProcess = () => {
                       marginLeft: '15px',
                       padding: '4px',
                       marginBottom: '-5px'
+
 
                     }}
                     disabled={isFinalized}
@@ -1070,14 +1351,21 @@ const PayrollProcess = () => {
         </Paper>
 
 
+
+
        
+
 
         </Box>
        
         </Box>
 
 
+
+
        
+
+
 
 
         </>
@@ -1088,10 +1376,14 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
 <Button
   variant="contained"
   color="success"
-  onClick={handleSubmitPayroll}
+  onClick={() => setShowConfirmation(true)}
   disabled={isAlreadyFinalized || duplicateEmployeeNumbers.length > 0}
   sx={{
     backgroundColor: '#6D2323',
@@ -1105,10 +1397,36 @@ const PayrollProcess = () => {
     pointerEvents: isAlreadyFinalized || duplicateEmployeeNumbers.length > 0 ? 'none' : 'auto',
 
 
+
+
   }}
 >
   Submit Payroll
 </Button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1169,6 +1487,22 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               {/* Employee Info */}
               <Typography variant="h6" gutterBottom>
                 Employee Information
@@ -1205,6 +1539,12 @@ const PayrollProcess = () => {
                         name={field}
                         value={editRow[field] || ''}
                         onChange={handleModalChange}
+                        InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
                       />
                     )}
                   </Grid>
@@ -1226,12 +1566,27 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+{/* MODAL EDIT*/}
+
+
+
+
+
+
                {/* Salary Info */}
                               <Typography variant="h6" mt={4} gutterBottom>
-                                Salary Information
+                                Salary Rate and Adjustments
                               </Typography>
                               <Grid container spacing={2}>
-                                {salaryFields.map((field) => (
+                                {salaryRateandAdjustments.map((field) => (
                                   <Grid item xs={6} key={field}>
                                     <TextField
                                       fullWidth
@@ -1239,20 +1594,182 @@ const PayrollProcess = () => {
                                       name={field}
                                       value={editRow[field] || ''}
                                       onChange={handleModalChange}
-                                      disabled={field === 'rateNbc188'}
+                                      disabled={field === 'rateNbc594' || field === 'rateNbc584' }
                                       InputProps={{
                                         style:
-                                          field === 'rateNbc188'
-                                            ? { fontWeight: 'bold', color: '' }
+                                          field === 'rateNbc594' || field === 'rateNbc584'
+                                            ? { fontWeight: 'bold', color: 'black', fontSize: '15px' }
                                             : undefined,}}
+                                      InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                               
                                     />
                                   </Grid>
-              
-                                  
+             
+                                 
                                 ))}
                               </Grid>
-              
-                      
+             
+                     
+
+
+
+
+                          {/* Deductions */}
+                          <Typography variant="h6" mt={5} gutterBottom>
+                            Salary Computations
+                          </Typography>
+                          <Grid container spacing={2}>
+                            {SalaryComputation.map((field) => (
+                              <Grid item xs={6} key={field}>
+                                <TextField
+                                  fullWidth
+                                  label={field}
+                                  name={field}
+                                  value={editRow[field] || ''}
+                                  onChange={handleModalChange}
+                                  InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
+                                />
+                              </Grid>
+                            ))}
+                          </Grid>
+                 
+
+
+                          <Typography variant="h6" mt={4} gutterBottom>
+                            Payroll Disbursement
+                          </Typography>
+                          <Grid container spacing={2}>
+                            {PayrollDisbursement.map((field) => (
+                              <Grid item xs={6} key={field}>
+                                <TextField
+                                  fullWidth
+                                  label={field}
+                                  name={field}
+                                  value={editRow[field] || ''}
+                                  onChange={handleModalChange}
+                                  InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
+                                />
+                              </Grid>
+                            ))}
+                          </Grid>
+                         
+
+
+                           <Typography variant="h6" mt={4} gutterBottom>
+                           GSIS Deductions
+                          </Typography>
+                          <Grid container spacing={2}>
+                            {GsisDeductions.map((field) => (
+                              <Grid item xs={6} key={field}>
+                                <TextField
+                                  fullWidth
+                                  label={field}
+                                  name={field}
+                                  value={editRow[field] || ''}
+                                  onChange={handleModalChange}
+                                  InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
+                                />
+                              </Grid>
+                            ))}
+                          </Grid>
+
+
+                          <Typography variant="h6" mt={4} gutterBottom>
+                           PAGIBIG Deductions
+                          </Typography>
+                          <Grid container spacing={2}>
+                            {PagIbigDeductions.map((field) => (
+                              <Grid item xs={6} key={field}>
+                                <TextField
+                                  fullWidth
+                                  label={field}
+                                  name={field}
+                                  value={editRow[field] || ''}
+                                  onChange={handleModalChange}
+                                  InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
+                                />
+                              </Grid>
+                            ))}
+                          </Grid>
+
+
+                           <Typography variant="h6" mt={4} gutterBottom>
+                           Total Other Deductions
+                          </Typography>
+                          <Grid container spacing={2}>
+                            {totalOtherDeductions.map((field) => (
+                              <Grid item xs={6} key={field}>
+                                <TextField
+                                  fullWidth
+                                  label={field}
+                                  name={field}
+                                  value={editRow[field] || ''}
+                                  onChange={handleModalChange}
+                                  InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
+                                />
+                              </Grid>
+                            ))}
+                          </Grid>
+
+
+                        {/* Other Info */}
+<Box mt={4} mb={2}>
+  <Typography variant="h6" fontWeight="bold">
+    Total Contributions & Deductions
+  </Typography>
+</Box>
+
+
+
+
+
+
+<Grid container spacing={2}>
+  {MandatoryDeductions.map((field) => (
+    <Grid item xs={6} key={field}>
+      <TextField
+        fullWidth
+        label={field}
+        name={field}
+        value={editRow[field] || ''}
+        onChange={handleModalChange}
+        InputLabelProps={{
+                                  style: { fontSize: '15px' }  // Make the label bigger
+                                }}
+                                InputProps={{
+                                  style: { fontSize: '15px' }  // Make the input text bigger
+                                }}
+      />
+    </Grid>
+  ))}
+</Grid>
 
 
 
@@ -1269,88 +1786,6 @@ const PayrollProcess = () => {
 
 
 
-              {/* Deductions */}
-              <Typography variant="h6" mt={4} gutterBottom>
-                Deductions
-              </Typography>
-              <Grid container spacing={2}>
-                {deductionFields.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              {/* Other Info */}
-              <Typography variant="h6" mt={4} gutterBottom>
-                Other Payments / Info
-              </Typography>
-              <Grid container spacing={2}>
-                {otherFields.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              <Typography variant="h6" mt={4} gutterBottom>
-                Remittance Field / Info
-              </Typography>
-              <Grid container spacing={2}>
-                {otherFields2.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
 
 
 
@@ -1395,11 +1830,67 @@ const PayrollProcess = () => {
                 >
                   Cancel
                 </Button>
+
+
+               
               </Box>
+
+
+             
             </>
           )}
         </Box>
+
+
       </Modal>
+
+
+      <Modal open={showConfirmation} onClose={() => setShowConfirmation(false)}>
+  <Box
+    sx={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      bgcolor: 'background.paper',
+      boxShadow: 24,
+      p: 4,
+      borderRadius: 2,
+      textAlign: 'center',
+      width: 400,
+    }}
+  >
+    <Typography variant="h6" mb={2}>
+      Are you sure you're submitting your data?
+    </Typography>
+    <Box display="flex" justifyContent="center" gap={2}>
+      <Button
+        variant="outlined"
+        style={{color: 'black'}}
+        onClick={() => setShowConfirmation(false)}
+        disabled={isSubmitting}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="contained"
+        style={{backgroundColor: '#6D2323', width: '100px'}}
+        color="success"
+        onClick={async () => {
+          setIsSubmitting(true);
+          setShowConfirmation(false);
+          await handleSubmitPayroll(); // THIS is your real submit function
+          setIsSubmitting(false);
+        }}
+        disabled={isSubmitting}
+      >
+        Yes
+      </Button>
+    </Box>
+  </Box>
+</Modal>
+
+
     </Container>
   );
 };
@@ -1407,5 +1898,13 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
 export default PayrollProcess;
+
+
+
+
 

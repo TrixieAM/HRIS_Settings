@@ -4,6 +4,9 @@ const mysql = require("mysql2");
 
 
 
+
+
+
 //MYSQL CONNECTION
 const db = mysql.createPool({
   host: 'localhost',
@@ -14,6 +17,9 @@ const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+
+
 
 
 
@@ -28,18 +34,22 @@ router.get('/employee-remittance', (req, res) => {
       }
     });
   });
+
+
+
+
  
   // POST: Add new remittance data
   router.post('/employee-remittance', (req, res) => {
     const {
-      employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
+      employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan,
       nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu
     } = req.body;
  
-    const sql = `INSERT INTO remittance_table (employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO remittance_table (employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
  
-    const values = [employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu];
+    const values = [employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu];
  
     db.query(sql, values, (err, result) => {
       if (err) {
@@ -55,14 +65,34 @@ router.get('/employee-remittance', (req, res) => {
   router.put('/employee-remittance/:id', (req, res) => {
     const { id } = req.params;
     const {
-      employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan,
+      employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan,
       nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu
     } = req.body;
  
-    const sql = `UPDATE remittance_table SET employeeNumber = ?, disallowance = ?, gsisSalaryLoan = ?, gsisPolicyLoan = ?, gfal = ?, cpl = ?, mpl = ?, mplLite = ?, emergencyLoan = ?, nbc594 = ?, increment = ?, pagibigFundCont = ?, pagibig2 = ?, multiPurpLoan = ?, landbankSalaryLoan = ?, earistCreditCoop = ?, feu = ?
+    const sql = `UPDATE remittance_table
+    SET
+    employeeNumber = ?,
+    name = ?,
+    liquidatingCash = ?,
+    gsisSalaryLoan = ?,
+    gsisPolicyLoan =?,
+    gsisArrears= ?,
+    gfal = ?,
+    cpl = ?,
+    mpl = ?,
+    mplLite = ?,
+    emergencyLoan = ?,
+    nbc594 = ?,
+    increment = ?,
+    pagibigFundCont = ?,
+    pagibig2 = ?,
+    multiPurpLoan = ?,
+    landbankSalaryLoan = ?,
+    earistCreditCoop = ?,
+    feu = ?
                  WHERE id = ?`;
  
-    const values = [employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu, id];
+    const values = [employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu, id];
  
     db.query(sql, values, (err, result) => {
       if (err) {
@@ -88,5 +118,11 @@ router.get('/employee-remittance', (req, res) => {
   });
 
 
+
+
 module.exports = router;
+
+
+
+
 

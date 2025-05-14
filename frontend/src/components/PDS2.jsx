@@ -9,7 +9,6 @@ import PrintIcon from '@mui/icons-material/Print'
 
 const PDS2 = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [eligibilityInfo, setEligibilityInfo] = useState([]);
@@ -17,18 +16,15 @@ const PDS2 = () => {
 
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem('email');
     const storedRole = localStorage.getItem('role');
     const storedEmployeeNumber = localStorage.getItem('employeeNumber');
 
 
-    console.log("Stored email:", storedEmail);
     console.log("Stored Role:", storedRole);
     console.log("Stored Employee Number:", storedEmployeeNumber);
 
 
-    if (storedEmail && storedRole && storedEmployeeNumber) {
-      setEmail(storedEmail);
+    if (storedRole && storedEmployeeNumber) {
       setRole(storedRole);
       setEmployeeNumber(storedEmployeeNumber);
     } else {

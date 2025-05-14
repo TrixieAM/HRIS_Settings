@@ -6,8 +6,11 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon
+  Save as SaveIcon, Cancel as CancelIcon,
+  ContactEmergency
 } from '@mui/icons-material';
+
+
 
 
 const PlantillaTable = () => {
@@ -22,9 +25,13 @@ const PlantillaTable = () => {
   const [editData, setEditData] = useState({});
 
 
+
+
   useEffect(() => {
     fetchPlantillas();
   }, []);
+
+
 
 
   const fetchPlantillas = async () => {
@@ -35,6 +42,8 @@ const PlantillaTable = () => {
       console.error('Error fetching plantilla:', err);
     }
   };
+
+
 
 
   const addPlantilla = async () => {
@@ -48,6 +57,8 @@ const PlantillaTable = () => {
   };
 
 
+
+
   const updatePlantilla = async () => {
     try {
       await axios.put(`http://localhost:5000/PlantillaTable/plantilla/${editingId}`, editData);
@@ -57,6 +68,8 @@ const PlantillaTable = () => {
       console.error('Error updating plantilla:', err);
     }
   };
+
+
 
 
   const deletePlantilla = async (id) => {
@@ -69,19 +82,48 @@ const PlantillaTable = () => {
   };
 
 
+
+
   return (
+    <Container>
+    <div
+    style={{
+      backgroundColor: '#6D2323',
+      color: '#ffffff',
+      padding: '25px',
+      width: '91.5%',
+      marginLeft: '25px',
+      borderRadius: '8px',
+      borderBottomLeftRadius: '0px',
+      borderBottomRightRadius: '0px',
+      marginBottom: '-20px'
+    }}
+   
+  >
+<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+  <ContactEmergency sx={{ fontSize: '3rem', marginRight: '15px', marginTop: '5px', marginLeft: '5px' }} />
+
+
+  <div>
+    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+      Plantilla Information
+    </h4>
+    <p style={{ margin: 0, fontSize: '85%' }}>
+      Insert Your Position Information
+    </p>
+  </div>
+</div>
+</div>
     <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1' }}>
+     
       <div style={{
         backgroundColor: 'white', padding: '20px', borderRadius: '8px',
         boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', marginBottom: '20px'
       }}>
-        <div style={{
-          backgroundColor: '#6D2323', color: '#ffffff', padding: '10px',
-          borderRadius: '8px', marginBottom: '25px'
-        }}>
-          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>Plantilla Table</h4>
-          <p style={{ margin: 0, fontSize: '85%', marginLeft: '.25%' }}>Manage Plantilla Records</p>
-        </div>
+
+
+
+
 
 
         <Box display="flex" gap={2} marginLeft="0px">
@@ -113,6 +155,8 @@ const PlantillaTable = () => {
         </Box>
 
 
+
+
         <Button
           onClick={addPlantilla}
           variant="contained"
@@ -128,6 +172,8 @@ const PlantillaTable = () => {
           Add
         </Button>
       </div>
+
+
 
 
       <div style={{
@@ -238,11 +284,20 @@ const PlantillaTable = () => {
         </Table>
       </div>
     </Container>
+    </Container>
   );
 };
 
 
+
+
 export default PlantillaTable;
+
+
+
+
+
+
 
 
 

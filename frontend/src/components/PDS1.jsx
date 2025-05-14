@@ -9,7 +9,6 @@ import PrintIcon from '@mui/icons-material/Print'
 
 const PDS1 = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState(""); // State for employee number
 
@@ -37,18 +36,17 @@ const PDS1 = () => {
 
   // First useEffect: Fetch from localStorage and set the state
   useEffect(() => {
-    const storedEmail = localStorage.getItem('email');
+  
     const storedRole = localStorage.getItem('role');
     const storedEmployeeNumber = localStorage.getItem('employeeNumber');
 
 
-    console.log("Stored email:", storedEmail);
     console.log("Stored Role:", storedRole);
     console.log("Stored Employee Number:", storedEmployeeNumber);
 
 
-    if (storedEmail && storedRole && storedEmployeeNumber) {
-      setEmail(storedEmail);
+    if (storedRole && storedEmployeeNumber) {
+      
       setRole(storedRole);
       setEmployeeNumber(storedEmployeeNumber);
     } else {

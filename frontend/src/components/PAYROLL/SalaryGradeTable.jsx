@@ -12,27 +12,37 @@ import {
   Typography,
   Grid,
   Paper,
+  Box,
+  InputAdornment
 } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
-
-
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Upgrade,
+  Search,
+  Shortcut,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 
 const SalaryGradeTable = () => {
   const [salaryGrades, setSalaryGrades] = useState([]);
+  const [filteredGrades, setFilteredGrades] = useState([]);
   const [newSalaryGrade, setNewSalaryGrade] = useState({
     effectivityDate: "",
     sg_number: "",
-    step1: "",
-    step2: "",
-    step3: "",
-    step4: "",
-    step5: "",
-    step6: "",
-    step7: "",
-    step8: "",
+    step1: "", step2: "", step3: "", step4: "",
+    step5: "", step6: "", step7: "", step8: ""
   });
   const [editSalaryGradeId, setEditSalaryGradeId] = useState(null);
+  const [searchFilters, setSearchFilters] = useState({
+    effectivityDate: "",
+    step: ""
+  });
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -40,41 +50,54 @@ const SalaryGradeTable = () => {
   }, []);
 
 
+  useEffect(() => {
+    const { effectivityDate, step } = searchFilters;
+
+
+    if (!effectivityDate && !step) {
+      setFilteredGrades(salaryGrades);
+      return;
+    }
+
+
+    const filtered = salaryGrades.filter((record) => {
+      const matchDate = record.effectivityDate.toLowerCase().includes(effectivityDate.toLowerCase());
+      const matchStep = [...Array(8)].some((_, i) =>
+        record[`step${i + 1}`]?.toString().toLowerCase().includes(step.toLowerCase())
+      );
+      return matchDate && matchStep;
+    });
+
+
+    setFilteredGrades(filtered);
+  }, [searchFilters, salaryGrades]);
+
+
   const fetchSalaryGrades = async () => {
     const response = await axios.get("http://localhost:5000/SalaryGradeTable/salary-grade");
     setSalaryGrades(response.data);
+    setFilteredGrades(response.data);
   };
 
 
   const addSalaryGrade = async () => {
-    if (Object.values(newSalaryGrade).includes("")) {
-      console.log("All fields are required");
-      return;
-    } else {
-      await axios.post("http://localhost:5000/SalaryGradeTable/salary-grade", newSalaryGrade);
-      setNewSalaryGrade({
-        effectivityDate: "",
-        sg_number: "",
-        step1: "",
-        step2: "",
-        step3: "",
-        step4: "",
-        step5: "",
-        step6: "",
-        step7: "",
-        step8: "",
-      });
-      fetchSalaryGrades();
-    }
+    if (Object.values(newSalaryGrade).some((v) => v === "")) return;
+
+
+    await axios.post("http://localhost:5000/SalaryGradeTable/salary-grade", newSalaryGrade);
+    setNewSalaryGrade({
+      effectivityDate: "",
+      sg_number: "",
+      step1: "", step2: "", step3: "", step4: "",
+      step5: "", step6: "", step7: "", step8: ""
+    });
+    fetchSalaryGrades();
   };
 
 
   const updateSalaryGrade = async (id) => {
-    const recordToUpdate = salaryGrades.find((record) => record.id === id);
-    await axios.put(
-      `http://localhost:5000/SalaryGradeTable/salary-grade/${id}`,
-      recordToUpdate
-    );
+    const updatedRecord = salaryGrades.find((rec) => rec.id === id);
+    await axios.put(`http://localhost:5000/SalaryGradeTable/salary-grade/${id}`, updatedRecord);
     setEditSalaryGradeId(null);
     fetchSalaryGrades();
   };
@@ -86,284 +109,192 @@ const SalaryGradeTable = () => {
   };
 
 
+  const highlightText = (text, query) => {
+    if (!query) return text;
+    const parts = text.toString().split(new RegExp(`(${query})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase()
+        ? <span key={i} style={{ backgroundColor: "yellow" }}>{part}</span>
+        : part
+    );
+  };
+
+
   return (
     <Container>
       {/* Header */}
-      <Paper
-  elevation={3}
-  sx={{
-    padding: 3,
-    backgroundColor: "#ffffff",
-    borderRadius: "8px",
-    marginBottom: "24px",
-  }}
->
-  <Typography
-    variant="h6"
-    sx={{
-      fontWeight: "bold",
-      backgroundColor: "#6D2323",
-      color: "#ffffff",
-      padding: "12px 16px",
-      borderRadius: "8px",
-      marginBottom: "16px",
-    }}
-  >
-    2025 Second Tranche Salary Schedule
-    <p style={{ fontSize: "14px", marginTop: "8px", fontWeight: "normal" }}>
-      For Civilian Personnel of the National Government  
-      Effective January 1, 2025
-</p>
+      <Box sx={{ backgroundColor: "#6D2323", color: "#fff", p: 3, borderRadius: "8px 8px 0 0" }}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Upgrade sx={{ fontSize: 60, mr: 2 }} />
+          <Box>
+            <Typography variant="h6">2024 First Tranche Salary Schedule</Typography>
+            <Typography variant="body2">
+              For Civilian Personnel of the National Government
+              <br />
+              Effective from <strong>January 1, 2024</strong> to <strong>December 31, 2024</strong>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
 
 
+      {/* Add Salary Grade Form */}
+      <Paper sx={{ p: 3, }}>
+        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: "bold" }}>Add New Salary Grade</Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Effectivity Date" fullWidth value={newSalaryGrade.effectivityDate}
+              onChange={(e) => setNewSalaryGrade({ ...newSalaryGrade, effectivityDate: e.target.value })} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Salary Grade Number" fullWidth value={newSalaryGrade.sg_number}
+              onChange={(e) => setNewSalaryGrade({ ...newSalaryGrade, sg_number: e.target.value })} />
+          </Grid>
+          {[...Array(8)].map((_, i) => (
+            <Grid item xs={12} sm={3} key={i}>
+              <TextField label={`Step ${i + 1}`} fullWidth
+                value={newSalaryGrade[`step${i + 1}`]}
+                onChange={(e) =>
+                  setNewSalaryGrade({ ...newSalaryGrade, [`step${i + 1}`]: e.target.value })
+                }
+              />
+            </Grid>
+          ))}
+          <Grid item xs={12}>
+            <Button
+              onClick={addSalaryGrade}
+              fullWidth
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{ backgroundColor: "#6D2323", '&:hover': { backgroundColor: "#9C2A2A" } }}
+            >
+              Add Salary Grade
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
 
-  </Typography>
- 
-
-
-  <Grid container spacing={2}>
-    <Grid item xs={12} sm={6}>
-      <TextField
-        label="Effectivity Date"
-        value={newSalaryGrade.effectivityDate}
-        onChange={(e) =>
-          setNewSalaryGrade({
-            ...newSalaryGrade,
-            effectivityDate: e.target.value,
-          })
-        }
-        fullWidth
-        InputLabelProps={{ shrink: true }}
-      />
-    </Grid>
-    <Grid item xs={12} sm={6}>
-      <TextField
-        label="Salary Grade Number"
-        value={newSalaryGrade.sg_number}
-        onChange={(e) =>
-          setNewSalaryGrade({
-            ...newSalaryGrade,
-            sg_number: e.target.value,
-          })
-        }
-        fullWidth
-      />
-    </Grid>
-    {[...Array(8)].map((_, index) => (
-      <Grid item xs={12} sm={6} key={index}>
+      {/* Search Filters & Shortcut */}
+      <Box sx={{ mt: 10, display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 2 }}>
         <TextField
-          label={`Step ${index + 1}`}
-          value={newSalaryGrade[`step${index + 1}`]}
-          onChange={(e) =>
-            setNewSalaryGrade({
-              ...newSalaryGrade,
-              [`step${index + 1}`]: e.target.value,
-            })
-          }
-          fullWidth
+          label="Search by Date"
+          style={{backgroundColor: "#fff", width: "200px"}}
+          value={searchFilters.effectivityDate}
+          onChange={(e) => setSearchFilters({ ...searchFilters, effectivityDate: e.target.value })}
+          size="small"
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><Search sx={{ color: "#6D2323" }} /></InputAdornment>
+          }}
         />
-      </Grid>
-    ))}
-    <Grid item xs={12}>
-      <Button
-        onClick={addSalaryGrade}
-        variant="contained"
-        sx={{
-          backgroundColor: "#6D2323",
-          '&:hover': { backgroundColor: "#9C2A2A" },
-          height: "40px",
-          width: "100%",
-        }}
-        startIcon={<AddIcon />}
-      >
-        Add Salary Grade
-      </Button>
-    </Grid>
-  </Grid>
-</Paper>
- <br />
- 
+        <TextField
+          label="Search by Step"
+          style={{backgroundColor: "#fff", width: "200px"}}
+          value={searchFilters.step}
+          onChange={(e) => setSearchFilters({ ...searchFilters, step: e.target.value })}
+          size="small"
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><Search sx={{ color: "#6D2323" }} /></InputAdornment>
+          }}
+        />
+        <Box sx={{ flexGrow: 1 }} />
+        <Button
+          variant="contained"
+          sx={{ backgroundColor: "#6D2323", '&:hover': { backgroundColor: "#9C2A2A" } }}
+          startIcon={<Shortcut />}
+          onClick={() => navigate('/item-table')}
+        >
+          Insert into item-table
+        </Button>
+      </Box>
 
 
       {/* Salary Grade Table */}
-      <Table style={{ backgroundColor: 'white', borderRadius: '5px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', marginLeft: '-3%' }}>
-      <TableHead>
-          <TableRow style={{ backgroundColor: "#6D2323", borderRadius: "15px", overflow: "hidden" }}>
-            <TableCell style={{ color: "#ffffff", fontWeight: "bold" }}>
-              ID
-            </TableCell>
-            <TableCell style={{ color: "#ffffff", fontWeight: "bold" }}>
-              Effectivity Date
-            </TableCell>
-            <TableCell style={{ color: "#ffffff", fontWeight: "bold" }}>
-              Salary Grade Number
-            </TableCell>
-            {[...Array(8)].map((_, index) => (
-              <TableCell
-                key={index}
-                style={{ color: "#ffffff", fontWeight: "bold", minWidth: "80px", // Adjust width as needed
-                  padding: "12px 16px",
-                }}
-              >
-                Step {index + 1}
-              </TableCell>
-            ))}
-            <TableCell style={{ color: "#ffffff", fontWeight: "bold" }}>
-              Actions
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {salaryGrades.map((record) => (
-            <TableRow key={record.id}>
-              <TableCell>{record.id}</TableCell>
-              <TableCell>
-                {editSalaryGradeId === record.id ? (
-                  <TextField
-                    value={record.effectivityDate}
-                    onChange={(e) => {
-                      const updatedRecord = {
-                        ...record,
-                        effectivityDate: e.target.value,
-                      };
-                      setSalaryGrades((prevData) =>
-                        prevData.map((rec) =>
-                          rec.id === record.id ? updatedRecord : rec
-                        )
-                      );
-                    }}
-                    size="small"
-                    variant="outlined"
-                  />
-                ) : (
-                  record.effectivityDate
-                )}
-              </TableCell>
-              <TableCell>
-                {editSalaryGradeId === record.id ? (
-                  <TextField
-                    value={record.sg_number}
-                    onChange={(e) => {
-                      const updatedRecord = {
-                        ...record,
-                        sg_number: e.target.value,
-                      };
-                      setSalaryGrades((prevData) =>
-                        prevData.map((rec) =>
-                          rec.id === record.id ? updatedRecord : rec
-                        )
-                      );
-                    }}
-                    size="small"
-                    variant="outlined"
-                  />
-                ) : (
-                  record.sg_number
-                )}
-              </TableCell>
-              {[...Array(8)].map((_, index) => (
-                <TableCell key={index}>
-                  {editSalaryGradeId === record.id ? (
-                    <TextField
-                      value={record[`step${index + 1}`]}
-                      onChange={(e) => {
-                        const updatedRecord = {
-                          ...record,
-                          [`step${index + 1}`]: e.target.value,
-                        };
-                        setSalaryGrades((prevData) =>
-                          prevData.map((rec) =>
-                            rec.id === record.id ? updatedRecord : rec
-                          )
-                        );
-                      }}
-                      size="small"
-                      variant="outlined"
-                    />
-                  ) : (
-                    record[`step${index + 1}`]
-                  )}
-                </TableCell>
+      <Box sx={{ mt: 3, overflowX: "auto" }}>
+        <Table sx={{ backgroundColor: "#fff" }}>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#6D2323" }}>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Effectivity Date</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>SG Number</TableCell>
+              {[...Array(8)].map((_, i) => (
+                <TableCell key={i} sx={{ color: "#fff", fontWeight: "bold" }}>Step {i + 1}</TableCell>
               ))}
-              <TableCell>
-                {editSalaryGradeId === record.id ? (
-                  <>
-                    <Button
-                      onClick={() => updateSalaryGrade(record.id)}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#6D2323",
-                        color: "#FEF9E1",
-                        "&:hover": { backgroundColor: "#9C2A2A" },
-                        marginRight: "8px",
-                        marginBottom:'5px',
-                        width: "100%",
-                      }}
-                      startIcon={<SaveIcon />}
-                    >
-                      Update
-                    </Button>
-                    <Button
-                      onClick={() => setEditSalaryGradeId(null)}
-                      variant="contained"
-                      color="error"
-                      sx={{
-                        backgroundColor: "#000000",
-                        color: "#ffffff",
-                        "&:hover": { backgroundColor: "#333333" },
-                        width: "100%",
-                      }}
-                      startIcon={<CancelIcon />}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      onClick={() => setEditSalaryGradeId(record.id)}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#6D2323",
-                        color: "#FEF9E1",
-                        "&:hover": { backgroundColor: "#9C2A2A" },
-                        marginRight: "8px",
-                        marginBottom:'5px',
-                        width: "100%",
-                       
-                      }}
-                      startIcon={<EditIcon />}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => deleteSalaryGrade(record.id)}
-                      variant="contained"
-                      color="error"
-                      sx={{
-                        backgroundColor: "#000000",
-                        color: "#ffffff",
-                        "&:hover": { backgroundColor: "#333333" },
-                        width: "100%",
-                      }}
-                      startIcon={<DeleteIcon />}
-                    >
-                      Delete
-                    </Button>
-                  </>
-                )}
-              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Actions</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {filteredGrades.length === 0 ? (
+              <TableRow><TableCell colSpan={11} align="center">No matching records found.</TableCell></TableRow>
+            ) : (
+              filteredGrades.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>
+                    {editSalaryGradeId === record.id ? (
+                      <TextField size="small" value={record.effectivityDate}
+                        onChange={(e) => {
+                          const updated = { ...record, effectivityDate: e.target.value };
+                          setSalaryGrades(prev => prev.map(r => r.id === record.id ? updated : r));
+                        }} />
+                    ) : highlightText(record.effectivityDate, searchFilters.effectivityDate)}
+                  </TableCell>
+                  <TableCell>
+                    {editSalaryGradeId === record.id ? (
+                      <TextField size="small" value={record.sg_number}
+                        onChange={(e) => {
+                          const updated = { ...record, sg_number: e.target.value };
+                          setSalaryGrades(prev => prev.map(r => r.id === record.id ? updated : r));
+                        }} />
+                    ) : highlightText(record.sg_number, searchFilters.step)}
+                  </TableCell>
+                  {[...Array(8)].map((_, i) => (
+                    <TableCell key={i}>
+                      {editSalaryGradeId === record.id ? (
+                        <TextField size="small" value={record[`step${i + 1}`]}
+                          onChange={(e) => {
+                            const updated = { ...record, [`step${i + 1}`]: e.target.value };
+                            setSalaryGrades(prev => prev.map(r => r.id === record.id ? updated : r));
+                          }} />
+                      ) : highlightText(record[`step${i + 1}`], searchFilters.step)}
+                    </TableCell>
+                  ))}
+                  <TableCell>
+                    {editSalaryGradeId === record.id ? (
+                      <>
+                        <Button onClick={() => updateSalaryGrade(record.id)}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1", mb: 1, width: "100%" }}
+                          startIcon={<SaveIcon />} variant="contained">
+                          Update
+                        </Button>
+                        <Button onClick={() => setEditSalaryGradeId(null)}
+                          sx={{ backgroundColor: "#000", color: "#fff", width: "100%" }}
+                          startIcon={<CancelIcon />} variant="contained">
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button onClick={() => setEditSalaryGradeId(record.id)}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1", mb: 1, width: "100%" }}
+                          startIcon={<EditIcon />} variant="contained">
+                          Edit
+                        </Button>
+                        <Button onClick={() => deleteSalaryGrade(record.id)}
+                          sx={{ backgroundColor: "#000", color: "#fff", width: "100%" }}
+                          startIcon={<DeleteIcon />} variant="contained">
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Box>
     </Container>
   );
 };
 
 
 export default SalaryGradeTable;
-
-
-

@@ -188,11 +188,11 @@ function App() {
           overflow: 'hidden',
         }}
       >
-        <AppBar
+       <AppBar
           position="fixed"
-          sx={{ zIndex: 1201, bgcolor:'#6d2323', height: '60px' }}// adjust HEADER
+          sx={{ zIndex: 1201, bgcolor: '#6d2323', height: '60px' }} // adjust HEADER
         >
-          <Toolbar>
+          <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
             {settings.logo_url && (
               <img
                 src={`http://localhost:5000${settings.logo_url}`}
@@ -200,11 +200,17 @@ function App() {
                 style={{ height: '40px', marginRight: '10px' }}
               />
             )}
-            <Typography variant="h6" noWrap>
-              {settings.company_name || 'Organization Name'}
-            </Typography>
+            <Box>
+              <Typography variant="body2" noWrap sx={{ lineHeight: 1.2, color: 'white', marginTop: '8px' }}>
+                Eulogio "Amang" Rodriguez Institute of Science and Technology
+              </Typography>
+              <Typography variant="subtitle1" noWrap sx={{ color: 'white', fontWeight: 'bold', marginTop: '-5px' }}>
+                Human Resources Information System
+              </Typography>
+            </Box>
           </Toolbar>
         </AppBar>
+
 
 
 
@@ -319,7 +325,7 @@ function App() {
             <Route
               path="/personalinfo"
               element={
-                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                <ProtectedRoute allowedRoles={['staff', 'administrator', 'superadmin']}>
                   <PersonalTable />
                 </ProtectedRoute>
               }
@@ -795,7 +801,7 @@ function App() {
           }}
         >
           <Typography variant="body2">
-            {settings.footer_text || 'Default Footer Text'}
+            {'2025 EARIST Manila - Human Resources Information System. All rights Reserved.'}
           </Typography>
         </Box>
       </Box>

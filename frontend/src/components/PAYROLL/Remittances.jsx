@@ -27,7 +27,7 @@ const EmployeeRemittance = () => {
   const [remittances, setRemittances] = useState([]);
   const [newRemittance, setNewRemittance] = useState({
     employeeNumber: '', name: '',  liquidatingCash: '', gsisSalaryLoan: '', gsisPolicyLoan: '', gsisArrears: '',
-    gfal: '', cpl: '', mpl: '', mplLite: '', emergencyLoan: '', nbc594: '',
+    cpl: '', mpl: '', mplLite: '', emergencyLoan: '', nbc594: '',
     increment: '',  pagibigFundCont: '', pagibig2: '', multiPurpLoan: '',
     landbankSalaryLoan: '', earistCreditCoop: '', feu: ''
   });

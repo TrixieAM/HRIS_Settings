@@ -38,8 +38,8 @@ const AllAttendanceRecord = () => {
 
   const currentYear = 2024;
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
@@ -77,7 +77,7 @@ const AllAttendanceRecord = () => {
                     <Search sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
                     <div>
                       <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-                        Attendance Record Search
+                        Attendance Record State Search
                       </h4>
                       <p style={{ margin: 0, fontSize: '85%' }}>
                       Generate & review attendance records
@@ -101,7 +101,7 @@ const AllAttendanceRecord = () => {
         }}
       >
         {/* Month Buttons */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, pb: 5 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, pb: 5, ml: 12.5 }}>
                 {months.map((month, index) => (
                   <Button
                     key={month}
@@ -170,7 +170,7 @@ const AllAttendanceRecord = () => {
             variant="contained"
             type="submit"
             style={{
-              width: "250px",
+              width: "200px",
               height: "55px",
               backgroundColor: "#6D2323",
               color: "#FEF9E1",

@@ -246,7 +246,7 @@ const Children = () => {
               <TableCell>Last Name</TableCell>
               <TableCell>Name Extension</TableCell>
               <TableCell>Date of Birth</TableCell>
-              <TableCell>Person ID</TableCell>
+              <TableCell>Employee Number</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>

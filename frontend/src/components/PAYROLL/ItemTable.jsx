@@ -145,7 +145,7 @@ const ItemTable = () => {
       {/* Form */}
       <Paper elevation={3} sx={{ p: 3, borderRadius: "0 0 8px 8px", mb: 3 }}>
         <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-          <TextField label="Item Description" name="item_description" value={newItem.item_description} onChange={handleChange} sx={{ width: "23%" }} />
+          <TextField label="Position" name="item_description" value={newItem.item_description} onChange={handleChange} sx={{ width: "23%" }} />
           <TextField label="Employee Number" name="employeeID" value={newItem.employeeID} onChange={handleChange} sx={{ width: "23%" }} />
           <TextField label="Name" name="name" value={newItem.name} onChange={handleChange} sx={{ width: "23%" }} />
           <TextField label="Item Code" name="item_code" value={newItem.item_code} onChange={handleChange} sx={{ width: "23%" }} />
@@ -244,7 +244,7 @@ const ItemTable = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              {["ID", "Item Description", "Employee Number", "Name", "Item Code", "Salary Grade", "Step", "Effectivity Date", "Actions"].map((head) => (
+              {["ID", "Position", "Employee Number", "Name", "Item Code", "Salary Grade", "Step", "Effectivity Date", "Actions"].map((head) => (
                 <TableCell key={head}>{head}</TableCell>
               ))}
             </TableRow>

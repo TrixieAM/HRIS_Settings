@@ -21,6 +21,7 @@ import {
   Button,
   Modal,
   Grid, // Added Grid import
+  Checkbox
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
@@ -31,6 +32,14 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon,
 } from '@mui/icons-material';
+
+
+
+
+
+
+
+
 
 
 
@@ -52,7 +61,35 @@ const PayrollProcess = () => {
   const [finalizedPayroll, setFinalizedPayroll] = useState([]);
   const [duplicateEmployeeNumbers, setDuplicateEmployeeNumbers] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
-const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+ 
+
+
+  const canSubmit = selectedRows.length > 0;
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -87,6 +124,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
   const isAlreadyFinalized = filteredData.some(fd =>
     finalizedPayroll.some(fp =>
       fp.employeeNumber === fd.employeeNumber &&
@@ -94,6 +139,18 @@ const [isSubmitting, setIsSubmitting] = useState(false);
       fp.endDate === fd.endDate
     )
   );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -117,8 +174,16 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const seen = new Set();
     const duplicates = new Set(); // newly add
+
+
+
+
 
 
 
@@ -130,6 +195,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         seen[item.employeeNumber] = true;
       }
     });
+
+
+
+
+
+
+
+
 
 
 
@@ -150,9 +223,23 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
     setDuplicateEmployeeNumbers([...duplicates]);
     setFilteredData(allData);
     setData(allData); // ✅ Add this line here
+
+
+
+
+
+
 
 
 
@@ -166,9 +253,17 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const allUnprocessed = allData.every(
       (item) => item.status === 'Unprocessed' || item.status === 0
     );
+
+
+
+
 
 
 
@@ -178,11 +273,39 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
   } catch (err) {
     console.error('Error fetching payroll data:', err);
     setError('An error occurred while fetching the payroll data.');
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -225,9 +348,49 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
     fetchPayrollData();
     fetchDepartments();
   }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -273,11 +436,51 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
   const handleSearchChange = (event) => {
     const term = event.target.value;
     setSearchTerm(term);
     applyFilters(selectedDepartment, term);
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -316,10 +519,16 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
     if (department) {
       filtered = filtered.filter((record) => record.department === department);
     }
+
+
 
 
       if (search) {
@@ -329,6 +538,12 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
       );
     }
+
+
+
+
+
+
 
 
 
@@ -369,11 +584,45 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleSubmitPayroll = async () => {
     try {
-      const updatedData = filteredData.map((item) => {
- const h = item.h || 0; // Default to 0 if h is not available
+    const updatedData = filteredData.map((item) => {
+    const h = item.h || 0; // Default to 0 if h is not available
     const m = item.m || 0; // Default to 0 if m is not availabl
+
+
 
 
     const grossSalary = item.increment
@@ -383,7 +632,12 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
-    const abs = (grossSalary *  0.0058341725167354* h) + (grossSalary *   0.00009723557208532  * m);   
+
+
+
+
+    const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723557208532  * m);
+
 
     const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
     const personalLifeRetIns = ((grossSalary) * 0.09);
@@ -391,7 +645,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const netSalary = grossSalary - (abs);
+
+
+
+
 
 
 
@@ -410,10 +672,18 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
     (parseFloat(item.multiPurpLoan) || 0);
+
+
+
+
 
 
 
@@ -428,12 +698,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const totalDeductions =
     (parseFloat(item.withholdingTax) || 0) +
     (parseFloat(PhilHealthContribution) || 0) +
     (parseFloat(totalGsisDeds) || 0) +
     (parseFloat(totalPagibigDeds) || 0) +
     (parseFloat(totalOtherDeds) || 0);
+
+
+
+
 
 
 
@@ -448,8 +726,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
     const pay1st = pay2ndCompute;
     const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+
+
 
 
 
@@ -484,13 +774,23 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
- 
-      await axios.post(
-        'http://localhost:5000/api/finalized-payroll',
-        updatedData
-      );
+      // ✅ Step 1: Update main payroll database (payroll-with-remittance)
+    for (const item of updatedData) {
+      if (selectedRows.includes(item.employeeNumber)) {
+        try {
+          await axios.put(
+            `http://localhost:5000/api/payroll-with-remittance/${item.employeeNumber}`,
+            item
+          );
+        } catch (error) {
+          console.error(`Error updating payroll for ${item.employeeNumber}:`, error);
+        }
+      }
+    }
 
 
+    // ✅ Step 2: Update finalized payroll database (finalized-payroll)
+      await axios.post('http://localhost:5000/api/finalized-payroll', updatedData);
 
 
 
@@ -512,6 +812,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     }
   };
  
+  const rowsToSubmit = filteredData.filter(row =>
+  selectedRows.includes(row.employeeNumber)
+);
+
+
+
+
+
+
 
 
 
@@ -521,6 +830,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     setEditRow(row);
     setOpenModal(true);
   };
+
+
+
+
+
+
+
+
 
 
 
@@ -540,9 +857,17 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
         // Recalculate duplicates
         const seen = {};
         const updatedDuplicates = new Set();
+
+
+
+
 
 
 
@@ -558,7 +883,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
         setDuplicateEmployeeNumbers([...updatedDuplicates]);
+
+
+
+
 
 
 
@@ -567,6 +900,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         console.error('Error deleting payroll data:', error);
       }
     };      
+
+
+
+
+
+
+
+
 
 
 
@@ -590,10 +931,26 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
   const handleCancel = () => {
     setOpenModal(false);
     setEditRow(null); // Clear the modal data on cancel
   };
+
+
+
+
+
+
+
+
 
 
 
@@ -624,10 +981,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
         totalPagibigDeds:
           (parseFloat(editRow.pagibigFundCont) || 0) +
           (parseFloat(editRow.pagibig2) || 0) +
           (parseFloat(editRow.multiPurpLoan) || 0) ,
+
+
 
 
         totalOtherDeds:
@@ -635,6 +1002,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
           (parseFloat(editRow.landbankSalaryLoan) || 0) +
           (parseFloat(editRow.earistCreditCoop) || 0) +
           (parseFloat(editRow.feu) || 0),
+
+
 
 
         totalDeductions:
@@ -648,6 +1017,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
       // Send the updated data to the backend
       const response = await axios.put(
         `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`,
@@ -657,13 +1030,25 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
       console.log('Payroll record updated successfully:', response.data);
+
+
+
+
 
 
 
 
       // Close the modal after saving
       setOpenModal(false);
+
+
+
+
 
 
 
@@ -681,6 +1066,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
       setError('Failed to update payroll data.');
     }
   };
+
+
+
+
 
 
 
@@ -716,19 +1105,31 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     'totalDeductions',
 
 
+
+
    
   ];
   const PayrollDisbursement = [
+
+
 
 
   'pay1st',
   'pay2nd',
 
 
+
+
   ];
 
 
+
+
   const GsisDeductions = [
+
+
+
+
 
 
 
@@ -744,10 +1145,16 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   'emergencyLoan'
 
 
+
+
   ];
 
 
+
+
   const PagIbigDeductions = [
+
+
 
 
   'pagibigFundCont',
@@ -755,10 +1162,16 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   'pagibig2'
 
 
+
+
   ];
 
 
+
+
   const totalOtherDeductions = [
+
+
 
 
   'liquidatingCash',
@@ -767,7 +1180,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   'landbankSalaryLoan'
 
 
+
+
   ];
+
+
+
+
+
+
 
 
 
@@ -781,6 +1202,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     const m = item.m || 0; // Default to 0 if m is not availabl
 
 
+
+
     const grossSalary = item.increment
     ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
     : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
@@ -788,7 +1211,11 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
-    const abs = (grossSalary *  0.0058341725167354* h) + (grossSalary *   0.00009723557208532  * m);
+
+
+
+
+const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723557208532  * m);
 
     const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
     const personalLifeRetIns = ((grossSalary) * 0.09);
@@ -796,7 +1223,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const netSalary = grossSalary - (abs);
+
+
+
+
 
 
 
@@ -815,10 +1250,18 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
     (parseFloat(item.multiPurpLoan) || 0);
+
+
+
+
 
 
 
@@ -833,12 +1276,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
     const totalDeductions =
     (parseFloat(item.withholdingTax) || 0) +
     (parseFloat(PhilHealthContribution) || 0) +
     (parseFloat(totalGsisDeds) || 0) +
     (parseFloat(totalPagibigDeds) || 0) +
     (parseFloat(totalOtherDeds) || 0);
+
+
+
+
 
 
 
@@ -853,8 +1304,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
     const pay1st = pay2ndCompute;
     const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+
+
 
 
 
@@ -882,9 +1345,21 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
  
     };
   });
+
+
+
+
+
+
+
+
 
 
 
@@ -903,7 +1378,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
           p: 3,
           borderRadius: 3,
           mb: 3,
-          width: 1230
+          width: 1080
         }}
       >
         <Box
@@ -924,6 +1399,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
               </Typography>
             </Box>
           </Box>
+
+
+
+
 
 
 
@@ -962,6 +1441,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
             <TextField
               variant="outlined"
               label="Search Name"
@@ -987,12 +1474,24 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
       {error ? (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       ) : (
         <>
+
+
+
+
 
 
 
@@ -1008,11 +1507,30 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
         <Paper elevation={4} sx={{ borderRadius: 3 }}> {/*TABLE HEADER */}
-          <TableContainer component={Box} sx={{ maxHeight: 600 , maxWidth: 1100, borderRadius: 1}}>
+          <TableContainer component={Box} sx={{ maxHeight: 600 , maxWidth: 950, borderRadius: 1}}>
             <Table stickyHeader>
               <TableHead sx={{ backgroundColor: '#F1F1F1' }}>
                 <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    indeterminate={selectedRows.length > 0 && selectedRows.length < computedRows.length}
+                    checked={selectedRows.length === computedRows.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRows(computedRows.map((row) => row.employeeNumber));
+                      } else {
+                        setSelectedRows([]);
+                      }
+                    }}
+                  />
+                </TableCell>
+
+
                   <TableCell>No.</TableCell>
                   <TableCell>Department</TableCell>
                   <TableCell>Employee Number</TableCell>
@@ -1054,8 +1572,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
                   <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
                
+
+
+
+
 
 
 
@@ -1120,6 +1650,38 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               <TableBody>
               {filteredData.length > 0 &&
                 computedRows.map((row, index) => {
@@ -1130,6 +1692,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                     );
 
 
+                    const hasNoFinalized = finalizedPayroll.length === 0;
+                    const submitButtonEnabled = canSubmit || hasNoFinalized;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1137,6 +1713,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
                     return (
+                     
                       <TableRow
                         key={`${row.employeeNumber}-${row.dateCreated}`}
                         sx={{
@@ -1145,6 +1722,22 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                             : 'inherit',
                         }}
                       >      
+                     
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedRows.includes(row.employeeNumber)}
+                          onChange={() => {
+                            if (selectedRows.includes(row.employeeNumber)) {
+                              setSelectedRows(prev => prev.filter(id => id !== row.employeeNumber));
+                            } else {
+                              setSelectedRows(prev => [...prev, row.employeeNumber]);
+                            }
+                          }}
+                          disabled={isFinalized}
+                        />
+                      </TableCell>
+
+
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.department}</TableCell>
                       <TableCell>{row.employeeNumber}</TableCell>
@@ -1178,9 +1771,17 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
                       <TableCell>{row.rtIns}</TableCell>
                       <TableCell>{row.ec}</TableCell>
                       <TableCell>{row.PhilHealthContribution}</TableCell>
+
+
 
 
                       <TableCell>{row.pagibigFundCont}</TableCell>
@@ -1189,7 +1790,17 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                       <br />
 
 
+
+
                       <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
+
+
+
+
+
+
+
+
 
 
 
@@ -1226,9 +1837,13 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                       <TableCell>{row.status}</TableCell>
 
 
+
+
                     </TableRow>
              );
     })}
+
+
 
 
               </TableBody>
@@ -1248,6 +1863,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         </Paper>
 
 
+
+
         <Paper elevation={4} sx={{ borderRadius: 1, pt: 2.5, width: 150 }}>
           <TableContainer component={Box} sx={{ maxHeight: 600, width: 150, overflow: 'hidden' }}>
             <Table stickyHeader>
@@ -1258,6 +1875,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                   <TableCell></TableCell>
                 </TableRow>
               </TableHead>
+
+
+
+
 
 
 
@@ -1274,9 +1895,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
             return (
               <TableRow key={`actions-${row.employeeNumber}-${row.dateCreated}`}>
                
+
+
 
 
                 {/* Edit column */}
@@ -1298,6 +1925,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                       padding: '4px'
 
 
+
+
                    
                     }}
                     disabled={isFinalized}
@@ -1305,6 +1934,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                     Edit
                   </Button>
                
+
+
+
+
 
 
 
@@ -1327,6 +1960,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                       marginLeft: '15px',
                       padding: '4px',
                       marginBottom: '-5px'
+
+
 
 
                     }}
@@ -1353,7 +1988,13 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
        
+
+
 
 
         </Box>
@@ -1363,7 +2004,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
        
+
+
+
+
 
 
 
@@ -1380,29 +2029,81 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
-<Button
-  variant="contained"
-  color="success"
-  onClick={() => setShowConfirmation(true)}
-  disabled={isAlreadyFinalized || duplicateEmployeeNumbers.length > 0}
-  sx={{
-    backgroundColor: '#6D2323',
-    color: '#ffffff',
-    textTransform: 'none',
-    height: '56px',
-    width: '200px',
-    marginTop: 2,
-    opacity: isAlreadyFinalized || duplicateEmployeeNumbers.length > 0 ? 0.6 : 1,
-    pointerEvents: isAlreadyFinalized ? 'none' : 'auto',
-    pointerEvents: isAlreadyFinalized || duplicateEmployeeNumbers.length > 0 ? 'none' : 'auto',
 
 
 
 
-  }}
->
-  Submit Payroll
-</Button>
+
+
+
+
+        <Button
+          variant="contained"
+          color="success"
+          onClick={() => setShowConfirmation(true)}
+          disabled={!canSubmit}
+          sx={{
+            backgroundColor: '#6D2323',
+            color: '#ffffff',
+            textTransform: 'none',
+            height: '56px',
+            width: '200px',
+            marginTop: 2,
+            opacity: canSubmit ? 1 : 0.6,
+            pointerEvents: canSubmit ? 'auto' : 'none',
+          }}
+         
+        >
+          Submit Selected Payroll
+        </Button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1471,6 +2172,38 @@ const [isSubmitting, setIsSubmitting] = useState(false);
               <Typography variant="h5" mb={3}>
                 Edit Payroll Record
               </Typography>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1574,7 +2307,37 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 {/* MODAL EDIT*/}
+
+
+
+
+
+
 
 
 
@@ -1616,6 +2379,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
                           {/* Deductions */}
                           <Typography variant="h6" mt={5} gutterBottom>
                             Salary Computations
@@ -1640,6 +2407,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                             ))}
                           </Grid>
                  
+
+
 
 
                           <Typography variant="h6" mt={4} gutterBottom>
@@ -1667,6 +2436,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                          
 
 
+
+
                            <Typography variant="h6" mt={4} gutterBottom>
                            GSIS Deductions
                           </Typography>
@@ -1689,6 +2460,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                               </Grid>
                             ))}
                           </Grid>
+
+
 
 
                           <Typography variant="h6" mt={4} gutterBottom>
@@ -1715,6 +2488,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                           </Grid>
 
 
+
+
                            <Typography variant="h6" mt={4} gutterBottom>
                            Total Other Deductions
                           </Typography>
@@ -1739,12 +2514,20 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                           </Grid>
 
 
+
+
                         {/* Other Info */}
 <Box mt={4} mb={2}>
   <Typography variant="h6" fontWeight="bold">
     Total Contributions & Deductions
   </Typography>
 </Box>
+
+
+
+
+
+
 
 
 
@@ -1770,6 +2553,38 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     </Grid>
   ))}
 </Grid>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1832,8 +2647,12 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                 </Button>
 
 
+
+
                
               </Box>
+
+
 
 
              
@@ -1842,7 +2661,11 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         </Box>
 
 
+
+
       </Modal>
+
+
 
 
       <Modal open={showConfirmation} onClose={() => setShowConfirmation(false)}>
@@ -1890,6 +2713,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 </Modal>
 
 
+
+
     </Container>
   );
 };
@@ -1901,7 +2726,23 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
+
+
+
+
+
+
+
+
 export default PayrollProcess;
+
+
+
+
+
+
+
+
 
 
 

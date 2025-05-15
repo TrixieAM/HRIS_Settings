@@ -77,16 +77,23 @@ const PDS3 = () => {
 
 
       const fetchOtherInformationData = async () => {
+        if (!employeeNumber) {
+          console.warn("Employee number is not defined");
+          return;
+        }
+
         try {
           const requests = Array.from({ length: 7 }, (_, i) =>
             axios.get(`http://localhost:5000/OtherInfo/other-information${i + 1}/${employeeNumber}`)
           );
           const responses = await Promise.all(requests);
-          setOtherInformationInfo(responses.map(res => res.data || null));
+          const data = responses.map(res => res.data || null);
+          setOtherInformationInfo(data);
         } catch (error) {
           console.error("Error loading other information data:", error);
         }
       };
+
 
 
 
@@ -209,7 +216,7 @@ const PDS3 = () => {
 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'white'}}>
              
-            <div style={{ border: '1px solid black', padding: '0.25in', width: '8in', height: '13.5in' }}>
+            <div style={{ border: '1px solid black', padding: '0.25in', width: '8in', height: '12.9in' }}>
            
                
                     <table style= {{border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed'}}>

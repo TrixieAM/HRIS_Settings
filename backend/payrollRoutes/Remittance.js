@@ -42,14 +42,14 @@ router.get('/employee-remittance', (req, res) => {
   // POST: Add new remittance data
   router.post('/employee-remittance', (req, res) => {
     const {
-      employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan,
+      employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, cpl, mpl, mplLite, emergencyLoan,
       nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu
     } = req.body;
  
-    const sql = `INSERT INTO remittance_table (employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO remittance_table (employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
  
-    const values = [employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu];
+    const values = [employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu];
  
     db.query(sql, values, (err, result) => {
       if (err) {
@@ -65,7 +65,7 @@ router.get('/employee-remittance', (req, res) => {
   router.put('/employee-remittance/:id', (req, res) => {
     const { id } = req.params;
     const {
-      employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan,
+      employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, cpl, mpl, mplLite, emergencyLoan,
       nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu
     } = req.body;
  
@@ -77,7 +77,6 @@ router.get('/employee-remittance', (req, res) => {
     gsisSalaryLoan = ?,
     gsisPolicyLoan =?,
     gsisArrears= ?,
-    gfal = ?,
     cpl = ?,
     mpl = ?,
     mplLite = ?,
@@ -92,7 +91,7 @@ router.get('/employee-remittance', (req, res) => {
     feu = ?
                  WHERE id = ?`;
  
-    const values = [employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu, id];
+    const values = [employeeNumber, name, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu, id];
  
     db.query(sql, values, (err, result) => {
       if (err) {

@@ -198,7 +198,7 @@ const OtherInformation = () => {
               <TableCell><strong>Special Skills</strong></TableCell>
               <TableCell><strong>Non-Academic Distinctions</strong></TableCell>
               <TableCell><strong>Membership in Association</strong></TableCell>
-              <TableCell><strong>Person ID</strong></TableCell>
+              <TableCell><strong>Employee Number</strong></TableCell>
               <TableCell><strong>Actions</strong></TableCell>
             </TableRow>
           </TableHead>

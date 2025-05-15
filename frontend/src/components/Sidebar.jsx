@@ -185,14 +185,14 @@ useEffect(() => {
   </Toolbar>
 
   <List>
-  {userRole !== 'staff' && (
+  {userRole !== 'administrator' && (
         <>
         <List component="div" disablePadding sx={{ pl: 2.5}}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, }}>
             <Tooltip title="Go to Profile">
               <Box
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/personalinfo')}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -208,7 +208,7 @@ useEffect(() => {
                   variant="body2" 
                   fontWeight="bold"
                   sx={{
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Poppins, sans-serif',
                     marginLeft: '9px',
                     color: 'black'
                   }}>
@@ -219,7 +219,7 @@ useEffect(() => {
                     variant="caption"
                     color="text.secondary"
                     sx={{
-                      fontFamily: 'Poppins',
+                      fontFamily: 'Poppins, sans-serif',
                       marginLeft: '9px',
                       color: 'black'
                     }}
@@ -625,6 +625,164 @@ useEffect(() => {
         )}
 
 
+      {userRole !== 'administrator' && (
+          <>
+
+        <ListItem
+              button
+              onClick={handleClickPDSFiles}
+              sx={{ color: 'black', cursor: 'pointer' }}
+            >
+              <ListItemIcon>
+              <DescriptionIcon />
+              </ListItemIcon>
+              <ListItemText primary="PDS Files" sx={{marginLeft: '-10px'}} />
+              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
+                {open5 ? <ExpandLess /> : <ExpandMore />}
+              </ListItemIcon>
+            </ListItem>
+
+            <Collapse in={open5} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds1' 
+                  sx={{
+                    color: selectedItem === 'pds1' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds1' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds1' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds1' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds1')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds1' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS1" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds2' 
+                  sx={{
+                    color: selectedItem === 'pds2' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds2' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds2' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds2' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds2')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+              color: selectedItem === 'pds2' ? 'white' : 'inherit',
+              '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS2" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+        
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds3' 
+                  sx={{
+                    color: selectedItem === 'pds3' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds3' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds3' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds3' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds3')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds3' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS3" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds4' 
+                  sx={{
+                    color: selectedItem === 'pds4' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds4' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds4' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds4' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds4')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds4' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS4" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+        </>
+        )}
+
+          {userRole !== 'administrator' && (
+        <>
+
         <ListItem
           button
           onClick={() => {
@@ -645,8 +803,7 @@ useEffect(() => {
         </ListItem>
 
 
-        {userRole !== 'staff' && (
-          <>
+       
             <Collapse in={open2} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 5.4 }}>
               <ListItem
@@ -935,160 +1092,6 @@ useEffect(() => {
           </>
         )}
 
-      {userRole !== 'staff' && (
-          <>
-        
-        <ListItem
-              button
-              onClick={handleClickPDSFiles}
-              sx={{ color: 'black', cursor: 'pointer' }}
-            >
-              <ListItemIcon>
-              <DescriptionIcon />
-              </ListItemIcon>
-              <ListItemText primary="PDS Files" sx={{marginLeft: '-10px'}} />
-              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
-                {open5 ? <ExpandLess /> : <ExpandMore />}
-              </ListItemIcon>
-            </ListItem>
-
-            <Collapse in={open5} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds1' 
-                  sx={{
-                    color: selectedItem === 'pds1' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds1' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds1' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds1' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds1')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-               color: selectedItem === 'pds1' ? 'white' : 'inherit',
-               '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS1" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-
-        <Collapse in={open5} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds2' 
-                  sx={{
-                    color: selectedItem === 'pds2' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds2' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds2' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds2' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds2')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-              color: selectedItem === 'pds2' ? 'white' : 'inherit',
-              '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS2" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-        
-        <Collapse in={open5} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds3' 
-                  sx={{
-                    color: selectedItem === 'pds3' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds3' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds3' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds3' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds3')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-               color: selectedItem === 'pds3' ? 'white' : 'inherit',
-               '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS3" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-
-        <Collapse in={open5} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds4' 
-                  sx={{
-                    color: selectedItem === 'pds4' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds4' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds4' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds4' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds4')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-               color: selectedItem === 'pds4' ? 'white' : 'inherit',
-               '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS4" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-        </>
-        )}
 
 
         {userRole !== 'staff' && (

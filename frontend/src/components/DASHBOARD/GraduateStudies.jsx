@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
+  Container,
+  Typography,
+  TextField,
   Button,
   Table,
-  TableBody,
-  TableCell,
   TableHead,
   TableRow,
-  TextField,
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Divider,
+  TableCell,
+  TableBody,
+  Box,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -21,47 +19,25 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon,
   School as SchoolIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
-
-
-const sectionHeaderStyle = {
-  background: 'linear-gradient(to right, #8B1E1E, #A32F2F)',
-  color: 'white',
-  fontWeight: 'bold',
-  padding: '16px',
-  borderRadius: '10px 10px 0 0',
-};
-
-
-const sectionContainerStyle = {
-  backgroundColor: '#FFFFFF',
-  borderRadius: '10px',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  marginBottom: '40px',
-};
-
-
-
-
-const fieldStyle = {
-  borderRadius: '10px',
-  backgroundColor: 'white',
-};
 
 
 const GraduateTable = () => {
   const [graduateData, setGraduateData] = useState([]);
   const [form, setForm] = useState({
     person_id: '',
-    SchoolName: '',
-    Degree: '',
+    graduateNameOfSchool: '',
+    graduateDegree: '',
     graduatePeriodFrom: '',
     graduatePeriodTo: '',
-    HighestAttained: '',
-    YearGraduated: '',
-    ScholarshipAcademicHonorsReceived: ''
+    graduateHighestAttained: '',
+    graduateYearGraduated: '',
+    graduateScholarshipAcademicHonorsReceived: '',
   });
   const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
 
 
   useEffect(() => {
@@ -94,13 +70,13 @@ const GraduateTable = () => {
       }
       setForm({
         person_id: '',
-        SchoolName: '',
-        Degree: '',
+        graduateNameOfSchool: '',
+        graduateDegree: '',
         graduatePeriodFrom: '',
         graduatePeriodTo: '',
-        HighestAttained: '',
-        YearGraduated: '',
-        ScholarshipAcademicHonorsReceived: ''
+        graduateHighestAttained: '',
+        graduateYearGraduated: '',
+        graduateScholarshipAcademicHonorsReceived: '',
       });
       fetchGraduateData();
     } catch (err) {
@@ -109,9 +85,20 @@ const GraduateTable = () => {
   };
 
 
-  const handleEdit = (grad) => {
-    setForm(grad);
-    setEditingId(grad.id);
+  const handleEdit = (row) => {
+    setEditData(row);
+    setEditingId(row.id);
+  };
+
+
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/GraduateRoute/graduate-table/${editingId}`, editData);
+      setEditingId(null);
+      fetchGraduateData();
+    } catch (err) {
+      console.error('Update failed:', err);
+    }
   };
 
 
@@ -125,123 +112,103 @@ const GraduateTable = () => {
   };
 
 
- 
-
-
   return (
-    <Container>
-      <Paper elevation={3} style={{ padding: 10, marginTop: 10 }}>
-      <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      marginBottom: '30px'
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-      <SchoolIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
-
-        <div>
-          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-            Graduate Studies Information
-          </h4>
-          <p style={{ margin: 0, fontSize: '85%' }}>
-            Insert Your Graduate Studies Information
-          </p>
-        </div>
+    <Container style={{ backgroundColor: '#FEF9E1', paddingBottom: '40px' }}>
+      {/* Header */}
+      <div style={{
+        backgroundColor: '#6D2323',
+        color: 'white',
+        padding: '20px',
+        borderRadius: '8px 8px 0 0'
+      }}>
+        <Box display="flex" alignItems="center">
+          <SchoolIcon sx={{ fontSize: '3rem', marginRight: 2 }} />
+          <div>
+            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+              Graduate Studies Information
+            </Typography>
+            <Typography variant="body2">
+              Insert Your Graduate Studies Information
+            </Typography>
+          </div>
+        </Box>
       </div>
-  </div>
-        <Divider style={{ marginBottom: 20 }} />
-        <Grid container spacing={2}>
-          {Object.keys(form).map((key) => (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <TextField
-                label={key}
-                name={key}
-                value={form[key]}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-              />
-            </Grid>
-          ))}
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color={editingId ? 'success' : 'primary'}
-              onClick={handleSubmit}
-              startIcon={editingId ? <SaveIcon /> : <AddIcon />}
-              sx={{
-                mt: 3,
-                width: '100%',
-                backgroundColor: '#6D2323',
-                color: '#FEF9E1',
-                '&:hover': { backgroundColor: '#5a1d1d' },
-              }}
-            >
-              {editingId ? 'Update' : 'Add'}
-            </Button>
-            {editingId && (
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm({
-                    person_id: '',
-                    SchoolName: '',
-                    Degree: '',
-                    graduatePeriodFrom: '',
-                    graduatePeriodTo: '',
-                    HighestAttained: '',
-                    YearGraduated: '',
-                    ScholarshipAcademicHonorsReceived: ''
-                  });
-                }}
-                startIcon={<CancelIcon />}
-                sx={{
-                    mt: 1,
-                    width: '100%',
-                    backgroundColor: 'black',
-                    color: '#FEF9E1',
-                    '&:hover': { backgroundColor: 'black' },
-                  }}
-              >
-                Cancel
-              </Button>
-            )}
-          </Grid>
-        </Grid>
-      </Paper>
 
 
-      <Paper elevation={3} style={{ marginTop: 30 }}>
+      {/* Form */}
+      <div style={{
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '0 0 8px 8px',
+        marginBottom: '20px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+      }}>
+        {Object.entries(form).map(([key, value], index) => (
+          <TextField
+            key={key}
+            label={key}
+            name={key}
+            value={value}
+            onChange={handleChange}
+            style={{
+              width: '300px',
+              marginRight: '10px',
+              marginBottom: '20px',
+              marginLeft: index % 1 === 0 ? '50px' : '10px'
+            }}
+          />
+        ))}
 
-        <Typography
-        variant="h5"
-        sx={{
+
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          startIcon={editingId ? <SaveIcon /> : <AddIcon />}
+          style={{
             backgroundColor: '#6D2323',
-            color: '#FFFFFF',
-            p: 3,
-            borderRadius: 2,
-            mb: 3,
-            fontWeight: 'bold',
-            fontFamily: 'Poppins',
-            letterSpacing: 1,
-            textAlign: 'left',
-            display: 'flex',
-            alignItems: 'center',
-        }}
+            color: '#ffffff',
+            width: '940px',
+            marginTop: '20px',
+            marginLeft: '80px'
+          }}
         >
-        <SchoolIcon sx={{ fontSize: '2rem', marginRight: '12px' }} />
-        Graduate Records
-        </Typography>
+          {editingId ? 'Update' : 'Add'}
+        </Button>
+      </div>
+
+
+      {/* Table + Search */}
+      <div style={{
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+      }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
+          <Box display="flex" alignItems="center">
+            <SchoolIcon sx={{ color: '#6D2323', fontSize: '2.5rem', mr: 2 }} />
+            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#000' }}>
+              Graduate Records
+            </Typography>
+          </Box>
+          <TextField
+            size="small"
+            variant="outlined"
+            placeholder="Search by Employee No. or School"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ backgroundColor: 'white', borderRadius: 1 }}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ color: '#6D2323', mr: 1 }} />
+            }}
+          />
+        </Box>
+
+
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Person ID</TableCell>
+              <TableCell>Employee Number</TableCell>
               <TableCell>School</TableCell>
               <TableCell>Degree</TableCell>
               <TableCell>From</TableCell>
@@ -253,40 +220,66 @@ const GraduateTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {graduateData.map((grad) => (
-              <TableRow key={grad.id}>
-                <TableCell>{grad.person_id}</TableCell>
-                <TableCell>{grad.SchoolName}</TableCell>
-                <TableCell>{grad.Degree}</TableCell>
-                <TableCell>{grad.graduatePeriodFrom}</TableCell>
-                <TableCell>{grad.graduatePeriodTo}</TableCell>
-                <TableCell>{grad.HighestAttained}</TableCell>
-                <TableCell>{grad.YearGraduated}</TableCell>
-                <TableCell>{grad.ScholarshipAcademicHonorsReceived}</TableCell>
-                <TableCell>
-                <Button
-                    onClick={() => handleEdit(grad)}
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                    sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: 100, mr: 1, mb: 1 }}
-                    >
-                    Edit
-                    </Button>
-                    <Button
-                    onClick={() => handleDelete(grad.id)}
-                    variant="outlined"
-                    startIcon={<DeleteIcon />}
-                    sx={{ backgroundColor: 'black', color: 'white', width: 100, mb: 1 }}
-                    >
-                    Delete
-                    </Button>
-
+            {graduateData.filter((row) => {
+              const search = searchTerm.toLowerCase();
+              return (
+                row.person_id?.toString().includes(search) ||
+                row.graduateNameOfSchool?.toLowerCase().includes(search)
+              );
+            }).length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} align="center">
+                  <Typography variant="h6" color="error">No matching records found.</Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : graduateData
+              .filter((row) => {
+                const search = searchTerm.toLowerCase();
+                return (
+                  row.person_id?.toString().includes(search) ||
+                  row.graduateNameOfSchool?.toLowerCase().includes(search)
+                );
+              })
+              .map((row) => (
+                <TableRow key={row.id}>
+                  {editingId === row.id ? (
+                    <>
+                      <TableCell>{row.person_id}</TableCell>
+                      <TableCell><TextField value={editData.graduateNameOfSchool} onChange={(e) => setEditData({ ...editData, graduateNameOfSchool: e.target.value })} /></TableCell>
+                      <TableCell><TextField value={editData.graduateDegree} onChange={(e) => setEditData({ ...editData, graduateDegree: e.target.value })} /></TableCell>
+                      <TableCell><TextField value={editData.graduatePeriodFrom} onChange={(e) => setEditData({ ...editData, graduatePeriodFrom: e.target.value })} /></TableCell>
+                      <TableCell><TextField value={editData.graduatePeriodTo} onChange={(e) => setEditData({ ...editData, graduatePeriodTo: e.target.value })} /></TableCell>
+                      <TableCell><TextField value={editData.graduateHighestAttained} onChange={(e) => setEditData({ ...editData, graduateHighestAttained: e.target.value })} /></TableCell>
+                      <TableCell><TextField value={editData.graduateYearGraduated} onChange={(e) => setEditData({ ...editData, graduateYearGraduated: e.target.value })} /></TableCell>
+                      <TableCell><TextField value={editData.graduateScholarshipAcademicHonorsReceived} onChange={(e) => setEditData({ ...editData, graduateScholarshipAcademicHonorsReceived: e.target.value })} /></TableCell>
+                      <TableCell>
+                        <Button onClick={handleUpdate} variant="contained" sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', mb: 1, mr: 1 }} startIcon={<SaveIcon />}>Update</Button>
+                        <Button onClick={() => setEditingId(null)} variant="contained" sx={{ backgroundColor: 'black', color: '#fff' }} startIcon={<CancelIcon />}>Cancel</Button>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell>{row.person_id}</TableCell>
+                      <TableCell>{row.graduateNameOfSchool}</TableCell>
+                      <TableCell>{row.graduateDegree}</TableCell>
+                      <TableCell>{row.graduatePeriodFrom}</TableCell>
+                      <TableCell>{row.graduatePeriodTo}</TableCell>
+                      <TableCell>{row.graduateHighestAttained}</TableCell>
+                      <TableCell>{row.graduateYearGraduated}</TableCell>
+                      <TableCell>{row.graduateScholarshipAcademicHonorsReceived}</TableCell>
+                      <TableCell>
+                        <Box display="flex" gap={1}>
+                          <Button onClick={() => handleEdit(row)} variant="contained" sx={{ backgroundColor: '#6D2323', color: '#FEF9E1' }} startIcon={<EditIcon />}>Edit</Button>
+                          <Button onClick={() => handleDelete(row.id)} variant="contained" sx={{ backgroundColor: 'black', color: '#fff' }} startIcon={<DeleteIcon />}>Delete</Button>
+                        </Box>
+                      </TableCell>
+                    </>
+                  )}
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
-      </Paper>
+      </div>
     </Container>
   );
 };

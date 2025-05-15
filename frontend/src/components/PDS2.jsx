@@ -176,7 +176,7 @@ const PDS2 = () => {
   `}
 </style>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor:'white'}}>
-            <div style={{ overflow:'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '13.5in' }}>
+            <div style={{ overflow:'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '13.1in' }}>
                      
                 <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed' }}>
                     <tbody>

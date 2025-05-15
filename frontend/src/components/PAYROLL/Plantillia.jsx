@@ -150,7 +150,7 @@ const PlantillaTable = () => {
             value={newPlantilla.salary_grade_id}
             onChange={(e) => setNewPlantilla({ ...newPlantilla, salary_grade_id: e.target.value })}
             style={{ width: '300px' }}
-            type="number"
+            type="text"
           />
         </Box>
 
@@ -222,7 +222,7 @@ const PlantillaTable = () => {
                     <TableCell>
                       <TextField
                         value={editData.salary_grade_id}
-                        type="number"
+                        type="text"
                         onChange={(e) =>
                           setEditData({ ...editData, salary_grade_id: e.target.value })
                         }

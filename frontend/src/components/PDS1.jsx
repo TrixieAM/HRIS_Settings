@@ -28,6 +28,7 @@ const PDS1 = () => {
   const [childrenInfo10, setchildrenInfo10] = useState(null);
   const [childrenInfo11, setchildrenInfo11] = useState(null);
   const [childrenInfo12, setchildrenInfo12] = useState(null);
+  const [graduateInfo, setGraduateInfo] = useState(null);
 
 
 
@@ -215,7 +216,15 @@ const PDS1 = () => {
           console.error('Error loading children-table12 data:', err);
         });
 
-
+         axios
+        .get(`http://localhost:5000/GraduateRoute/graduate-table/${employeeNumber}`)
+        .then((res) => {
+          console.log('Fetched Graduate data:', res.data);
+          setGraduateInfo(res.data);
+        })
+        .catch((err) => {
+          console.error('Error loading Graduate data:', err);
+        });
 
 
 
@@ -497,16 +506,10 @@ const PDS1 = () => {
                     &emsp;&emsp;If holder of dual citizenship, <br></br>
                     &emsp;&emsp;please indicate the details
                 </td>
-                <td colSpan="5"  style={{height:'0.25in', fontSize:'45%', border: '1px solid black'}}>
-                <label style={{  alignItems: 'center', gap: '10px' }}>
-                <input type="checkbox" name="config" value="single" /> Single
-                </label>
-                &emsp; &emsp;
-                <label>
-                <input type="checkbox" name="config" value="dual" /> Dual
-                </label>
-               
+                 <td colSpan="5" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
+               {personalInfo ? personalInfo.citizenship : ''}
                 </td>
+               
             </tr>
 
 
@@ -517,8 +520,15 @@ const PDS1 = () => {
 
 
             <tr>
-                <td colSpan="5" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-               {personalInfo ? personalInfo.citizenship : ''}
+                 <td colSpan="5"  style={{height:'0.25in', fontSize:'45%', border: '1px solid black'}}>
+                <label style={{  alignItems: 'center', gap: '10px' }}>
+                <input type="checkbox" name="config" value="single" /> Single
+                </label>
+                &emsp; &emsp;
+                <label>
+                <input type="checkbox" name="config" value="dual" /> Dual
+                </label>
+               
                 </td>
             </tr>    
 
@@ -1254,25 +1264,25 @@ const PDS1 = () => {
                     GRADUATE STUDIES<br />
                 </td>
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                    {graduateInfo ? graduateInfo.graduateNameOfSchool: ''}
                 </td>
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                   {graduateInfo ? graduateInfo.graduateDegree: ''}
                 </td>
                 <td colSpan="1" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                    {graduateInfo ? graduateInfo.graduatePeriodFrom: ''}
                 </td>
                 <td colSpan="1" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                    {graduateInfo ? graduateInfo.graduatePeriodTo: ''}
                 </td>
                 <td colSpan="2" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                   {graduateInfo ? graduateInfo.graduateHighestAttained: ''}
                 </td>
                 <td colSpan="1" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                    {graduateInfo ? graduateInfo.graduateYearGraduated: ''}
                 </td>
                 <td colSpan="1" style={{ height: '0.25in', fontSize: '45%', border: '1px solid black' }}>
-                    &nbsp;
+                    {graduateInfo ? graduateInfo.graduateScholarshipAcademicHonorsReceived: ''}
                 </td>
             </tr>
             <tr>

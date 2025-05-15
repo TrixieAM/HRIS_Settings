@@ -85,7 +85,7 @@ const handleConfirm = () => {
 
 
 const handlePasskeySubmit = async () => {
-  const HARDCODED_PASSKEY = "123456" && "20134507";
+  const HARDCODED_PASSKEY = "20134507";
 
   if (passkeyInput !== HARDCODED_PASSKEY) {
     alert("Incorrect Passkey.");
@@ -146,7 +146,7 @@ const handlePasskeySubmit = async () => {
 
 
         <Box sx={{ display: 'flex', gap: 2, }}>
-        <Paper elevation={4} sx={{ borderRadius: 3, width: '1100px', p: 3, mb: 3 }}>
+        <Paper elevation={4} sx={{ borderRadius: 2, width: '925px', p: 3, mb: 3 }}>
           <TableContainer component={Box} sx={{ maxHeight: 600 }}>
             <Table stickyHeader>
               <TableHead>
@@ -327,12 +327,12 @@ const handlePasskeySubmit = async () => {
         </Paper>
 
 
-        <Paper elevation={4} sx={{ borderRadius: 3, width: '135px', mb: 10  }}>
+        <Paper elevation={4} sx={{ borderRadius: 2, width: '135px', mb: 10  }}>
   <TableContainer component={Box} sx={{ Height: 110, mt: 6 }}>
     <Table>
       <TableHead>
         <TableRow>
-          <TableCell><b>Action</b></TableCell>
+          <TableCell  style={{alignItems: 'center', marginTop: '10px', paddingBottom: '40px', paddingLeft: '45px'}}><b>Action</b></TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -352,6 +352,7 @@ const handlePasskeySubmit = async () => {
                       borderColor: '#D3D3D3',
                       bgcolor: '#333333',
                     },
+                    
                   }}
                 >
                   Delete

@@ -147,7 +147,7 @@ const College = () => {
         <TextField label="Highest Attained" value={newCollege.collegeHighestAttained} onChange={(e) => handleChange('collegeHighestAttained', e.target.value)} style={inputStyle} />
         <TextField label="Year Graduated" value={newCollege.collegeYearGraduated} onChange={(e) => handleChange('collegeYearGraduated', e.target.value)} style={inputStyle} />
         <TextField label="Honors Received" value={newCollege.collegeScholarshipAcademicHonorsReceived} onChange={(e) => handleChange('collegeScholarshipAcademicHonorsReceived', e.target.value)} style={inputStyle} />
-        <TextField label="Person ID" value={newCollege.person_id} onChange={(e) => handleChange('person_id', e.target.value)} style={inputStyle} />
+        <TextField label="Employee Number" value={newCollege.person_id} onChange={(e) => handleChange('person_id', e.target.value)} style={inputStyle} />
         <Button
           onClick={handleAdd}
           variant="contained"
@@ -216,7 +216,7 @@ const College = () => {
             <TableCell sx={{ fontWeight: 'bold' }}>Highest Attained</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Year Graduated</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Honors Received</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Person ID</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Employee Number</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
           </TableRow>
         </TableHead>

@@ -1,15 +1,14 @@
 const express = require("express");
 const mysql = require("mysql2");
-
 const multer = require("multer");
-
 const fs = require("fs");
 const xlsx = require("xlsx");
+
 
 const router = express.Router();
 
 
-//MYSQL CONNECTION
+// MYSQL CONNECTION
 const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
@@ -19,7 +18,6 @@ const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
-
 
 
 // READ - Get all graduate studies
@@ -34,38 +32,47 @@ router.get("/graduate-table", (req, res) => {
 
 // CREATE - Add new graduate study
 router.post("/graduate-table", (req, res) => {
-  console.log("POST Data Received:", req.body);  // Log the received body
+  console.log("POST Data Received:", req.body);
+
+
   const {
     person_id,
-    SchoolName,
-    Degree,
+    graduateNameOfSchool,
+    graduateDegree,
     graduatePeriodFrom,
     graduatePeriodTo,
-    HighestAttained,
-    YearGraduated,
-    ScholarshipAcademicHonorsReceived,
+    graduateHighestAttained,
+    graduateYearGraduated,
+    graduateScholarshipAcademicHonorsReceived,
   } = req.body;
 
 
   const query = `
-    INSERT INTO graduate_table
-    (person_id, SchoolName, Degree, graduatePeriodFrom, graduatePeriodTo, HighestAttained, YearGraduated, ScholarshipAcademicHonorsReceived)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    INSERT INTO graduate_table (
+      person_id,
+      graduateNameOfSchool,
+      graduateDegree,
+      graduatePeriodFrom,
+      graduatePeriodTo,
+      graduateHighestAttained,
+      graduateYearGraduated,
+      graduateScholarshipAcademicHonorsReceived
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
 
   db.query(query, [
     person_id,
-    SchoolName,
-    Degree,
+    graduateNameOfSchool,
+    graduateDegree,
     graduatePeriodFrom,
     graduatePeriodTo,
-    HighestAttained,
-    YearGraduated,
-    ScholarshipAcademicHonorsReceived,
-
+    graduateHighestAttained,
+    graduateYearGraduated,
+    graduateScholarshipAcademicHonorsReceived,
   ], (err, result) => {
     if (err) {
-      console.error('Error inserting data:', err); // Log the error
+      console.error("Error inserting data:", err);
       return res.status(500).json({ error: "Error adding graduate study" });
     }
     res.status(201).json({ message: "Graduate study added", id: result.insertId });
@@ -78,35 +85,45 @@ router.put("/graduate-table/:id", (req, res) => {
   const { id } = req.params;
   const {
     person_id,
-    SchoolName,
-    Degree,
+    graduateNameOfSchool,
+    graduateDegree,
     graduatePeriodFrom,
     graduatePeriodTo,
-    HighestAttained,
-    YearGraduated,
-    ScholarshipAcademicHonorsReceived,
-    
+    graduateHighestAttained,
+    graduateYearGraduated,
+    graduateScholarshipAcademicHonorsReceived,
   } = req.body;
 
 
   const query = `
-    UPDATE graduate_table
-    SET  person_id = ?, SchoolName = ?, Degree = ?, graduatePeriodFrom = ?, graduatePeriodTo = ?, HighestAttained = ?, YearGraduated = ?, ScholarshipAcademicHonorsReceived = ?
-    WHERE id = ?`;
+    UPDATE graduate_table SET
+      person_id = ?,
+      graduateNameOfSchool = ?,
+      graduateDegree = ?,
+      graduatePeriodFrom = ?,
+      graduatePeriodTo = ?,
+      graduateHighestAttained = ?,
+      graduateYearGraduated = ?,
+      graduateScholarshipAcademicHonorsReceived = ?
+    WHERE id = ?
+  `;
 
 
   db.query(query, [
     person_id,
-    SchoolName,
-    Degree,
+    graduateNameOfSchool,
+    graduateDegree,
     graduatePeriodFrom,
     graduatePeriodTo,
-    HighestAttained,
-    YearGraduated,
-    ScholarshipAcademicHonorsReceived,
+    graduateHighestAttained,
+    graduateYearGraduated,
+    graduateScholarshipAcademicHonorsReceived,
     id,
   ], (err) => {
-    if (err) return res.status(500).json({ error: "Error updating graduate study" });
+    if (err) {
+      console.error("Error updating data:", err);
+      return res.status(500).json({ error: "Error updating graduate study" });
+    }
     res.json({ message: "Graduate study updated" });
   });
 });
@@ -117,7 +134,10 @@ router.delete("/graduate-table/:id", (req, res) => {
   const { id } = req.params;
   const query = `DELETE FROM graduate_table WHERE id = ?`;
   db.query(query, [id], (err) => {
-    if (err) return res.status(500).json({ error: "Error deleting graduate study" });
+    if (err) {
+      console.error("Error deleting data:", err);
+      return res.status(500).json({ error: "Error deleting graduate study" });
+    }
     res.json({ message: "Graduate study deleted" });
   });
 });

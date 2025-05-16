@@ -104,6 +104,9 @@ import PDS4 from './components/PDS4';
 import { PictureAsPdfOutlined } from '@mui/icons-material';
 import ForgotPassword from './components/ForgotPassword';
 
+//CAROUSEL
+import PostCarousel from './components/DASHBOARD/PostCarousel';
+import PostPlatform from './components/DASHBOARD/PostPlatform';
 
 
 
@@ -237,7 +240,7 @@ function App() {
           component="main"
           sx={{
             flexGrow: 1,
-            bgcolor: 'transparent',  // etong kupal nato ang naglalagay ng white background
+            bgcolor: 'transparent', // white background
             p: 5,
             marginLeft: `${drawerWidth}px`,
             fontFamily: 'Poppins, sans-serif',
@@ -337,14 +340,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <SettingsForm onUpdate={fetchSettings} />
-                </ProtectedRoute>
-              }
-            />
+           
             <Route
               path="/view_attendance"
               element={
@@ -769,6 +765,24 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <EmployeeSalaryGrade />
+                </ProtectedRoute>
+              }
+            />
+
+             <Route
+              path="/carousel"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <PostCarousel />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/platform"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <PostPlatform />
                 </ProtectedRoute>
               }
             />

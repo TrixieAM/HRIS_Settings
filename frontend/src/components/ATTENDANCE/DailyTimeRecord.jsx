@@ -102,12 +102,13 @@ const DailyTimeRecord = () => {
     return date.toLocaleDateString("en-US", options);
   };
 
+
 // Function to format the end date (DayNumber, Year)
   const formatEndDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     const day = date.getDate(); // Get the day number
-    const year = 2024; // Get the year
+    const year = date.getFullYear(); // Get the year
     return `${day}, ${year}`; // Format as "DayNumber, Year"
   };
 
@@ -115,17 +116,10 @@ const DailyTimeRecord = () => {
   const formattedEndDate = formatEndDate(endDate);
 
 
-  const currentYear = 2024;
-  const months = [
-     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
 
   const handleMonthClick = (monthIndex) => {
-    const year = 2024;
-  
-    const start = new Date(Date.UTC(year, monthIndex, 1));
-    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
+    const year = new Date().getFullYear();
+
   
     // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
     const formattedStart = start.toISOString().substring(0, 10);
@@ -139,66 +133,67 @@ const DailyTimeRecord = () => {
     
     <div className="container faculty" style={{transform: 'scale(0.8)', marginTop: '-10rem'}}>
      
-     <style>
-  {`
-    @media print {
-      html, body {
-        background: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        margin: 0;
-        padding: 0;
-      }
+    <style>
+        {`
+          @media print {
+            .no-print { 
+              display: none !important;
+              
+            }
 
-      .no-print, .header {
-        display: none !important;
-      }
+            .header { 
+              display: none !important; 
+            }
 
-      /* Container to center the tables */
-      .table-wrapper {
-        width: 100%;
-        margin: 0 auto;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap; /* wrap if needed to avoid overflow */
-        page-break-inside: avoid;
-      }
+            .table-wrapper { 
+              display: flex; 
+              justify-content: center; 
+              width: 100rem; 
+              margin-top: -10rem; 
+              padding-top: -5%;
+              margin-left: -47.5rem;
+              transform: scale(0.5);
+              height: 100vh;
+              
+            }
+            
+            .table { 
+              width: 40%; 
+              border: 1px solid black; 
+              border-collapse: collapse; 
+            }
 
-      .table-side-by-side {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap; /* prevent overflow */
-        justify-content: center;
-        width: 100%;
-      }
+            .table-side-by-side {
+              display: flex; 
+              flex-direction: row; 
+              gap: 0.5%
+            }
+          }
 
-      .table {
-        width: auto;
-        max-width: 100%;
-        border: 1px solid black;
-        border-collapse: collapse;
-        font-size: 10pt;
-        page-break-inside: avoid;
-      }
+          @media print {
+            .print-visible {
+              display: block !important;
+              page-break-before: avoid;
+              margin-bottom: 0;
+              margin-top: 0;
 
-      .table th, .table td {
-        border: 1px solid black;
-        padding: 4px;
-        text-align: center;
-      }
-
-      table, tr, td, th {
-        page-break-inside: avoid;
-      }
-
-      @page {
-        margin: 1cm; /* control print margins */
-        size: A4 portrait;
-      }
-    }
-  `}
-</style>
+            }
+              @media print {
+              .header, .top-banner, .page-banner, header, footer {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+              }
+            }
+              body {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }  
+          }
+        `}
+      </style>
 
 
       
@@ -242,15 +237,7 @@ const DailyTimeRecord = () => {
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
   }}
 >
-  {/* Month Buttons */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 20 }}>
-            {months.map((month, index) => (
-              <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
-                {month}
-              </Button>
-            ))}
-          </Box>
-
+ 
 
 
  <div className="search-container no-print textfield-container" >

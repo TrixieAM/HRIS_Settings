@@ -48,6 +48,22 @@ import {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const PayrollProcess = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState('');
@@ -66,10 +82,48 @@ const PayrollProcess = () => {
  
 
 
+
+
   const canSubmit = selectedRows.length > 0;
 
 
+
+
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -132,6 +186,22 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const isAlreadyFinalized = filteredData.some(fd =>
     finalizedPayroll.some(fp =>
       fp.employeeNumber === fd.employeeNumber &&
@@ -139,8 +209,6 @@ const PayrollProcess = () => {
       fp.endDate === fd.endDate
     )
   );
-
-
 
 
 
@@ -178,8 +246,24 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
     const seen = new Set();
     const duplicates = new Set(); // newly add
+
+
+
+
+
+
+
+
 
 
 
@@ -211,16 +295,26 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
      const allData = res.data.map(item => ({
       ...item,
       status: item.status === 'Processed' || item.status === 1 ? 'Processed' : 'Unprocessed',
     }));
-
-
-
-
-
-
 
 
 
@@ -246,9 +340,29 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const allProcessed = allData.every(
       (item) => item.status === 'Processed' || item.status === 1
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -268,7 +382,23 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
     setIsPayrollProcessed(allProcessed);
+
+
+
+
+
+
+
+
 
 
 
@@ -356,9 +486,33 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     fetchPayrollData();
     fetchDepartments();
   }, []);
+
+
+
+
+
+
+
+
 
 
 
@@ -438,63 +592,11 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
   const handleSearchChange = (event) => {
     const term = event.target.value;
     setSearchTerm(term);
     applyFilters(selectedDepartment, term);
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -523,10 +625,22 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
     /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
     if (department) {
       filtered = filtered.filter((record) => record.department === department);
     }
+
+
+
+
 
 
 
@@ -538,6 +652,18 @@ const PayrollProcess = () => {
         (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
       );
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -610,17 +736,17 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
   const handleSubmitPayroll = async () => {
     try {
     const updatedData = filteredData.map((item) => {
+
+
     const h = item.h || 0; // Default to 0 if h is not available
-    const m = item.m || 0; // Default to 0 if m is not availabl
+    const m = item.m || 0; // Default to 0 if m is not available
+
+
+
+
 
 
 
@@ -628,6 +754,14 @@ const PayrollProcess = () => {
     const grossSalary = item.increment
     ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
     : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
+
+
+
+
+
+
+
+
 
 
 
@@ -649,7 +783,23 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
     const netSalary = grossSalary - (abs);
+
+
+
+
+
+
+
+
 
 
 
@@ -676,6 +826,14 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
@@ -688,12 +846,28 @@ const PayrollProcess = () => {
 
 
 
-    const totalOtherDeds =
+
+
+
+
+
+
+
+
+     const totalOtherDeds =
    
       (parseFloat(item.liquidatingCash) || 0) +
       (parseFloat(item.landbankSalaryLoan) || 0) +
       (parseFloat(item.earistCreditCoop) || 0) +
       (parseFloat(item.feu) || 0);
+
+
+
+
+
+
+
+
 
 
 
@@ -708,6 +882,14 @@ const PayrollProcess = () => {
     (parseFloat(totalGsisDeds) || 0) +
     (parseFloat(totalPagibigDeds) || 0) +
     (parseFloat(totalOtherDeds) || 0);
+
+
+
+
+
+
+
+
 
 
 
@@ -734,8 +916,32 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const pay1st = pay2ndCompute;
     const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+
+
+
+
+
+
 
 
 
@@ -774,6 +980,14 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
           // Filter only selected AND not already finalized rows
           const rowsToSubmit = updatedData.filter(item =>
             selectedRows.includes(item.employeeNumber) &&
@@ -783,6 +997,8 @@ const PayrollProcess = () => {
               fp.endDate === item.endDate
             )
           );
+
+
 
 
           // Step 1: Update main payroll database (payroll-with-remittance)
@@ -798,8 +1014,12 @@ const PayrollProcess = () => {
           }
 
 
+
+
           // Step 2: Update finalized payroll database (finalized-payroll)
           await axios.post('http://localhost:5000/api/finalized-payroll', rowsToSubmit);
+
+
 
 
           // Step 3: Update UI state with new data
@@ -809,10 +1029,14 @@ const PayrollProcess = () => {
           });
 
 
+
+
           setFilteredData(updatedFilteredData);
           setData(updatedFilteredData);
           setIsPayrollProcessed(true);
           alert('Payroll Processed and submitted successfully!');
+
+
 
 
           // Refresh finalizedPayroll from backend
@@ -820,13 +1044,24 @@ const PayrollProcess = () => {
           setFinalizedPayroll(res.data);
 
 
-      
+
+
+     
           } catch (error) {
             console.error('Error submitting payroll:', error);
             alert('Existing payroll data.');
           }
         };
-      
+     
+
+
+
+
+
+
+
+
+
 
 
 
@@ -841,10 +1076,6 @@ const PayrollProcess = () => {
     setEditRow(row);
     setOpenModal(true);
   };
-
-
-
-
 
 
 
@@ -872,9 +1103,25 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
         // Recalculate duplicates
         const seen = {};
         const updatedDuplicates = new Set();
+
+
+
+
+
+
+
+
 
 
 
@@ -898,7 +1145,23 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
         setDuplicateEmployeeNumbers([...updatedDuplicates]);
+
+
+
+
+
+
+
+
 
 
 
@@ -911,6 +1174,22 @@ const PayrollProcess = () => {
         console.error('Error deleting payroll data:', error);
       }
     };      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -950,6 +1229,22 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleCancel = () => {
     setOpenModal(false);
     setEditRow(null); // Clear the modal data on cancel
@@ -970,20 +1265,6 @@ const PayrollProcess = () => {
 
 
 
-  const handleSave = async () => {
-    try {
-      // Recalculate totalGsisDeds based on relevant fields
-      const updatedRow = {
-        ...editRow,
-        totalGsisDeds:
-          (parseFloat(editRow.personalLifeRetIns) || 0) +
-          (parseFloat(editRow.gsisSalaryLoan) || 0) +
-          (parseFloat(editRow.gsisPolicyLoan) || 0) +
-          (parseFloat(editRow.gsisArrears) || 0) +
-          (parseFloat(editRow.cpl) || 0) +
-          (parseFloat(editRow.mpl) || 0) +
-          (parseFloat(editRow.mplLite) || 0) +
-          (parseFloat(editRow.emergencyLoan) || 0),
 
 
 
@@ -998,85 +1279,114 @@ const PayrollProcess = () => {
 
 
 
+const handleSave = async () => {
+  try {
+    const h = editRow.h || 0;
+    const m = editRow.m || 0;
 
 
-        totalPagibigDeds:
-          (parseFloat(editRow.pagibigFundCont) || 0) +
-          (parseFloat(editRow.pagibig2) || 0) +
-          (parseFloat(editRow.multiPurpLoan) || 0) ,
+    const grossSalary = editRow.increment
+      ? (parseFloat(editRow.rateNbc594) || 0) + (parseFloat(editRow.nbcDiffl597) || 0) + (parseFloat(editRow.increment) || 0)
+      : (parseFloat(editRow.rateNbc594) || 0) + (parseFloat(editRow.nbcDiffl597) || 0);
+
+
+    const abs = (grossSalary * 0.0058341925167354 * h) + (grossSalary * 0.00009723557208532 * m);
+    const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
+    const personalLifeRetIns = grossSalary * 0.09;
+    const netSalary = grossSalary - abs;
+
+
+    const totalGsisDeds =
+      (parseFloat(personalLifeRetIns) || 0) +
+      (parseFloat(editRow.gsisSalaryLoan) || 0) +
+      (parseFloat(editRow.gsisPolicyLoan) || 0) +
+      (parseFloat(editRow.gsisArrears) || 0) +
+      (parseFloat(editRow.cpl) || 0) +
+      (parseFloat(editRow.mpl) || 0) +
+      (parseFloat(editRow.eal) || 0) +
+      (parseFloat(editRow.mplLite) || 0) +
+      (parseFloat(editRow.emergencyLoan) || 0);
+
+
+    const totalPagibigDeds =
+      (parseFloat(editRow.pagibigFundCont) || 0) +
+      (parseFloat(editRow.pagibig2) || 0) +
+      (parseFloat(editRow.multiPurpLoan) || 0);
+
+
+    const totalOtherDeds =
+      (parseFloat(editRow.liquidatingCash) || 0) +
+      (parseFloat(editRow.landbankSalaryLoan) || 0) +
+      (parseFloat(editRow.earistCreditCoop) || 0) +
+      (parseFloat(editRow.feu) || 0);
+
+
+    const totalDeductions =
+      (parseFloat(editRow.withholdingTax) || 0) +
+      (parseFloat(PhilHealthContribution) || 0) +
+      (parseFloat(totalGsisDeds) || 0) +
+      (parseFloat(totalPagibigDeds) || 0) +
+      (parseFloat(totalOtherDeds) || 0);
+
+
+    const pay1stCompute = netSalary - totalDeductions;
+    const pay2ndCompute = pay1stCompute / 2;
+
+
+    const pay1st = pay2ndCompute;
+    const pay2nd = pay1stCompute - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+    const rtIns = grossSalary * 0.12;
+
+
+    const updatedRow = {
+      ...editRow,
+      grossSalary,
+      abs,
+      PhilHealthContribution,
+      personalLifeRetIns,
+      netSalary,
+      totalGsisDeds,
+      totalPagibigDeds,
+      totalOtherDeds,
+      totalDeductions,
+      pay1st,
+      pay2nd,
+      rtIns,
+    };
+
+
+    const response = await axios.put(
+      `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`,
+      updatedRow
+    );
+
+
+    console.log('Payroll record updated successfully:', response.data);
+    setOpenModal(false);
+
+
+    setFilteredData((prevData) =>
+      prevData.map((item) =>
+        item.employeeNumber === updatedRow.employeeNumber
+          ? { ...item, ...updatedRow }
+          : item
+      )
+    );
+  } catch (error) {
+    console.error('Error updating payroll:', error);
+    setError('Failed to update payroll data.');
+  }
+};
 
 
 
 
-        totalOtherDeds:
-          (parseFloat(editRow.liquidatingCash) || 0) +
-          (parseFloat(editRow.landbankSalaryLoan) || 0) +
-          (parseFloat(editRow.earistCreditCoop) || 0) +
-          (parseFloat(editRow.feu) || 0),
 
 
 
 
-        totalDeductions:
-          (parseFloat(editRow.withholdingTax) || 0) +
-          (parseFloat(editRow.totalGsisDeds) || 0) +
-          (parseFloat(editRow.totalPagibigDeds) || 0) +
-          (parseFloat(editRow.PhilHealthContribution) || 0)+
-          (parseFloat(editRow.totalOtherDeds) || 0),
-      };
-
-
-
-
-
-
-
-
-      // Send the updated data to the backend
-      const response = await axios.put(
-        `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`,
-        updatedRow
-      );
-
-
-
-
-
-
-
-
-      console.log('Payroll record updated successfully:', response.data);
-
-
-
-
-
-
-
-
-      // Close the modal after saving
-      setOpenModal(false);
-
-
-
-
-
-
-
-
-      // Update state with the new data
-      setFilteredData((prevData) =>
-        prevData.map((item) =>
-          item.employeeNumber === updatedRow.employeeNumber
-            ? { ...item, ...updatedRow }
-            : item
-        )
-      );
-    } catch (error) {
-      console.error('Error updating payroll:', error);
-      setError('Failed to update payroll data.');
-    }
-  };
 
 
 
@@ -1118,9 +1428,17 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
    
   ];
   const PayrollDisbursement = [
+
+
+
+
 
 
 
@@ -1131,12 +1449,28 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   ];
 
 
 
 
+
+
+
+
   const GsisDeductions = [
+
+
+
+
+
+
+
+
 
 
 
@@ -1158,12 +1492,24 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   ];
 
 
 
 
+
+
+
+
   const PagIbigDeductions = [
+
+
+
+
 
 
 
@@ -1175,12 +1521,24 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   ];
 
 
 
 
+
+
+
+
   const totalOtherDeductions = [
+
+
+
+
 
 
 
@@ -1193,7 +1551,23 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   ];
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1215,6 +1589,10 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
     const grossSalary = item.increment
     ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
     : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
@@ -1226,8 +1604,19 @@ const PayrollProcess = () => {
 
 
 
-const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723557208532  * m);
 
+
+
+
+
+
+
+
+
+
+
+
+    const abs = (grossSalary *  0.0055555625544423* h) + (grossSalary *   0.0000925948584897 * m);
     const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
     const personalLifeRetIns = ((grossSalary) * 0.09);
 
@@ -1238,7 +1627,23 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
-    const netSalary = grossSalary - (abs);
+
+
+
+
+
+
+
+
+    const netSalary = grossSalary - abs;
+
+
+
+
+
+
+
+
 
 
 
@@ -1265,10 +1670,26 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
     (parseFloat(item.multiPurpLoan) || 0);
+
+
+
+
+
+
+
+
 
 
 
@@ -1291,12 +1712,28 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
     const totalDeductions =
     (parseFloat(item.withholdingTax) || 0) +
     (parseFloat(PhilHealthContribution) || 0) +
     (parseFloat(totalGsisDeds) || 0) +
     (parseFloat(totalPagibigDeds) || 0) +
     (parseFloat(totalOtherDeds) || 0);
+
+
+
+
+
+
+
+
 
 
 
@@ -1323,8 +1760,32 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const pay1st = pay2ndCompute;
     const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+
+
+
+
+
+
 
 
 
@@ -1338,20 +1799,72 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
  
     return {
       ...item,
-        totalGsisDeds: totalGsisDeds.toFixed(2),
-        totalPagibigDeds: totalPagibigDeds.toFixed(2),
-        totalOtherDeds: totalOtherDeds.toFixed(2),
-        grossSalary,
-        abs: abs.toFixed(2),
-        netSalary: netSalary.toFixed(2),
-        totalDeductions: totalDeductions.toFixed(2),
-        PhilHealthContribution:PhilHealthContribution.toFixed(2),
-        personalLifeRetIns: personalLifeRetIns.toFixed(2),
-        pay1stCompute: pay1stCompute.toFixed(2),
-        pay2ndCompute: pay2ndCompute.toFixed(2),
-        pay1st: pay1st.toFixed(0),
-        pay2nd: pay2nd.toFixed(2),
-        rtIns:rtIns.toFixed(2)
+        totalGsisDeds: totalGsisDeds.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        totalPagibigDeds: totalPagibigDeds.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        totalOtherDeds: totalOtherDeds.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        grossSalary: grossSalary.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        abs: abs.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        netSalary: netSalary.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        totalDeductions: totalDeductions.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        PhilHealthContribution:PhilHealthContribution.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        personalLifeRetIns: personalLifeRetIns.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        pay1stCompute: pay1stCompute.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        pay2ndCompute: pay2ndCompute.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        pay1st: pay1st.toLocaleString('en-US', {
+          maximumFractionDigits: 0,
+          maximumFractionDigits: 0
+
+
+        }),
+        pay2nd: pay2nd.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+        rtIns:rtIns.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }),
+
+
+
+
+
+
+
+
 
 
 
@@ -1363,6 +1876,22 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
  
     };
   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1418,6 +1947,14 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
           <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
             <FormControl
               variant="outlined"
@@ -1444,6 +1981,22 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                 ))}
               </Select>
             </FormControl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1493,12 +2046,36 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {error ? (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       ) : (
         <>
+
+
+
+
+
+
+
+
 
 
 
@@ -1514,6 +2091,14 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
         )}
         <Box sx={{ width: '100%' }}>
          <Box display="flex" gap={3} alignItems="flex-start" minWidth="1300px">
+
+
+
+
+
+
+
+
 
 
 
@@ -1565,7 +2150,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                     }}
                   />
 
+
                 </TableCell>
+
+
 
 
                   <TableCell>No.</TableCell>
@@ -1617,8 +2205,32 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                   <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
                
+
+
+
+
+
+
+
+
 
 
 
@@ -1719,6 +2331,70 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               <TableBody>
               {filteredData.length > 0 &&
                 computedRows.map((row, index) => {
@@ -1729,8 +2405,28 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                     );
 
 
+
+
                     const hasNoFinalized = finalizedPayroll.length === 0;
                     const submitButtonEnabled = canSubmit || hasNoFinalized;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1775,6 +2471,8 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                       </TableCell>
 
 
+
+
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.department}</TableCell>
                       <TableCell>{row.employeeNumber}</TableCell>
@@ -1782,11 +2480,40 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                       <TableCell>{row.endDate}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
-                      <TableCell>{row.rateNbc584}</TableCell>
-                      <TableCell>{row.nbc594}</TableCell>
-                      <TableCell>{row.rateNbc594 || '0' }</TableCell>
-                      <TableCell>{row.nbcDiffl597 || '0' }</TableCell>
-                      <TableCell>{row.increment}</TableCell>
+                      <TableCell>
+                        {row.rateNbc584
+                          ? Number(row.rateNbc584).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : ''}
+                      </TableCell>
+                      <TableCell>{row.nbc594
+                          ? Number(row.nbc594).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.rateNbc594
+                          ? Number(row.rateNbc594).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.nbcDiffl597
+                          ? Number(row.nbcDiffl597).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.increment
+                          ? Number(row.increment).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
                       <TableCell>{row.grossSalary}</TableCell>
                       <TableCell><b>{row.abs}</b></TableCell>
                       <TableCell>{row.h}</TableCell>
@@ -1814,9 +2541,25 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       <TableCell>{row.rtIns}</TableCell>
                       <TableCell>{row.ec}</TableCell>
                       <TableCell>{row.PhilHealthContribution}</TableCell>
+
+
+
+
 
 
 
@@ -1825,6 +2568,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                       <TableCell>{row.pay1stCompute}</TableCell>
                       <TableCell>{row.pay2ndCompute}</TableCell>
                       <br />
+
+
+
+
 
 
 
@@ -1846,29 +2593,157 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
-                      <TableCell>{row.withholdingTax}</TableCell>
+                      <TableCell>{row.withholdingTax
+                      ? Number(row.withholdingTax).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
                       <TableCell>{row.personalLifeRetIns}</TableCell>
-                      <TableCell>{row.gsisSalaryLoan}</TableCell>
-                      <TableCell>{row.gsisPolicyLoan}</TableCell>
-                      <TableCell>{row.gsisArrears}</TableCell>
-                      <TableCell>{row.cpl}</TableCell>
-                      <TableCell>{row.mpl}</TableCell>
-                      <TableCell>{row.eal}</TableCell>
-                      <TableCell>{row.mplLite}</TableCell>
-                      <TableCell>{row.emergencyLoan}</TableCell>
+                      <TableCell>{row.gsisSalaryLoan
+                        ? Number(row.gsisSalaryLoan).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.gsisPolicyLoan
+                         ? Number(row.gsisPolicyLoan).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.gsisArrears
+                        ? Number(row.gsisArrears).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.cpl
+                        ? Number(row.cpl).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.mpl
+                      ? Number(row.mpl).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.eal
+                        ? Number(row.eal).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.mplLite
+                      ? Number(row.eal).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.emergencyLoan
+                        ? Number(row.eal).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
                       <TableCell>{row.totalGsisDeds}</TableCell>
-                      <TableCell>{row.pagibigFundCont}</TableCell>
-                      <TableCell>{row.pagibig2}</TableCell>
-                      <TableCell>{row.multiPurpLoan}</TableCell>
+                      <TableCell>{row.pagibigFundCont
+                        ? Number(row.pagibigFundCont).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.pagibig2
+                        ? Number(row.pagibig2).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.multiPurpLoan
+                        ? Number(row.multiPurpLoan).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
                       <TableCell>{row.totalPagibigDeds}</TableCell>
                       <TableCell>{row.PhilHealthContribution}</TableCell>
-                      <TableCell>{row.liquidatingCash}</TableCell>
-                      <TableCell>{row.landbankSalaryLoan}</TableCell>
-                      <TableCell>{row.earistCreditCoop}</TableCell>
-                      <TableCell>{row.feu}</TableCell>              
+                      <TableCell>{row.liquidatingCash
+                        ? Number(row.liquidatingCash).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.landbankSalaryLoan
+                        ? Number(row.landbankSalaryLoan).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.earistCreditCoop
+                        ? Number(row.earistCreditCoop).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>
+                      <TableCell>{row.feu
+                         ? Number(row.feu).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+
+
+                            })
+                          : ''}</TableCell>              
                       <TableCell>{row.totalOtherDeds}</TableCell>
                       <TableCell>{row.totalDeductions}</TableCell>
                       <TableCell>{row.status}</TableCell>
@@ -1876,9 +2751,17 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
                     </TableRow>
              );
     })}
+
+
+
+
 
 
 
@@ -1902,6 +2785,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
         <Paper elevation={4} sx={{ borderRadius: 1, pt: 2.5, width: 150 }}>
           <TableContainer component={Box} sx={{ maxHeight: 600, width: 150, overflow: 'hidden' }}>
             <Table stickyHeader>
@@ -1912,6 +2799,14 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                   <TableCell></TableCell>
                 </TableRow>
               </TableHead>
+
+
+
+
+
+
+
+
 
 
 
@@ -1936,9 +2831,21 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
             return (
               <TableRow key={`actions-${row.employeeNumber}-${row.dateCreated}`}>
                
+
+
+
+
 
 
 
@@ -1964,6 +2871,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
                    
                     }}
                     disabled={isFinalized}
@@ -1971,6 +2882,14 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                     Edit
                   </Button>
                
+
+
+
+
+
+
+
+
 
 
 
@@ -1997,6 +2916,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                       marginLeft: '15px',
                       padding: '4px',
                       marginBottom: '-5px'
+
+
+
+
 
 
 
@@ -2029,7 +2952,19 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
        
+
+
+
+
 
 
 
@@ -2045,7 +2980,23 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
        
+
+
+
+
+
+
+
+
 
 
 
@@ -2058,6 +3009,22 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
        
       )}
      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2093,6 +3060,102 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
         >
           Submit Selected Payroll
         </Button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2273,6 +3336,70 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               {/* Employee Info */}
               <Typography variant="h6" gutterBottom>
                 Employee Information
@@ -2368,7 +3495,67 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 {/* MODAL EDIT*/}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2394,10 +3581,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                                       name={field}
                                       value={editRow[field] || ''}
                                       onChange={handleModalChange}
-                                      disabled={field === 'rateNbc594' || field === 'rateNbc584' }
+                                      disabled={field === 'rateNbc594'  }
                                       InputProps={{
                                         style:
-                                          field === 'rateNbc594' || field === 'rateNbc584'
+                                          field === 'rateNbc594'
                                             ? { fontWeight: 'bold', color: 'black', fontSize: '15px' }
                                             : undefined,}}
                                       InputLabelProps={{
@@ -2412,6 +3599,14 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                               </Grid>
              
                      
+
+
+
+
+
+
+
+
 
 
 
@@ -2448,6 +3643,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
                           <Typography variant="h6" mt={4} gutterBottom>
                             Payroll Disbursement
                           </Typography>
@@ -2471,6 +3670,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                             ))}
                           </Grid>
                          
+
+
+
+
 
 
 
@@ -2501,6 +3704,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
                           <Typography variant="h6" mt={4} gutterBottom>
                            PAGIBIG Deductions
                           </Typography>
@@ -2523,6 +3730,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                               </Grid>
                             ))}
                           </Grid>
+
+
+
+
 
 
 
@@ -2553,12 +3764,28 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
                         {/* Other Info */}
 <Box mt={4} mb={2}>
   <Typography variant="h6" fontWeight="bold">
     Total Contributions & Deductions
   </Typography>
 </Box>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2590,6 +3817,70 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
     </Grid>
   ))}
 </Grid>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2686,8 +3977,16 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
                
               </Box>
+
+
+
+
 
 
 
@@ -2700,7 +3999,15 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
       </Modal>
+
+
+
+
 
 
 
@@ -2752,6 +4059,10 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
     </Container>
   );
 };
@@ -2771,7 +4082,39 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export default PayrollProcess;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

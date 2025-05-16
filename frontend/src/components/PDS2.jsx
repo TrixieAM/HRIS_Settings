@@ -149,14 +149,14 @@ const PDS2 = () => {
         position: absolute;
         left: 0;
         top: 0;
-        width: 8.5in;
+        width: fit-content;
         margin: 0;
         margin-bottom: 0;
         padding: 0;
         background-color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-        transform: scale(1); /* ✅ Shrinks content to fit one page */
+        transform: scale(1); 
         transform-origin: center;
         page-break-inside: avoid;
         break-inside: avoid;
@@ -176,7 +176,7 @@ const PDS2 = () => {
   `}
 </style>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor:'white'}}>
-            <div style={{ overflow:'hidden', border: '1px solid black', padding: '0.25in', width: '8in', height: '13.1in' }}>
+            <div style={{ overflow:'hidden', padding: '0.25in', width: '8in', height: '13.1in' }}>
                      
                 <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed' }}>
                     <tbody>

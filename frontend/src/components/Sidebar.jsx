@@ -34,7 +34,6 @@ import {
   Summarize as SummarizeIcon,
   Portrait as PortraitIcon,
   ContactPage as ContactPageIcon,
-  AddHomeWork as AddHomeWorkIcon,
   Payment as PaymentsIcon,
   EditNote as EditNoteIcon,
   AccountBalance as AccountBalanceIcon,
@@ -144,6 +143,8 @@ useEffect(() => {
             transition: 'width 0.3s',
             display: 'flex',
             flexDirection: 'column',
+            boxShadow: 10,
+            zIndex: 1200,
           },
         }}
       >
@@ -157,6 +158,9 @@ useEffect(() => {
     width: 230, 
     height: '100vh', 
     transition: 'all 0.3s ease',  
+   
+    
+    
   }}
 >
   <Toolbar
@@ -165,6 +169,8 @@ useEffect(() => {
       justifyContent: 'space-between',
       alignItems: 'center',
       px: 2,
+
+      
     }}
   >
     {drawerOpen && (
@@ -172,7 +178,7 @@ useEffect(() => {
         <img
           src="/earist-logo-1.png"
           alt="earist-logo"
-          style={{ height: 32 }}
+          style={{ height: 32,  }}
         />
         <Typography variant="h6" noWrap>
           HRIS
@@ -248,10 +254,10 @@ useEffect(() => {
       <ListItem 
   button 
   component={Link} 
-  to='/home' 
+  to='/carousel' 
   sx={{
-    color: selectedItem === 'home' ? 'white' : 'inherit',
-    bgcolor: selectedItem === 'home' ? '#A31D1D' : 'inherit',
+    color: selectedItem === 'carousel' ? 'white' : 'inherit',
+    bgcolor: selectedItem === 'carousel' ? '#A31D1D' : 'inherit',
     '&:hover': {
       bgcolor: '#f0f0f0',
       color: 'black',
@@ -261,19 +267,19 @@ useEffect(() => {
         color: 'black',
       }
     },
-    borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
-    borderBottomRightRadius: selectedItem === 'home' ? '15px' : 0,
+    borderTopRightRadius: selectedItem === 'carousel' ? '15px' : 0,
+    borderBottomRightRadius: selectedItem === 'carousel' ? '15px' : 0,
     
   }}
-  onClick={() => handleItemClick('home')}
+  onClick={() => handleItemClick('carousel')}
 >
-<ListItemIcon sx={{ color: selectedItem === 'home' ? 'white' : 'inherit',
+<ListItemIcon sx={{ color: selectedItem === 'carousel' ? 'white' : 'inherit',
                     '&:hover': { color: 'black' }
                    }}>
     <House sx={{ fontSize: 29, marginLeft: '-6%' }} />
   </ListItemIcon>
   <ListItemText 
-    primary="Home" 
+    primary="carousel" 
     sx={{ marginLeft: '-10px' }} 
   />
 </ListItem>
@@ -491,7 +497,7 @@ useEffect(() => {
                     color: selectedItem === 'work-experience' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <AddHomeWorkIcon />
+                    <Streetview />
                   </ListItemIcon>
                   <ListItemText primary="Work Experience" sx={{marginLeft: '-10px'}}/>
                 </ListItem>

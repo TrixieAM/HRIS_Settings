@@ -1,7 +1,7 @@
 import React, { useEffect,useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { TextField, Button } from "@mui/material";
+import { TextField, Button, Box } from "@mui/material";
 import earistLogo from '../../assets/earistLogo.jpg';
 import { AccessTime, Print, SaveOutlined, Search, SearchOutlined } from '@mui/icons-material';
 import PrintIcon from '@mui/icons-material/Print'
@@ -107,7 +107,7 @@ const DailyTimeRecord = () => {
     if (!dateString) return "";
     const date = new Date(dateString);
     const day = date.getDate(); // Get the day number
-    const year = date.getFullYear(); // Get the year
+    const year = 2024; // Get the year
     return `${day}, ${year}`; // Format as "DayNumber, Year"
   };
 
@@ -115,14 +115,14 @@ const DailyTimeRecord = () => {
   const formattedEndDate = formatEndDate(endDate);
 
 
-  const currentYear = new Date().getFullYear();
+  const currentYear = 2024;
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
-    const year = new Date().getFullYear();
+    const year = 2024;
   
     const start = new Date(Date.UTC(year, monthIndex, 1));
     const end = new Date(Date.UTC(year, monthIndex + 1, 0)); // last day of month
@@ -139,25 +139,71 @@ const DailyTimeRecord = () => {
     
     <div className="container faculty" style={{transform: 'scale(0.8)', marginTop: '-10rem'}}>
      
-      <style>
-        {`
-          @media print {
-            .no-print { display: none !important; }
-            .header { display: none !important; }
-            .table-wrapper { display: flex; justify-content: center; width: 95rem; margin-top: 20px; margin-left: -12%;}
-            
-            .table { width: 45%; border: 1px solid black; border-collapse: collapse; }
-            .table-side-by-side {display: flex; flex-direction: row; gap: 1%}
-          }
-          @media print {
-            .print-visible {
-              display: block !important; /* Ensure it's displayed during print */
-              page-break-before: always; /* Optional: force a new page if needed */
-            }
-          }
-        `}
-      </style>
+     <style>
+  {`
+    @media print {
+      html, body {
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+      }
+
+      .no-print, .header {
+        display: none !important;
+      }
+
+      /* Container to center the tables */
+      .table-wrapper {
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap; /* wrap if needed to avoid overflow */
+        page-break-inside: avoid;
+      }
+
+      .table-side-by-side {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap; /* prevent overflow */
+        justify-content: center;
+        width: 100%;
+      }
+
+      .table {
+        width: auto;
+        max-width: 100%;
+        border: 1px solid black;
+        border-collapse: collapse;
+        font-size: 10pt;
+        page-break-inside: avoid;
+      }
+
+      .table th, .table td {
+        border: 1px solid black;
+        padding: 4px;
+        text-align: center;
+      }
+
+      table, tr, td, th {
+        page-break-inside: avoid;
+      }
+
+      @page {
+        margin: 1cm; /* control print margins */
+        size: A4 portrait;
+      }
+    }
+  `}
+</style>
+
+
+      
       <div
+      className="search-container no-print textfield-container"
   style={{
     backgroundColor: '#6D2323',
     color: '#ffffff',
@@ -170,7 +216,7 @@ const DailyTimeRecord = () => {
   }}
 >
   
-  <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+  <div  style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
     <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
     <div>
       <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
@@ -181,8 +227,10 @@ const DailyTimeRecord = () => {
       </p>
     </div>
   </div>
-      </div>    
+      </div>   
+       
       <div
+      className="search-container no-print textfield-container"
   style={{
     backgroundColor: 'white',
     padding: '20px',
@@ -194,26 +242,34 @@ const DailyTimeRecord = () => {
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
   }}
 >
+  {/* Month Buttons */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 20 }}>
+            {months.map((month, index) => (
+              <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
+                {month}
+              </Button>
+            ))}
+          </Box>
 
 
 
  <div className="search-container no-print textfield-container" >
        
-        <TextField sx={{ width: "300px", marginleft: "10px", backgroundColor:'white', paddingLeft: '18px' }} m disabled value={personID} variant="outlined" />
+        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white', paddingLeft: '18px' }} m disabled value={personID} variant="outlined" />
 
 
-        <TextField sx={{ width: "300px", marginleft: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
 
 
-        <TextField sx={{ width: "300px", marginleft: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
 
 
         <Button
           sx={{
-            width: "250px",
+            width: "230px",
             height: "55px",
-            marginleft: "10px",
-            margintopt: "10px",
+            marginleft: "40px",
+            margintop: "10px",
             bgcolor: "#6D2323",
             fontWeight: 'bold',
             fontSize: '17px'

@@ -13,14 +13,28 @@ const AttendanceModuleFaculty = () => {
   const [endDate, setEndDate] = useState("");
   const [attendanceData, setAttendanceData] = useState([]);
     const navigate = useNavigate();
+
+
+    useEffect(() => {
+        const storedEmployeeNumber = localStorage.getItem('employeeNumber');
+        const storedStartDate = localStorage.getItem('startDate');
+        const storedEndDate = localStorage.getItem('endDate');
+    
+        if (storedEmployeeNumber) setEmployeeNumber(storedEmployeeNumber);
+        if (storedStartDate) setStartDate(storedStartDate);
+        if (storedEndDate) setEndDate(storedEndDate);
+      }, []);
   
+
+      
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     localStorage.setItem('employeeNumber', employeeNumber);
     localStorage.setItem('startDate', startDate);
     localStorage.setItem('endDate', endDate);
-
+    
+    
     try {
       const response = await axios.get("http://localhost:5000/attendance/api/attendance", {
         params: {
@@ -581,8 +595,8 @@ const AttendanceModuleFaculty = () => {
 
   const currentYear = 2024;
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
@@ -641,24 +655,13 @@ const AttendanceModuleFaculty = () => {
     >
       {/* header band */}
        {/* Month Buttons */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5 }}>
-              {months.map((month, index) => (
-                <Button
-                  key={month}
-                  variant="contained"
-                  onClick={() => handleMonthClick(index)}
-                  sx={{
-                    backgroundColor: "#6D2323",
-                    color: "white", // optional: text color for contrast
-                    "&:hover": {
-                      backgroundColor: "#d4bd99", // optional: slightly darker hover effect
-                    },
-                  }}
-                >
-                  {month}
-                </Button>
-              ))}
-            </Box>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 12.7 }}>
+                {months.map((month, index) => (
+                  <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
+                    {month}
+                  </Button>
+                ))}
+              </Box>
       
 
 
@@ -1308,7 +1311,7 @@ const AttendanceModuleFaculty = () => {
           fullWidth
           onClick={saveOverallAttendance}
           variant="contained"
-          sx={{ mt: 3, backgroundColor: '#6D2323', color: '#FEF9E1' }}
+           sx={{ bgcolor: '#6D2323', color: '#FEF9E1', width: '100%', mb: 4 }}
         >
           Save Record
         </Button>

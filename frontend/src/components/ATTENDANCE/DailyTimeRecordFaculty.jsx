@@ -66,6 +66,24 @@ const DailyTimeRecordFaculty = () => {
     return date.toLocaleDateString(undefined, options).toUpperCase();
   };
 
+  const currentYear = 2024;
+  const months = [
+     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+   const handleMonthClick = (monthIndex) => {
+    const year = 2024;
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); 
+
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
   return (
     <div className="container faculty">
       <style>
@@ -79,7 +97,7 @@ const DailyTimeRecordFaculty = () => {
           }
         `}
       </style>
-      <div
+      <div 
   style={{
     backgroundColor: '#6D2323',
     color: '#ffffff',
@@ -90,10 +108,10 @@ const DailyTimeRecordFaculty = () => {
     borderBottomRightRadius: '0px',
    
   }}>
-        <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
+        <div  style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
           <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
-          <div>
-            <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+          <div >
+            <h4  style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
               Daily Time Record Faculty Search
             </h4>
             <p style={{ margin: 0, fontSize: '85%' }}>
@@ -105,9 +123,18 @@ const DailyTimeRecordFaculty = () => {
       <Container sx={{ bgcolor: 'white', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '50px', paddingTop:'25px'}}>
       <div className="search-container no-print">
 
+         {/* Month Buttons */}
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 1.3 }}>
+                    {months.map((month, index) => (
+                      <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
+                        {month}
+                      </Button>
+                    ))}
+                  </Box>
+
         <div className='textfield-container'>
           <TextField
-            sx={{ width: "200px", marginleft: "10px" }}
+            sx={{ width: "200px", paddingRight: "12px" }}
             m
             label="Employee Number"
             value={personID}
@@ -116,7 +143,7 @@ const DailyTimeRecordFaculty = () => {
           />
 
           <TextField
-            sx={{ width: "200px", marginleft: "10px" }}
+            sx={{ width: "200px", paddingRight: "12px" }}
             fullWidth
             label="Start Date"
             type="date"
@@ -127,7 +154,7 @@ const DailyTimeRecordFaculty = () => {
           />
 
           <TextField
-            sx={{ width: "200px", marginleft: "10px" }}
+            sx={{ width: "200px", paddingRight: "12px" }}
             label="End Date"
             type="date"
             value={endDate}

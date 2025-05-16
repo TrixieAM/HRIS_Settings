@@ -101,7 +101,7 @@ const AllAttendanceRecord = () => {
         }}
       >
         {/* Month Buttons */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, pb: 5, ml: 12.5 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 12.5 }}>
                 {months.map((month, index) => (
                   <Button
                     key={month}
@@ -127,6 +127,7 @@ const AllAttendanceRecord = () => {
             flexWrap: 'wrap',
             alignItems: 'center',
             gap: 2,
+            paddingTop: 1,
           }}
           onSubmit={handleSubmit}
         >
@@ -148,7 +149,7 @@ const AllAttendanceRecord = () => {
               width: "250px",
               height: "54px",
               marginLeft: "10px",
-              marginTop: "14px",
+
             }}
             InputLabelProps={{ shrink: true }}
           />
@@ -162,7 +163,6 @@ const AllAttendanceRecord = () => {
               width: "250px",
               height: "54px",
               marginLeft: "10px",
-              marginTop: "14px",
             }}
             InputLabelProps={{ shrink: true }}
           />

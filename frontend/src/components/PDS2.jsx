@@ -129,6 +129,8 @@ const PDS2 = () => {
         padding: 0;
         .no-print {
         display: none !important;
+        height: 100vh;
+        overflow: hidden;
         }
       }
 
@@ -148,8 +150,6 @@ const PDS2 = () => {
         left: 0;
         top: 0;
         width: 8.5in;
-        height: 14.1in;
-        overflow: hidden;
         margin: 0;
         margin-bottom: 0;
         padding: 0;
@@ -169,7 +169,7 @@ const PDS2 = () => {
 
 
       @page {
-        size: Legal;
+        size: legal portrait;
         margin: 0;
       }
     }
@@ -189,7 +189,7 @@ const PDS2 = () => {
                         <td colSpan="1" rowSpan="2" style={{height:'0.3in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px 1px 1px 0px solid black'}}>
                             27.
                         </td>
-                        <td colSpan="5" rowSpan="2" style={{height:'0.3in', fontSize:'52.5%', backgroundColor:'lightgray', border: '1px 0px 1px 1px solid black', textAlign:'center'}}>
+                        <td colSpan="5" rowSpan="2" style={{height:'0.3in', fontSize:'58%', backgroundColor:'lightgray', border: '1px 0px 1px 1px solid black', textAlign:'center'}}>
                             CAREER SERVICE/ RA 1080 (BOARD/ BAR) UNDER <br></br>
                             SPECIAL LAWS/ CES/ CSEE <br></br>
                             BARANGAY ELIGIBILITY / DRIVER'S LICENSE
@@ -228,19 +228,19 @@ const PDS2 = () => {
                         <td colSpan="6" style={{height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
                        {eligibility ? eligibility.eligibilityName: 'N/A'}
                         </td>
-                        <td colSpan="2" style={{height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="2" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                         {eligibility ? eligibility.eligibilityRating: 'N/A'}                  
                         </td>
-                        <td colSpan="2" style={{height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="2" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                         {eligibility ? eligibility.eligibilityDateOfExam: 'N/A'}    
                         </td>
                         <td colSpan="5" style={{height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
                         {eligibility ? eligibility.eligibilityPlaceOfExam: 'N/A'}
                         </td>
-                        <td colSpan="2" style={{height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="2" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                         {eligibility ? eligibility.licenseNumber: 'N/A'}
                         </td>
-                        <td colSpan="1" style={{height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="1" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                         {eligibility ? eligibility.DateOfValidity: 'N/A'}
                         </td>
                     </tr>
@@ -287,7 +287,7 @@ const PDS2 = () => {
                             DEPARTMENT / AGENCY / OFFICE / COMPANY  <br></br>
                             (Write in full/Do not abbreviate)
                         </td>
-                        <td colSpan="1" rowSpan="3" style={{height:'0.3in', fontSize:'52.5%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
+                        <td colSpan="1" rowSpan="3" style={{height:'0.3in', fontSize:'58%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                             MONTHLY <br></br>
                             SALARY
                         </td>
@@ -330,25 +330,25 @@ const PDS2 = () => {
                         <td colSpan="2" style={{height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
                         {workexperience ? workexperience.workDateFrom: 'N/A'}
                         </td>
-                        <td colSpan="2" style={{height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.workDateTo: 'N/A'}
                         </td>
-                        <td colSpan="4" style={{height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="4" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.workPositionTitle: 'N/A'}
                         </td>
                         <td colSpan="4" style={{height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
                         {workexperience ? workexperience.workCompany: 'N/A'}
                         </td>
-                        <td colSpan="1" style={{height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="1" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.workMonthlySalary: 'N/A'}
                         </td>
-                        <td colSpan="2" style={{height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.SalaryJobOrPayGrade: 'N/A'}
                         </td>
-                        <td colSpan="2" style={{height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.StatusOfAppointment: 'N/A'}
                         </td>
-                        <td colSpan="1" style={{height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                        <td colSpan="1" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.isGovtService: 'N/A'}
                         </td>
                     </tr>
@@ -410,6 +410,7 @@ const PDS2 = () => {
             marginTop: '20px',
             fontSize: '14px',  
             marginLeft: '80%',
+            marginBottom: '30px'
           }}
         >
           <PrintIcon style={{ fontSize: '24px' }} />

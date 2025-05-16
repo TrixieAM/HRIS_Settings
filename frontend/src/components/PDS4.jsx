@@ -50,6 +50,8 @@ const PDS4 = () => {
         padding: 0;
         .no-print {
         display: none !important;
+        height: 100vh;
+        overflow: hidden;
         }
       }
 
@@ -69,8 +71,6 @@ const PDS4 = () => {
         left: 0;
         top: 0;
         width: 8.5in;
-        height: 15in;
-        overflow: hidden;
         margin: 0;
         margin-bottom: 0;
         padding: 0;
@@ -90,7 +90,7 @@ const PDS4 = () => {
 
 
       @page {
-        size: Legal;
+        size: legal portrait;
         margin: 0;
       }
     }
@@ -104,7 +104,7 @@ const PDS4 = () => {
             <table style={{ border: '1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '8in', tableLayout: 'fixed', marginTop: '-5px' }}>
                   <tbody>
                         <tr>
-                            <td colSpan="12"style={{height:'1in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
+                            <td colSpan="12"style={{height:'1.1in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
                                 34.&emsp;&emsp;Are you related by consanguinity or affinity to the appointing or recommending authority, or to the<br></br>
                                 &emsp;&emsp;&emsp; chief of bureau or office or to the person who has immediate supervision over you in the Office,<br></br>
                                 &emsp;&emsp;&emsp; Bureau or Department where you will be apppointed,<br></br>
@@ -115,7 +115,7 @@ const PDS4 = () => {
                                 <br></br>
                                 <br></br>
                             </td>
-                            <td colSpan="6"style={{height:'1in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'1.1in', fontSize:'62.5%', border: '1px solid black'}}>
                                 <br></br>
                                 <br></br>
                                 <br></br>
@@ -154,7 +154,7 @@ const PDS4 = () => {
                             </td>      
                         </tr>
                         <tr>
-                            <td colSpan="6"style={{height:'0.75in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'0.85in', fontSize:'62.5%', border: '1px solid black'}}>
                                 &emsp; <input type="checkbox" name="q34_a_yes" /> Yes   &emsp; <input type="checkbox" name="q34_a_no" /> No
                                 <br />
                                 <br />
@@ -165,7 +165,7 @@ const PDS4 = () => {
                             </td>      
                         </tr>
                         <tr>
-                            <td colSpan="12"style={{height:'0.5in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
+                            <td colSpan="12"style={{height:'0.6in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
                                 <br></br>
                                 36.&emsp;&emsp;Have you ever been convicted of any crime or violation of any law, decree, ordinance or<br></br>
                                 &emsp;&emsp;&emsp; regulation by any court or tribunal?
@@ -173,7 +173,7 @@ const PDS4 = () => {
                                 <br></br>
                                 <br></br>
                             </td>
-                            <td colSpan="6"style={{height:'0.5in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'0.6in', fontSize:'62.5%', border: '1px solid black'}}>
                                 &emsp; <input type="checkbox" name="q34_a_yes" /> Yes   &emsp; <input type="checkbox" name="q34_a_no" /> No
                                 <br></br>
                                 <br />
@@ -182,14 +182,14 @@ const PDS4 = () => {
                             </td>      
                         </tr>
                         <tr>
-                            <td colSpan="12"style={{height:'0.5in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
+                            <td colSpan="12"style={{height:'0.6in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
                                 <br></br>
                                 37.&emsp;&emsp;Have you ever been separated from the service in any of the following modes: resignation,<br></br>
                                 &emsp;&emsp;&emsp; retirement, dropped from the rolls, dismissal, termination, end of term, finished contract or phased<br></br>
                                 &emsp;&emsp;&emsp; out (abolition) in the public or private sector?<br></br>
                                 <br></br>
                             </td>
-                            <td colSpan="6"style={{height:'0.5in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'0.6in', fontSize:'62.5%', border: '1px solid black'}}>
                               
                                 &emsp; <input type="checkbox" name="q34_a_yes" /> Yes   &emsp; <input type="checkbox" name="q34_a_no" /> No
                                 <br />
@@ -208,7 +208,7 @@ const PDS4 = () => {
                                 &emsp;&emsp;&emsp; last election to promote/actively campaign for a national or local candidate?<br></br>
                                 <br></br>
                             </td>
-                            <td colSpan="6"style={{height:'1in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'1.1in', fontSize:'62.5%', border: '1px solid black'}}>
                                 &emsp; <input type="checkbox" name="q34_a_yes" /> Yes   &emsp; <input type="checkbox" name="q34_a_no" /> No
                                 <br></br>
                                 <br></br>
@@ -221,14 +221,14 @@ const PDS4 = () => {
                             </td>      
                         </tr>
                         <tr>
-                            <td colSpan="12"style={{height:'0.5in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
+                            <td colSpan="12"style={{height:'0.6in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black'}}>
                                 <br></br>
                                 39.&emsp;&emsp;Have you acquired the status of an immigrant or permanent resident of another country?<br></br>
                                 <br></br>
                                 <br></br>
                                 <br></br>
                             </td>
-                            <td colSpan="6"style={{height:'0.5in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'0.6in', fontSize:'62.5%', border: '1px solid black'}}>
                                 &emsp; <input type="checkbox" name="q34_a_yes" /> Yes   &emsp; <input type="checkbox" name="q34_a_no" /> No
                                 <br></br>
                                 <br />
@@ -237,7 +237,7 @@ const PDS4 = () => {
                             </td>      
                         </tr>
                         <tr>
-                            <td colSpan="12"style={{height: '0.7in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black' }}>
+                            <td colSpan="12"style={{height: '1in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black' }}>
                                 40. &emsp; &emsp; Pursuant to: (a) Indigenous People's Act (RA 8371); (b) Magna Carta for Disabled Persons (RA <br></br>
                                 &emsp;&emsp;&emsp; 7277); and (c) Solo Parents Welfare Act of 2000 (RA 8972), please answer the following items:<br></br>
                                 <br></br>
@@ -252,7 +252,7 @@ const PDS4 = () => {
                                 <br></br>
                                 <br></br>
                             </td>
-                            <td colSpan="6"style={{height:'1in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'1.1in', fontSize:'62.5%', border: '1px solid black'}}>
                                 <br></br>
                                 <br></br>
                                 <br></br>
@@ -280,7 +280,7 @@ const PDS4 = () => {
                                     (Person not related by consanguinity or affinity to applicant/appointee)
                                 </span>
                             </td>
-                            <td colSpan="4" rowspan="6" style={{height:'0.1in', fontSize:'62.5%', border:'1px 1px 0px 1px solid black', textAlign:'center'}}>
+                            <td colSpan="4" rowspan="6" style={{height:'0.1.1in', fontSize:'62.5%', border:'1px 1px 0px 1px solid black', textAlign:'center'}}>
                                {/* <div style={{border:'1px solid black', width:'3.5cm', height:'4.5cm', position:'absolute', top: '113.75%', left: '45%', textAlign:'center'}}>
                                     <br></br>
                                     ID picture taken within<br></br>
@@ -364,9 +364,9 @@ const PDS4 = () => {
                             </td>  
                         </tr>
                         <tr>
-                            <td colSpan="18"style={{height: '1.35in', fontSize: '47.5%', border: '0px 1px 0px 1px solid black'}}>
-                                <div style={{position: 'relative', top: '0.06in', left: '0.1in', float: 'left'}}>
-                                    <table style={{border:'1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '2.9in', height: '1in', tableLayout: 'fixed'}}>
+                            <td colSpan="18"style={{height: '1.50in', fontSize: '50%', border: '0px 1px 0px 1px solid black'}}>
+                                <div style={{position: 'relative', top: '0.06in', left: '0.1.1in', float: 'left'}}>
+                                    <table style={{border:'1px solid black', borderCollapse: 'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '2.9in', height: '1.1in', tableLayout: 'fixed'}}>
                                         <tr>
                                             <td style={{height: '0.35in', fontSize: '47.5', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                                                 Government Issued ID (i.e.Passport, GSIS, SSS, PRC, Driver's<br></br>
@@ -374,17 +374,17 @@ const PDS4 = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style={{height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
+                                            <td style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                                             &emsp;Government Issued ID:
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style={{height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
+                                            <td style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                                             &emsp;ID/License/Passport No:
                                             </td>
                                         </tr>
                                         <tr>
-                                        <td style={{height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
+                                        <td style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
                                             &emsp;Date/Place of Issuance:
                                         </td>
                                        
@@ -395,24 +395,24 @@ const PDS4 = () => {
                                
                            
                         <div style={{position:'relative', top: '0.08in', left: '0.3in', float: 'left'}}>
-                                    <table style={{border:'1px solid black', borderCollapse:'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '2.9in', height: '1in', tableLayout: 'fixed'}}>
+                                    <table style={{border:'1px solid black', borderCollapse:'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '2.9in', height: '1.1in', tableLayout: 'fixed'}}>
                                         <tr>
-                                            <td style={{height:'0.6in', fontSize:'55%', border: '1px solid black', textAlign:'center'}}>
+                                            <td style={{height:'0.6in', fontSize:'58%', border: '1px solid black', textAlign:'center'}}>
                                                 &nbsp;
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style={{height:'0.1in', fontSize:'55%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
+                                            <td style={{height:'0.1.1in', fontSize:'58%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                                                 Signature (Sign inside the box)
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style={{height: '0.2in', fontSize:'55%', border: '1px solid black'}}>
+                                            <td style={{height: '0.2in', fontSize:'58%', border: '1px solid black'}}>
                                                 &nbsp;
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style={{height:'0.1in', fontSize:'55%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
+                                            <td style={{height:'0.1.1in', fontSize:'58%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                                                 Date Accomplished
                                             </td>
                                         </tr>
@@ -420,14 +420,14 @@ const PDS4 = () => {
                                 </div>
                                
                                 <div style={{position:'relative', top: '-0.05in', left: '-0.15in', float: 'right'}}>
-                                    <table style={{border:'1px solid black', borderCollapse:'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '1.5in', height: '1in', tableLayout: 'fixed'}}>
+                                    <table style={{border:'1px solid black', borderCollapse:'collapse', fontFamily: 'Arial, Helvetica, sans-serif', width: '1.5in', height: '1.1in', tableLayout: 'fixed'}}>
                                         <tr>
-                                            <td style={{height:'1in', fontSize:'55%', border: '1px solid black', textAlign:'center'}}>
+                                            <td style={{height:'1.1in', fontSize:'58%', border: '1px solid black', textAlign:'center'}}>
                                                 &nbsp;
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style={{height: '0.2in', fontSize:'55%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
+                                            <td style={{height: '0.2in', fontSize:'58%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                                                 Right Thumbmark
                                             </td>
                                         </tr>
@@ -447,10 +447,10 @@ const PDS4 = () => {
                             </td>
                         </tr>
                         <tr>
-                            <td colSpan="6" rowspan="3"style={{height:' 0.7in', fontSize:'62.5%', border: '0px 1px 1px 1px solid black'}}>
+                            <td colSpan="6" rowspan="3"style={{height:' 1in', fontSize:'62.5%', border: '0px 1px 1px 1px solid black'}}>
                                 &nbsp;
                             </td>
-                            <td colSpan="6"style={{height:'0.5in', fontSize:'62.5%', border: '1px solid black'}}>
+                            <td colSpan="6"style={{height:'0.6in', fontSize:'62.5%', border: '1px solid black'}}>
                                 &nbsp;
                             </td>
                             <td colSpan="6" rowspan="3"style={{height:'0.6in', fontSize:'62.5%', border: '0px 1px 1px 1px solid black'}}>
@@ -458,12 +458,12 @@ const PDS4 = () => {
                             </td>
                         </tr>
                         <tr>
-                            <td colSpan="6"style={{height:'0.1in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
+                            <td colSpan="6"style={{height:'0.1.1in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                                 Person Administering Oath
                             </td>  
                         </tr>
                         <tr>
-                            <td colSpan="6"style={{height:'0.1in', fontSize:'62.5%', border: '1px solid white', textAlign:'center'}}>
+                            <td colSpan="6"style={{height:'0.1.1in', fontSize:'62.5%', border: '1px solid white', textAlign:'center'}}>
                                 &nbsp;
                             </td>
                         </tr>
@@ -473,7 +473,7 @@ const PDS4 = () => {
                             </td>
                         </tr>
                         <tr>
-                            <td colSpan="18"style={{height:'0.1in', fontSize: '50%', border: '1px solid white', textAlign: 'right'}}>
+                            <td colSpan="18"style={{height:'0.1.1in', fontSize: '50%', border: '1px solid white', textAlign: 'right'}}>
                             <i>CS FORM 212 (Revised 2017), Page 4 of 4</i>
                             </td>
                         </tr>  
@@ -553,6 +553,7 @@ const PDS4 = () => {
             marginTop: '20px',
             fontSize: '14px',  
             marginLeft: '80%',
+            marginBottom: '30px'
             }}
             >
             <PrintIcon style={{ fontSize: '24px' }} />

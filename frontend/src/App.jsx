@@ -15,8 +15,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import ProtectedRoute from './components/ProtectedRoute';
-
-
+import '@fontsource/poppins';
 
 
 import Login from './components/Login';

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Box, Button, Container, TextField, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 import dayjs from "dayjs";
@@ -13,6 +13,17 @@ const AttendanceModuleNonTeachingStaff = () => {
   const [endDate, setEndDate] = useState("");
   const [attendanceData, setAttendanceData] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+          const storedEmployeeNumber = localStorage.getItem('employeeNumber');
+          const storedStartDate = localStorage.getItem('startDate');
+          const storedEndDate = localStorage.getItem('endDate');
+      
+          if (storedEmployeeNumber) setEmployeeNumber(storedEmployeeNumber);
+          if (storedStartDate) setStartDate(storedStartDate);
+          if (storedEndDate) setEndDate(storedEndDate);
+        }, []);
+    
 
 
 
@@ -864,8 +875,8 @@ const AttendanceModuleNonTeachingStaff = () => {
 
   const currentYear = 2024;
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
@@ -891,7 +902,7 @@ const AttendanceModuleNonTeachingStaff = () => {
         padding: "0px", // Optional padding
       }}
     >
-<Container sx={{ mt: 4, bgcolor: '#FEF9E1' }}>
+<Container sx={{ mt: 2, bgcolor: '#FEF9E1' }}>
       {/* header card ---------------------------------------------------- */}
       <div
                   style={{
@@ -931,25 +942,14 @@ const AttendanceModuleNonTeachingStaff = () => {
       >
         {/* colored banner */}
 
- {/* Month Buttons */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5 }}>
-        {months.map((month, index) => (
-          <Button
-            key={month}
-            variant="contained"
-            onClick={() => handleMonthClick(index)}
-            sx={{
-              backgroundColor: "#6D2323",
-              color: "white", // optional: text color for contrast
-              "&:hover": {
-                backgroundColor: "#d4bd99", // optional: slightly darker hover effect
-              },
-            }}
-          >
-            {month}
-          </Button>
-        ))}
-      </Box>
+  {/* Month Buttons */}
+         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 12.7 }}>
+           {months.map((month, index) => (
+             <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
+               {month}
+             </Button>
+           ))}
+         </Box>
 
 
         {/* filters row */}
@@ -959,7 +959,7 @@ const AttendanceModuleNonTeachingStaff = () => {
             value={employeeNumber}
             onChange={(e) => setEmployeeNumber(e.target.value)}
             required
-            sx={{ width: 300, marginTop: "14px" }}
+            sx={{width: "250px", marginTop: "14px" }}
             slotProps={{ inputLabel: { shrink: true } }}
           />
          <TextField
@@ -969,11 +969,11 @@ const AttendanceModuleNonTeachingStaff = () => {
                  onChange={(e) => setStartDate(e.target.value)}
                  required
                  sx={{
-                   width: "250px",
-                   height: "54px",
-                   marginLeft: "10px",
-                   marginTop: "14px",
-                 }}
+                  width: "250px",
+                  height: "54px",
+                  marginLeft: "10px",
+                  marginTop: "14px",
+                }}
                  InputLabelProps={{ shrink: true }}
                />
                <TextField
@@ -982,21 +982,21 @@ const AttendanceModuleNonTeachingStaff = () => {
                  value={endDate}
                  onChange={(e) => setEndDate(e.target.value)}
                  required
-                 sx={{
-                   width: "250px",
-                   height: "54px",
-                   marginLeft: "10px",
-                   marginTop: "14px",
-                 }}
+                  sx={{
+                  width: "250px",
+                  height: "54px",
+                  marginLeft: "10px",
+                  marginTop: "14px",
+                }}
                  InputLabelProps={{ shrink: true }}
                />
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{marginTop: "14px", bgcolor: '#6D2323', flexGrow: 1, minWidth: 200, height: 56 }}
-          >
-            Generate Report
-          </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ marginTop: "14px", backgroundColor: '#6D2323', color: '#FEF9E1', height: 56, flexGrow: 1 }}
+              >
+                Generate Report
+              </Button>
         </Box>
       </Box>
 

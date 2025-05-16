@@ -167,6 +167,8 @@ const PDS3 = () => {
                     padding: 0;
                     .no-print {
                     display: none !important;
+                    height: 100vh;
+                    overflow: hidden;
                     }
                   }
            
@@ -183,8 +185,6 @@ const PDS3 = () => {
                     left: 0;
                     top: 0;
                     width: 8.5in;
-                    height: 14.1in;
-                    overflow: hidden;
                     margin: 0;
                     margin-bottom: 0;
                     padding: 0;
@@ -202,7 +202,7 @@ const PDS3 = () => {
                   }
            
                   @page {
-                    size: Legal;
+                    size: legal portrait;
                     margin: 0;
                   }
                 }
@@ -269,13 +269,13 @@ const PDS3 = () => {
                             {voluntarywork ? voluntarywork.nameAndAddress: 'N/A'}
                             </td>
                            
-                            <td colSpan="1" style={{ height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
                             {voluntarywork ? voluntarywork.dateFrom: 'N/A'}
                             </td>
-                            <td colSpan="1" style={{ height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
                             {voluntarywork ? voluntarywork.dateTo: 'N/A'}
                             </td>
-                            <td colSpan="1" style={{ height:'0.3in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
                             {voluntarywork ? voluntarywork.numberOfHours: 'N/A'}
                             </td>
                             <td colSpan="5" style={{ height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
@@ -338,16 +338,16 @@ const PDS3 = () => {
                             <td colSpan="7" style={{ height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
                            {learningdevelopment ? learningdevelopment.titleOfProgram: 'N/A'}
                             </td>
-                            <td colSpan="1" style={{ height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
                             {learningdevelopment ? learningdevelopment.dateFrom: 'N/A'}
                             </td>
-                            <td colSpan="1" style={{ height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
                             {learningdevelopment ? learningdevelopment.dateTo: 'N/A'}
                             </td>
-                            <td colSpan="1" style={{ height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
                             {learningdevelopment ? learningdevelopment.numberOfHours: 'N/A'}
                             </td>
-                            <td colSpan="1" style={{ height:'0.25in', fontSize:'52.5%', border: '1px solid black'}}>
+                            <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
                             {learningdevelopment ? learningdevelopment.typeOfLearningDevelopment: 'N/A'}
                             </td>
                             <td colSpan="4" style={{ height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
@@ -477,6 +477,7 @@ const PDS3 = () => {
             marginTop: '20px',
             fontSize: '14px',  
             marginLeft: '80%',
+            marginBottom: '30px'
           }}
         >
           <PrintIcon style={{ fontSize: '24px' }} />

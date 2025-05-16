@@ -774,48 +774,59 @@ const PayrollProcess = () => {
 
 
 
-      // ✅ Step 1: Update main payroll database (payroll-with-remittance)
-    for (const item of updatedData) {
-      if (selectedRows.includes(item.employeeNumber)) {
-        try {
-          await axios.put(
-            `http://localhost:5000/api/payroll-with-remittance/${item.employeeNumber}`,
-            item
+          // Filter only selected AND not already finalized rows
+          const rowsToSubmit = updatedData.filter(item =>
+            selectedRows.includes(item.employeeNumber) &&
+            !finalizedPayroll.some(fp =>
+              fp.employeeNumber === item.employeeNumber &&
+              fp.startDate === item.startDate &&
+              fp.endDate === item.endDate
+            )
           );
-        } catch (error) {
-          console.error(`Error updating payroll for ${item.employeeNumber}:`, error);
-        }
-      }
-    }
 
 
-    // ✅ Step 2: Update finalized payroll database (finalized-payroll)
-      await axios.post('http://localhost:5000/api/finalized-payroll', updatedData);
+          // Step 1: Update main payroll database (payroll-with-remittance)
+          for (const item of rowsToSubmit) {
+            try {
+              await axios.put(
+                `http://localhost:5000/api/payroll-with-remittance/${item.employeeNumber}`,
+                item
+              );
+            } catch (error) {
+              console.error(`Existing payroll for ${item.employeeNumber}:`, error);
+            }
+          }
 
 
+          // Step 2: Update finalized payroll database (finalized-payroll)
+          await axios.post('http://localhost:5000/api/finalized-payroll', rowsToSubmit);
 
 
+          // Step 3: Update UI state with new data
+          const updatedFilteredData = filteredData.map(row => {
+            const match = rowsToSubmit.find(item => item.employeeNumber === row.employeeNumber);
+            return match ? { ...row, status: 'Processed' } : row;
+          });
 
 
- 
-      setFilteredData(updatedData);
-      setData(updatedData);
-      setIsPayrollProcessed(true);
-      alert('Payroll Processed and submitted successfully!');
- 
-      const res = await axios.get("http://localhost:5000/api/finalized-payroll");
-      setFinalizedPayroll(res.data);
- 
-    } catch (error) {
-      console.error('Error submitting payroll:', error);
-      alert('Error submitting payroll.');
-    }
-  };
- 
-  const rowsToSubmit = filteredData.filter(row =>
-  selectedRows.includes(row.employeeNumber)
-);
+          setFilteredData(updatedFilteredData);
+          setData(updatedFilteredData);
+          setIsPayrollProcessed(true);
+          alert('Payroll Processed and submitted successfully!');
 
+
+          // Refresh finalizedPayroll from backend
+          const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+          setFinalizedPayroll(res.data);
+
+
+      
+          } catch (error) {
+            console.error('Error submitting payroll:', error);
+            alert('Existing payroll data.');
+          }
+        };
+      
 
 
 
@@ -1518,16 +1529,42 @@ const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723
                 <TableRow>
                 <TableCell padding="checkbox">
                   <Checkbox
-                    indeterminate={selectedRows.length > 0 && selectedRows.length < computedRows.length}
-                    checked={selectedRows.length === computedRows.length}
+                    indeterminate={
+                      selectedRows.length > 0 &&
+                      selectedRows.length < computedRows.filter(row =>
+                        !finalizedPayroll.some(fp =>
+                          fp.employeeNumber === row.employeeNumber &&
+                          fp.startDate === row.startDate &&
+                          fp.endDate === row.endDate
+                        )
+                      ).length
+                    }
+                    checked={
+                      selectedRows.length === computedRows.filter(row =>
+                        !finalizedPayroll.some(fp =>
+                          fp.employeeNumber === row.employeeNumber &&
+                          fp.startDate === row.startDate &&
+                          fp.endDate === row.endDate
+                        )
+                      ).length
+                    }
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedRows(computedRows.map((row) => row.employeeNumber));
+                        setSelectedRows(
+                          computedRows
+                            .filter(row => !finalizedPayroll.some(fp =>
+                              fp.employeeNumber === row.employeeNumber &&
+                              fp.startDate === row.startDate &&
+                              fp.endDate === row.endDate
+                            ))
+                            .map(row => row.employeeNumber)
+                        );
                       } else {
                         setSelectedRows([]);
                       }
                     }}
                   />
+
                 </TableCell>
 
 

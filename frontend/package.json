@@ -13,6 +13,7 @@
     "@date-io/date-fns": "^3.0.0",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@fontsource/poppins": "^5.2.6",
     "@mui/icons-material": "^6.1.7",
     "@mui/lab": "^6.0.0-beta.15",
     "@mui/material": "^6.1.6",

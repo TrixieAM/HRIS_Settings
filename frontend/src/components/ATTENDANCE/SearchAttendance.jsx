@@ -60,8 +60,8 @@ const AttendanceSearch = () => {
 
   const currentYear = 2024;
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
@@ -107,9 +107,9 @@ const AttendanceSearch = () => {
                       </div>
                       </div>
                           
-    <Container sx={{bgcolor: "white", height: "90%", paddingTop: "25px",  paddingBottom: '30px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px',}}>
+    <Container sx={{bgcolor: "white", height: "90%",  paddingBottom: '30px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px',}}>
  {/* Month Buttons */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, pb: 5 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, ml: 12.5 }}>
                 {months.map((month, index) => (
                   <Button
                     key={month}

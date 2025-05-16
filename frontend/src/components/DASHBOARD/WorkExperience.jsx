@@ -189,7 +189,7 @@ const WorkExperience = () => {
 
     <TextField
       variant="outlined"
-      placeholder="Search by Person ID"
+      placeholder="Search by Employee Number"
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       sx={{ backgroundColor: 'white', borderRadius: 1 }}
@@ -211,7 +211,7 @@ const WorkExperience = () => {
           'Monthly Salary',
           'Salary Job/Pay Grade',
           'Status of Appointment',
-          'Person ID',
+          'Employee Number',
           'Actions',
         ].map((header) => (
           <TableCell key={header}>
@@ -308,7 +308,7 @@ const WorkExperience = () => {
         { label: 'Monthly Salary', key: 'workMonthlySalary' },
         { label: 'Salary Job/Pay Grade', key: 'SalaryJobOrPayGrade' },
         { label: 'Status of Appointment', key: 'StatusOfAppointment' },
-        { label: 'Person ID', key: 'person_id' },
+        { label: 'Employee Number', key: 'person_id' },
       ].map(({ label, key }) => (
         <Grid item xs={12} sm={6} key={key}>
           <TextField

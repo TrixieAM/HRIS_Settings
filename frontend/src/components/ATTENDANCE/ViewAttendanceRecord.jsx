@@ -57,8 +57,8 @@ const ViewAttendanceRecord = () => {
 
   const currentYear = 2024;
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
@@ -125,7 +125,7 @@ const ViewAttendanceRecord = () => {
 
       <Container sx={{ bgcolor: "white", height: "90%", paddingTop: "-5px", paddingBottom: '-10px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px' }}>
         {/* Month Buttons */}
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, ml: 12.7 }}>
           {months.map((month, index) => (
             <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
               {month}
@@ -133,7 +133,7 @@ const ViewAttendanceRecord = () => {
           ))}
         </Box>
 
-        <div style={{ padding: "10px", marginLeft:'-10px', paddingTop:'25px' }}>
+        <div style={{ padding: "10px", marginLeft:'-10px'}}>
           <form onSubmit={handleSubmit} style={{ marginBottom: "16px" }}>
             <TextField
               label="Employee Number"

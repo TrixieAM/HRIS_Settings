@@ -233,7 +233,7 @@ const ViewAttendanceRecord = () => {
               style={{ marginTop: "16px", backgroundColor: '#6D2323', marginLeft: '20px', marginBottom: '20px' }}
               startIcon={<SaveAsIcon />}
             >
-            Save Faculty Non-Teaching
+            Save Non-Teaching
             </Button>
           </>
         </div>

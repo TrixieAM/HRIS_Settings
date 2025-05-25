@@ -58,7 +58,7 @@ const Login = () => {
           if (role === "superadmin" || role === "administrator") {
             navigate("/home");
           } else if (role === "staff") {
-            navigate("/pdsfile");
+            navigate("/home");
           } else {
             setErrorMessage("Unauthorized role");
           }
@@ -85,7 +85,6 @@ const Login = () => {
         backgroundColor: "#fff8e1",
       }}
     >
-      {/* Paper component wrapping the entire login form */}
       <Paper
         elevation={4}
         sx={{
@@ -96,7 +95,7 @@ const Login = () => {
           textAlign: "center",
         }}
       >
-        {/* Logo Section */}
+        {/* Logo */}
         <Box
           sx={{
             backgroundColor: "#A31D1D",
@@ -127,14 +126,14 @@ const Login = () => {
           <b>Login to your Account</b>
         </Typography>
 
-        {/* Error message alert */}
+        {/* alert */}
         {errMessage && (
           <Alert sx={{ mb: 2 }} severity="error">
             {errMessage}
           </Alert>
         )}
 
-        {/* Form fields */}
+        {/* Fields */}
         <form onSubmit={handleLogin}>
           <TextField
             name="employeeNumber"
@@ -154,7 +153,7 @@ const Login = () => {
             onChange={handleChanges}
           />
 
-          {/* Forgot password link */}
+          {/* Forgot password */}
           <Box sx={{ textAlign: "left", mb: 3 }}>
             <Link
               onClick={() => navigate("/forgot-password")}
@@ -165,7 +164,7 @@ const Login = () => {
                 fontSize: "13px",
               }}
             >
-              Forgot your password?
+              Forgot password?
             </Link>
           </Box>
 
@@ -180,7 +179,7 @@ const Login = () => {
           </Button>
         </form>
 
-   
+        {/* No account link */}
         <Typography variant="body2" sx={{ mt: 2, fontSize: "13px" }}>
           Don’t have an account?{" "}
           <Link

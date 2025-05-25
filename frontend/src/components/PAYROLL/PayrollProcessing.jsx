@@ -64,6 +64,38 @@ import {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const PayrollProcess = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState('');
@@ -84,74 +116,11 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
   const canSubmit = selectedRows.length > 0;
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -176,32 +145,6 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const isAlreadyFinalized = filteredData.some(fd =>
     finalizedPayroll.some(fp =>
       fp.employeeNumber === fd.employeeNumber &&
@@ -209,20 +152,6 @@ const PayrollProcess = () => {
       fp.endDate === fd.endDate
     )
   );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -242,32 +171,8 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     const seen = new Set();
     const duplicates = new Set(); // newly add
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -283,34 +188,6 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
      const allData = res.data.map(item => ({
       ...item,
       status: item.status === 'Processed' || item.status === 1 ? 'Processed' : 'Unprocessed',
@@ -321,31 +198,9 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
     setDuplicateEmployeeNumbers([...duplicates]);
     setFilteredData(allData);
-    setData(allData); // ✅ Add this line here
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    setData(allData);
 
 
 
@@ -359,33 +214,9 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     const allUnprocessed = allData.every(
       (item) => item.status === 'Unprocessed' || item.status === 0
     );
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -395,65 +226,11 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   } catch (err) {
     console.error('Error fetching payroll data:', err);
     setError('An error occurred while fetching the payroll data.');
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -472,107 +249,9 @@ const PayrollProcess = () => {
     };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     fetchPayrollData();
     fetchDepartments();
   }, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -588,8 +267,7 @@ const PayrollProcess = () => {
 
 
 
-
-
+  // HANDLE SEARCH IN DEPARTMENT AND SEARCH BUTTON
 
 
   const handleSearchChange = (event) => {
@@ -597,18 +275,6 @@ const PayrollProcess = () => {
     setSearchTerm(term);
     applyFilters(selectedDepartment, term);
   };
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -623,24 +289,10 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
     /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
     if (department) {
       filtered = filtered.filter((record) => record.department === department);
     }
-
-
-
-
 
 
 
@@ -654,80 +306,8 @@ const PayrollProcess = () => {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     setFilteredData(filtered);
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -741,14 +321,10 @@ const PayrollProcess = () => {
     const updatedData = filteredData.map((item) => {
 
 
+
+
     const h = item.h || 0; // Default to 0 if h is not available
     const m = item.m || 0; // Default to 0 if m is not available
-
-
-
-
-
-
 
 
     const grossSalary = item.increment
@@ -756,56 +332,16 @@ const PayrollProcess = () => {
     : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723557208532  * m);
 
 
     const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
+
+
     const personalLifeRetIns = ((grossSalary) * 0.09);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const netSalary = grossSalary - (abs);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     const totalGsisDeds =
@@ -820,38 +356,10 @@ const PayrollProcess = () => {
     (parseFloat(item.emergencyLoan) || 0);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
     (parseFloat(item.multiPurpLoan) || 0);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
      const totalOtherDeds =
@@ -860,18 +368,6 @@ const PayrollProcess = () => {
       (parseFloat(item.landbankSalaryLoan) || 0) +
       (parseFloat(item.earistCreditCoop) || 0) +
       (parseFloat(item.feu) || 0);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -886,68 +382,12 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     const pay1stCompute = netSalary - totalDeductions;
     const pay2ndCompute = (netSalary - totalDeductions) / 2;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const pay1st = pay2ndCompute;
     const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     const rtIns = grossSalary * 0.12;
@@ -968,10 +408,26 @@ const PayrollProcess = () => {
           pay1st: pay1st.toFixed(0),
           pay2nd: pay2nd.toFixed(2),
           rtIns: rtIns.toFixed(2),
-          status: 'Processed',
+          status: 'Processed' && 'Unprocessed',
         };
       });
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1001,6 +457,10 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
           // Step 1: Update main payroll database (payroll-with-remittance)
           for (const item of rowsToSubmit) {
             try {
@@ -1016,8 +476,16 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
           // Step 2: Update finalized payroll database (finalized-payroll)
           await axios.post('http://localhost:5000/api/finalized-payroll', rowsToSubmit);
+
+
+
+
 
 
 
@@ -1031,6 +499,10 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
           setFilteredData(updatedFilteredData);
           setData(updatedFilteredData);
           setIsPayrollProcessed(true);
@@ -1039,9 +511,17 @@ const PayrollProcess = () => {
 
 
 
+
+
+
+
           // Refresh finalizedPayroll from backend
           const res = await axios.get("http://localhost:5000/api/finalized-payroll");
           setFinalizedPayroll(res.data);
+
+
+
+
 
 
 
@@ -1071,11 +551,10 @@ const PayrollProcess = () => {
 
 
 
-  const handleEdit = (rowId) => {
-    const row = computedRows.find((item) => item.id === rowId);
-    setEditRow(row);
-    setOpenModal(true);
-  };
+
+
+
+
 
 
 
@@ -1103,27 +582,9 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
         // Recalculate duplicates
         const seen = {};
         const updatedDuplicates = new Set();
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1141,31 +602,7 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
         setDuplicateEmployeeNumbers([...updatedDuplicates]);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1178,32 +615,7 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // Handle modal open and close
 
 
   const handleModalChange = (e) => {
@@ -1219,32 +631,6 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleCancel = () => {
     setOpenModal(false);
     setEditRow(null); // Clear the modal data on cancel
@@ -1253,36 +639,22 @@ const PayrollProcess = () => {
 
 
 
+  const handleEdit = (rowId) => {
+    const row = computedRows.find((item) => item.id === rowId);
+    setEditRow(row);
+    setOpenModal(true);
+  };
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // THIS IS FOR THE MODAL AND IT RECALCULATES THE VALUE DATA
 const handleSave = async () => {
   try {
     const h = editRow.h || 0;
     const m = editRow.m || 0;
+
+
 
 
     const grossSalary = editRow.increment
@@ -1290,10 +662,14 @@ const handleSave = async () => {
       : (parseFloat(editRow.rateNbc594) || 0) + (parseFloat(editRow.nbcDiffl597) || 0);
 
 
-    const abs = (grossSalary * 0.0058341925167354 * h) + (grossSalary * 0.00009723557208532 * m);
+
+
+    const abs = (grossSalary *  0.0055555525544423* h) + (grossSalary *   0.0000925948584897 * m);
     const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
     const personalLifeRetIns = grossSalary * 0.09;
     const netSalary = grossSalary - abs;
+
+
 
 
     const totalGsisDeds =
@@ -1308,10 +684,14 @@ const handleSave = async () => {
       (parseFloat(editRow.emergencyLoan) || 0);
 
 
+
+
     const totalPagibigDeds =
       (parseFloat(editRow.pagibigFundCont) || 0) +
       (parseFloat(editRow.pagibig2) || 0) +
       (parseFloat(editRow.multiPurpLoan) || 0);
+
+
 
 
     const totalOtherDeds =
@@ -1319,6 +699,8 @@ const handleSave = async () => {
       (parseFloat(editRow.landbankSalaryLoan) || 0) +
       (parseFloat(editRow.earistCreditCoop) || 0) +
       (parseFloat(editRow.feu) || 0);
+
+
 
 
     const totalDeductions =
@@ -1329,19 +711,29 @@ const handleSave = async () => {
       (parseFloat(totalOtherDeds) || 0);
 
 
+
+
     const pay1stCompute = netSalary - totalDeductions;
     const pay2ndCompute = pay1stCompute / 2;
+
+
 
 
     const pay1st = pay2ndCompute;
     const pay2nd = pay1stCompute - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
 
 
+
+
     const rtIns = grossSalary * 0.12;
+
+
 
 
     const updatedRow = {
       ...editRow,
+      h,
+      m,
       grossSalary,
       abs,
       PhilHealthContribution,
@@ -1357,14 +749,20 @@ const handleSave = async () => {
     };
 
 
+
+
     const response = await axios.put(
       `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`,
       updatedRow
     );
 
 
+
+
     console.log('Payroll record updated successfully:', response.data);
     setOpenModal(false);
+
+
 
 
     setFilteredData((prevData) =>
@@ -1379,14 +777,6 @@ const handleSave = async () => {
     setError('Failed to update payroll data.');
   }
 };
-
-
-
-
-
-
-
-
 
 
 
@@ -1424,59 +814,14 @@ const handleSave = async () => {
     'PhilHealthContribution',
     'totalOtherDeds',
     'totalDeductions',
-
-
-
-
-
-
-
-
-   
   ];
   const PayrollDisbursement = [
-
-
-
-
-
-
-
-
   'pay1st',
   'pay2nd',
-
-
-
-
-
-
-
-
   ];
-
-
-
-
-
-
 
 
   const GsisDeductions = [
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   'personalLifeRetIns',
@@ -1488,74 +833,48 @@ const handleSave = async () => {
   'cpl',
   'mplLite',
   'emergencyLoan'
-
-
-
-
-
-
-
-
   ];
-
-
-
-
 
 
 
 
   const PagIbigDeductions = [
-
-
-
-
-
-
-
-
   'pagibigFundCont',
   'multiPurpLoan',
   'pagibig2'
-
-
-
-
-
-
-
-
   ];
 
 
-
-
-
-
-
-
   const totalOtherDeductions = [
-
-
-
-
-
-
-
-
   'liquidatingCash',
   'earistCreditCoop',
   'feu',
   'landbankSalaryLoan'
-
-
-
-
-
-
-
-
   ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1587,69 +906,17 @@ const handleSave = async () => {
     const m = item.m || 0; // Default to 0 if m is not availabl
 
 
-
-
-
-
-
-
     const grossSalary = item.increment
     ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
     : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const abs = (grossSalary *  0.0055555625544423* h) + (grossSalary *   0.0000925948584897 * m);
+    const abs = (grossSalary *  0.0055555525544423* h) + (grossSalary *   0.0000925948584897 * m);
     const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
     const personalLifeRetIns = ((grossSalary) * 0.09);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const netSalary = grossSalary - abs;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     const totalGsisDeds =
@@ -1664,38 +931,10 @@ const handleSave = async () => {
     (parseFloat(item.emergencyLoan) || 0);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const totalPagibigDeds =
     (parseFloat(item.pagibigFundCont) || 0) +
     (parseFloat(item.pagibig2) || 0) +
     (parseFloat(item.multiPurpLoan) || 0);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
      const totalOtherDeds =
@@ -1706,20 +945,6 @@ const handleSave = async () => {
       (parseFloat(item.feu) || 0);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const totalDeductions =
     (parseFloat(item.withholdingTax) || 0) +
     (parseFloat(PhilHealthContribution) || 0) +
@@ -1728,50 +953,8 @@ const handleSave = async () => {
     (parseFloat(totalOtherDeds) || 0);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const pay1stCompute = netSalary - totalDeductions;
     const pay2ndCompute = (netSalary - totalDeductions) / 2;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1782,23 +965,13 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     const rtIns = grossSalary * 0.12;
    
  
     return {
       ...item,
+      h,
+      m,
         totalGsisDeds: totalGsisDeds.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
@@ -1848,6 +1021,8 @@ const handleSave = async () => {
           maximumFractionDigits: 0
 
 
+
+
         }),
         pay2nd: pay2nd.toLocaleString('en-US', {
           minimumFractionDigits: 2,
@@ -1873,9 +1048,57 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  
     };
   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1955,6 +1178,22 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
             <FormControl
               variant="outlined"
@@ -1981,6 +1220,38 @@ const handleSave = async () => {
                 ))}
               </Select>
             </FormControl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2062,12 +1333,60 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {error ? (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       ) : (
         <>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2091,6 +1410,22 @@ const handleSave = async () => {
         )}
         <Box sx={{ width: '100%' }}>
          <Box display="flex" gap={3} alignItems="flex-start" minWidth="1300px">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2151,11 +1486,14 @@ const handleSave = async () => {
                   />
 
 
+
+
                 </TableCell>
 
 
 
 
+                 
                   <TableCell>No.</TableCell>
                   <TableCell>Department</TableCell>
                   <TableCell>Employee Number</TableCell>
@@ -2163,8 +1501,7 @@ const handleSave = async () => {
                   <TableCell>End Date</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Position</TableCell>
-                  <TableCell>Rate NBC 584</TableCell>
-                  <TableCell>NBC 594</TableCell>
+
                   <TableCell>Rate NBC 594</TableCell>
                   <TableCell>NBC DIFF'L 597</TableCell>
                   <TableCell>Increment</TableCell>
@@ -2221,8 +1558,56 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                   <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2395,6 +1780,134 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               <TableBody>
               {filteredData.length > 0 &&
                 computedRows.map((row, index) => {
@@ -2407,8 +1920,48 @@ const handleSave = async () => {
 
 
 
+
+
+
+
                     const hasNoFinalized = finalizedPayroll.length === 0;
                     const submitButtonEnabled = canSubmit || hasNoFinalized;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2473,6 +2026,10 @@ const handleSave = async () => {
 
 
 
+
+
+
+
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.department}</TableCell>
                       <TableCell>{row.employeeNumber}</TableCell>
@@ -2480,20 +2037,7 @@ const handleSave = async () => {
                       <TableCell>{row.endDate}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
-                      <TableCell>
-                        {row.rateNbc584
-                          ? Number(row.rateNbc584).toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })
-                          : ''}
-                      </TableCell>
-                      <TableCell>{row.nbc594
-                          ? Number(row.nbc594).toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })
-                          : ''}</TableCell>
+
                       <TableCell>{row.rateNbc594
                           ? Number(row.rateNbc594).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
@@ -2510,6 +2054,8 @@ const handleSave = async () => {
                           ? Number(row.increment).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2553,9 +2099,41 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                       <TableCell>{row.rtIns}</TableCell>
                       <TableCell>{row.ec}</TableCell>
                       <TableCell>{row.PhilHealthContribution}</TableCell>
+
+
+
+
+
+
+
+
 
 
 
@@ -2568,6 +2146,14 @@ const handleSave = async () => {
                       <TableCell>{row.pay1stCompute}</TableCell>
                       <TableCell>{row.pay2ndCompute}</TableCell>
                       <br />
+
+
+
+
+
+
+
+
 
 
 
@@ -2609,6 +2195,38 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
@@ -2616,6 +2234,8 @@ const handleSave = async () => {
                       ? Number(row.withholdingTax).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2627,12 +2247,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.gsisPolicyLoan
                          ? Number(row.gsisPolicyLoan).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2643,12 +2267,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.cpl
                         ? Number(row.cpl).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2659,12 +2287,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.eal
                         ? Number(row.eal).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2675,12 +2307,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.emergencyLoan
                         ? Number(row.eal).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2692,6 +2328,8 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.pagibig2
@@ -2700,12 +2338,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.multiPurpLoan
                         ? Number(row.multiPurpLoan).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2718,12 +2360,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.landbankSalaryLoan
                         ? Number(row.landbankSalaryLoan).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2734,12 +2380,16 @@ const handleSave = async () => {
                               maximumFractionDigits: 2,
 
 
+
+
                             })
                           : ''}</TableCell>
                       <TableCell>{row.feu
                          ? Number(row.feu).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
+
+
 
 
                             })
@@ -2755,9 +2405,25 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
                     </TableRow>
              );
     })}
+
+
+
+
+
+
+
+
 
 
 
@@ -2789,6 +2455,14 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
         <Paper elevation={4} sx={{ borderRadius: 1, pt: 2.5, width: 150 }}>
           <TableContainer component={Box} sx={{ maxHeight: 600, width: 150, overflow: 'hidden' }}>
             <Table stickyHeader>
@@ -2799,6 +2473,22 @@ const handleSave = async () => {
                   <TableCell></TableCell>
                 </TableRow>
               </TableHead>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2839,9 +2529,33 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             return (
               <TableRow key={`actions-${row.employeeNumber}-${row.dateCreated}`}>
                
+
+
+
+
+
+
+
+
 
 
 
@@ -2875,6 +2589,14 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
                    
                     }}
                     disabled={isFinalized}
@@ -2882,6 +2604,22 @@ const handleSave = async () => {
                     Edit
                   </Button>
                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2924,6 +2662,14 @@ const handleSave = async () => {
 
 
 
+
+
+
+
+
+
+
+
                     }}
                     disabled={isFinalized}
                   >
@@ -2931,110 +2677,24 @@ const handleSave = async () => {
                   </Button>
                 </TableCell>
               </TableRow>
-            );
-          })
-        ) : (
-          <TableRow>
-            <TableCell colSpan={5} align="center">
-              No Data Available
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
-  </TableContainer>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      No Data Available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Paper>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       
-
-
-
-
-
-
-
-
         </Box>
-       
         </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         </>
-       
       )}
      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3064,194 +2724,6 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       <Modal open={openModal} onClose={handleCancel}>
         <Box
           sx={{
@@ -3272,128 +2744,6 @@ const handleSave = async () => {
               <Typography variant="h5" mb={3}>
                 Edit Payroll Record
               </Typography>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3451,123 +2801,7 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{/* MODAL EDIT*/}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                {/* MODAL EDIT*/}
                {/* Salary Info */}
                               <Typography variant="h6" mt={4} gutterBottom>
                                 Salary Rate and Adjustments
@@ -3596,23 +2830,7 @@ const handleSave = async () => {
              
                                  
                                 ))}
-                              </Grid>
-             
-                     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                              </Grid>                              
 
 
                           {/* Deductions */}
@@ -3639,14 +2857,6 @@ const handleSave = async () => {
                             ))}
                           </Grid>
                  
-
-
-
-
-
-
-
-
                           <Typography variant="h6" mt={4} gutterBottom>
                             Payroll Disbursement
                           </Typography>
@@ -3669,15 +2879,7 @@ const handleSave = async () => {
                               </Grid>
                             ))}
                           </Grid>
-                         
-
-
-
-
-
-
-
-
+                   
                            <Typography variant="h6" mt={4} gutterBottom>
                            GSIS Deductions
                           </Typography>
@@ -3700,12 +2902,6 @@ const handleSave = async () => {
                               </Grid>
                             ))}
                           </Grid>
-
-
-
-
-
-
 
 
                           <Typography variant="h6" mt={4} gutterBottom>
@@ -3732,12 +2928,6 @@ const handleSave = async () => {
                           </Grid>
 
 
-
-
-
-
-
-
                            <Typography variant="h6" mt={4} gutterBottom>
                            Total Other Deductions
                           </Typography>
@@ -3762,185 +2952,35 @@ const handleSave = async () => {
                           </Grid>
 
 
-
-
-
-
-
-
                         {/* Other Info */}
-<Box mt={4} mb={2}>
-  <Typography variant="h6" fontWeight="bold">
-    Total Contributions & Deductions
-  </Typography>
-</Box>
+                        <Box mt={4} mb={2}>
+                          <Typography variant="h6" fontWeight="bold">
+                            Total Contributions & Deductions
+                          </Typography>
+                        </Box>
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<Grid container spacing={2}>
-  {MandatoryDeductions.map((field) => (
-    <Grid item xs={6} key={field}>
-      <TextField
-        fullWidth
-        label={field}
-        name={field}
-        value={editRow[field] || ''}
-        onChange={handleModalChange}
-        InputLabelProps={{
+                        <Grid container spacing={2}>
+                          {MandatoryDeductions.map((field) => (
+                            <Grid item xs={6} key={field}>
+                              <TextField
+                                fullWidth
+                                label={field}
+                                name={field}
+                                value={editRow[field] || ''}
+                                onChange={handleModalChange}
+                                InputLabelProps={{
                                   style: { fontSize: '15px' }  // Make the label bigger
                                 }}
                                 InputProps={{
                                   style: { fontSize: '15px' }  // Make the input text bigger
                                 }}
-      />
-    </Grid>
-  ))}
-</Grid>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
 
 
 
@@ -3973,96 +3013,54 @@ const handleSave = async () => {
                 >
                   Cancel
                 </Button>
-
-
-
-
-
-
-
-
-               
               </Box>
-
-
-
-
-
-
-
-
-             
             </>
           )}
         </Box>
-
-
-
-
-
-
-
-
       </Modal>
-
-
-
-
-
-
-
-
       <Modal open={showConfirmation} onClose={() => setShowConfirmation(false)}>
-  <Box
-    sx={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      bgcolor: 'background.paper',
-      boxShadow: 24,
-      p: 4,
-      borderRadius: 2,
-      textAlign: 'center',
-      width: 400,
-    }}
-  >
-    <Typography variant="h6" mb={2}>
-      Are you sure all the data are correct?
-    </Typography>
-    <Box display="flex" justifyContent="center" gap={2}>
-      <Button
-        style={{color: 'black'}}
-        onClick={() => setShowConfirmation(false)}
-        disabled={isSubmitting}
-      >
-        Cancel
-      </Button>
-      <Button
-        variant="contained"
-        style={{backgroundColor: '#6D2323', width: '100px'}}
-        color="success"
-        onClick={async () => {
-          setIsSubmitting(true);
-          setShowConfirmation(false);
-          await handleSubmitPayroll(); // THIS is your real submit function
-          setIsSubmitting(false);
-        }}
-        disabled={isSubmitting}
-      >
-        Yes
-      </Button>
-    </Box>
-  </Box>
-</Modal>
-
-
-
-
-
-
-
-
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            textAlign: 'center',
+            width: 400,
+          }}
+        >
+          <Typography variant="h6" mb={2}>
+            Are you sure all the data are correct?
+          </Typography>
+          <Box display="flex" justifyContent="center" gap={2}>
+            <Button
+              style={{color: 'black'}}
+              onClick={() => setShowConfirmation(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              style={{backgroundColor: '#6D2323', width: '100px'}}
+              color="success"
+              onClick={async () => {
+                setIsSubmitting(true);
+                setShowConfirmation(false);
+                await handleSubmitPayroll(); // THIS is your real submit function
+                setIsSubmitting(false);
+              }}
+              disabled={isSubmitting}
+            >
+              Yes
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Container>
   );
 };
@@ -4070,61 +3068,5 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export default PayrollProcess;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

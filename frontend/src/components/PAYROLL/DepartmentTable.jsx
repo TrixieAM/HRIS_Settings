@@ -6,8 +6,11 @@ import {
 } from "@mui/material";
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon
+  Save as SaveIcon, Cancel as CancelIcon,
+  DepartureBoard,
+  Domain
 } from '@mui/icons-material';
+
 
 const DepartmentTable = () => {
   const [data, setData] = useState([]);
@@ -18,9 +21,11 @@ const DepartmentTable = () => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
+
   useEffect(() => {
     fetchData();
   }, []);
+
 
   const fetchData = async () => {
     try {
@@ -30,6 +35,7 @@ const DepartmentTable = () => {
       console.error("Error fetching data", error);
     }
   };
+
 
   const addEntry = async () => {
     try {
@@ -41,6 +47,7 @@ const DepartmentTable = () => {
     }
   };
 
+
   const startEditing = (item) => {
     setEditingId(item.id);
     setEditData({
@@ -49,10 +56,12 @@ const DepartmentTable = () => {
     });
   };
 
+
   const cancelEditing = () => {
     setEditingId(null);
     setEditData({});
   };
+
 
   const saveEdit = async (id) => {
     try {
@@ -64,6 +73,7 @@ const DepartmentTable = () => {
     }
   };
 
+
   const deleteEntry = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/department-table/${id}`);
@@ -73,19 +83,40 @@ const DepartmentTable = () => {
     }
   };
 
+
   return (
-    <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1' }}>
+    <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1' , marginRight: '50px'}}>
+      <div style={{
+        backgroundColor: '#6D2323',
+      color: '#ffffff',
+      padding: '25px',
+      width: '92.5%',
+      marginLeft: '1px',
+      borderRadius: '8px',
+      borderBottomLeftRadius: '0px',
+      borderBottomRightRadius: '0px',
+      display: 'flex',
+      }}>
+        <Domain sx={{ fontSize: '3rem', marginRight: '15px', marginTop: '5px', marginLeft: '5px' }} />
+     
+        <div>
+          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+            Department Table
+          </h4>
+          <p style={{ margin: 0, fontSize: '85%' }}>
+            Insert The Department Information
+          </p>
+        </div>
+      </div>
+
+
       <div style={{
         backgroundColor: 'white', padding: '20px', borderRadius: '8px',
         boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', marginBottom: '20px'
       }}>
-        <div style={{
-          backgroundColor: '#6D2323', color: '#ffffff', padding: '10px',
-          borderRadius: '8px', marginBottom: '25px'
-        }}>
-          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>Department Table</h4>
-          <p style={{ margin: 0, fontSize: '85%', marginLeft: '.25%' }}>Manage Department Records</p>
-        </div>
+
+
+
 
         {/* Add New Entry Section */}
         <Box display="flex" gap={2} marginLeft="0px" marginBottom="20px">
@@ -113,6 +144,9 @@ const DepartmentTable = () => {
             Add
           </Button>
         </Box>
+        </div>
+        <div>
+
 
         {/* Table */}
         <Table style={{ backgroundColor: 'white' }}>
@@ -173,7 +207,7 @@ const DepartmentTable = () => {
                         color="white"
                         size="small"
                         startIcon={<CancelIcon />}
-                        style={{ 
+                        style={{
                           textTransform: 'none',
                           width: '100px',
                           backgroundColor: '#000000',
@@ -210,6 +244,7 @@ const DepartmentTable = () => {
                           textTransform: 'none',
                           width: '100px'
 
+
                         }}
                       >
                         Delete
@@ -226,4 +261,8 @@ const DepartmentTable = () => {
   );
 };
 
+
 export default DepartmentTable;
+
+
+

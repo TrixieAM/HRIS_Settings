@@ -199,8 +199,14 @@ function App() {
               <img
                 src={`http://localhost:5000${settings.logo_url}`}
                 alt="Logo"
-                style={{ height: '40px', marginRight: '10px' }}
+                style={{
+                  height: '45px',
+                  marginRight: '10px',
+                  // border: '2px solid white',
+                  // borderRadius: '50px'
+                }}
               />
+
             )}
             <Box>
               <Typography variant="body2" noWrap sx={{ lineHeight: 1.2, color: 'white', marginTop: '8px' }}>
@@ -489,7 +495,7 @@ function App() {
             />
 
              <Route
-              path="/payroll-edit"
+              path="/payroll-processed"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <PayrollProcessed />
@@ -814,7 +820,7 @@ function App() {
           }}
         >
           <Typography variant="body2">
-            {'2025 EARIST Manila - Human Resources Information System. All rights Reserved.'}
+            {'© 2025 EARIST Manila - Human Resources Information System. All rights Reserved.'}
           </Typography>
         </Box>
       </Box>

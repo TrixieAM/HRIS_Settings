@@ -208,7 +208,7 @@ useEffect(() => {
 
                 }}
               >
-                <Avatar alt={username} sx={{ width: 35, height: 35, marginLeft: -1, color: 'black' }} />
+                <Avatar alt={username} sx={{ width: 35, height: 35, marginLeft: -1, color: '#000000', bgcolor: '#ffffff' }} />
                 <Box>
                   <Typography 
                   variant="body2" 
@@ -230,7 +230,6 @@ useEffect(() => {
                       color: 'black'
                     }}
                   >
-                    <b>ID: &nbsp;</b>
                     {employeeNumber}
                   </Typography>
 
@@ -254,10 +253,10 @@ useEffect(() => {
       <ListItem 
   button 
   component={Link} 
-  to='/carousel' 
+  to='/home' 
   sx={{
-    color: selectedItem === 'carousel' ? 'white' : 'inherit',
-    bgcolor: selectedItem === 'carousel' ? '#A31D1D' : 'inherit',
+    color: selectedItem === 'home' ? 'white' : 'inherit',
+    bgcolor: selectedItem === 'home' ? '#A31D1D' : 'inherit',
     '&:hover': {
       bgcolor: '#f0f0f0',
       color: 'black',
@@ -267,19 +266,19 @@ useEffect(() => {
         color: 'black',
       }
     },
-    borderTopRightRadius: selectedItem === 'carousel' ? '15px' : 0,
-    borderBottomRightRadius: selectedItem === 'carousel' ? '15px' : 0,
+    borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
+    borderBottomRightRadius: selectedItem === 'home' ? '15px' : 0,
     
   }}
-  onClick={() => handleItemClick('carousel')}
+  onClick={() => handleItemClick('home')}
 >
-<ListItemIcon sx={{ color: selectedItem === 'carousel' ? 'white' : 'inherit',
+<ListItemIcon sx={{ color: selectedItem === 'home' ? 'white' : 'inherit',
                     '&:hover': { color: 'black' }
                    }}>
     <House sx={{ fontSize: 29, marginLeft: '-6%' }} />
   </ListItemIcon>
   <ListItemText 
-    primary="carousel" 
+    primary="Home" 
     sx={{ marginLeft: '-10px' }} 
   />
 </ListItem>
@@ -841,6 +840,34 @@ useEffect(() => {
                 <ListItem
                   button
                   component={Link}
+                  to='/attendance_form'
+                  sx={{
+                    color: selectedItem === 'attendance_form' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'attendance_form' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('attendance_form')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_form' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <EventNote />
+                  </ListItemIcon>
+                  <ListItemText primary="Attendance Record State" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+
+                
+
+                <ListItem
+                  button
+                  component={Link}
                   to='/search_attendance'
                   sx={{
                     color: selectedItem === 'search_attendance' ? 'white' : 'inherit',
@@ -864,33 +891,8 @@ useEffect(() => {
                   <ListItemText primary="Attendance Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
-                <ListItem
-                  button
-                  component={Link}
-                  to='/daily_time_record'
-                  sx={{
-                    color: selectedItem === 'daily_time_record' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'daily_time_record' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('daily_time_record')}>
-                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'daily_time_record' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
-                    <CalendarToday />
-                  </ListItemIcon>
-                  <ListItemText primary="Daily Time Record" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
 
-                
+                 
               <ListItem 
                   button 
                   component={Link} 
@@ -920,15 +922,15 @@ useEffect(() => {
                   </ListItemIcon>
                   <ListItemText primary="Daily Faculty Time Record" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
-            
 
-                <ListItem
+
+                 <ListItem
                   button
                   component={Link}
-                  to='/attendance_form'
+                  to='/daily_time_record'
                   sx={{
-                    color: selectedItem === 'attendance_form' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'attendance_form' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'daily_time_record' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'daily_time_record' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -938,15 +940,16 @@ useEffect(() => {
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('attendance_form')}>
-                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_form' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
-                    <EventNote />
+                  onClick={() => handleItemClick('daily_time_record')}>
+                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'daily_time_record' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Record State" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Daily Time Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
+            
 
                 <ListItem
                   button
@@ -971,7 +974,7 @@ useEffect(() => {
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_module' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <WorkHistory />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Module Non-teaching Staff" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Module Non-teaching Faculty" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
@@ -1153,10 +1156,10 @@ useEffect(() => {
                 <ListItem 
                   button 
                   component={Link} 
-                  to= '/payroll-edit' 
+                  to= '/payroll-processed' 
                   sx={{
-                    color: selectedItem === 'payroll-edit' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'payroll-edit' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'payroll-processed' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'payroll-processed' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -1166,13 +1169,13 @@ useEffect(() => {
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'payroll-edit' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'payroll-edit' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'payroll-processed' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'payroll-processed' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('payroll-edit')} 
+                  onClick={() => handleItemClick('payroll-processed')} 
                   >
                   <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'payroll-edit' ? 'white' : 'inherit',
+                     color: selectedItem === 'payroll-processed' ? 'white' : 'inherit',
                      '&:hover': { color: 'white' }
                    }}>
                     <PaymentsIcon />

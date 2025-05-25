@@ -117,19 +117,13 @@ const ForgotPassword = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <TextField
-            name="name"
-            label="Name"
-            fullWidth
-            sx={{ mb: 2, mt: 5 }}
-            onChange={handleChanges}
-          />
+          
           <TextField
             name="email"
             label="Email"
             type="email"
             fullWidth
-            sx={{ mb: 3 }}
+            sx={{ mb: 3, mt: 5 }}
             autoComplete="email"
             onChange={handleChanges}
           />

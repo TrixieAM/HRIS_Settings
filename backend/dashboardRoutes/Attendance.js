@@ -241,7 +241,7 @@ router.post("/api/view-attendance", (req, res) => {
       p.*, 
       ot.officialTimeIN, ot.officialTimeOUT
     FROM attendanceRecord ar
-    INNER JOIN profile p ON ar.personID = p.employeeID
+    INNER JOIN person_table p ON ar.personID = p.agencyEmployeeNum
     INNER JOIN (
       SELECT day, MIN(officialTimeIN) AS officialTimeIN, MIN(officialTimeOUT) AS officialTimeOUT
       FROM officialtime

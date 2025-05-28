@@ -276,16 +276,45 @@ const PDS1 = () => {
   }, [employeeNumber]);
 
 
+const countries = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia",
+  "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium",
+  "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei",
+  "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Chad",
+  "Chile", "China", "Colombia", "Comoros", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+  "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
+  "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany",
+  "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+  "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+  "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati",
+  "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya",
+  "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives",
+  "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia",
+  "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia",
+  "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea",
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea",
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of the Congo",
+  "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia",
+  "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe",
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia",
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain",
+  "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
+  "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey",
+  "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+  "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+  "Yemen", "Zambia", "Zimbabwe"
+];
 
 
+  const [citizenshipType, setCitizenshipType] = useState('');
+  const [dualCountry, setDualCountry] = useState('');
 
-
-
-
-
-
-
-
+  const handleCheckboxChange = (e) => {
+    const value = e.target.value;
+    setCitizenshipType(value === citizenshipType ? '' : value);
+    if (value !== 'dual') setDualCountry('');
+ };
  
  
  
@@ -627,17 +656,6 @@ const PDS1 = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
                 <td colSpan="4" rowSpan="2" style={{height:'0.25in', fontSize:'58.6%', border:'1px solid black'}}>
                    
                 {personalInfo ? personalInfo.birthDate : ''}
@@ -645,70 +663,46 @@ const PDS1 = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-                <td colSpan="3" rowSpan="4" style={{height:'0.25in', fontSize:'58.6%', backgroundColor:'lightgray', border:'1px solid black', verticalAlign:'top'}}>
-                    16.&emsp; CITIZENSHIP <br></br>
-                    &emsp;&emsp;If holder of dual citizenship, <br></br>
+                <td colSpan="3" rowSpan="4" style={{ height: '0.25in', fontSize: '58.6%', backgroundColor: 'lightgray', border: '1px solid black', verticalAlign: 'top' }}>
+                    16.&emsp; CITIZENSHIP <br />
+                    &emsp;&emsp;If holder of dual citizenship, <br />
                     &emsp;&emsp;please indicate the details
                 </td>
-                 <td colSpan="5" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-               {personalInfo ? personalInfo.citizenship : ''}
+
+                
+
+                <td colSpan="5" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
+                    {personalInfo ? personalInfo.citizenship : ''}
                 </td>
-               
+            </tr>
+
+            <tr>
+                <td colSpan="5" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
+                    <label style={{ marginRight: '1rem' }}>
+                    <input
+                        type="checkbox"
+                        name="config"
+                        value="single"
+                        checked={citizenshipType === 'single'}
+                        onChange={handleCheckboxChange}
+                    /> Single
+                    </label>
+
+                    <label>
+                    <input
+                        type="checkbox"
+                        name="config"
+                        value="dual"
+                        checked={citizenshipType === 'dual'}
+                        onChange={handleCheckboxChange}
+                    /> Dual
+                    </label>
+                </td>
             </tr>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-            <tr>
-                 <td colSpan="5"  style={{height:'0.25in', fontSize:'58.6%', border: '1px solid black'}}>
-                <label style={{  alignItems: 'center', gap: '10px' }}>
-                <input type="checkbox" name="config" value="single" /> Single
-                </label>
-                &emsp; &emsp;
-                <label>
-                <input type="checkbox" name="config" value="dual" /> Dual
-                </label>
-               
-                </td>
-            </tr>    
-
-
-
-
-
-
-
-
-
-
-
-
-
+       
 
 
 
@@ -716,10 +710,21 @@ const PDS1 = () => {
                 <td colSpan="3" style={{ height: '0.25in', fontSize: '58.6%', backgroundColor: 'lightgray', border: '1px solid black' }}>
                     4.&emsp;PLACE OF BIRTH
                 </td>
+                
                 <td colSpan="4" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
                {personalInfo ? personalInfo.placeOfBirth: ''}
                 </td>
+
+
+                 <td colSpan="5" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black', paddingTop: '4px' }}>
+                {citizenshipType === 'dual' && (
+                <label style={{ marginRight: '10px' }}>If Dual Citizenship, select country:</label>
+                )}
+                </td>
             </tr>
+
+            
+            
 
 
 
@@ -759,7 +764,34 @@ const PDS1 = () => {
                 <td colSpan="5" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
                 {personalInfo ? personalInfo.sex: ''}
                 </td>
+
+               
+                <td>
+                    {citizenshipType === 'dual' && (
+                    <select
+                        value={dualCountry}
+                        onChange={(e) => setDualCountry(e.target.value)}
+                        style={{
+                            fontSize: '58.6%',
+                            border: 'none',
+                            outline: 'none',
+                            backgroundColor: 'transparent',
+                            textAlignLast: 'left',
+                            width: '500%' 
+                        }}
+                        >
+                        <option value="">-- Select Country --</option>
+                        {countries.map((country) => (
+                            <option key={country} value={country}>
+                            {country}
+                            </option>
+                        ))}
+                    </select>
+                    )}
+                </td>
             </tr>
+
+            
 
 
 

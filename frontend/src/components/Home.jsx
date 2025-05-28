@@ -592,7 +592,7 @@ const philippineHolidays = [
         <Typography fontSize="small">
           May 1, 2025 – In accordance with Proclamation No. 727, it is a Regular Holiday. No classes and office transactions.
         </Typography>
-        <Button variant="outlined" size="small" sx={{ mt: 1 }}>See more</Button>
+        <Button variant="outlined" size="small" sx={{ mt: 1, borderColor: '#700000', color: '#700000' }}>See more</Button>
       </Box>
 
       <Box sx={{ backgroundColor: 'white', color: 'black', borderRadius: 1, p: 2, mt: 2 }}>
@@ -600,7 +600,7 @@ const philippineHolidays = [
         <Typography fontSize="small">
           May 12, 2025 – As per Proclamation No. 878, all classes and office work at EARIST are suspended.
         </Typography>
-        <Button variant="outlined" size="small" sx={{ mt: 1 }}>See more</Button>
+        <Button variant="outlined" size="small" sx={{ mt: 1, borderColor: '#700000', color: '#700000' }}>See more</Button>
       </Box>
     </Box>
   </Grid>

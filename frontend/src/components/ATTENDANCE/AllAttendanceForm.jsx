@@ -219,9 +219,9 @@ const AllAttendanceRecord = () => {
                   <TableCell>{record.Date}</TableCell>
                   <TableCell>{record.Time}</TableCell>
                   <TableCell 
-                    style={{ color: record.AttendanceState === 0 || record.AttendanceState === 'Uncategorized' ? 'red' : 'black', fontWeight: 'bold'}} 
+                    style={{ color: record.AttendanceState === 0 || record.AttendanceState === 'UnCategorized' ? 'red' : 'black', fontWeight: 'bold'}} 
                   >
-                    {record.AttendanceState === 4 ? "Time OUT" : record.AttendanceState === 3 ? "Breaktime OUT" : record.AttendanceState === 2 ? "Breaktime IN" : record.AttendanceState === 1 ? "Time IN" : "Uncategorized" } 
+                    {record.AttendanceState === 4 ? "Time OUT" : record.AttendanceState === 3 ? "Breaktime OUT" : record.AttendanceState === 2 ? "Breaktime IN" : record.AttendanceState === 1 ? "Time IN" : "UnCategorized" } 
                   </TableCell>
                 </TableRow>
               ))}

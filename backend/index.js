@@ -42,26 +42,75 @@ const PlantillaTable = require('./payrollRoutes/PlantilliaTable');
 const SalaryGradeTable = require('./payrollRoutes/SalaryGradeTable');
 const Remittance = require('./payrollRoutes/Remittance');
 
+const Leave = require('./dashboardRoutes/Leave');
+const SendPayslip = require('./payrollRoutes/SendPayslip');
+
+
 
 
 
 const app = express();
 
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
 
 
 
 //MIDDLEWARE
-app.use(fileUpload());
-app.use(express.json());
-
-
-
-
 app.use(express.json());
 app.use(cors());
 app.use(bodyparser.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads')); // BAgo
+
+// File upload configurations
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const profileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/profile_pictures/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
+const profileUpload = multer({
+  storage: profileStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept only image files
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
+
+// Create necessary directories
+const profilePicturesDir = path.join(__dirname, 'uploads', 'profile_pictures');
+if (!fs.existsSync(profilePicturesDir)) {
+  fs.mkdirSync(profilePicturesDir, { recursive: true });
+}
+
+app.use('/uploads', express.static('uploads'));
 app.use('/ChildrenRoute', childrenRouter);
 app.use('/VoluntaryRoute', VoluntaryWork);
 app.use('/eligibilityRoute', EligibilityRoute);
@@ -81,6 +130,10 @@ app.use('/EmployeeSalaryGrade', EmployeeSalaryGrade);
 app.use('/PlantillaTable', PlantillaTable);
 app.use('/SalaryGradeTable', SalaryGradeTable);
 app.use('/Remittance', Remittance);
+
+
+app.use('/leaveRoute', Leave);
+app.use('/SendPayslipRoute', SendPayslip);
 
 
 
@@ -127,6 +180,163 @@ module.exports = db;
   //connection.release(); // Important: release connection back to the pool
 //});
 
+
+
+//RESET PASSWORD (BAGO 'TO - HANNA)
+// Add this after your other middleware configurations
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false, // ✅ allow Gmail cert
+  },
+});
+
+            
+// Store verification codes temporarily (in production, use Redis or database)
+const verificationCodes = new Map();
+
+// Generate random 6-digit code
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Forgot password route - send verification code
+app.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    // Check if user exists
+    const query = 'SELECT * FROM users WHERE email = ?';
+    db.query(query, [email], async (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'No account found with this email address' });
+      }
+
+      const user = results[0];
+      const verificationCode = generateVerificationCode();
+
+      // Store code with 15-minute expiration
+      verificationCodes.set(email, {
+        code: verificationCode,
+        expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+        userId: user.id
+      });
+
+      // Send email
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password Reset Verification Code',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #A31D1D;">Password Reset Request</h2>
+            <p>Hello ${user.username},</p>
+            <p>You requested to reset your password. Please use the following verification code:</p>
+            <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
+              <h1 style="color: #A31D1D; font-size: 32px; margin: 0; letter-spacing: 5px;">${verificationCode}</h1>
+            </div>
+            <p>This code will expire in 15 minutes.</p>
+            <p>If you didn't request this password reset, please ignore this email.</p>
+            <hr style="margin: 30px 0;">
+            <p style="color: #666; font-size: 12px;">This is an automated message from your HRIS system.</p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      res.json({ message: 'Verification code sent to your email' });
+    });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send verification code' });
+  }
+});
+
+// Verify code route
+app.post('/verify-reset-code', (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email and verification code are required' });
+  }
+
+  const storedData = verificationCodes.get(email);
+  
+  if (!storedData) {
+    return res.status(400).json({ error: 'No verification code found. Please request a new one.' });
+  }
+
+  if (Date.now() > storedData.expires) {
+    verificationCodes.delete(email);
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+  }
+
+  if (storedData.code !== code) {
+    return res.status(400).json({ error: 'Invalid verification code' });
+  }
+
+  res.json({ 
+    message: 'Code verified successfully', 
+    userId: storedData.userId,
+    verified: true 
+  });
+});
+
+// Reset password route
+app.post('/reset-password', async (req, res) => {
+  const { email, newPassword, confirmPassword } = req.body;
+
+  if (!email || !newPassword || !confirmPassword) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: 'Passwords do not match' });
+  }
+
+  const storedData = verificationCodes.get(email);
+  
+  if (!storedData) {
+    return res.status(400).json({ error: 'Invalid or expired session. Please start over.' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    const query = 'UPDATE users SET password = ? WHERE email = ?';
+    db.query(query, [hashedPassword, email], (err, result) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Failed to update password' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Clean up the verification code
+      verificationCodes.delete(email);
+      
+      res.json({ message: 'Password updated successfully' });
+    });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+});
 
 
 
@@ -334,7 +544,6 @@ app.delete('/learning_and_development_table/:id', (req, res) => {
 
 
 // File uploads
-const upload = multer({ dest: 'uploads/' });
 // Convert Excel date to normalized UTC date
 function excelDateToUTCDate(excelDate) {
   const date = new Date((excelDate - 25569) * 86400 * 1000);
@@ -434,22 +643,6 @@ app.post(
 
 
 
-// File upload config
-const storage = multer.diskStorage({
-  destination: './uploads/', //BAgo
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-
-
-
-const upload1 = multer({ storage });
-
-
-
-
 // Get settings
 app.get('/api/settings', (req, res) => {
   db.query('SELECT * FROM settings WHERE id = 1', (err, result) => {
@@ -482,7 +675,7 @@ const deleteOldLogo = (logoUrl) => {
 
 
 // Update settings
-app.post('/api/settings', upload1.single('logo'), (req, res) => {
+app.post('/api/settings', upload.single('logo'), (req, res) => {
   const companyName = req.body.company_name || '';
   const headerColor = req.body.header_color || '#ffffff';
   const footerText = req.body.footer_text || '';
@@ -577,74 +770,6 @@ app.get('/officialtimetable/:employeeID', (req, res) => {
 
 
 
-// app.post("/officialtimetable", (req, res) => {
-//   const { employeeID, records } = req.body;
-
-
-
-
-//   // Insert or update logic
-//   const sql = `
-//     INSERT INTO officialtime (
-//       employeeID, day,
-//       officialTimeIN,
-//       officialBreaktimeIN,
-//       officialBreaktimeOUT,
-//       officialTimeOUT,
-//       officialHonorariumTimeIN,
-//       officialHonorariumTimeOUT,
-//       officialServiceCreditTimeIN,
-//       officialServiceCreditTimeOUT,
-//       officialOverTimeIN,
-//       officialOverTimeOUT,
-//       breaktime
-//     )
-//     VALUES ?
-//     ON DUPLICATE KEY UPDATE
-//       officialTimeIN = VALUES(officialTimeIN),
-//       officialBreaktimeIN = VALUES(officialBreaktimeIN),
-//       officialBreaktimeOUT = VALUES(officialBreaktimeOUT),
-//       officialTimeOUT = VALUES(officialTimeOUT),
-//       officialHonorariumTimeIN = VALUES(officialHonorariumTimeIN),
-//       officialHonorariumTimeOUT = VALUES(officialHonorariumTimeOUT),
-//       officialServiceCreditTimeIN = VALUES(officialServiceCreditTimeIN),
-//       officialServiceCreditTimeOUT = VALUES(officialServiceCreditTimeOUT),
-//       officialOverTimeIN = VALUES(officialOverTimeIN),
-//       officialOverTimeOUT = VALUES(officialOverTimeOUT)
-//       WHERE employeeID = employeeID and day = day
-//   `;
-
-
-
-
-//   const values = records.map((r) => [
-//     employeeID,
-//     r.day,
-//     r.officialTimeIN,
-//     r.officialBreaktimeIN,
-//     r.officialBreaktimeOUT,
-//     r.officialTimeOUT,
-//     r.officialHonorariumTimeIN,
-//     r.officialHonorariumTimeOUT,
-//     r.officialServiceCreditTimeIN,
-//     r.officialServiceCreditTimeOUT,
-//     r.officialOverTimeIN,
-//     r.officialOverTimeOUT,
-//     r.breaktime,
-//   ]);
-
-
-
-
-//   db.query(sql, [values], (err) => {
-//     if (err) return res.status(500).json({ error: err.message });
-//     res.json({ message: "Records saved successfully" });
-//   });
-// });
-
-
-
-
 app.post('/officialtimetable', (req, res) => {
   const { employeeID, records } = req.body;
 
@@ -731,106 +856,74 @@ app.post('/officialtimetable', (req, res) => {
 
 
 
-app.post("/upload-excel-faculty-official-time", async (req, res) => {
-  if (!req.files || !req.files.file) {
+app.post("/upload-excel-faculty-official-time", upload.single('file'), async (req, res) => {
+  if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
   }
 
+  try {
+    const workbook = xlsx.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
 
-  const file = req.files.file;
-  const workbook = xlsx.read(file.data, { type: "buffer" });
-  const sheetName = workbook.SheetNames[0];
-  const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
-
-
-  if (!sheet.length) {
-    return res.status(400).json({ message: "Excel file is empty." });
-  }
-
-
-  const cleanedSheet = sheet.map((row) => {
-    const cleanedRow = {};
-    for (const key in row) {
-      const cleanKey = key.replace(/\u00A0/g, "").trim();
-      cleanedRow[cleanKey] = row[key];
+    if (!sheet.length) {
+      return res.status(400).json({ message: "Excel file is empty." });
     }
-    return cleanedRow;
-  });
 
+    const cleanedSheet = sheet.map((row) => {
+      const cleanedRow = {};
+      for (const key in row) {
+        const cleanKey = key.replace(/\u00A0/g, "").trim();
+        cleanedRow[cleanKey] = row[key];
+      }
+      return cleanedRow;
+    });
 
-  let insertedCount = 0;
-  let updatedCount = 0;
+    let insertedCount = 0;
+    let updatedCount = 0;
 
+    for (const row of cleanedSheet) {
+      const {
+        employeeID,
+        day,
+        officialTimeIN,
+        officialBreaktimeIN,
+        officialBreaktimeOUT,
+        officialTimeOUT,
+        officialHonorariumTimeIN,
+        officialHonorariumTimeOUT,
+        officialServiceCreditTimeIN,
+        officialServiceCreditTimeOUT,
+        officialOverTimeIN,
+        officialOverTimeOUT,
+      } = row;
 
-  for (const row of cleanedSheet) {
-    const {
-      employeeID,
-      day,
-      officialTimeIN,
-      officialBreaktimeIN,
-      officialBreaktimeOUT,
-      officialTimeOUT,
-      officialHonorariumTimeIN,
-      officialHonorariumTimeOUT,
-      officialServiceCreditTimeIN,
-      officialServiceCreditTimeOUT,
-      officialOverTimeIN,
-      officialOverTimeOUT,
-    } = row;
+      if (!employeeID || !day) continue;
 
+      const checkQuery = `SELECT id FROM officialtime WHERE employeeID = ? AND day = ?`;
+      const checkValues = [employeeID, day];
 
-    if (!employeeID || !day) continue;
+      try {
+        const [rows] = await db.promise().query(checkQuery, checkValues);
 
+        if (rows.length > 0) {
+          // Exists – perform UPDATE
+          const updateQuery = `
+            UPDATE officialtime SET
+              officialTimeIN = ?,
+              officialBreaktimeIN = ?,
+              officialBreaktimeOUT = ?,
+              officialTimeOUT = ?,
+              officialHonorariumTimeIN = ?,
+              officialHonorariumTimeOUT = ?,
+              officialServiceCreditTimeIN = ?,
+              officialServiceCreditTimeOUT = ?,
+              officialOverTimeIN = ?,
+              officialOverTimeOUT = ?
+            WHERE employeeID = ? AND day = ?
+          `;
 
-    const checkQuery = `SELECT id FROM officialtime WHERE employeeID = ? AND day = ?`;
-    const checkValues = [employeeID, day];
-
-
-    try {
-      const [rows] = await db.promise().query(checkQuery, checkValues);
-
-
-      if (rows.length > 0) {
-        // Exists – perform UPDATE
-        const updateQuery = `
-          UPDATE officialtime SET
-            officialTimeIN = ?,
-            officialBreaktimeIN = ?,
-            officialBreaktimeOUT = ?,
-            officialTimeOUT = ?,
-            officialHonorariumTimeIN = ?,
-            officialHonorariumTimeOUT = ?,
-            officialServiceCreditTimeIN = ?,
-            officialServiceCreditTimeOUT = ?,
-            officialOverTimeIN = ?,
-            officialOverTimeOUT = ?
-          WHERE employeeID = ? AND day = ?
-        `;
-
-
-        const updateValues = [
-          officialTimeIN,
-          officialBreaktimeIN,
-          officialBreaktimeOUT,
-          officialTimeOUT,
-          officialHonorariumTimeIN,
-          officialHonorariumTimeOUT,
-          officialServiceCreditTimeIN,
-          officialServiceCreditTimeOUT,
-          officialOverTimeIN,
-          officialOverTimeOUT,
-          employeeID,
-          day,
-        ];
-
-
-        const [result] = await db.promise().query(updateQuery, updateValues);
-        if (result.affectedRows > 0) updatedCount++;
-      } else {
-        // Not found – perform INSERT
-        const insertQuery = `
-          INSERT INTO officialtime (
-            employeeID, day,
+          const updateValues = [
             officialTimeIN,
             officialBreaktimeIN,
             officialBreaktimeOUT,
@@ -840,42 +933,68 @@ app.post("/upload-excel-faculty-official-time", async (req, res) => {
             officialServiceCreditTimeIN,
             officialServiceCreditTimeOUT,
             officialOverTimeIN,
-            officialOverTimeOUT
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+            officialOverTimeOUT,
+            employeeID,
+            day,
+          ];
 
+          const [result] = await db.promise().query(updateQuery, updateValues);
+          if (result.affectedRows > 0) updatedCount++;
+        } else {
+          // Not found – perform INSERT
+          const insertQuery = `
+            INSERT INTO officialtime (
+              employeeID, day,
+              officialTimeIN,
+              officialBreaktimeIN,
+              officialBreaktimeOUT,
+              officialTimeOUT,
+              officialHonorariumTimeIN,
+              officialHonorariumTimeOUT,
+              officialServiceCreditTimeIN,
+              officialServiceCreditTimeOUT,
+              officialOverTimeIN,
+              officialOverTimeOUT
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
 
-        const insertValues = [
-          employeeID,
-          day,
-          officialTimeIN,
-          officialBreaktimeIN,
-          officialBreaktimeOUT,
-          officialTimeOUT,
-          officialHonorariumTimeIN,
-          officialHonorariumTimeOUT,
-          officialServiceCreditTimeIN,
-          officialServiceCreditTimeOUT,
-          officialOverTimeIN,
-          officialOverTimeOUT,
-        ];
+          const insertValues = [
+            employeeID,
+            day,
+            officialTimeIN,
+            officialBreaktimeIN,
+            officialBreaktimeOUT,
+            officialTimeOUT,
+            officialHonorariumTimeIN,
+            officialHonorariumTimeOUT,
+            officialServiceCreditTimeIN,
+            officialServiceCreditTimeOUT,
+            officialOverTimeIN,
+            officialOverTimeOUT,
+          ];
 
-
-        const [result] = await db.promise().query(insertQuery, insertValues);
-        if (result.affectedRows > 0) insertedCount++;
+          const [result] = await db.promise().query(insertQuery, insertValues);
+          if (result.affectedRows > 0) insertedCount++;
+        }
+      } catch (err) {
+        console.error(`Error processing row for employeeID: ${employeeID}, day: ${day}`, err.message);
       }
-    } catch (err) {
-      
-      console.error(`Error processing row for employeeID: ${employeeID}, day: ${day}`, err.message);
     }
+
+    // Delete the uploaded file after processing
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error('Error deleting uploaded file:', err);
+    });
+
+    res.json({
+      message: "Upload complete.",
+      inserted: insertedCount,
+      updated: updatedCount,
+    });
+  } catch (error) {
+    console.error('Error processing Excel file:', error);
+    res.status(500).json({ message: "Error processing Excel file." });
   }
-
-
-  res.json({
-    message: "Upload complete.",
-    inserted: insertedCount,
-    updated: updatedCount,
-  });
 });
 
 
@@ -3085,7 +3204,7 @@ app.delete('/api/philhealth/:id', (req, res) => {
 
 
 // BULK REGISTER
-app.post("/excel-register", (req, res) => {
+app.post("/excel-register", async (req, res) => {
   const { users } = req.body;
 
   if (!Array.isArray(users) || users.length === 0) {
@@ -3095,58 +3214,73 @@ app.post("/excel-register", (req, res) => {
   const results = [];
   const errors = [];
 
-  users.forEach((user) => {
-    const queryCheck =
-      "SELECT * FROM users WHERE employeeNumber = ?";
-    db.query(queryCheck, [user.employeeNumber], (err, existingUser) => {
-      if (err) {
-        errors.push(`Error checking user ${user.employeeNumber}: ${err.message}`);
-        return;
-      }
+  try {
+    await Promise.all(
+      users.map(
+        (user) =>
+          new Promise((resolve) => {
+            const queryCheck = "SELECT * FROM users WHERE employeeNumber = ?";
+            db.query(queryCheck, [user.employeeNumber], (err, existingUser) => {
+              if (err) {
+                errors.push(
+                  `Error checking user ${user.employeeNumber}: ${err.message}`
+                );
+                return resolve();
+              }
 
-      if (existingUser.length > 0) {
-        errors.push(`Employee number ${user.employeeNumber} already exists`);
-      } else {
-        const hashedPassword = bcrypt.hashSync(user.password, 10);
-        const queryInsert =
-          "INSERT INTO users (username, email, role, password, employeeNumber, employmentCategory, access_level) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        
-        db.query(
-          queryInsert,
-          [
-            user.username,
-            user.email,
-            user.role,
-            hashedPassword,
-            user.employeeNumber,
-            user.employmentCategory,
-            user.access_level,
-          ],
-          (err, result) => {
-            if (err) {
-              errors.push(`Error processing user ${user.employeeNumber}: ${err.message}`);
-            } else {
-              results.push({
-                employeeNumber: user.employeeNumber,
-                username: user.username,
-                status: "success",
-              });
-            }
-          }
-        );
-      }
-    });
-  });
+              if (existingUser.length > 0) {
+                errors.push(
+                  `Employee number ${user.employeeNumber} already exists`
+                );
+                return resolve();
+              }
 
-  // Delay sending response to allow for asynchronous processing
-  setTimeout(() => {
+              const hashedPassword = bcrypt.hashSync(user.password, 10);
+              const queryInsert =
+                "INSERT INTO users (username, email, role, password, employeeNumber, employmentCategory, access_level) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+              db.query(
+                queryInsert,
+                [
+                  user.username,
+                  user.email,
+                  "staff",
+                  hashedPassword,
+                  user.employeeNumber,
+                  "0",
+                  "user",
+                ],
+                (err) => {
+                  if (err) {
+                    errors.push(
+                      `Error processing user ${user.employeeNumber}: ${err.message}`
+                    );
+                  } else {
+                    results.push({
+                      employeeNumber: user.employeeNumber,
+                      username: user.username,
+                      status: "success",
+                    });
+                  }
+                  resolve();
+                }
+              );
+            });
+          })
+      )
+    );
+
+    // Send final results AFTER all queries are processed
     res.json({
       message: "Bulk registration completed",
       successful: results,
       errors: errors,
     });
-  }, 1000); // Adjust delay if necessary for your use case
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 });
+
 
 
 
@@ -3155,4 +3289,100 @@ app.post("/excel-register", (req, res) => {
 
 app.listen(5000, () => {
   console.log('Server runnning');
+});
+
+// Profile picture upload endpoint
+app.post('/upload-profile-picture/:employeeNumber', profileUpload.single('profile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { employeeNumber } = req.params;
+    const filePath = `/uploads/profile_pictures/${req.file.filename}`;
+
+    // Update the person_table with the new profile picture path
+    const query = 'UPDATE person_table SET profile_picture = ? WHERE agencyEmployeeNum = ?';
+    
+    db.query(query, [filePath, employeeNumber], (err, result) => {
+      if (err) {
+        console.error('Error updating profile picture:', err);
+        return res.status(500).json({ error: 'Failed to update profile picture' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Employee not found' });
+      }
+
+      res.json({
+        message: 'Profile picture updated successfully',
+        filePath: filePath
+      });
+    });
+  } catch (error) {
+    console.error('Error in profile picture upload:', error);
+    res.status(500).json({ error: 'Failed to upload profile picture' });
+  }
+});
+
+// Announcements endpoints
+app.get('/api/announcements', (req, res) => {
+  const query = 'SELECT * FROM announcements ORDER BY date DESC';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching announcements:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
+});
+
+app.post('/api/announcements', upload.single('image'), (req, res) => {
+  const { title, about, date } = req.body;
+  const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+  const query = 'INSERT INTO announcements (title, about, date, image) VALUES (?, ?, ?, ?)';
+  db.query(query, [title, about, date, image], (err, result) => {
+    if (err) {
+      console.error('Error creating announcement:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.status(201).json({ 
+      message: 'Announcement created successfully',
+      id: result.insertId 
+    });
+  });
+});
+
+app.delete('/api/announcements/:id', (req, res) => {
+  const { id } = req.params;
+  
+  // First get the announcement to check if it has an image
+  const getQuery = 'SELECT image FROM announcements WHERE id = ?';
+  db.query(getQuery, [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+
+    // If there's an image, delete it from the filesystem
+    if (results[0].image) {
+      const imagePath = path.join(__dirname, results[0].image);
+      fs.unlink(imagePath, (err) => {
+        if (err) console.error('Error deleting image:', err);
+      });
+    }
+
+    // Delete the announcement from the database
+    const deleteQuery = 'DELETE FROM announcements WHERE id = ?';
+    db.query(deleteQuery, [id], (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.json({ message: 'Announcement deleted successfully' });
+    });
+  });
 });

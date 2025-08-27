@@ -13,7 +13,6 @@ import {
   Avatar,
   Box,
   Divider,
-
 } from '@mui/material';
 import {
   House,
@@ -41,16 +40,18 @@ import {
   TableChart as TableChartIcon,
   PeopleAlt as PeopleAltIcon,
   MonetizationOn as MonetizationOnIcon,
-  PriceCheck as PriceCheckIcon,
   Business as BusinessIcon,
   BusinessCenter as BusinessCenterIcon,
   EventNote as EventNoteIcon,
   AssignmentInd as AssignmentIndIcon,
-  EventBusy as EventBusyIcon,
   Assignment as AssignmentIcon,
   Description as DescriptionIcon,
   AccessTime as AccessTimeIcon,
-  Devices as DevicesIcon
+  Devices as DevicesIcon,
+  Person as PersonAddIcon,
+  AppRegistration,
+  EditCalendar,
+  RequestQuote as RequestQuoteIcon,
 } from '@mui/icons-material';
 import { 
   AccessAlarm, 
@@ -63,6 +64,7 @@ import {
 } from '@mui/icons-material';
 
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 
 const drawerWidth = 270;
 const collapsedWidth = 60;
@@ -101,18 +103,35 @@ const Sidebar = ({
   const [selectedItem, setSelectedItem] = useState(null);
   const [username, setUsername] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
   const navigate = useNavigate();
   const [employeeNumber, setEmployeeNumber] = useState('');
 
-useEffect(() => {
-  const storedUser = localStorage.getItem('username');
-  const { role, employeeNumber, email, username } = getUserInfo();
-  setUsername(storedUser || '');
-  setUserRole(role || '');
-  setEmployeeNumber(employeeNumber || '');
-  setUsername(username || '');
-}, []);
+  useEffect(() => {
+    const storedUser = localStorage.getItem('username');
+    const { role, employeeNumber, email, username } = getUserInfo();
+    setUsername(storedUser || '');
+    setUserRole(role || '');
+    setEmployeeNumber(employeeNumber || '');
+    setUsername(username || '');
 
+    // Fetch profile picture
+    const fetchProfilePicture = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/personalinfo/person_table`);
+        const person = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
+        if (person && person.profile_picture) {
+          setProfilePicture(`http://localhost:5000${person.profile_picture}`);
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+      }
+    };
+
+    if (employeeNumber) {
+      fetchProfilePicture();
+    }
+  }, [employeeNumber]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -198,7 +217,7 @@ useEffect(() => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, }}>
             <Tooltip title="Go to Profile">
               <Box
-                onClick={() => navigate('/personalinfo')}
+                onClick={() => navigate('/profile')}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -208,7 +227,17 @@ useEffect(() => {
 
                 }}
               >
-                <Avatar alt={username} sx={{ width: 35, height: 35, marginLeft: -1, color: '#000000', bgcolor: '#ffffff' }} />
+                <Avatar 
+                  alt={username} 
+                  src={profilePicture}
+                  sx={{ 
+                    width: 35, 
+                    height: 35, 
+                    marginLeft: -1, 
+                    color: '#000000', 
+                    bgcolor: '#ffffff' 
+                  }} 
+                />
                 <Box>
                   <Typography 
                   variant="body2" 
@@ -284,6 +313,98 @@ useEffect(() => {
 </ListItem>
 
 
+    <ListItem
+                  button
+                  component={Link}
+                  to='/daily_time_record'
+                  sx={{
+                    color: selectedItem === 'daily_time_record' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'daily_time_record' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('daily_time_record')}>
+                  <ListItemIcon sx={{ marginRight: '-0.01rem', color: selectedItem === 'daily_time_record' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </ListItemIcon>
+                  <ListItemText primary="Daily Time Record" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+
+                
+              {userRole !== 'staff' && (
+                <ListItem
+                  button
+                  component={Link}
+                  to='/payslip'
+                  sx={{
+                    color: selectedItem === 'payslip' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'payslip' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'payslip' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'payslip' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('payslip')}>
+                  <RequestQuoteIcon sx={{ marginRight: '2rem', color: selectedItem === 'payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </RequestQuoteIcon>
+                  <ListItemText primary="Payslip" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+                 )}
+
+                <Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
+               
+
+                {userRole !== 'staff' && (
+<ListItem 
+  button 
+  component={Link} 
+  to='/registration' 
+  sx={{
+    color: selectedItem === 'bulk-register' ? 'white' : 'inherit',
+    bgcolor: selectedItem === 'bulk-register' ? '#A31D1D' : 'inherit',
+    '&:hover': {
+      bgcolor: '#f0f0f0',
+      color: 'black',
+      borderTopRightRadius: '15px',
+      borderBottomRightRadius: '15px',
+      '& .MuiListItemIcon-root': {
+        color: 'black',
+      }
+    },
+    borderTopRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
+    borderBottomRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
+    
+  }}
+  onClick={() => handleItemClick('bulk-register')}
+>
+<ListItemIcon sx={{ color: selectedItem === 'bulk-register' ? 'white' : 'inherit',
+                    '&:hover': { color: 'black' }
+                   }}>
+    <AppRegistration sx={{ fontSize: 29, marginLeft: '-6%' }} />
+  </ListItemIcon>
+  <ListItemText 
+    primary="Registration" 
+    sx={{ marginLeft: '-10px' }} 
+  />
+</ListItem>
+  )}
 
 
         {userRole !== 'staff' && (
@@ -299,9 +420,9 @@ useEffect(() => {
                 
             >
               <ListItemIcon>
-                <DashboardIcon />
+                <DashboardIcon sx={{ color: 'black'}} />
               </ListItemIcon>
-              <ListItemText primary="Dashboards" sx={{marginLeft: '-10px', }} />
+              <ListItemText primary="Information Management" sx={{marginLeft: '-10px', }} />
               <ListItemIcon sx={{ marginLeft: '10rem', color: 'black',  }}>
                 {open ? <ExpandLess /> : <ExpandMore />}
               </ListItemIcon>
@@ -639,7 +760,7 @@ useEffect(() => {
               sx={{ color: 'black', cursor: 'pointer' }}
             >
               <ListItemIcon>
-              <DescriptionIcon />
+              <DescriptionIcon  sx={{ color: 'black'}} />
               </ListItemIcon>
               <ListItemText primary="PDS Files" sx={{marginLeft: '-10px'}} />
               <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
@@ -799,9 +920,9 @@ useEffect(() => {
             
         >
           <ListItemIcon>
-            <AccessTimeIcon/>
+            <AccessTimeIcon  sx={{ color: 'black'}}/>
           </ListItemIcon>
-          <ListItemText primary="Records" sx={{marginLeft: '-10px'}}/>
+          <ListItemText primary="Attendance Management" sx={{marginLeft: '-10px'}}/>
           <ListItemIcon sx={{ marginLeft: '10rem', color:'black' }}>
             {open2 ? <ExpandLess /> : <ExpandMore />}
           </ListItemIcon>
@@ -834,7 +955,7 @@ useEffect(() => {
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'view_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <DevicesIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance View Device Record" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Device Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem
@@ -885,10 +1006,10 @@ useEffect(() => {
                     borderBottomRightRadius: selectedItem === 'search_attendance' ? '15px' : 0,
                   }}
                   onClick={() => handleItemClick('search_attendance')}>
-                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'search_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                  <EditCalendar sx={{ marginRight: '1rem', color: selectedItem === 'search_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <Search />
-                  </ListItemIcon>
-                  <ListItemText primary="Attendance Record" sx={{ marginLeft: '-10px' }} />
+                  </EditCalendar>
+                  <ListItemText primary="Attendance Management" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
 
@@ -920,35 +1041,10 @@ useEffect(() => {
                    }}>
                     <BadgeRounded />
                   </ListItemIcon>
-                  <ListItemText primary="Daily Faculty Time Record" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Overall Daily Time Record" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
 
 
-                 <ListItem
-                  button
-                  component={Link}
-                  to='/daily_time_record'
-                  sx={{
-                    color: selectedItem === 'daily_time_record' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'daily_time_record' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('daily_time_record')}>
-                  <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'daily_time_record' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
-                    <CalendarToday />
-                  </ListItemIcon>
-                  <ListItemText primary="Daily Time Record" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
             
 
                 <ListItem
@@ -1111,7 +1207,7 @@ useEffect(() => {
               sx={{ color: 'black', cursor: 'pointer' }}
             >
               <ListItemIcon>
-                <AccountBalanceIcon />
+                <AccountBalanceIcon  sx={{ color: 'black'}} />
               </ListItemIcon>
               <ListItemText primary="Payroll Management" sx={{ marginLeft: '-10px' }} />
               <ListItemIcon sx={{ marginLeft: '10rem',
@@ -1492,10 +1588,10 @@ useEffect(() => {
                 <ListItem 
                   button 
                   component={Link} 
-                  to= '/holiday-suspension' 
+                  to= '/leave-request' 
                   sx={{
-                    color: selectedItem === 'holiday-suspension' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'holiday-suspension' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'leave-request' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'leave-request' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -1505,23 +1601,24 @@ useEffect(() => {
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'holiday-suspension' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'holiday-suspension' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'leave-request' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'leave-request' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('holiday-suspension')} 
+                  onClick={() => handleItemClick('leave-request')} 
                   >
                   <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'holiday-suspension' ? 'white' : 'inherit',
+                    color: selectedItem === 'leave-request' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <EventBusyIcon />
+                    <PersonAddIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Holiday and Suspension" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Leave Request" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>
           </>
         )}
+
 
 
         {userRole !== 'staff' && (
@@ -1532,7 +1629,7 @@ useEffect(() => {
               sx={{ color: 'black', cursor: 'pointer' }}
             >
               <ListItemIcon>
-                <AssignmentIcon />
+                <AssignmentIcon  sx={{ color: 'black'}} />
               </ListItemIcon>
               <ListItemText primary="Forms" sx={{ marginLeft: '-10px' }} />
               <ListItemIcon sx={{ marginLeft: '10rem' }}>

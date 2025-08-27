@@ -112,7 +112,7 @@ const DailyTimeRecordFaculty = () => {
           <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
           <div >
             <h4  style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-              Daily Time Record Faculty Search
+              Overall Daily Time Record
             </h4>
             <p style={{ margin: 0, fontSize: '85%' }}>
               Filter your DTR records by date

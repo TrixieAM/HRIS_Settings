@@ -22,8 +22,13 @@ import {
   InputAdornment,
 } from "@mui/material";
 import {
+
+
   Delete as DeleteIcon,
+  Email,
+  Payment,
   Save as SaveIcon,
+
 } from '@mui/icons-material';
 import SearchIcon from '@mui/icons-material/Search';
 import Dialog from '@mui/material/Dialog';
@@ -32,6 +37,11 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import * as XLSX from 'xlsx';
+import {
+  Checkbox
+} from '@mui/material';
+
+
 
 
 
@@ -78,100 +88,89 @@ const PayrollProcessed = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredFinalizedData, setFilteredFinalizedData] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedRows, setSelectedRows] = useState([]);
 
-
-
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-
-
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-
-
-
-  const getTableHeight = () => {
-    const rowHeight = 53;
-    const headerHeight = 56;
-    const paginationHeight = 52;
-    const minHeight = 300;
-    const maxHeight = 600;
-   
-    const contentHeight = (Math.min(rowsPerPage, filteredFinalizedData.length) * rowHeight) + headerHeight + paginationHeight;
-    return Math.min(Math.max(contentHeight, minHeight), maxHeight);
-  };
-
-
-
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/department-table');
-        setDepartments(response.data);
-      } catch (err) {
-        console.error('Error fetching departments:', err);
+      const handleDateChange = (event) => {
+        const newDate = event.target.value;
+        setSelectedDate(newDate);
+        applyFilters(selectedDepartment, searchTerm, newDate);
       }
-    };
+
+
+      const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+      };
+
+      const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+      };
+
+
+        const getTableHeight = () => {
+          const rowHeight = 53;
+          const headerHeight = 56;
+          const paginationHeight = 52;
+          const minHeight = 300;
+          const maxHeight = 600;
+        
+          const contentHeight = (Math.min(rowsPerPage, filteredFinalizedData.length) * rowHeight) + headerHeight + paginationHeight;
+          return Math.min(Math.max(contentHeight, minHeight), maxHeight);
+        };
 
 
 
 
-    fetchDepartments();
-  }, []);
+        useEffect(() => {
+          const fetchDepartments = async () => {
+            try {
+              const response = await axios.get('http://localhost:5000/api/department-table');
+              setDepartments(response.data);
+            } catch (err) {
+              console.error('Error fetching departments:', err);
+            }
+          };
+          fetchDepartments();
+        }, []);
 
 
 
 
-  useEffect(() => {
-    const fetchFinalizedPayroll = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/finalized-payroll");
-        setFinalizedData(res.data);
-        setFilteredFinalizedData(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching finalized payroll:", err);
-        setError("An error occurred while fetching the finalized payroll.");
-        setLoading(false);
-      }
-    };
+        useEffect(() => {
+          const fetchFinalizedPayroll = async () => {
+            try {
+              const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+              setFinalizedData(res.data);
+              setFilteredFinalizedData(res.data);
+              setLoading(false);
+            } catch (err) {
+              console.error("Error fetching finalized payroll:", err);
+              setError("An error occurred while fetching the finalized payroll.");
+              setLoading(false);
+            }
+          };
+          fetchFinalizedPayroll();
+        }, []);
+
+
+          const handleDepartmentChange = (event) => {
+          const selectedDept = event.target.value;
+          setSelectedDepartment(selectedDept);
+          applyFilters(selectedDept, searchTerm, selectedDate);
+        };
+
+
+          const handleSearchChange = (event) => {
+          const term = event.target.value;
+          setSearchTerm(term);
+          applyFilters(selectedDept, searchTerm, selectedDate);
+        };
 
 
 
 
-    fetchFinalizedPayroll();
-  }, []);
-
-
-
-
-  const handleDepartmentChange = (event) => {
-    const selectedDept = event.target.value;
-    setSelectedDepartment(selectedDept);
-    applyFilters(selectedDept, searchTerm);
-  };
-
-
-
-
-  const handleSearchChange = (event) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    applyFilters(selectedDepartment, term);
-  };
-
-
-
-
-  const applyFilters = (department, search) => {
+  const applyFilters = (department, search, filterDate) => {
     let filtered = [...finalizedData];
 
 
@@ -191,6 +190,25 @@ const PayrollProcessed = () => {
         (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
       );
     }
+
+    
+// Filter by date - check if the selected date falls within the payroll period
+  if (filterDate) {
+    filtered = filtered.filter((record) => {
+      const startDate = new Date(record.startDate);
+      const endDate = new Date(record.endDate);
+      const selectedDate = new Date(filterDate);
+      
+      // Set time to start/end of day to ensure proper comparison
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      selectedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+      
+      // Check if the selected date falls within the payroll period
+      return selectedDate >= startDate && selectedDate <= endDate;
+    });
+  }
+
 
 
 
@@ -240,10 +258,17 @@ const PayrollProcessed = () => {
 
 
 
-  const initiateDelete = (row) => {
-    setSelectedRow(row);
-    setOpenConfirm(true);
-  };
+  const initiateDelete = (rowOrIds) => {
+  if (Array.isArray(rowOrIds)) {
+    // Bulk delete mode
+    setSelectedRow({ isBulk: true, ids: rowOrIds });
+  } else {
+    // Single row delete
+    setSelectedRow(rowOrIds);
+  }
+  setOpenConfirm(true);
+};
+
 
 
 
@@ -257,61 +282,53 @@ const PayrollProcessed = () => {
 
 
   const handlePasskeySubmit = async () => {
-    const HARDCODED_PASSKEY = "20134507";
+  const HARDCODED_PASSKEY = "20134507";
 
+  if (passkeyInput !== HARDCODED_PASSKEY) {
+    alert("Incorrect Passkey.");
+    setOpenPasskey(false);
+    return;
+  }
 
-
-
-    if (passkeyInput !== HARDCODED_PASSKEY) {
-      alert("Incorrect Passkey.");
-      setOpenPasskey(false);
-      return;
-    }
-
-
-
-
-    try {
-      // First update UI immediately
+  try {
+    if (selectedRow.isBulk) {
+      // Bulk delete
+      setFinalizedData(prev => prev.filter(item => !selectedRow.ids.includes(item.id)));
+      setFilteredFinalizedData(prev => prev.filter(item => !selectedRow.ids.includes(item.id)));
+      
+      await Promise.all(selectedRow.ids.map(id => 
+        axios.delete(`http://localhost:5000/api/finalized-payroll/${id}`)
+      ));
+      
+      alert(`${selectedRow.ids.length} records deleted successfully`);
+      setSelectedRows([]);
+    } else {
+      // Single delete (existing logic)
       setFinalizedData(prev => prev.filter(item => item.id !== selectedRow.id));
       setFilteredFinalizedData(prev => prev.filter(item => item.id !== selectedRow.id));
-     
-      // Then make API call
+      
       await axios.delete(`http://localhost:5000/api/finalized-payroll/${selectedRow.id}`, {
         data: {
           employeeNumber: selectedRow.employeeNumber,
           name: selectedRow.name,
         },
       });
-     
+      
       alert("Record deleted successfully");
-    } catch (error) {
-      console.error("Error deleting record:", error);
-      // If API call fails, revert the UI changes
-      const res = await axios.get("http://localhost:5000/api/finalized-payroll");
-      setFinalizedData(res.data);
-      setFilteredFinalizedData(prev => {
-        // Reapply current filters
-        let filtered = res.data;
-        if (selectedDepartment) {
-          filtered = filtered.filter((record) => record.department === selectedDepartment);
-        }
-        if (searchTerm) {
-          const lowerSearch = searchTerm.toLowerCase();
-          filtered = filtered.filter((record) =>
-            (record.name || '').toLowerCase().includes(lowerSearch) ||
-            (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
-          );
-        }
-        return filtered;
-      });
-      alert("Failed to delete record. Please try again.");
-    } finally {
-      setOpenPasskey(false);
-      setPasskeyInput("");
-      setSelectedRow(null);
     }
-  };
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    // Revert UI changes on error
+    const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+    setFinalizedData(res.data);
+    applyFilters(selectedDepartment, searchTerm, selectedDate);
+    alert("Failed to delete record(s). Please try again.");
+  } finally {
+    setOpenPasskey(false);
+    setPasskeyInput("");
+    setSelectedRow(null);
+  }
+};
 
 
 
@@ -490,51 +507,76 @@ const PayrollProcessed = () => {
 
   return (
     <Container maxWidth={false} sx={{ mt: 4, mb: 4, px: 2 }}>
-      <Paper
-        elevation={6}
-        sx={{ backgroundColor: "rgb(109, 35, 35)", color: "#fff", p: 3, borderRadius: 3, mb: 3 }}
-      >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          flexWrap="wrap"
-          gap={2}
-        >
+        <Paper
+            elevation={6}
+            sx={{ 
+              backgroundColor: '#6D2323', 
+              color: '#fff', 
+              p: 3, 
+              borderRadius: 3, 
+              borderEndEndRadius: '0', 
+              borderEndStartRadius: '0' ,
+              
+          }}
+          >
+            
           <Box display="flex" alignItems="center" gap={2}>
-            <BusinessCenterIcon fontSize="large" />
+            <Payment fontSize="large" />
             <Box>
-              <Typography variant="h4" fontWeight="bold">
-                Payroll Dashboard | Processed
+              <Typography variant="h4" fontWeight="bold" fontFamily="'Poppins', sans-serif">
+                Payroll | Processed
               </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.7)">
+              <Typography variant="body2" color="rgba(255,255,255,0.7)" fontFamily="'Poppins', sans-serif">
                 Viewing all processed payroll records
               </Typography>
             </Box>
           </Box>
+        
+         </Paper>
+          <Box
+            sx={{
+              backgroundColor: 'white',
+              border: '2px solid #6D2323',
+              p: 1,
+              mt: 0,
+              mb: 2
+            }}
+          >     
+          <TextField
+              type="date"
+              label="Search by Date"
+              value={selectedDate}
+              onChange={handleDateChange}
+              sx={{ 
+                minWidth: 200,
+                bgcolor: '#fff',
+                border: '1px solid #6d2323',
+                borderRadius: 0,
+                mr: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 0
+                }
+              }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
 
-
-
-
-          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-           
-            <FormControl
-              variant="outlined"
-              sx={{ minWidth: 200, backgroundColor: '#fff', borderRadius: 1 }}
-            >
-              <InputLabel id="department-label">
-                <b>Department</b>
-              </InputLabel>
+            <FormControl variant="outlined" sx={{ 
+              minWidth: 200, 
+              bgcolor: '#fff',
+              border: '1px solid #6d2323',
+              borderRadius: 0,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 0
+              }
+            }}>
+              <InputLabel id="department-label">Department</InputLabel>
               <Select
                 labelId="department-label"
-                id="department-select"
                 value={selectedDepartment}
-                label="Department"
                 onChange={handleDepartmentChange}
-                sx={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: 1,
-                }}
+                label="Department"
               >
                 <MenuItem value="">
                   <em>All Departments</em>
@@ -547,15 +589,21 @@ const PayrollProcessed = () => {
               </Select>
             </FormControl>
 
-
-
-
             <TextField
               variant="outlined"
-              label="Search Name"
+              placeholder="Search Name"
               value={searchTerm}
               onChange={handleSearchChange}
-              sx={{ minWidth: 250, backgroundColor: '#fff', borderRadius: 1 }}
+              sx={{ 
+                flex: 1,
+                bgcolor: '#fff',
+                border: '1px solid #6d2323',
+                borderRadius: 0,
+                ml: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 0
+                }
+              }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -564,11 +612,8 @@ const PayrollProcessed = () => {
                 ),
               }}
             />
+            
           </Box>
-        </Box>
-       
-      </Paper>
-
 
 
 
@@ -585,6 +630,7 @@ const PayrollProcessed = () => {
             elevation={4}
             sx={{
               borderRadius: 2,
+              border: '3px solid #6d2323',
               flex: 1,
               minWidth: '800px',
               maxWidth: '1600px',
@@ -616,6 +662,36 @@ const PayrollProcessed = () => {
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                        <Checkbox
+                          indeterminate={
+                            selectedRows.length > 0 &&
+                            selectedRows.length <
+                              filteredFinalizedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
+                          }
+                          checked={
+                            filteredFinalizedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 &&
+                            selectedRows.length ===
+                              filteredFinalizedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
+                          }
+                          onChange={(e) => {
+                            const currentPageRows = filteredFinalizedData.slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            );
+                            if (e.target.checked) {
+                              setSelectedRows((prev) => [
+                                ...new Set([...prev, ...currentPageRows.map((row) => row.id)]),
+                              ]);
+                            } else {
+                              setSelectedRows((prev) =>
+                                prev.filter((id) => !currentPageRows.map((row) => row.id).includes(id))
+                              );
+                            }
+                          }}
+                        />
+                      </TableCell>
+
                     <ExcelTableCell header>No.</ExcelTableCell>
                     <ExcelTableCell header>Department</ExcelTableCell>
                     <ExcelTableCell header>Employee Number</ExcelTableCell>
@@ -681,6 +757,7 @@ const PayrollProcessed = () => {
 
 
                 <TableBody>
+                  
                   {filteredFinalizedData.length > 0 ? (
                     filteredFinalizedData
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -693,6 +770,20 @@ const PayrollProcessed = () => {
                             },
                           }}
                         >
+                          
+                           <TableCell padding="checkbox">
+                            <Checkbox
+                              checked={selectedRows.includes(row.id)}
+                              onChange={(e) => {
+                                e.stopPropagation(); // prevent row click side effects
+                                if (selectedRows.includes(row.id)) {
+                                  setSelectedRows((prev) => prev.filter((id) => id !== row.id));
+                                } else {
+                                  setSelectedRows((prev) => [...prev, row.id]);
+                                }
+                              }}
+                            />
+                          </TableCell>
                           <ExcelTableCell>{(page * rowsPerPage) + index + 1}</ExcelTableCell>
                           <ExcelTableCell>{row.department}</ExcelTableCell>
                           <ExcelTableCell>{row.employeeNumber}</ExcelTableCell>
@@ -1003,124 +1094,168 @@ const PayrollProcessed = () => {
               }}
             />
           </Paper>
-
-
-
-
           <Paper
             elevation={4}
             sx={{
               borderRadius: 2,
-              width: '100px',
+              width: '150px', // Increased width for better button display
               height: getTableHeight(),
               display: 'flex',
               flexDirection: 'column',
+              border: '3px solid #6d2323',
             }}
           >
             <Box sx={{
-              p: 2,
-              borderBottom: '1px solid #E0E0E0',
-              bgcolor: '#F5F5F5',
-              height: '5px',
+              p: 1,
+              borderBottom:'2px solid black',
+              pb: '20px',
+              bgcolor: '#ffffff',
+              height: '12px', // Match table header height
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Action
+              <Typography variant="subtitle2" fontWeight="bold" sx={{mt: '15px'}}>
+                Actions
               </Typography>
             </Box>
+    
+                <Box sx={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '10px',
+                    height: '10px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: '#f1f1f1',
+                    borderRadius: '5px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#888',
+                    borderRadius: '5px',
+                    '&:hover': {
+                      background: '#555',
+                    },
+                  },
+                }}>
+                  {filteredFinalizedData.length > 0 ? (
+                    filteredFinalizedData
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row) => (
+                            <Box
+                              key={row.id}
+                              sx={{
+                                mt: '6px',
+                                pb: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderBottom: '2px solid #d1ceceff',
+                                '&:nth-of-type(odd)': {
+                                  backgroundColor: '#FAFAFA',
+                                },
+                                '&:hover': {
+                                  backgroundColor: '#F5F5F5',
+                                }
+                              }}
+                            >
+                              <Button
+                                onClick={() => {
+                                  if (selectedRows.includes(row.id)) {
+                                    // Bulk delete mode (delete all selected checkboxes)
+                                    initiateDelete(selectedRows);
+                                  } else {
+                                    // Single delete mode (delete only this row)
+                                    initiateDelete(row);
+                                  }
+                                }}
+                                variant="contained"
+                                size="small"
+                                startIcon={<DeleteIcon />}
+                                sx={{
+                                  bgcolor: '#6d2323',
+                                  minWidth: '10px',
+                                  px: 1,
+                                  '&:hover': {
+                                    bgcolor: '#A31D1D',
+                                  },
+                                }}
+                              >
+                                Delete
+                              </Button>
 
 
-
-
-            <Box sx={{
-              flex: 1,
-              overflowY: 'auto',
-              '&::-webkit-scrollbar': {
-                width: '10px',
-                height: '10px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: '#f1f1f1',
-                borderRadius: '5px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#888',
-                borderRadius: '5px',
-                '&:hover': {
-                  background: '#555',
-                },
-              },
-            }}>
-              {filteredFinalizedData.length > 0 ? (
-                filteredFinalizedData
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <Box
-                      key={row.id}
-                      sx={{
-                        height: '53px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderBottom: '1px solid #E0E0E0',
-                        '&:nth-of-type(odd)': {
-                          backgroundColor: '#FAFAFA',
-                        },
-                        '&:hover': {
-                          backgroundColor: '#F5F5F5',
-                        }
-                      }}
-                    >
-                      <Button
-                        onClick={() => initiateDelete(row)}
-                        variant="contained"
-                        size="small"
-                        startIcon={<DeleteIcon />}
-                        sx={{
-                          bgcolor: '#000000',
-                          minWidth: '10px',
-                         
-                          px: 1,
-                          '&:hover': {
-                            bgcolor: '#333333',
-                          },
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </Box>
-                  ))
-              ) : (
-                <Box sx={{ p: 2, textAlign: 'center' }}>
-                  No records
-                </Box>
-              )}
-            </Box>
-
-
-
-
-            <Box sx={{ height: '52px', borderTop: '1px solid #E0E0E0' }} />
+                              </Box>
+                                  ))
+                              ) : (
+                                <Box sx={{ p: 2, textAlign: 'center' }}>
+                                  No records
+                                </Box>
+                              )}
+                            </Box>
           </Paper>
          
         </Box>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', gap: '12px' }}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => window.location.href = '/payroll-table'}
+              size="medium"
+              sx={{
+                backgroundColor: '#6d2323',
+                color: '#ffffff',
+                textTransform: 'none',
+              
+               
+                '&:hover': {
+                  backgroundColor: '#a31d1d',
+                },
+              }}
+              startIcon={<BusinessCenterIcon />}
+            >
+              View Pending Payroll
+            </Button>
         <Button
               variant="contained"
               startIcon={<SaveIcon />}
               onClick={handleSaveToExcel}
+              size="medium"
               sx={{
                 bgcolor: '#6D2323',
+                textTransform: 'none', 
                 color: 'WHITE',
                 '&:hover': {
-                  bgcolor: '#f0f0f0',
+                  bgcolor: '#fef9e1',
+                  color: '#6d2323',
+
                 },
               }}
             >
               Save to Excel
             </Button>
+
+            
+
+            <Button
+              onClick={() => window.location.href = "/send-payslip"}
+              variant="contained"
+              size="medium"
+              startIcon={<Email />}
+              sx={{
+                bgcolor: '#6D2323',
+                textTransform: 'none', 
+                color: 'white',
+                '&:hover': { 
+                  bgcolor: '#fef9e1',
+                  color: '#6d2323' 
+                }
+              }}
+            >
+              Send Payslip
+            </Button>
+
         </div>
         </Box>
       )}
@@ -1128,10 +1263,19 @@ const PayrollProcessed = () => {
 
 
 
-      <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
+      <Dialog 
+        open={openConfirm} 
+        onClose={() => setOpenConfirm(false)}
+        PaperProps={{
+          sx: {
+            minWidth: '400px',
+            maxWidth: '600px',
+          }
+        }}
+      >
         <DialogTitle>Delete this record?</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete this record?</Typography>
+          Are you sure you want to delete {selectedRow?.isBulk ? `${selectedRow.ids.length} selected records` : 'this record'}?
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenConfirm(false)} style={{color: 'black'}}>Cancel</Button>
@@ -1139,29 +1283,62 @@ const PayrollProcessed = () => {
         </DialogActions>
       </Dialog>
 
+       <Dialog 
+  open={openConfirm} 
+  onClose={() => setOpenConfirm(false)}
+  PaperProps={{
+    sx: {
+      minWidth: '400px',
+      maxWidth: '600px',
+    }
+  }}
+>
+  <DialogTitle>Delete this record?</DialogTitle>
+  <DialogContent>
+    <Typography>Are you sure you want to delete this record?</Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenConfirm(false)} style={{color: 'black'}}>Cancel</Button>
+    <Button onClick={handleConfirm} style={{backgroundColor: '#6D2323'}} variant="contained" color="error">Delete</Button>
+  </DialogActions>
+</Dialog>
 
-
-
-      <Dialog open={openPasskey} onClose={() => setOpenPasskey(false)}>
-        <DialogTitle>Passkey</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Enter a Passkey"
-            type="password"
-            fullWidth
-            value={passkeyInput}
-            onChange={(e) => setPasskeyInput(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenPasskey(false)}  sx={{ color: '#000000' }}>Cancel</Button>
-          <Button onClick={handlePasskeySubmit} variant="contained" color="primary" sx={{ bgcolor: '#6D2323' }}>
-            Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
+<Dialog 
+  open={openPasskey} 
+  onClose={() => setOpenPasskey(false)}
+  PaperProps={{
+    sx: {
+      minWidth: '200px',
+      maxWidth: '500px',
+    }
+  }}
+>
+  <DialogTitle>Passkey Required</DialogTitle>
+  <DialogContent>
+    <Typography 
+      variant="body2" 
+      color="black" 
+      sx={{ mb: 2 }}
+    >
+      Please enter the administrator passkey to confirm the deletion of this payroll record.
+    </Typography>
+    <TextField
+      autoFocus
+      margin="dense"
+      label="Enter a Passkey"
+      type="password"
+      fullWidth
+      value={passkeyInput}
+      onChange={(e) => setPasskeyInput(e.target.value)}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenPasskey(false)} sx={{ color: '#000000' }}>Cancel</Button>
+    <Button onClick={handlePasskeySubmit} variant="contained" color="primary" sx={{ bgcolor: '#6D2323' }}>
+      Submit
+    </Button>
+  </DialogActions>
+</Dialog>
     </Container>
   );
 };
@@ -1170,24 +1347,3 @@ const PayrollProcessed = () => {
 
 
 export default PayrollProcessed;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -247,7 +247,7 @@ const AttendanceSearch = () => {
             variant="contained"
             color="secondary"
             onClick={saveAll}
-            style={{ marginTop: "20px" }}
+            style={{ marginTop: "20px", backgroundColor: "#6d2323" }}
             startIcon={<SaveAsIcon />}
             
           >

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -101,12 +103,20 @@ import PDS3 from './components/PDS3';
 import PDS4 from './components/PDS4';
 
 
-import { PictureAsPdfOutlined } from '@mui/icons-material';
+import { Announcement, PictureAsPdfOutlined } from '@mui/icons-material';
 import ForgotPassword from './components/ForgotPassword';
+import AnnouncementForm from './components/Announcement';
 
 //CAROUSEL
 import PostCarousel from './components/DASHBOARD/PostCarousel';
 import PostPlatform from './components/DASHBOARD/PostPlatform';
+import Profile from './components/DASHBOARD/Profile';
+import BulkRegister from './components/BulkRegister';
+import LeaveTable from './components/LEAVE/LeaveTable';
+import LeaveRequest from './components/LEAVE/LeaveRequest';
+import Registration from './components/Registration';
+import Payslip from './components/PAYROLL/Payslip';
+import SendPayslip from './components/PAYROLL/SendPayslip';
 
 
 
@@ -137,6 +147,8 @@ function App() {
   const [open5, setOpen5] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const location = useLocation();
+  const [open6, setOpen6] = useState(false);
+
 
 
 
@@ -242,19 +254,21 @@ function App() {
 
 
         {/* Main Content */}
-        <Box
+       <Box
           component="main"
           sx={{
             flexGrow: 1,
-            bgcolor: 'transparent', // white background
+            bgcolor: 'transparent',
             p: 5,
-            marginLeft: `${drawerWidth}px`,
+            marginLeft: (theme) => (open6 ? `${drawerWidth}px` : `0px`), // shift when open
             fontFamily: 'Poppins, sans-serif',
           }}
         >
           <Toolbar />
           <Routes>
             <Route path="/register" element={<Register />} />
+            <Route path="/bulk-register" element={<BulkRegister />} />
+            <Route path="/registration" element={<Registration />} />
             <Route path="/" element={<Login />} />
             <Route path='/forgot-password' element={<ForgotPassword />}/>
             <Route
@@ -582,7 +596,16 @@ function App() {
               path="/leave-table"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <Leave />
+                  <LeaveTable />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leave-request"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <LeaveRequest />
                 </ProtectedRoute>
               }
             />
@@ -792,7 +815,43 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            
+            <Route
+              path="/announcement"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <AnnouncementForm />
+                </ProtectedRoute>
+              }
+            />
            
+            <Route
+              path="/payslip"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <Payslip />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/send-payslip"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <SendPayslip />
+                </ProtectedRoute>
+              }
+            />
            
 
 

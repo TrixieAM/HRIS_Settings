@@ -31,64 +31,14 @@ import {
   Delete as DeleteIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
+  ExitToApp,
+  Payment,
+  BusinessCenter,
 } from '@mui/icons-material';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import PeopleIcon from '@mui/icons-material/People';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ReceiptIcon from '@mui/icons-material/ReceiptLong';
+import CircleIcon from '@mui/icons-material/Circle';
 
 
 
@@ -111,26 +61,13 @@ const PayrollProcess = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
- 
-
-
-
-
-
-
-
 
   const canSubmit = selectedRows.length > 0;
-
-
-
-
-
 
   useEffect(() => {
     const fetchFinalizedPayroll = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+        const res = await axios.get ("http://localhost:5000/api/finalized-payroll");
         setFinalizedPayroll(res.data);
       } catch (err) {
         console.error("Error fetching finalized payroll data:", err);
@@ -142,9 +79,6 @@ const PayrollProcess = () => {
 
 
 
-
-
-
   const isAlreadyFinalized = filteredData.some(fd =>
     finalizedPayroll.some(fp =>
       fp.employeeNumber === fd.employeeNumber &&
@@ -152,11 +86,6 @@ const PayrollProcess = () => {
       fp.endDate === fd.endDate
     )
   );
-
-
-
-
-
 
 
 
@@ -267,183 +196,148 @@ const PayrollProcess = () => {
 
 
 
-  // HANDLE SEARCH IN DEPARTMENT AND SEARCH BUTTON
+              // HANDLE SEARCH IN DEPARTMENT AND SEARCH BUTTON
 
 
-  const handleSearchChange = (event) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    applyFilters(selectedDepartment, term);
-  };
-
-
-
-
-
-
-  const applyFilters = (department, search) => {
-    let filtered = [...data];
+              const handleSearchChange = (event) => {
+                const term = event.target.value;
+                setSearchTerm(term);
+                applyFilters(selectedDepartment, term);
+              };
 
 
 
 
 
 
-    /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
-    if (department) {
-      filtered = filtered.filter((record) => record.department === department);
-    }
-
-
-
-
-      if (search) {
-      const lowerSearch = search.toLowerCase();
-      filtered = filtered.filter((record) =>
-        (record.name || '').toLowerCase().includes(lowerSearch) ||
-        (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
-      );
-    }
-
-
-    setFilteredData(filtered);
-  };
+              const applyFilters = (department, search) => {
+                let filtered = [...data];
 
 
 
 
 
 
-
-
-  const handleSubmitPayroll = async () => {
-    try {
-    const updatedData = filteredData.map((item) => {
-
-
-
-
-    const h = item.h || 0; // Default to 0 if h is not available
-    const m = item.m || 0; // Default to 0 if m is not available
-
-
-    const grossSalary = item.increment
-    ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
-    : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
-
-
-    const abs = (grossSalary *  0.0058341925167354* h) + (grossSalary *   0.00009723557208532  * m);
-
-
-    const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
-
-
-    const personalLifeRetIns = ((grossSalary) * 0.09);
-
-
-    const netSalary = grossSalary - (abs);
-
-
-    const totalGsisDeds =
-    (parseFloat(personalLifeRetIns) || 0) +
-    (parseFloat(item.gsisSalaryLoan) || 0) +
-    (parseFloat(item.gsisPolicyLoan) || 0) +
-    (parseFloat(item.gsisArrears) || 0) +
-    (parseFloat(item.cpl) || 0) +
-    (parseFloat(item.mpl) || 0) +
-    (parseFloat(item.eal) || 0) +
-    (parseFloat(item.mplLite) || 0) +
-    (parseFloat(item.emergencyLoan) || 0);
-
-
-    const totalPagibigDeds =
-    (parseFloat(item.pagibigFundCont) || 0) +
-    (parseFloat(item.pagibig2) || 0) +
-    (parseFloat(item.multiPurpLoan) || 0);
-
-
-     const totalOtherDeds =
-   
-      (parseFloat(item.liquidatingCash) || 0) +
-      (parseFloat(item.landbankSalaryLoan) || 0) +
-      (parseFloat(item.earistCreditCoop) || 0) +
-      (parseFloat(item.feu) || 0);
+                /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
+                if (department && department !== '') {
+                  filtered = filtered.filter((record) => record.department === department);
+                }
 
 
 
 
-    const totalDeductions =
-    (parseFloat(item.withholdingTax) || 0) +
-    (parseFloat(PhilHealthContribution) || 0) +
-    (parseFloat(totalGsisDeds) || 0) +
-    (parseFloat(totalPagibigDeds) || 0) +
-    (parseFloat(totalOtherDeds) || 0);
+                  if (search) {
+                  const lowerSearch = search.toLowerCase();
+                  filtered = filtered.filter((record) =>
+                    (record.name || '').toLowerCase().includes(lowerSearch) ||
+                    (record.employeeNumber || '').toString().toLowerCase().includes(lowerSearch)
+                  );
+                }
+
+
+                setFilteredData(filtered);
+              };
 
 
 
 
-    const pay1stCompute = netSalary - totalDeductions;
-    const pay2ndCompute = (netSalary - totalDeductions) / 2;
+
+            const handleSubmitPayroll = async () => {
+              try {
+              const updatedData = filteredData.map((item) => {
 
 
-    const pay1st = pay2ndCompute;
-    const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
 
 
-    const rtIns = grossSalary * 0.12;
+              const h = item.h || 0; // Default to 0 if h is not available
+              const m = item.m || 0; // Default to 0 if m is not available
+
+
+              const grossSalary = item.increment
+              ? (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0) + (parseFloat(item.increment) || 0)
+              : (parseFloat(item.rateNbc594) || 0) + (parseFloat(item.nbcDiffl597) || 0);
+
+
+              const abs = (grossSalary *  0.0055555525544423* h) + (grossSalary *   0.0000925948584897 * m);
+
+
+              const PhilHealthContribution = Math.floor((grossSalary * 0.05 / 2) * 100) / 100;
+
+
+              const personalLifeRetIns = ((grossSalary) * 0.09);
+
+
+              const netSalary = grossSalary - (abs);
+
+
+              const totalGsisDeds =
+              (parseFloat(personalLifeRetIns) || 0) +
+              (parseFloat(item.gsisSalaryLoan) || 0) +
+              (parseFloat(item.gsisPolicyLoan) || 0) +
+              (parseFloat(item.gsisArrears) || 0) +
+              (parseFloat(item.cpl) || 0) +
+              (parseFloat(item.mpl) || 0) +
+              (parseFloat(item.eal) || 0) +
+              (parseFloat(item.mplLite) || 0) +
+              (parseFloat(item.emergencyLoan) || 0);
+
+
+              const totalPagibigDeds =
+              (parseFloat(item.pagibigFundCont) || 0) +
+              (parseFloat(item.pagibig2) || 0) +
+              (parseFloat(item.multiPurpLoan) || 0);
+
+
+              const totalOtherDeds =
+            
+                (parseFloat(item.liquidatingCash) || 0) +
+                (parseFloat(item.landbankSalaryLoan) || 0) +
+                (parseFloat(item.earistCreditCoop) || 0) +
+                (parseFloat(item.feu) || 0);
+
+
+
+
+              const totalDeductions =
+              (parseFloat(item.withholdingTax) || 0) +
+              (parseFloat(PhilHealthContribution) || 0) +
+              (parseFloat(totalGsisDeds) || 0) +
+              (parseFloat(totalPagibigDeds) || 0) +
+              (parseFloat(totalOtherDeds) || 0);
+
+
+
+
+              const pay1stCompute = netSalary - totalDeductions;
+              const pay2ndCompute = (netSalary - totalDeductions) / 2;
+
+
+              const pay1st = pay2ndCompute;
+              const pay2nd = (parseFloat(pay1stCompute) || 0) - parseFloat((parseFloat(pay1st) || 0).toFixed(0));
+
+
+              const rtIns = grossSalary * 0.12;
  
-        return {
-          ...item,
-          totalGsisDeds: totalGsisDeds.toFixed(2),
-          totalPagibigDeds: totalPagibigDeds.toFixed(2),
-          totalOtherDeds: totalOtherDeds.toFixed(2),
-          grossSalary,
-          abs: abs.toFixed(2),
-          netSalary: netSalary.toFixed(2),
-          totalDeductions: totalDeductions.toFixed(2),
-          PhilHealthContribution: PhilHealthContribution.toFixed(2),
-          personalLifeRetIns: personalLifeRetIns.toFixed(2),
-          pay1stCompute: pay1stCompute.toFixed(2),
-          pay2ndCompute: pay2ndCompute.toFixed(2),
-          pay1st: pay1st.toFixed(0),
-          pay2nd: pay2nd.toFixed(2),
-          rtIns: rtIns.toFixed(2),
-          status: 'Processed' && 'Unprocessed',
-        };
-      });
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+              return {
+                ...item,
+                totalGsisDeds: totalGsisDeds.toFixed(2),
+                totalPagibigDeds: totalPagibigDeds.toFixed(2),
+                totalOtherDeds: totalOtherDeds.toFixed(2),
+                grossSalary,
+                abs: abs.toFixed(2),
+                netSalary: netSalary.toFixed(2),
+                totalDeductions: totalDeductions.toFixed(2),
+                PhilHealthContribution: PhilHealthContribution.toFixed(2),
+                personalLifeRetIns: personalLifeRetIns.toFixed(2),
+                pay1stCompute: pay1stCompute.toFixed(2),
+                pay2ndCompute: pay2ndCompute.toFixed(2),
+                pay1st: pay1st.toFixed(0),
+                pay2nd: pay2nd.toFixed(2),
+                rtIns: rtIns.toFixed(2),
+                status: 'Processed' && 'Unprocessed',
+              };
+            });
+      
           // Filter only selected AND not already finalized rows
           const rowsToSubmit = updatedData.filter(item =>
             selectedRows.includes(item.employeeNumber) &&
@@ -454,14 +348,7 @@ const PayrollProcess = () => {
             )
           );
 
-
-
-
-
-
-
-
-          // Step 1: Update main payroll database (payroll-with-remittance)
+          //  Update main payroll database (payroll-with-remittance)
           for (const item of rowsToSubmit) {
             try {
               await axios.put(
@@ -476,11 +363,7 @@ const PayrollProcess = () => {
 
 
 
-
-
-
-
-          // Step 2: Update finalized payroll database (finalized-payroll)
+          //  Update finalized payroll database (finalized-payroll)
           await axios.post('http://localhost:5000/api/finalized-payroll', rowsToSubmit);
 
 
@@ -490,17 +373,11 @@ const PayrollProcess = () => {
 
 
 
-          // Step 3: Update UI state with new data
+          //  Update UI state with new data
           const updatedFilteredData = filteredData.map(row => {
             const match = rowsToSubmit.find(item => item.employeeNumber === row.employeeNumber);
             return match ? { ...row, status: 'Processed' } : row;
           });
-
-
-
-
-
-
 
 
           setFilteredData(updatedFilteredData);
@@ -509,21 +386,9 @@ const PayrollProcess = () => {
           alert('Payroll Processed and submitted successfully!');
 
 
-
-
-
-
-
-
           // Refresh finalizedPayroll from backend
           const res = await axios.get("http://localhost:5000/api/finalized-payroll");
           setFinalizedPayroll(res.data);
-
-
-
-
-
-
 
 
      
@@ -532,37 +397,6 @@ const PayrollProcess = () => {
             alert('Existing payroll data.');
           }
         };
-     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -818,6 +652,7 @@ const handleSave = async () => {
   const PayrollDisbursement = [
   'pay1st',
   'pay2nd',
+  'ec'
   ];
 
 
@@ -851,44 +686,6 @@ const handleSave = async () => {
   'feu',
   'landbankSalaryLoan'
   ];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1020,9 +817,6 @@ const handleSave = async () => {
           maximumFractionDigits: 0,
           maximumFractionDigits: 0
 
-
-
-
         }),
         pay2nd: pay2nd.toLocaleString('en-US', {
           minimumFractionDigits: 2,
@@ -1032,39 +826,6 @@ const handleSave = async () => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
         }),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
     };
   });
 
@@ -1077,142 +838,117 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Paper
+    <Container maxWidth="xl" sx={{ mt: -18, mb: 4 }}>
+       <Paper
         elevation={6}
+        sx={{ 
+          backgroundColor: '#6D2323', 
+          color: '#fff', 
+          p: 3, 
+          borderRadius: 3, 
+          borderEndEndRadius: '0', 
+          borderEndStartRadius: '0' ,
+          marginTop:' 12%'
+      }}
+    >
+      <Box display="flex" alignItems="center" gap={2}>
+        <Payment fontSize="large" />
+        <Box>
+          <Typography variant="h4" fontWeight="bold" fontFamily="'Poppins', sans-serif">
+            Payroll | Processing
+          </Typography>
+          <Typography variant="body2" color="rgba(255,255,255,0.7)" fontFamily="'Poppins', sans-serif">
+            Manage employee records and calculates accurately
+          </Typography>
+        </Box>
+      </Box>
+        </Paper>
+       
+      {/*STATUS, SEARCH BAR TAS YUNG DEPARMENT*/}
+      <Box
         sx={{
-          backgroundColor: 'rgb(109, 35, 35)',
-          color: '#fff',
-          p: 3,
-          borderRadius: 3,
-          mb: 3,
-          width: 1080
+          backgroundColor: 'white',
+          border: '2px solid #6D2323',
+          p: 1 ,
+          mt: 0,
+          
         }}
       >
         <Box
           display="flex"
-          justifyContent="space-between"
           alignItems="center"
-          flexWrap="wrap"
-          gap={2}
+          gap={0}
+          sx={{ width: '100%' }}
         >
-          <Box display="flex" alignItems="center" gap={1}>
-            <BusinessCenterIcon fontSize="large" />
-            <Box>
-              <Typography variant="h4" fontWeight="bold">
-                Payroll Dashboard | Processing
-              </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.7)">
-                Manage employee payroll records effectively
-              </Typography>
+          {/* Stats Box */}
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={6}
+            sx={{
+              p: 0,
+              border: '1px solid #6d2323',
+              borderRadius: 0,
+              marginRight: '2px'
+            }}
+          >
+            <Box display="flex" alignItems="flex-end" gap={2}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                <Typography fontWeight="bold" sx={{ color: '#6D2323', fontSize: '1.2rem' }}>
+                  {filteredData.length}
+                </Typography>
+                <Typography variant="caption" fontWeight="bold" fontSize='13px' sx={{ color: '#000000', marginLeft:'5px' }}>
+                  EMPLOYEE'S
+                </Typography>
+              </Box>
+              <PeopleIcon sx={{ color: 'black', fontSize: '2.5rem' }} />
+            </Box>
+             
+            <Box display="flex" alignItems="flex-end" gap={2}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                <Typography fontWeight="bold" sx={{ color: 'green', fontSize: '1.2rem' }}>
+                  {filteredData.filter(emp => emp.status === 'Processed').length}
+                </Typography>
+                <Typography variant="caption" fontWeight="bold" fontSize='13.6px' sx={{ color: '#000000' }}>
+                  PROCESSED
+                </Typography>
+              </Box>
+              <TrendingUpIcon sx={{ color: 'green', fontSize: '3rem' }} />
+            </Box>
+
+            <Box display="flex" alignItems="flex-end" gap={2}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                <Typography fontWeight="bold" sx={{ color: '#FFA500', fontSize: '1.2rem' }}>
+                  {filteredData.filter(emp => emp.status !== 'Processed').length}
+                </Typography>
+                <Typography variant="caption" fontWeight="bold" fontSize='13.5px' sx={{ color: '#000000' }}>
+                  PENDING
+                </Typography>
+              </Box>
+              <ReceiptIcon sx={{ color: '#FFA500', fontSize: '3rem' }} />
             </Box>
           </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-            <FormControl
-              variant="outlined"
-              sx={{ minWidth: 200, backgroundColor: '#fff', borderRadius: 1 }}
-            >
-              <InputLabel id="department-label">
-                <b>Department</b>
-              </InputLabel>
+          
+            <FormControl variant="outlined" sx={{ 
+              minWidth: 200, 
+              bgcolor: '#fff',
+              border: '1px solid #6d2323',
+              borderRadius: 0,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 0
+              }
+            }}>
+              <InputLabel id="department-label">Department</InputLabel>
               <Select
                 labelId="department-label"
-                id="department-select"
                 value={selectedDepartment}
-                label="Department"
                 onChange={handleDepartmentChange}
-                sx={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: 1,
-                }}
+                label="Department"
               >
+                <MenuItem value="">
+                  <em>All Departments</em>
+                </MenuItem>
                 {departments.map((dept) => (
                   <MenuItem key={dept.id} value={dept.code}>
                     {dept.description}
@@ -1221,75 +957,21 @@ const handleSave = async () => {
               </Select>
             </FormControl>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             <TextField
               variant="outlined"
-              label="Search Name"
+              placeholder="Search Name"
               value={searchTerm}
               onChange={handleSearchChange}
-              sx={{ minWidth: 250, backgroundColor: '#fff', borderRadius: 1 }}
+              sx={{ 
+                flex: 1,
+                bgcolor: '#fff',
+                border: '1px solid #6d2323',
+                borderRadius: 0,
+                ml: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 0
+                }
+              }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -1298,71 +980,9 @@ const handleSave = async () => {
                 ),
               }}
             />
-          </Box>
+          
         </Box>
-      </Paper>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      </Box>
 
 
       {error ? (
@@ -1371,35 +991,6 @@ const handleSave = async () => {
         </Alert>
       ) : (
         <>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1412,41 +1003,26 @@ const handleSave = async () => {
          <Box display="flex" gap={3} alignItems="flex-start" minWidth="1300px">
 
 
+        <Paper elevation={4} sx={{  marginTop: '5px', border:'3px solid #6d2323 ', paddingTop: '2px', width: 1060 }}> {/*TABLE HEADER */}
+          <TableContainer component={Box} sx={{ minHeight: 100, height: 350 , minWidth: 100, width: 1060, borderRadius: 1, fontFamily: "'Poppins', sans-serif", }}>
+            <Table stickyHeader >
+             
+              <TableHead sx={{ backgroundColor: '#be1010ff',  }}>
+                <TableRow  sx={{
+                 
+                  '& > th': {
+                  borderBottom: '.20px solid #080808ff',
+                  borderRight: '.20px solid #080808ff',
+                  backgroundColor: '#ffffff',
+                 
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap', // ❗️Prevents the text from wrapping
+                  overflow: 'hidden',   // Optional: hides any overflowed content
+                  textOverflow: 'ellipsis', // Optional: adds "..." if text is too long
+                }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <Paper elevation={4} sx={{ borderRadius: 3 }}> {/*TABLE HEADER */}
-          <TableContainer component={Box} sx={{ maxHeight: 600 , maxWidth: 950, borderRadius: 1}}>
-            <Table stickyHeader>
-              <TableHead sx={{ backgroundColor: '#F1F1F1' }}>
-                <TableRow>
+                }}>
                 <TableCell padding="checkbox">
                   <Checkbox
                     indeterminate={
@@ -1491,9 +1067,7 @@ const handleSave = async () => {
                 </TableCell>
 
 
-
-
-                 
+                   
                   <TableCell>No.</TableCell>
                   <TableCell>Department</TableCell>
                   <TableCell>Employee Number</TableCell>
@@ -1501,7 +1075,8 @@ const handleSave = async () => {
                   <TableCell>End Date</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Position</TableCell>
-
+                  <TableCell>Rate NBC 584</TableCell>
+                  <TableCell>NBC 594</TableCell>
                   <TableCell>Rate NBC 594</TableCell>
                   <TableCell>NBC DIFF'L 597</TableCell>
                   <TableCell>Increment</TableCell>
@@ -1528,102 +1103,8 @@ const handleSave = async () => {
                   <br />
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                   <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                   <TableCell>No.</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Position</TableCell>
@@ -1650,267 +1131,18 @@ const handleSave = async () => {
                   <TableCell> Total Other Deductions</TableCell>
                   <TableCell> Total Deductions</TableCell>
                   <TableCell>Status</TableCell>
+                 
                 </TableRow>
+               
               </TableHead>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 
               <TableBody>
               {filteredData.length > 0 &&
-                computedRows.map((row, index) => {
+                computedRows
+                .map((row, index) => {
                     const isFinalized = finalizedPayroll.some(fp =>
                       fp.employeeNumber === row.employeeNumber &&
                       fp.startDate === row.startDate &&
@@ -1930,83 +1162,18 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                     return (
                      
                       <TableRow
                         key={`${row.employeeNumber}-${row.dateCreated}`}
                         sx={{
-                          backgroundColor: duplicateEmployeeNumbers.includes(row.employeeNumber)
-                            ? 'rgba(255, 0, 0, 0.1)'
-                            : 'inherit',
-                        }}
+                        backgroundColor: duplicateEmployeeNumbers.includes(row.employeeNumber)
+                          ? 'rgba(255, 0, 0, 0.1)'
+                          : '#fdfdfd',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                            }}
                       >      
                      
                       <TableCell padding="checkbox">
@@ -2030,14 +1197,27 @@ const handleSave = async () => {
 
 
 
-                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{index + 1 }</TableCell>
                       <TableCell>{row.department}</TableCell>
                       <TableCell>{row.employeeNumber}</TableCell>
                       <TableCell>{row.startDate}</TableCell>
                       <TableCell>{row.endDate}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.position}</TableCell>
-
+                      <TableCell>
+                        {row.rateNbc584
+                          ? Number(row.rateNbc584).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : ''}
+                      </TableCell>
+                      <TableCell>{row.nbc594
+                          ? Number(row.nbc594).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : ''}</TableCell>
                       <TableCell>{row.rateNbc594
                           ? Number(row.rateNbc594).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
@@ -2077,67 +1257,9 @@ const handleSave = async () => {
                       <TableCell>{index + 1}</TableCell>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                       <TableCell>{row.rtIns}</TableCell>
                       <TableCell>{row.ec}</TableCell>
                       <TableCell>{row.PhilHealthContribution}</TableCell>
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2150,81 +1272,7 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
                       <TableCell style={{ borderLeft: '2px solid black' }}></TableCell>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
                       <TableCell>{index + 1}</TableCell>
@@ -2271,6 +1319,8 @@ const handleSave = async () => {
 
                             })
                           : ''}</TableCell>
+
+
                       <TableCell>{row.cpl
                         ? Number(row.cpl).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
@@ -2281,6 +1331,8 @@ const handleSave = async () => {
 
                             })
                           : ''}</TableCell>
+
+
                       <TableCell>{row.mpl
                       ? Number(row.mpl).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
@@ -2396,19 +1448,12 @@ const handleSave = async () => {
                           : ''}</TableCell>              
                       <TableCell>{row.totalOtherDeds}</TableCell>
                       <TableCell>{row.totalDeductions}</TableCell>
-                      <TableCell>{row.status}</TableCell>
-
-
-
-
-
-
-
-
-
-
-
-
+                      <TableCell sx={{
+                            fontWeight: 'bold',
+                            color: row.status === 'Processed' ? 'green' : 'red'
+                          }}>
+                      {row.status}
+                      </TableCell>
 
 
 
@@ -2420,32 +1465,21 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
               </TableBody>
             </Table>
           </TableContainer>
            {}
-                    {filteredData.length === 0 && (
+            {filteredData.length === 0 && (
             <Typography
               variant="h6"
               align="center"
               color="error"
-              sx={{ mt: 2 }}
+              sx={{ mt: 3, fontFamily: "'Poppins', sans-serif" }}
             >
-              Loading or No Data Available
+               No Data Available
             </Typography>
           )}
+         
         </Paper>
 
 
@@ -2463,40 +1497,21 @@ const handleSave = async () => {
 
 
 
-        <Paper elevation={4} sx={{ borderRadius: 1, pt: 2.5, width: 150 }}>
-          <TableContainer component={Box} sx={{ maxHeight: 600, width: 150, overflow: 'hidden' }}>
-            <Table stickyHeader>
-              <TableHead sx={{ backgroundColor: '#F1F1F1' }}>
-                <TableRow>
-               
-                  <TableCell style={{alignItems: 'center', marginTop: '10px', paddingBottom: '40px', paddingLeft: '45px'}}>Actions</TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              </TableHead>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        <Paper elevation={4} sx={{ borderRadius: 1, pt: 1.2, pb: 1.2, mt: .70, width: 190, height: 335, overflowX: 'hidden', border: '3px solid #6d2323' }}>         
+        <TableContainer component={Box} sx={{ overflowX: 'hidden' }}>           
+          <Table stickyHeader sx={{ width: '100%', tableLayout: 'fixed' }}>               
+            <TableHead sx={{ backgroundColor: '#ffffff' }}>                   
+              <TableRow style={{
+                alignItems: 'center', 
+                textAlign: 'center', 
+                fontFamily: 'poppins, sans-serif', 
+                fontWeight: 'bold'
+              }}>
+                <TableCell align="center" sx={{ fontWeight: 'bold', fontFamily: 'poppins, sans-serif' }}>
+                  Actions
+                </TableCell>
+              </TableRow>               
+            </TableHead>
 
 
 
@@ -2519,32 +1534,6 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             return (
               <TableRow key={`actions-${row.employeeNumber}-${row.dateCreated}`}>
                
@@ -2554,128 +1543,52 @@ const handleSave = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
                 {/* Edit column */}
                 <TableCell>
-                  <Button
-                    onClick={() => handleEdit(row.id)}
-                    variant="contained"
-                    color="primary"
-                    startIcon={<EditIcon />}
-                    style={{
-                      backgroundColor: isFinalized ? '#D3D3D3' : '#6D2323',
-                      color: isFinalized ? '#A9A9A9' : '#FEF9E1',
-                      textTransform: 'none',
-                      width: '85px',
-                      opacity: isFinalized ? 0.6 : 1,
-                      pointerEvents: isFinalized ? 'none' : 'auto',
-                      position: 'inherit',
-                      marginLeft: '15px',
-                      padding: '4px'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                   
-                    }}
-                    disabled={isFinalized}
-                  >
-                    Edit
-                  </Button>
-               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                {/* Delete column */}
-               
-                  <Button
-                    onClick={() => handleDelete(row.id)}
-                    variant="contained"
-                    startIcon={<DeleteIcon />}
-                    style={{
-                      backgroundColor: isFinalized ? '#D3D3D3' : '#000000',
-                      color: isFinalized ? '#A9A9A9' : '#ffffff',
-                      textTransform: 'none',
-                      width: '85px',
-                      opacity: isFinalized ? 0.6 : 1,
-                      pointerEvents: isFinalized ? 'none' : 'auto',
-                      marginTop: '5px',
-                      position: 'inherit',
-                      marginLeft: '15px',
-                      padding: '4px',
-                      marginBottom: '-5px'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    }}
-                    disabled={isFinalized}
-                  >
-                    Delete
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: '5px' , /* space between buttons */ }}>
+                    <Button
+                      onClick={() => handleEdit(row.id)}
+                      variant="contained"
+                      color="primary"
+                      startIcon={<EditIcon />}
+                      style={{
+                        backgroundColor: isFinalized ? '#D3D3D3' : '#6D2323',
+                        color: isFinalized ? '#A9A9A9' : '#FEF9E1',
+                        textTransform: 'none',
+                        width: '85px',
+                        opacity: isFinalized ? 0.6 : 1,
+                        pointerEvents: isFinalized ? 'none' : 'auto',
+                        padding: '0px',
+                        
+                      }}
+                      
+                      disabled={isFinalized}
+                    >
+                      Edit
+                    </Button>
+
+
+                    <Button
+                      onClick={() => handleDelete(row.id)}
+                      variant="contained"
+                      startIcon={<DeleteIcon />}
+                      style={{
+                        backgroundColor: isFinalized ? '#D3D3D3' : '#000000',
+                        color: isFinalized ? '#A9A9A9' : '#ffffff',
+                        textTransform: 'none',
+                        width: '85px',
+                        opacity: isFinalized ? 0.6 : 1,
+                        pointerEvents: isFinalized ? 'none' : 'auto',
+                       
+                      }}
+                      disabled={isFinalized}
+                    >
+                      Delete
+                    </Button>
+                  </Box>
                 </TableCell>
+
+
               </TableRow>
                     );
                   })
@@ -2697,29 +1610,55 @@ const handleSave = async () => {
      
 
 
+<Box display="flex" justifyContent="flex-end" mt={2} mr={2} gap={2}>
 
-
-
-
+      <Box display="flex" justifyContent="flex-end" >
         <Button
           variant="contained"
           color="success"
           onClick={() => setShowConfirmation(true)}
           disabled={!canSubmit}
           sx={{
-            backgroundColor: '#6D2323',
-            color: '#ffffff',
+            backgroundColor: '#6d2323',
+            color: canSubmit ? '#ffffff' : '#0c0b0bff',
             textTransform: 'none',
-            height: '56px',
-            width: '200px',
+            height: '40px',
+            width: '220px',
             marginTop: 2,
             opacity: canSubmit ? 1 : 0.6,
             pointerEvents: canSubmit ? 'auto' : 'none',
+             border: canSubmit ? 'none' : '2px solid #6d2323',
+            '&:hover': {
+              backgroundColor: '#a31d1d',
+            },
           }}
-         
+          startIcon={<ExitToApp />}
         >
-          Submit Selected Payroll
+          Export Payroll Records
         </Button>
+      </Box>
+
+      <Button
+    variant="contained"
+    color="success"
+    onClick={() => window.location.href = '/payroll-processed'}
+    sx={{
+      backgroundColor: '#6d2323',
+      color: '#ffffff',
+      textTransform: 'none',
+      height: '40px',
+      width: '220px',
+      marginTop: 2,
+      '&:hover': {
+        backgroundColor: '#a31d1d',
+      },
+    }}
+    startIcon={<BusinessCenter />}
+  >
+    View Processed Payroll
+  </Button>
+
+</Box>
 
 
 
@@ -2771,6 +1710,9 @@ const handleSave = async () => {
                           onChange={handleModalChange}
                           label="Department"
                         >
+                           <MenuItem value="">
+                             <em>All Departments</em>
+                           </MenuItem>
                           {departments.map((dept) => (
                             <MenuItem key={dept.id} value={dept.code}>
                               {dept.description}
@@ -2835,7 +1777,7 @@ const handleSave = async () => {
 
                           {/* Deductions */}
                           <Typography variant="h6" mt={5} gutterBottom>
-                            Salary Computations
+                            Absent Deductions
                           </Typography>
                           <Grid container spacing={2}>
                             {SalaryComputation.map((field) => (
@@ -3033,20 +1975,27 @@ const handleSave = async () => {
             width: 400,
           }}
         >
-          <Typography variant="h6" mb={2}>
-            Are you sure all the data are correct?
-          </Typography>
+          <Typography variant="body2" mb={2}>
+          Please confirm that all the data provided are accurate before proceeding.
+          Are you sure you want to submit the payroll records?
+        </Typography>
+
+
           <Box display="flex" justifyContent="center" gap={2}>
             <Button
+              variant="outlined"
               style={{color: 'black'}}
               onClick={() => setShowConfirmation(false)}
               disabled={isSubmitting}
+
+
             >
               Cancel
             </Button>
             <Button
               variant="contained"
-              style={{backgroundColor: '#6D2323', width: '100px'}}
+              style={{backgroundColor: '#6D2323', width: '120px'}}
+             
               color="success"
               onClick={async () => {
                 setIsSubmitting(true);
@@ -3069,4 +2018,3 @@ const handleSave = async () => {
 
 
 export default PayrollProcess;
-

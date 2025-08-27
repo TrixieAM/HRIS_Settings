@@ -13,7 +13,7 @@ import {
 import earistLogo from "../assets/earistLogo.jpg";
 
 
-const Register = () => {
+const Registration = () => {
   const [formData, setFormData] = useState({
     username: "",
     employeeNumber: "",
@@ -66,7 +66,6 @@ const Register = () => {
   sx={{
     display: "flex",
     minHeight: "70vh", // Use full viewport height
-    marginLeft: "-20%",
     backgroundColor: "#fff8e1", // Soft background
   }}
 >
@@ -80,35 +79,15 @@ const Register = () => {
       textAlign: "center",
     }}
   >
-    {/* Logo and header */}
-    <Box
-      sx={{
-        backgroundColor: "#A31D1D",
-        borderTopLeftRadius: 8,
-        borderTopRightRadius: 8,
-        py: 2,
-        display: "flex",
-        justifyContent: "center",
-        mb: 2,
-        mx: -4, // stretch to full Paper width
-        mt: -4, // lift up to top edge
-      }}
-    >
-      <img
-        src={earistLogo}
-        alt="E.A.R.I.S.T Logo"
-        style={{
-          height: 80,
-          borderRadius: "50%",
-          backgroundColor: "white",
-          padding: 4,
-        }}
-      />
-    </Box>
+   
 
 
-    <Typography variant="h6" gutterBottom sx={{ mt: 5}}>
-      <b>Create an Account</b>
+    <Typography variant="h4" gutterBottom sx={{ mt: 5}}>
+      <b>User Registration</b>
+    </Typography>
+
+      <Typography gutterBottom sx={{ mt: 1}}>
+      <b>Register users one at a time.</b>
     </Typography>
 
 
@@ -139,7 +118,7 @@ const Register = () => {
             label="Password"
             type="password"
             fullWidth
-            sx={{ mb: 3 }}
+            sx={{ mb: 1 }}
             autoComplete="new-password"
             onChange={handleChanges}
           />
@@ -149,32 +128,36 @@ const Register = () => {
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ bgcolor: "#A31D1D", mt: 4 }}
+            sx={{ bgcolor: "#A31D1D", mt: 2}}
           >
             Register
           </Button>
         </form>
 
 
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Already have an account?{" "}
-          <Link 
-            href="/" 
-            underline="hover"
+
+        <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ bgcolor: "black", mt: 1}}
+          >
+            <Link 
+            href="/bulk-register" 
+            underline="none"
             sx={{
-                color: "black",
-                fontSize: "13px",
+                color: "white",
               }}>
-            <b>Login</b>
+             ⮞ Bulk Registration
           </Link>
-        </Typography>
+          </Button>
       </Paper>
     </Container>
   );
 };
 
 
-export default Register;
+export default Registration;
 
 
 

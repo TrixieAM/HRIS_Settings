@@ -81,7 +81,6 @@ const Login = () => {
       sx={{
         display: "flex",
         minHeight: "70vh",
-        marginLeft: "-20%",
         backgroundColor: "#fff8e1",
       }}
     >
@@ -179,21 +178,7 @@ const Login = () => {
           </Button>
         </form>
 
-        {/* No account link */}
-        <Typography variant="body2" sx={{ mt: 2, fontSize: "13px" }}>
-          Don’t have an account?{" "}
-          <Link
-            href="/register"
-            underline="hover"
-            sx={{
-              color: "black",
-              fontWeight: "bold",
-              fontSize: "13px",
-            }}
-          >
-            Register
-          </Link>
-        </Typography>
+        
       </Paper>
     </Container>
   );

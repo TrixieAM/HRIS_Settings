@@ -97,10 +97,10 @@ const AttendanceSearch = () => {
                         <SearchIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
                         <div>
                           <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-                            Attendance Record
+                            Attendance Management
                           </h4>
                           <p style={{ margin: 0, fontSize: '85%' }}>
-                          Generate and review attendance records
+                          Review and manage attendance records
              
                           </p>
                         </div>

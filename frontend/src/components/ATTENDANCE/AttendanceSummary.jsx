@@ -151,7 +151,7 @@ const updateRecord = async () => {
                                           Overall Attendance Report
                                         </h4>
                                         <p style={{ margin: 0, fontSize: '85%' }}>
-                                        Generate & review overall records
+                                        Generate and review summary of overall attendance records
                            
                                         </p>
                                       </div>

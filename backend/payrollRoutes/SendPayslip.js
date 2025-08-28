@@ -86,10 +86,10 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
 
 
                 const mailOptions = {
-                    from: `"HR Payroll" <${process.env.GMAIL_USER}>`,
+                    from: `"EARIST HR Testing Notice" <${process.env.GMAIL_USER}>`,
                     to: email,
                     subject: `Payslip for ${name}`,
-                    text: `Dear ${name},\n\nPlease find your payslip attached.\n\nBest regards,\nHR Team`,
+                    text: `Dear ${name},\n\nPlease find your payslip attached. We encourage you to review the details carefully.\n\nIf you have any questions, notice mismatches and errors, or require further clarification, kindly reach out to the\nHR team at earisthrmstesting@gmail.com or go to the HR Office. Your concerns will be addressed promptly.\n\nWe sincerely appreciate your hard work and contributions to the Institution. Thank you for your continued dedication.\n\nBest regards,\nEARIST HR Testing Team`,
                     attachments: [
                     {
                         filename: `${name}_payslip.pdf`,

@@ -194,14 +194,6 @@ const Sidebar = ({
   >
     {drawerOpen && (
       <Box display="flex" alignItems="center" gap={1}>
-        <img
-          src="/earist-logo-1.png"
-          alt="earist-logo"
-          style={{ height: 32,  }}
-        />
-        <Typography variant="h6" noWrap>
-          HRIS
-        </Typography>
       </Box>
     )}
     <IconButton onClick={handleToggleDrawer} size="small">
@@ -922,7 +914,7 @@ const Sidebar = ({
           <ListItemIcon>
             <AccessTimeIcon  sx={{ color: 'black'}}/>
           </ListItemIcon>
-          <ListItemText primary="Attendance Management" sx={{marginLeft: '-10px'}}/>
+          <ListItemText primary="Attendance Records Management" sx={{marginLeft: '-10px'}}/>
           <ListItemIcon sx={{ marginLeft: '10rem', color:'black' }}>
             {open2 ? <ExpandLess /> : <ExpandMore />}
           </ListItemIcon>
@@ -955,7 +947,7 @@ const Sidebar = ({
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'view_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <DevicesIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Device Record" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Device Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem
@@ -981,7 +973,7 @@ const Sidebar = ({
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_form' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <EventNote />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Record State" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Record State" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 
@@ -1070,7 +1062,7 @@ const Sidebar = ({
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_module' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <WorkHistory />
                   </ListItemIcon>
-                  <ListItemText primary="Attendance Module Non-teaching Faculty" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Module Faculty (Non-teaching)" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>

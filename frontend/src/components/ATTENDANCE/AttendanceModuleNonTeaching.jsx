@@ -920,10 +920,10 @@ const AttendanceModuleNonTeachingStaff = () => {
                     <WorkHistory sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
                     <div>
                       <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-                        Attendance Report for Non-Teaching Faculty
+                        Attendance Report for Faculty (Non-teaching)
                       </h4>
                       <p style={{ margin: 0, fontSize: '85%' }}>
-                      Generate & review all attendance records of Non-Teaching Faculty
+                      Generate and review all attendance records of Non-Teaching employees
          
                       </p>
                     </div>

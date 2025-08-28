@@ -115,7 +115,7 @@ const DailyTimeRecordFaculty = () => {
               Overall Daily Time Record
             </h4>
             <p style={{ margin: 0, fontSize: '85%' }}>
-              Filter your DTR records by date
+              Manage and filters overall DTR records
             </p>
           </div>
           </div>     

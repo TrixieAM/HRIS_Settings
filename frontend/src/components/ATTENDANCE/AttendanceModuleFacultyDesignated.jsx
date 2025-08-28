@@ -896,7 +896,7 @@ const AttendanceModuleFaculty = () => {
                                 Attendance Report for Designated (40hrs)
                               </h4>
                               <p style={{ margin: 0, fontSize: '85%' }}>
-                              Generate & review all attendance records of Designated
+                              Generate and review all attendance records of designated employees
                  
                               </p>
                             </div>

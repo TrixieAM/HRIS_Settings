@@ -244,12 +244,13 @@ app.post('/forgot-password', async (req, res) => {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #A31D1D;">Password Reset Request</h2>
             <p>Hello ${user.username},</p>
-            <p>You requested to reset your password. Please use the following verification code:</p>
+            <p>You requested to reset your password. Below is the verification code that you requested.
+            </p> <p>Verification code:</p>
             <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
               <h1 style="color: #A31D1D; font-size: 32px; margin: 0; letter-spacing: 5px;">${verificationCode}</h1>
             </div>
-            <p>This code will expire in 15 minutes.</p>
-            <p>If you didn't request this password reset, please ignore this email.</p>
+            <p>This code will expire in 15 minutes. Make sure to use the code before expiration.</p>
+            <p>Please ignore this message if you didn't request this password reset.</p>
             <hr style="margin: 30px 0;">
             <p style="color: #666; font-size: 12px;">This is an automated message from your HRIS system.</p>
           </div>

@@ -16,6 +16,10 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import { InputAdornment } from '@mui/material';
@@ -25,39 +29,93 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import Payslip from "./Payslip";
 
+
 const SendPayslip = () => {
   const [users, setUsers] = useState([]);
+  const [payrollData, setPayrollData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [sendingPayslips, setSendingPayslips] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const payslipRef = useRef();
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/SendPayslipRoute/users")
-      .then((response) => {
-        setUsers(response.data);
+    // Fetch both users and payroll data
+    const fetchData = async () => {
+      try {
+        const [usersResponse, payrollResponse] = await Promise.all([
+          axios.get("http://localhost:5000/SendPayslipRoute/users"),
+          axios.get("http://localhost:5000/api/finalized-payroll")
+        ]);
+       
+        setUsers(usersResponse.data);
+        setPayrollData(payrollResponse.data);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching users:", error);
-        setError('An error occurred while fetching users.');
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError('An error occurred while fetching data.');
         setLoading(false);
-      });
+      }
+    };
+
+
+    fetchData();
   }, []);
 
-  // Filter users based on search query
-  const filteredUsers = users.filter(
-    (user) =>
+
+  // Function to get payroll data for a specific user
+  const getPayrollDataForUser = (user, filterByMonth = false) => {
+    // Try to match by employeeNumber first, then by name
+    let payrollRecords = payrollData.filter(p =>
+      p.employeeNumber === user.employeeNumber ||
+      p.employeeNumber?.toString() === user.employeeNumber?.toString() ||
+      (user.name && p.name?.toLowerCase() === user.name?.toLowerCase())
+    );
+
+
+    // If we have a month filter and filterByMonth is true, try to match that too
+    if (filterByMonth && selectedMonth && payrollRecords.length > 0) {
+      const monthFilteredRecord = payrollRecords.find(p =>
+        p.month === selectedMonth || p.payPeriod === selectedMonth
+      );
+     
+      if (monthFilteredRecord) {
+        return monthFilteredRecord;
+      }
+    }
+
+
+    // Return the first matching record or undefined
+    return payrollRecords[0];
+  };
+
+
+  // Filter users based on search query and whether they have payroll data
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
       (user.name &&
         user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (user.employeeNumber &&
-        user.employeeNumber.toString().toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+        user.employeeNumber.toString().toLowerCase().includes(searchQuery.toLowerCase()));
+   
+    // Only include users who have corresponding payroll data
+    const hasPayrollData = getPayrollDataForUser(user) !== undefined;
+   
+    return matchesSearch && hasPayrollData;
+  });
+
 
   // Handle individual user selection
   const handleUserSelection = (user, isSelected) => {
@@ -68,56 +126,179 @@ const SendPayslip = () => {
     }
   };
 
+
   // Handle select all functionality
   const handleSelectAll = (isSelected) => {
     setSelectAll(isSelected);
     if (isSelected) {
-      setSelectedUsers(filteredUsers.filter(user => user.name && user.employeeNumber));
+      // Get fresh filtered users to avoid stale closure
+      const currentFilteredUsers = users.filter((user) => {
+        const matchesSearch =
+          (user.name &&
+            user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (user.employeeNumber &&
+            user.employeeNumber.toString().toLowerCase().includes(searchQuery.toLowerCase()));
+       
+        const hasPayrollData = getPayrollDataForUser(user) !== undefined;
+        return matchesSearch && hasPayrollData;
+      });
+     
+      setSelectedUsers(currentFilteredUsers.filter(user => user.name && user.employeeNumber));
     } else {
       setSelectedUsers([]);
     }
   };
+
 
   // Check if user is selected
   const isUserSelected = (user) => {
     return selectedUsers.some(u => u.employeeNumber === user.employeeNumber);
   };
 
-  // Send individual payslip
-  const handleSendPayslip = async (user) => {
+
+  // Generate PDF from employee data without DOM
+  const generatePDF = async (employeeData) => {
     try {
-      setSelectedEmployee(user);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPosition = 30;
 
-      setTimeout(async () => {
-        if (payslipRef.current) {
-          const canvas = await html2canvas(payslipRef.current);
-          const pdf = new jsPDF("p", "mm", "a4");
-          const imgData = canvas.toDataURL("image/png");
-          const pdfWidth = 210;
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-          const pdfBlob = pdf.output("blob");
-          const formData = new FormData();
-          formData.append("pdf", pdfBlob, `${user.name}_payslip.pdf`);
-          formData.append("name", user.name);
-          formData.append("employeeNumber", user.employeeNumber);
-
-          await axios.post(
-            "http://localhost:5000/SendPayslipRoute/send-payslip",
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
-          );
-
-          alert("Payslip sent successfully!");
+      // Helper function to get pay period
+      const getPayPeriod = (employee) => {
+        if (employee.month) {
+          return `Month of ${employee.month} ${employee.year || new Date().getFullYear()}`;
         }
-      }, 200);
+        return "Current Pay Period";
+      };
+
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("EARIST PAYSLIP", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 10;
+
+
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Pay Period: ${getPayPeriod(employeeData)}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 8;
+
+
+      pdf.text(`Date Issued: ${new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 20;
+
+
+      // Employee Information
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("EMPLOYEE INFORMATION", margin, yPosition);
+      yPosition += 10;
+
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Employee #: ${employeeData.employeeNumber}`, margin, yPosition);
+      pdf.text(`Name: ${employeeData.name}`, margin + 80, yPosition);
+      yPosition += 6;
+      pdf.text(`Position: ${employeeData.position || "N/A"}`, margin, yPosition);
+      pdf.text(`Department: ${employeeData.department || "N/A"}`, margin + 80, yPosition);
+      yPosition += 15;
+
+
+      // Earnings
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("EARNINGS", margin, yPosition);
+      yPosition += 10;
+
+
+      pdf.setFontSize(12);
+      pdf.text("Gross Salary:", margin, yPosition);
+      pdf.text(`₱${parseFloat(employeeData.grossSalary || 0).toLocaleString()}`, pageWidth - margin - 40, yPosition, { align: "right" });
+      yPosition += 15;
+
+
+      // Deductions
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("DEDUCTIONS", margin, yPosition);
+      yPosition += 10;
+
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      const deductions = [
+        { label: "Withholding Tax", value: employeeData.withholdingTax || 0 },
+        { label: "GSIS Contributions", value: employeeData.totalGsisDeds || 0 },
+        { label: "Pag-IBIG Contributions", value: employeeData.totalPagibigDeds || 0 },
+        { label: "PhilHealth", value: employeeData.PhilHealthContribution || 0 },
+        { label: "Other Deductions", value: employeeData.totalOtherDeds || 0 }
+      ];
+
+
+      deductions.forEach(deduction => {
+        pdf.text(deduction.label, margin, yPosition);
+        pdf.text(`₱${parseFloat(deduction.value).toLocaleString()}`, pageWidth - margin - 40, yPosition, { align: "right" });
+        yPosition += 6;
+      });
+
+
+      yPosition += 5;
+      pdf.setFont("helvetica", "bold");
+      pdf.text("TOTAL DEDUCTIONS:", margin, yPosition);
+      pdf.text(`₱${parseFloat(employeeData.totalDeductions || 0).toLocaleString()}`, pageWidth - margin - 40, yPosition, { align: "right" });
+      yPosition += 15;
+
+
+      // Net Pay
+      pdf.setFontSize(14);
+      pdf.text("NET PAY COMPUTATION", margin, yPosition);
+      yPosition += 10;
+
+
+      pdf.setFontSize(12);
+      pdf.text("Net Salary:", margin, yPosition);
+      pdf.text(`₱${parseFloat(employeeData.netSalary || 0).toLocaleString()}`, pageWidth - margin - 40, yPosition, { align: "right" });
+      yPosition += 15;
+
+
+      // Pay Distribution
+      pdf.setFontSize(14);
+      pdf.text("PAY DISTRIBUTION", margin, yPosition);
+      yPosition += 10;
+
+
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("1st Pay Period:", margin, yPosition);
+      pdf.text(`₱${parseFloat(employeeData.pay1st || 0).toLocaleString()}`, margin + 60, yPosition);
+      yPosition += 8;
+      pdf.text("2nd Pay Period:", margin, yPosition);
+      pdf.text(`₱${parseFloat(employeeData.pay2nd || 0).toLocaleString()}`, margin + 60, yPosition);
+      yPosition += 20;
+
+
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text("This payslip is computer generated and does not require signature.", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 5;
+      pdf.text("For any payroll inquiries, please contact the Human Resources Department.", pageWidth / 2, yPosition, { align: "center" });
+
+
+      return pdf.output("blob");
     } catch (error) {
-      console.error("Error sending payslip:", error);
-      alert("Error sending payslip. Please try again.");
+      console.error("Error generating PDF:", error);
+      throw error;
     }
   };
+
 
   // Send all selected payslips
   const handleSendAllPayslips = async () => {
@@ -126,55 +307,70 @@ const SendPayslip = () => {
       return;
     }
 
+
     setSendingPayslips(true);
     let successCount = 0;
     let failCount = 0;
 
+
     for (const user of selectedUsers) {
       try {
-        setSelectedEmployee(user);
-
-        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for render
-
-        if (payslipRef.current) {
-          const canvas = await html2canvas(payslipRef.current);
-          const pdf = new jsPDF("p", "mm", "a4");
-          const imgData = canvas.toDataURL("image/png");
-          const pdfWidth = 210;
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-          const pdfBlob = pdf.output("blob");
-          const formData = new FormData();
-          formData.append("pdf", pdfBlob, `${user.name}_payslip.pdf`);
-          formData.append("name", user.name);
-          formData.append("employeeNumber", user.employeeNumber);
-
-          await axios.post(
-            "http://localhost:5000/SendPayslipRoute/send-payslip",
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
-          );
-
-          successCount++;
+        const payrollRecord = getPayrollDataForUser(user, !!selectedMonth);
+        if (!payrollRecord) {
+          console.warn(`No payroll data found for ${user.name}${selectedMonth ? ` in ${selectedMonth}` : ''}`);
+          failCount++;
+          continue;
         }
+
+
+        // Merge user data with payroll data
+        const employeeData = {
+          ...payrollRecord,
+          email: user.email,
+          selectedMonth: selectedMonth,
+          selectedYear: selectedYear
+        };
+
+
+        // Generate PDF
+        const pdfBlob = await generatePDF(employeeData);
+
+
+        // Send the PDF
+        const formData = new FormData();
+        formData.append("pdf", pdfBlob, `${user.name}_payslip.pdf`);
+        formData.append("name", user.name);
+        formData.append("employeeNumber", user.employeeNumber);
+        formData.append("email", user.email);
+
+
+        await axios.post(
+          "http://localhost:5000/SendPayslipRoute/send-payslip",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+
+        successCount++;
       } catch (error) {
         console.error(`Error sending payslip for ${user.name}:`, error);
         failCount++;
       }
     }
 
+
     setSendingPayslips(false);
+    setSelectedEmployee(null); // Clear after all done
     alert(`Payslips sent: ${successCount} successful, ${failCount} failed`);
-    
+   
     // Clear selections
     setSelectedUsers([]);
     setSelectAll(false);
   };
 
+
   return (
-    <Container maxWidth="xl" sx={{}}>
+    <Container maxWidth="xl">
       <Paper
         elevation={6}
         sx={{ backgroundColor: 'rgb(109, 35, 35)', color: '#fff', p: 3, borderRadius: 3, borderEndEndRadius: '0', borderEndStartRadius: '0' }}
@@ -192,7 +388,47 @@ const SendPayslip = () => {
         </Box>
       </Paper>
 
-      <Box mt={4} sx={{ backgroundColor: '#fff', p: 3, boxShadow: 3, marginBottom: '15px', marginTop: '0px' }}>
+
+      {/* Month and Year Selection */}
+      <Box mt={2} sx={{ backgroundColor: '#fff', p: 3, boxShadow: 3, borderRadius: 2 }}>
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+          Payslip Period
+        </Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Month</InputLabel>
+            <Select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              label="Month"
+            >
+              <MenuItem value="">All Months</MenuItem>
+              {months.map((month) => (
+                <MenuItem key={month} value={month}>
+                  {month}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Year</InputLabel>
+            <Select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              label="Year"
+            >
+              {[2023, 2024, 2025, 2026].map((year) => (
+                <MenuItem key={year} value={year}>
+                  {year}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
+
+
+      <Box mt={2} sx={{ backgroundColor: '#fff', p: 3, boxShadow: 3, borderRadius: 2 }}>
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
           Bulk Actions
         </Typography>
@@ -237,22 +473,26 @@ const SendPayslip = () => {
         </Box>
       </Box>
 
+
       {/* Search Section */}
-      <TextField
-        size="small"
-        variant="outlined"
-        placeholder="Search by Name or Employee Number"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ backgroundColor: 'white', borderRadius: 1, marginLeft: '870px' }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search sx={{ color: '#6D2323', marginRight: 1 }} />
-            </InputAdornment>
-          ),
-        }}
-      />
+      <Box mt={2} display="flex" justifyContent="flex-end">
+        <TextField
+          size="small"
+          variant="outlined"
+          placeholder="Search by Name or Employee Number"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ backgroundColor: 'white', borderRadius: 1, width: 300 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: '#6D2323', marginRight: 1 }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
 
       {loading ? (
         <Box display="flex" justifyContent="center" mt={10}>
@@ -261,7 +501,7 @@ const SendPayslip = () => {
       ) : error ? (
         <Alert severity="error">{error}</Alert>
       ) : (
-        <Paper elevation={4} sx={{ borderRadius: 3, p: 3 }}>
+        <Paper elevation={4} sx={{ borderRadius: 3, p: 3, mt: 2 }}>
           <TableContainer component={Box} sx={{ maxHeight: 600 }}>
             <Table stickyHeader>
               <TableHead>
@@ -270,51 +510,48 @@ const SendPayslip = () => {
                   <TableCell>Name</TableCell>
                   <TableCell>Employee Number</TableCell>
                   <TableCell>Email</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>Has Payroll Data</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.employeeNumber || user.id || Math.random()}>
-                      <TableCell>
-                        <Checkbox
-                          checked={isUserSelected(user)}
-                          onChange={(e) => handleUserSelection(user, e.target.checked)}
-                          disabled={!user.name || !user.employeeNumber}
-                          sx={{
-                            color: '#6D2323',
-                            '&.Mui-checked': {
+                  filteredUsers.map((user) => {
+                    const hasPayrollData = getPayrollDataForUser(user) !== undefined;
+                    return (
+                      <TableRow key={user.employeeNumber || user.id || Math.random()}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isUserSelected(user)}
+                            onChange={(e) => handleUserSelection(user, e.target.checked)}
+                            disabled={!user.name || !user.employeeNumber || !hasPayrollData}
+                            sx={{
                               color: '#6D2323',
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>{user.name || "N/A"}</TableCell>
-                      <TableCell>{user.employeeNumber || "N/A"}</TableCell>
-                      <TableCell>{user.email || "N/A"}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: '#6D2323',
-                            '&:hover': {
-                              backgroundColor: '#B22222',
-                            },
-                            marginRight: '8px',
-                          }}
-                          onClick={() => handleSendPayslip(user)}
-                          disabled={!user.name || !user.employeeNumber || sendingPayslips}
-                        >
-                          Send
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                              '&.Mui-checked': {
+                                color: '#6D2323',
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>{user.name || "N/A"}</TableCell>
+                        <TableCell>{user.employeeNumber || "N/A"}</TableCell>
+                        <TableCell>{user.email || "N/A"}</TableCell>
+                        <TableCell>
+                          <Box
+                            sx={{
+                              color: hasPayrollData ? 'green' : 'red',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {hasPayrollData ? '✓ Yes' : '✗ No'}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} align="center" sx={{ color: 'red' }}>
-                      No users available.
+                      No users with payroll data available.
                     </TableCell>
                   </TableRow>
                 )}
@@ -324,6 +561,7 @@ const SendPayslip = () => {
         </Paper>
       )}
 
+
       {/* Hidden Payslip component for PDF generation */}
       <div style={{ position: "absolute", left: "-9999px" }}>
         {selectedEmployee && <Payslip ref={payslipRef} employee={selectedEmployee} />}
@@ -332,4 +570,6 @@ const SendPayslip = () => {
   );
 };
 
+
 export default SendPayslip;
+

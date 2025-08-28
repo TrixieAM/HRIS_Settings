@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Avatar, IconButton, Typography, Box, CircularProgress, Paper, Divider, Grid,
-  Container, Fade, useTheme, alpha
+  Container, Fade, useTheme, alpha, Button, Link
 } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { styled } from '@mui/material/styles';
@@ -124,10 +124,28 @@ const Profile = () => {
   );
   
   if (!person) return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-      <Typography variant="h5" color="text.secondary">No profile data found.</Typography>
+    <Box display="block" justifyContent="center" alignItems="center" minHeight="80vh">
+      <Typography textAlign="center" variant="h4" color="text.secondary">No profile data found!</Typography>
+            <Typography ml="10px" variant="subtitle1" color="text.secondary">Contact administrator to set up your profile.</Typography>
+
+        {/* <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  sx={{ bgcolor: "black", mt: 1}}
+                >
+                  <Link 
+                  href="/*" 
+                  underline="none"
+                  sx={{
+                      color: "white",
+                    }}>
+                   Edit Information
+                </Link>
+        </Button> */}
     </Box>
   );
+  
 
   const renderField = (label, value) => (
     <Grid item xs={12} sm={6} md={4}>
@@ -205,6 +223,24 @@ const Profile = () => {
             >
               Employee No.: <b>{person.agencyEmployeeNum}</b>
             </Typography>
+
+            
+
+             <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  sx={{ bgcolor: "black", mt: 1}}
+                >
+                  <Link 
+                  href="/*" 
+                  underline="none"
+                  sx={{
+                      color: "white",
+                    }}>
+                   Edit Information
+                </Link>
+        </Button>
           </ProfileHeader>
 
           {/* Content Sections */}

@@ -350,7 +350,7 @@ app.post('/reset-password', async (req, res) => {
 
 // REGISTER
 app.post("/register", async (req, res) => {
-  const { username, password, employeeNumber } = req.body;
+  const { username, email, password, employeeNumber } = req.body;
 
 
   try {
@@ -361,23 +361,26 @@ app.post("/register", async (req, res) => {
     const query = `
       INSERT INTO users (
         username,
+        email,
         role,
         password,
         employeeNumber,
         employmentCategory,
         access_level
-      ) VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
 
      db.query(query, [
       username,
+      email,
       'staff',       // default role
       hashedPass,
       employeeNumber,
       1,             // default employmentCategory
       'user'         // default access_level
-    ]);
+    ],
+  );
 
 
     res.status(200).send({ message: "User Registered Successfully" });
@@ -441,7 +444,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-// send 2FA code
 // send 2FA code
 app.post("/send-2fa-code", async (req, res) => {
   const { email, employeeNumber } = req.body;

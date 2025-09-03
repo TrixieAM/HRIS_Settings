@@ -52,6 +52,7 @@ import {
   AppRegistration,
   EditCalendar,
   RequestQuote as RequestQuoteIcon,
+  AddBusiness,
 } from '@mui/icons-material';
 import { 
   AccessAlarm, 
@@ -331,8 +332,7 @@ const Sidebar = ({
                   <ListItemText primary="Daily Time Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
-                
-              {userRole !== 'staff' && (
+                              
                 <ListItem
                   button
                   component={Link}
@@ -358,78 +358,19 @@ const Sidebar = ({
                   </RequestQuoteIcon>
                   <ListItemText primary="Payslip" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-                 )}
 
                 <Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
                
 
-                {userRole !== 'staff' && (
-<ListItem 
-  button 
-  component={Link} 
-  to='/registration' 
-  sx={{
-    color: selectedItem === 'bulk-register' ? 'white' : 'inherit',
-    bgcolor: selectedItem === 'bulk-register' ? '#A31D1D' : 'inherit',
-    '&:hover': {
-      bgcolor: '#f0f0f0',
-      color: 'black',
-      borderTopRightRadius: '15px',
-      borderBottomRightRadius: '15px',
-      '& .MuiListItemIcon-root': {
-        color: 'black',
-      }
-    },
-    borderTopRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
-    borderBottomRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
-    
-  }}
-  onClick={() => handleItemClick('bulk-register')}
->
-<ListItemIcon sx={{ color: selectedItem === 'bulk-register' ? 'white' : 'inherit',
-                    '&:hover': { color: 'black' }
-                   }}>
-    <AppRegistration sx={{ fontSize: 29, marginLeft: '-6%' }} />
-  </ListItemIcon>
-  <ListItemText 
-    primary="Registration" 
-    sx={{ marginLeft: '-10px' }} 
-  />
-</ListItem>
-  )}
-
-
-        {userRole !== 'staff' && (
-          <>
-            <ListItem
-              button
-              onClick={() => {
-                handleItemClick('Dashboards'); 
-                handleClick();                
-              }}
-              sx={{ color: 'black', cursor: 'pointer',  borderTopRightRadius: selectedItem === 'Dashboards' ? '15px' : 0,
-                borderBottomRightRadius: selectedItem === 'Dashboards' ? '15px' : 0, }}
+                  {userRole !== 'staff' && (
                 
-            >
-              <ListItemIcon>
-                <DashboardIcon sx={{ color: 'black'}} />
-              </ListItemIcon>
-              <ListItemText primary="Information Management" sx={{marginLeft: '-10px', }} />
-              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black',  }}>
-                {open ? <ExpandLess /> : <ExpandMore />}
-              </ListItemIcon>
-            </ListItem>
-
-
-            <Collapse in={open} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding sx={{ pl: 5.4 }}>
-              <ListItem
+                <ListItem
                   button
                   component={Link}
-                  to="/personalinfo"
+                  to='/overall-payslip'
                   sx={{
-                    color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'personalinfo' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'overall-payslip' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'overall-payslip' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -437,24 +378,111 @@ const Sidebar = ({
                       borderBottomRightRadius: '15px',
                       '& .MuiListItemIcon-root': {
                         color: 'black',
-                      },
+                      }
                     },
-                    borderTopRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('personalinfo')}
-                >
-                  <ListItemIcon
-                    sx={{
-                      marginRight: '-1rem',
-                      color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
-                      bgcolor: 'transparent',
-                    }}
-                  >
-                    <PortraitIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Personal Information" sx={{ marginLeft: '-10px' }} />
+                  onClick={() => handleItemClick('overall-payslip')}>
+                  <AddBusiness sx={{ marginRight: '2rem', color: selectedItem === 'overall-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </AddBusiness>
+                  <ListItemText primary="Overall Payslip" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
+                 )}
+
+                {userRole !== 'staff' && (
+                    <ListItem 
+                      button 
+                      component={Link} 
+                      to='/registration' 
+                      sx={{
+                        color: selectedItem === 'bulk-register' ? 'white' : 'inherit',
+                        bgcolor: selectedItem === 'bulk-register' ? '#A31D1D' : 'inherit',
+                        '&:hover': {
+                          bgcolor: '#f0f0f0',
+                          color: 'black',
+                          borderTopRightRadius: '15px',
+                          borderBottomRightRadius: '15px',
+                          '& .MuiListItemIcon-root': {
+                            color: 'black',
+                          }
+                        },
+                        borderTopRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
+                        borderBottomRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
+                        
+                      }}
+                      onClick={() => handleItemClick('bulk-register')}
+                    >
+                    <ListItemIcon sx={{ color: selectedItem === 'bulk-register' ? 'white' : 'inherit',
+                                        '&:hover': { color: 'black' }
+                                      }}>
+                        <AppRegistration sx={{ fontSize: 29, marginLeft: '-6%' }} />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Registration" 
+                        sx={{ marginLeft: '-10px' }} 
+                      />
+                    </ListItem>
+                      )}
+
+
+                {userRole !== 'staff' && (
+                  <>
+                    <ListItem
+                      button
+                      onClick={() => {
+                        handleItemClick('Dashboards'); 
+                        handleClick();                
+                      }}
+                      sx={{ color: 'black', cursor: 'pointer',  borderTopRightRadius: selectedItem === 'Dashboards' ? '15px' : 0,
+                        borderBottomRightRadius: selectedItem === 'Dashboards' ? '15px' : 0, }}
+                        
+                    >
+                      <ListItemIcon>
+                        <DashboardIcon sx={{ color: 'black'}} />
+                      </ListItemIcon>
+                      <ListItemText primary="Information Management" sx={{marginLeft: '-10px', }} />
+                      <ListItemIcon sx={{ marginLeft: '10rem', color: 'black',  }}>
+                        {open ? <ExpandLess /> : <ExpandMore />}
+                      </ListItemIcon>
+                    </ListItem>
+
+
+                    <Collapse in={open} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding sx={{ pl: 5.4 }}>
+                    <ListItem
+                        button
+                        component={Link}
+                        to="/personalinfo"
+                        sx={{
+                          color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
+                          bgcolor: selectedItem === 'personalinfo' ? '#A31D1D' : 'inherit',
+                          '&:hover': {
+                            bgcolor: '#f0f0f0',
+                            color: 'black',
+                            borderTopRightRadius: '15px',
+                            borderBottomRightRadius: '15px',
+                            '& .MuiListItemIcon-root': {
+                              color: 'black',
+                            },
+                          },
+                          borderTopRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
+                          borderBottomRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
+                        }}
+                        onClick={() => handleItemClick('personalinfo')}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            marginRight: '-1rem',
+                            color: selectedItem === 'personalinfo' ? 'white' : 'inherit',
+                            bgcolor: 'transparent',
+                          }}
+                        >
+                          <PortraitIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="Personal Information" sx={{ marginLeft: '-10px' }} />
+                      </ListItem>
 
 
                 <ListItem
@@ -1202,7 +1230,7 @@ const Sidebar = ({
                 <AccountBalanceIcon  sx={{ color: 'black'}} />
               </ListItemIcon>
               <ListItemText primary="Payroll Management" sx={{ marginLeft: '-10px' }} />
-              <ListItemIcon sx={{ marginLeft: '10rem',
+              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black'
                 
                }}>
                 {open3 ? <ExpandLess /> : <ExpandMore />}
@@ -1624,7 +1652,7 @@ const Sidebar = ({
                 <AssignmentIcon  sx={{ color: 'black'}} />
               </ListItemIcon>
               <ListItemText primary="Forms" sx={{ marginLeft: '-10px' }} />
-              <ListItemIcon sx={{ marginLeft: '10rem' }}>
+              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
                 {open4 ? <ExpandLess /> : <ExpandMore />}
               </ListItemIcon>
             </ListItem>

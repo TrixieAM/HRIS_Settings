@@ -1,4 +1,4 @@
-import { jwtDecode } from "jwt-decode";
+// Payslip.jsx
 import React, { useRef, forwardRef, useState, useEffect } from "react";
 import {
   Container,
@@ -23,7 +23,7 @@ import html2canvas from "html2canvas";
 import axios from "axios";
 import logo from "../../assets/logo.png";
 
-const Payslip = forwardRef(({ employee }, ref) => {
+const PayslipOverall = forwardRef(({ employee }, ref) => {
   const payslipRef = ref || useRef();
 
   const [allPayroll, setAllPayroll] = useState([]);
@@ -37,53 +37,32 @@ const Payslip = forwardRef(({ employee }, ref) => {
   const [hasSearched, setHasSearched] = useState(false);  // flag if search was done
   const [selectedMonth, setSelectedMonth] = useState(""); // which month is selected
   const [filteredPayroll, setFilteredPayroll] = useState([]); // search r
-  const [personID, setPersonID] = useState('');
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    useEffect(() => {
-      // Retrieve and decode the token from local storage
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          setPersonID(decoded.employeeNumber); // Set the employeeNumber in state
-        } catch (error) {
-          console.error("Error decoding token:", error);
-        }
-      }
-    }, []);
-
-
-  useEffect(() => {
-  if (!employee) {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/finalized-payroll");
-        setAllPayroll(res.data);
-
-        if (res.data.length > 0) {
-          const userPayroll = res.data.find(
-            (emp) => emp.employeeNumber?.toString() === personID.toString()
-          );
-
-          setDisplayEmployee(userPayroll || res.data[0]); 
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching payroll:", err);
-        setError("Failed to fetch payroll data. Please try again.");
-        setLoading(false);
-      }
-    };
-
-    if (personID) fetchData(); // ✅ only run when we have employeeNumber
-  }
-}, [employee, personID]); 
-
-
-
   
+
+  // Fetch payroll data
+  useEffect(() => {
+    if (!employee) {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+          setAllPayroll(res.data);
+          // if (res.data.length > 0) {
+          //   setDisplayEmployee(res.data[0]);
+          // }
+          setLoading(false);
+        } catch (err) {
+          console.error("Error fetching payroll:", err);
+          setError("Failed to fetch payroll data. Please try again.");
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, [employee]);
+
   // Download PDF
   const downloadPDF = () => {
     const input = payslipRef.current;
@@ -179,28 +158,31 @@ const clearSearch = () => {
   setSelectedMonth("");
   setFilteredPayroll([]);
 
+  // ✅ Restore original employee (logged-in) or fallback to first payroll
   if (employee) {
     setDisplayEmployee(employee);
-  } else if (allPayroll.length > 0) {
-    setDisplayEmployee(allPayroll[0]);
-  } else {
+  } 
+  // else if (allPayroll.length > 0) {
+  //   setDisplayEmployee(allPayroll[0]);
+  // } 
+  else {
     setDisplayEmployee(null);
   }
 };
 
 
-// Month filter
+// 📅 Month filter
 const handleMonthSelect = (month) => {
   setSelectedMonth(month);
 
-  const monthIndex = months.indexOf(month);
+  const monthIndex = months.indexOf(month); // Jan=0, Feb=1, ...
 
   const result = allPayroll.filter((emp) => {
     if (!emp.startDate) return false;
     const empMonth = new Date(emp.startDate).getMonth();
-
     return (
-      emp.employeeNumber?.toString() === personID.toString() &&
+      (emp.employeeNumber.toString().includes(search.trim()) ||
+        emp.name.toLowerCase().includes(search.trim().toLowerCase())) &&
       empMonth === monthIndex
     );
   });
@@ -208,14 +190,13 @@ const handleMonthSelect = (month) => {
   setFilteredPayroll(result);
 
   if (result.length > 0) {
-    setDisplayEmployee(result[0]);
+    setDisplayEmployee(result[0]);   // ✅ show first match for that month
   } else {
-    setDisplayEmployee(null);    
+    setDisplayEmployee(null);        // ✅ no data for this month
   }
 
   setHasSearched(true);
 };
-
 
 
 
@@ -238,10 +219,10 @@ const handleMonthSelect = (month) => {
           <WorkIcon fontSize="large" />
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Employee Payslip
+              Overall Employee Payslip
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              View and download employee payslips
+              Generate and manage employee payslips
             </Typography>
           </Box>
         </Box>
@@ -266,8 +247,8 @@ const handleMonthSelect = (month) => {
       <TextField
         size="small"
         variant="outlined"
-        // placeholder="Search by Employee # or Name"
-        m disabled value={personID}
+        placeholder="Search by Employee # or Name"
+        value={search}
         onChange={(e) => setSearch(e.target.value)}
         onKeyPress={(e) => e.key === "Enter" && handleSearch()}
         InputProps={{
@@ -283,16 +264,42 @@ const handleMonthSelect = (month) => {
           flex: 1,
         }}
       />
-      
+      <Box display="flex" gap={1}>
+        <Button
+          variant="contained"
+          onClick={handleSearch}
+          disabled={!search.trim()}
+          sx={{
+            backgroundColor: "#6D2323",
+            "&:hover": { backgroundColor: "#B22222" },
+            "&:disabled": { backgroundColor: "#ccc" },
+          }}
+        >
+          Search Employee
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={clearSearch}
+          sx={{
+            borderColor: "#6D2323",
+            color: "#6D2323",
+            "&:hover": {
+              borderColor: "#B22222",
+              backgroundColor: "#f5f5f5",
+            },
+          }}
+        >
+          Clear
+        </Button>
+      </Box>
     </Box>
 
     {/* Month Filter */}
     <Typography
       variant="subtitle2"
-      // color={hasSearched ? "textSecondary" : "textDisabled"}
+      color={hasSearched ? "textSecondary" : "textDisabled"}
     >
-      Filter By Month 
-      {/* {!hasSearched && "(Search for an employee first)"} */}
+      Filter By Month {!hasSearched && "(Search for an employee first)"}
     </Typography>
     <Box display="flex" flexWrap="wrap" gap={1}>
       {months.map((m) => (
@@ -300,7 +307,7 @@ const handleMonthSelect = (month) => {
           key={m}
           variant={m === selectedMonth ? "contained" : "outlined"}
           size="small"
-          // disabled={!hasSearched}
+          disabled={!hasSearched}
           sx={{
             backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
             color:
@@ -308,8 +315,8 @@ const handleMonthSelect = (month) => {
                 ? "#fff"
                 : hasSearched
                 ? "#6D2323"
-                : "#6D2323",
-            borderColor: hasSearched ? "#6D2323" : "#6D2323",
+                : "#ccc",
+            borderColor: hasSearched ? "#6D2323" : "#ccc",
             "&:hover": {
               backgroundColor: hasSearched
                 ? m === selectedMonth
@@ -648,7 +655,7 @@ const handleMonthSelect = (month) => {
       {/* Download Button */}
       {/* Action Buttons */}
       {displayEmployee && (
-        <Box display="flex" justifyContent="center" mt={2} gap={2}>
+        <Box display="flex" justifyContent="center" mt={2} gap={2} mb={3}>
         <Button
           variant="contained"
           onClick={downloadPDF}
@@ -668,8 +675,8 @@ const handleMonthSelect = (month) => {
           onClick={sendPayslipViaGmail}
           disabled={sending}
           sx={{
-            backgroundColor: "#1976d2",
-            "&:hover": { backgroundColor: "#1565c0" },
+            backgroundColor: "#000000",
+            "&:hover": { backgroundColor: "#2f2f2f" },
             px: 4,
             py: 1.5,
             fontSize: "1.1rem",
@@ -708,6 +715,6 @@ const handleMonthSelect = (month) => {
 
 
 
-export default Payslip;
+export default PayslipOverall;
 
 

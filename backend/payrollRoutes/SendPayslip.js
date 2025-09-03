@@ -83,17 +83,17 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
                pass: process.env.GMAIL_PASS,
              },
              tls: {
-               rejectUnauthorized: false, // ✅ allow Gmail cert
+               rejectUnauthorized: false, //allow Gmail cert
              },
            });
 
 
-            // ✅ Verify Gmail connection at startup
+            // Verify Gmail connection at startup
             transporter.verify((error, success) => {
             if (error) {
-                console.error("❌ Gmail connection failed:", error);
+                console.error("Gmail connection failed:", error);
             } else {
-                console.log("✅ Gmail is ready to send emails");
+                console.log("Gmail is ready to send emails");
             }
             });
 

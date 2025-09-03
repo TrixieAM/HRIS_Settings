@@ -116,6 +116,7 @@ import LeaveTable from './components/LEAVE/LeaveTable';
 import LeaveRequest from './components/LEAVE/LeaveRequest';
 import Registration from './components/Registration';
 import Payslip from './components/PAYROLL/Payslip';
+import PayslipOverall from './components/PAYROLL/PayslipOverall';
 import SendPayslip from './components/PAYROLL/SendPayslip';
 
 
@@ -840,6 +841,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
                   <Payslip />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/overall-payslip"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <PayslipOverall />
                 </ProtectedRoute>
               }
             />

@@ -4,6 +4,8 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const jwt = require("jsonwebtoken");
+
 
 
 
@@ -195,7 +197,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-            
+const twoFACodes = {}; // { email: { code, expiresAt } }
+
+
+
+
+// Forgot password start      
 // Store verification codes temporarily (in production, use Redis or database)
 const verificationCodes = new Map();
 
@@ -433,6 +440,139 @@ app.post('/login', (req, res) => {
     });
   });
 });
+
+// send 2FA code
+// send 2FA code
+app.post("/send-2fa-code", async (req, res) => {
+  const { email, employeeNumber } = req.body;
+  if (!email || !employeeNumber) {
+    return res.status(400).json({ error: "Email and employee number required" });
+  }
+
+  // Fetch user to get username
+  const query = "SELECT username FROM users WHERE email = ? AND employeeNumber = ?";
+  db.query(query, [email, employeeNumber], async (err, result) => {
+    if (err) {
+      console.error("DB error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = result[0];
+
+    // generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    // store in memory (indexed by email)
+    twoFACodes[email] = { code, expiresAt };
+
+    try {
+      await transporter.sendMail({
+        from: '"EARIST HR Testing" <yourgmail@gmail.com>',
+        to: email,
+        subject: "Login Verification Code",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #A31D1D;">Login Verification</h2>
+            <p>Hello ${user.username},</p>
+            <p>We detected a login attempt to your account. For your security, please verify your identity by entering the verification code below:</p>
+            
+            <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
+              <h1 style="color: #A31D1D; font-size: 32px; margin: 0; letter-spacing: 5px;">${code}</h1>
+            </div>
+            
+            <p>This code will expire in 15 minutes. Do not share it with anyone.</p>
+            <p>If this login attempt wasn’t made by you, we recommend securing your account immediately.</p>
+            <hr style="margin: 30px 0;">
+            <p style="color: #666; font-size: 12px;">This is an automated message from your HRIS system.</p>
+          </div>
+        `
+      });
+
+      res.json({ message: "Verification code sent" });
+    } catch (err) {
+      console.error("Email send error:", err);
+      res.status(500).json({ error: "Failed to send email" });
+    }
+  });
+});
+
+
+
+// verify code
+app.post("/verify-2fa-code", (req, res) => {
+  const { email, code } = req.body;
+  const record = twoFACodes[email];
+
+
+  if (!record) {
+    return res.status(400).json({ error: "No code found. Please request again." });
+  }
+
+
+  if (Date.now() > record.expiresAt) {
+    delete twoFACodes[email];
+    return res.status(400).json({ error: "Code expired. Please request a new one." });
+  }
+
+
+  if (record.code !== code) {
+    return res.status(400).json({ error: "Invalid code" });
+  }
+
+
+  res.json({ verified: true });
+});
+
+
+// complete login (issue JWT)
+app.post("/complete-2fa-login", (req, res) => {
+  const { email, employeeNumber } = req.body;
+ 
+  // Lookup user in database using either email or employeeNumber
+  const query = `SELECT * FROM users WHERE email = ? OR employeeNumber = ?`;
+ 
+  db.query(query, [email, employeeNumber], (err, result) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: "Database error" });
+    }
+   
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+   
+    const user = result[0];
+   
+    // Clean up the 2FA code since login is successful
+    delete twoFACodes[email];
+   
+    // Generate JWT with actual user data
+    const token = jwt.sign(
+        {
+          id: user.id,
+          username: user.username,
+          employeeNumber: user.employeeNumber,
+          email: user.email,
+          role: user.role
+        },
+        "secret", // Match your main login JWT secret
+        { expiresIn: "1h" }
+      );
+
+
+    res.json({
+      token,
+      role: user.role,
+      employeeNumber: user.employeeNumber,
+      email: user.email
+    });
+  });
+});
+
 
 
 

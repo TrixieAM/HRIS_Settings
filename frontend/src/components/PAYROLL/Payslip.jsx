@@ -5,46 +5,43 @@ import {
   Paper,
   Typography,
   Box,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
   Button,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
-  Snackbar,
-  Divider,
-  Grid,
+  InputAdornment
 } from "@mui/material";
-import { InputAdornment } from "@mui/material";
-import { Search } from "@mui/icons-material";
+import Search from "@mui/icons-material/Search";
+
+import WorkIcon from "@mui/icons-material/Work";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import axios from "axios";
-import WorkIcon from "@mui/icons-material/Work";
 import logo from "../../assets/logo.png";
-
-const months = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December"
-];
 
 const Payslip = forwardRef(({ employee }, ref) => {
   const payslipRef = ref || useRef();
 
   const [allPayroll, setAllPayroll] = useState([]);
-  const [currentEmployee, setCurrentEmployee] = useState(employee || null);
-  const [search, setSearch] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [dateIssued, setDateIssued] = useState(new Date().toISOString().split('T')[0]);
+  const [displayEmployee, setDisplayEmployee] = useState(employee || null);
   const [loading, setLoading] = useState(!employee);
   const [error, setError] = useState("");
-  const [searchError, setSearchError] = useState("");
-  const [showSearchError, setShowSearchError] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [modal, setModal] = useState({ open: false, type: "success", message: "" });
 
-  // Fetch payroll data only once and only if no employee prop is provided
+  const [search, setSearch] = useState("");                // search input
+  const [hasSearched, setHasSearched] = useState(false);  // flag if search was done
+  const [selectedMonth, setSelectedMonth] = useState(""); // which month is selected
+  const [filteredPayroll, setFilteredPayroll] = useState([]); // search r
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  
+
+  // Fetch payroll data
   useEffect(() => {
     if (!employee) {
       const fetchData = async () => {
@@ -53,7 +50,7 @@ const Payslip = forwardRef(({ employee }, ref) => {
           const res = await axios.get("http://localhost:5000/api/finalized-payroll");
           setAllPayroll(res.data);
           if (res.data.length > 0) {
-            setCurrentEmployee(res.data[0]);
+            setDisplayEmployee(res.data[0]);
           }
           setLoading(false);
         } catch (err) {
@@ -66,73 +63,6 @@ const Payslip = forwardRef(({ employee }, ref) => {
     }
   }, [employee]);
 
-  // Search employee with improved logic
-  const handleSearch = () => {
-    if (!search.trim()) {
-      setSearchError("Please enter a search term");
-      setShowSearchError(true);
-      return;
-    }
-
-    const searchTerm = search.toLowerCase().trim();
-    
-    // Filter employees based on search term
-    let filteredEmployees = allPayroll.filter((emp) => {
-      const matchesNumber = emp.employeeNumber && 
-        emp.employeeNumber.toString().toLowerCase().includes(searchTerm);
-      const matchesName = emp.name && 
-        emp.name.toLowerCase().includes(searchTerm);
-      return matchesNumber || matchesName;
-    });
-
-    // If month is selected, further filter by month (if your data has month info)
-    if (selectedMonth && filteredEmployees.length > 0) {
-      // Assuming your payroll data has a month field
-      // If not, you might need to adjust this based on your data structure
-      const monthFilteredEmployees = filteredEmployees.filter(emp => 
-        emp.month === selectedMonth || emp.payPeriod === selectedMonth
-      );
-      
-      // If month filtering returns results, use it; otherwise use the name/number filtered results
-      if (monthFilteredEmployees.length > 0) {
-        filteredEmployees = monthFilteredEmployees;
-      }
-    }
-
-    if (filteredEmployees.length > 0) {
-      setCurrentEmployee(filteredEmployees[0]); // Take the first match
-      setSearchError("");
-      setShowSearchError(false);
-      
-      // If multiple matches, you could show a message about taking the first one
-      if (filteredEmployees.length > 1) {
-        setSearchError(`Found ${filteredEmployees.length} matches. Showing first result.`);
-        setShowSearchError(true);
-      }
-    } else {
-      setSearchError(`No employee found matching "${search}"`);
-      setShowSearchError(true);
-    }
-  };
-
-  // Handle Enter key press in search field
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  // Clear search and reset to first employee
-  const clearSearch = () => {
-    setSearch("");
-    setSelectedMonth("");
-    setSearchError("");
-    setShowSearchError(false);
-    if (allPayroll.length > 0) {
-      setCurrentEmployee(allPayroll[0]);
-    }
-  };
-
   // Download PDF
   const downloadPDF = () => {
     const input = payslipRef.current;
@@ -142,13 +72,136 @@ const Payslip = forwardRef(({ employee }, ref) => {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${currentEmployee?.name || "EARIST"}-Payslip.pdf`);
+      pdf.save(`${displayEmployee?.name || "EARIST"}-Payslip.pdf`);
     });
   };
 
+// Send Payslip via Gmail
+const sendPayslipViaGmail = async () => {
+  if (!displayEmployee) return;
+
+  setSending(true);
+  try {
+    const input = payslipRef.current;
+    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+    // Convert PDF to Blob
+    const pdfBlob = pdf.output("blob");
+    const formData = new FormData();
+    formData.append("pdf", pdfBlob, `${displayEmployee.name}_payslip.pdf`);
+    formData.append("name", displayEmployee.name);
+    formData.append("employeeNumber", displayEmployee.employeeNumber);
+
+    const res = await axios.post(
+      "http://localhost:5000/SendPayslipRoute/send-payslip",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    if (res.data.success) {
+      setModal({
+        open: true,
+        type: "success",
+        message: "Payslip sent successfully via Gmail!",
+      });
+    } else {
+      setModal({
+        open: true,
+        type: "error",
+        message: res.data.error || "Failed to send payslip.",
+      });
+    }
+  } catch (err) {
+    console.error("Error sending payslip:", err);
+    setModal({
+      open: true,
+      type: "error",
+      message: "An error occurred while sending the payslip.",
+    });
+  } finally {
+    setSending(false);
+  }
+};
+
+// For Search
+const handleSearch = () => {
+  if (!search.trim()) return;
+
+  const result = allPayroll.filter(
+    (emp) =>
+      emp.employeeNumber.toString().includes(search.trim()) ||
+      emp.name.toLowerCase().includes(search.trim().toLowerCase())
+  );
+
+  if (result.length > 0) {
+    setFilteredPayroll(result);
+    setDisplayEmployee(result[0]);   // ✅ show first search match
+    setHasSearched(true);
+  } else {
+  setFilteredPayroll([]);
+  setDisplayEmployee(null);   // clear display
+  setSelectedMonth("");       // ✅ reset month filter
+  setHasSearched(true);
+}
+};
+
+
+// For Clear / Reset
+const clearSearch = () => {
+  setSearch("");
+  setHasSearched(false);
+  setSelectedMonth("");
+  setFilteredPayroll([]);
+
+  // ✅ Restore original employee (logged-in) or fallback to first payroll
+  if (employee) {
+    setDisplayEmployee(employee);
+  } else if (allPayroll.length > 0) {
+    setDisplayEmployee(allPayroll[0]);
+  } else {
+    setDisplayEmployee(null);
+  }
+};
+
+
+// 📅 Month filter
+const handleMonthSelect = (month) => {
+  setSelectedMonth(month);
+
+  const monthIndex = months.indexOf(month); // Jan=0, Feb=1, ...
+
+  const result = allPayroll.filter((emp) => {
+    if (!emp.startDate) return false;
+    const empMonth = new Date(emp.startDate).getMonth();
+    return (
+      (emp.employeeNumber.toString().includes(search.trim()) ||
+        emp.name.toLowerCase().includes(search.trim().toLowerCase())) &&
+      empMonth === monthIndex
+    );
+  });
+
+  setFilteredPayroll(result);
+
+  if (result.length > 0) {
+    setDisplayEmployee(result[0]);   // ✅ show first match for that month
+  } else {
+    setDisplayEmployee(null);        // ✅ no data for this month
+  }
+
+  setHasSearched(true);
+};
+
+
+
+
   return (
     <Container maxWidth="md">
-      {/* Header */}
+      {/* Header Bar */}
       <Paper
         elevation={6}
         sx={{
@@ -173,112 +226,115 @@ const Payslip = forwardRef(({ employee }, ref) => {
         </Box>
       </Paper>
 
-      {/* Search + Month Selector + Date Issued */}
-      <Box 
-        
-        mb={2} 
-        display="flex" 
-        flexDirection="column" 
-        gap={2}
+      <Box
+      mb={2}
+      display="flex"
+      flexDirection="column"
+      gap={2}
+      sx={{
+        backgroundColor: "white",
+        border: "2px solid #6D2323",
+        borderRadius: 2,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        p: 3,
+      }}
+    >
+    {/* Search Bar */}
+    <Box display="flex" alignItems="center" gap={2}>
+      <TextField
+        size="small"
+        variant="outlined"
+        placeholder="Search by Employee # or Name"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search sx={{ color: "#6D2323", marginRight: 1 }} />
+            </InputAdornment>
+          ),
+        }}
         sx={{
           backgroundColor: "white",
-          border: "2px solid #6D2323",
-          borderRadius: 2,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          p: 3
+          borderRadius: 1,
+          flex: 1,
         }}
-      >
-        <Box display="flex" alignItems="center" gap={2}>
-          <TextField
-            size="small"
-            variant="outlined"
-            placeholder="Search by Employee # or Name"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyPress={handleSearchKeyPress}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: "#6D2323", marginRight: 1 }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ 
-              backgroundColor: "white", 
-              borderRadius: 1,
-              flex: 1
-            }}
-          />
-          <Box display="flex" gap={1}>
-            <Button
-              variant="contained"
-              onClick={handleSearch}
-              disabled={!search.trim()}
-              sx={{
-                backgroundColor: "#6D2323",
-                "&:hover": { backgroundColor: "#B22222" },
-                "&:disabled": { backgroundColor: "#ccc" },
-              }}
-            >
-              Search Employee
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={clearSearch}
-              sx={{
-                borderColor: "#6D2323",
-                color: "#6D2323",
-                "&:hover": { borderColor: "#B22222", backgroundColor: "#f5f5f5" },
-              }}
-            >
-              Clear
-            </Button>
-          </Box>
-        </Box>
-        
-        <Typography variant="subtitle2" color="textSecondary">
-          Search By Month (Optional)
-        </Typography>
-        <Box display="flex" flexWrap="wrap" gap={1}>
-          {months.map((m) => (
-            <Button
-              key={m}
-              variant={m === selectedMonth ? "contained" : "outlined"}
-              size="small"
-              sx={{
-                backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
-                color: m === selectedMonth ? "#fff" : "#6D2323",
-                borderColor: "#6D2323",
-                "&:hover": {
-                  backgroundColor: m === selectedMonth ? "#B22222" : "#f5f5f5",
-                },
-              }}
-              onClick={() => setSelectedMonth(selectedMonth === m ? "" : m)}
-            >
-              {m}
-            </Button>
-          ))}
-        </Box>
-
-        {/* Date Issued Field */}
-        <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="subtitle2" color="textSecondary" sx={{ minWidth: "100px" }}>
-            Date Issued:
-          </Typography>
-          <TextField
-            type="date"
-            size="small"
-            value={dateIssued}
-            onChange={(e) => setDateIssued(e.target.value)}
-            sx={{ 
-              backgroundColor: "white", 
-              borderRadius: 1,
-              maxWidth: "200px"
-            }}
-          />
-        </Box>
+      />
+      <Box display="flex" gap={1}>
+        <Button
+          variant="contained"
+          onClick={handleSearch}
+          disabled={!search.trim()}
+          sx={{
+            backgroundColor: "#6D2323",
+            "&:hover": { backgroundColor: "#B22222" },
+            "&:disabled": { backgroundColor: "#ccc" },
+          }}
+        >
+          Search Employee
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={clearSearch}
+          sx={{
+            borderColor: "#6D2323",
+            color: "#6D2323",
+            "&:hover": {
+              borderColor: "#B22222",
+              backgroundColor: "#f5f5f5",
+            },
+          }}
+        >
+          Clear
+        </Button>
       </Box>
+    </Box>
+
+    {/* Month Filter */}
+    <Typography
+      variant="subtitle2"
+      color={hasSearched ? "textSecondary" : "textDisabled"}
+    >
+      Filter By Month {!hasSearched && "(Search for an employee first)"}
+    </Typography>
+    <Box display="flex" flexWrap="wrap" gap={1}>
+      {months.map((m) => (
+        <Button
+          key={m}
+          variant={m === selectedMonth ? "contained" : "outlined"}
+          size="small"
+          disabled={!hasSearched}
+          sx={{
+            backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
+            color:
+              m === selectedMonth
+                ? "#fff"
+                : hasSearched
+                ? "#6D2323"
+                : "#ccc",
+            borderColor: hasSearched ? "#6D2323" : "#ccc",
+            "&:hover": {
+              backgroundColor: hasSearched
+                ? m === selectedMonth
+                  ? "#B22222"
+                  : "#f5f5f5"
+                : "#fff",
+            },
+            "&:disabled": {
+              backgroundColor: "#f5f5f5",
+              color: "#ccc",
+              borderColor: "#ccc",
+            },
+          }}
+          onClick={() => handleMonthSelect(m)}
+        >
+          {m}
+        </Button>
+      ))}
+    </Box>
+  </Box>
 
       {/* Payslip Content */}
       {loading ? (
@@ -287,258 +343,376 @@ const Payslip = forwardRef(({ employee }, ref) => {
         </Box>
       ) : error ? (
         <Alert severity="error">{error}</Alert>
-      ) : currentEmployee ? (
+      ) : displayEmployee ? (
         <Paper
           ref={payslipRef}
           elevation={4}
           sx={{
-            p: 4,
+            p: 3,
             mt: 2,
-            borderRadius: 3,
-            textAlign: "center",
+            border: "2px solid black",
+            borderRadius: 1,
             backgroundColor: "#fff",
+            fontFamily: "Arial, sans-serif",
           }}
         >
-          {/* Header Section */}
-          <Box mb={3}>
-            <img src={logo} alt="Logo" style={{ width: "80px", marginBottom: "10px" }} />
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#6D2323", mb: 1 }}>
-              EARIST PAYSLIP
-            </Typography>
-            <Typography variant="h6" sx={{ color: "#666", mb: 1 }}>
-              Month of {selectedMonth || "—"}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#888" }}>
-              Date Issued: {new Date(dateIssued).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </Typography>
+          {/* Header */}
+          <Box display="flex" alignItems="center" mb={2}>
+          {/* Logo on the left */}
+          <Box>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: "70px", marginRight: "5px" }}
+            />
           </Box>
 
-          <Divider sx={{ mb: 3, borderWidth: 2 }} />
-
-          {/* Employee Information */}
-          <Box textAlign="left" mb={3}>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "#6D2323", mb: 2 }}>
-              EMPLOYEE INFORMATION
+          {/* Text on the right */}
+          <Box textAlign="center" flex={1}>
+            <Typography variant="subtitle2" sx={{ fontStyle: "italic" }}>
+              Republic of the Philippines
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Box display="flex" justifyContent="space-between" py={0.5}>
-                  <Typography fontWeight="bold">Employee #:</Typography>
-                  <Typography>{currentEmployee.employeeNumber}</Typography>
+            <Typography variant="subtitle5" fontWeight="bold"  sx={{ ml: '25px' }} >
+              EULOGIO “AMANG” RODRIGUEZ INSTITUTE OF SCIENCE AND TECHNOLOGY
+            </Typography>
+            <Typography variant="body2">Nagtahan, Sampaloc Manila</Typography>
+          </Box>
+        </Box>
+
+
+          {/* Rows */}
+          <Box sx={{ border: "2px solid black", borderBottom: '0px' }}>
+            {/* Row template */}
+            {[
+              {
+                label: "PERIOD:",
+                value: (
+                  <span style={{ fontWeight: "bold" }}>
+                    {(() => {
+                      if (!displayEmployee.startDate || !displayEmployee.endDate) return "—";
+                      const start = new Date(displayEmployee.startDate);
+                      const end = new Date(displayEmployee.endDate);
+                      const month = start.toLocaleString("en-US", { month: "long" }).toUpperCase();
+                      return `${month} ${start.getDate()}-${end.getDate()} ${end.getFullYear()}`;
+                    })()}
+                  </span>
+                ),
+              },
+              {
+                label: "EMPLOYEE NUMBER:",
+                 value: (
+                  <Typography sx={{ color: "red", fontWeight: "bold" }}>
+                    {displayEmployee.employeeNumber
+                      ? `${parseFloat(displayEmployee.employeeNumber)}`
+                      : ""}
+                  </Typography>
+                ),
+              },
+              {
+                label: "NAME:",
+                 value: (
+                  <Typography sx={{ color: "red", fontWeight: "bold" }}>
+                    {displayEmployee.name
+                      ? `${(displayEmployee.name)}`
+                      : ""}
+                  </Typography>
+                ),
+              },
+              {
+                label: "GROSS SALARY:",
+                value: displayEmployee.grossSalary
+                  ? `₱${parseFloat(displayEmployee.grossSalary).toLocaleString()}`
+                  : "",
+              },
+              {
+                label: "ABS:",
+                value: displayEmployee.abs
+                  ? `₱${parseFloat(displayEmployee.abs).toLocaleString()}`
+                  : "",
+              },
+              {
+                label: "WITHHOLDING TAX:",
+                value: displayEmployee.withholdingTax
+                  ? `₱${parseFloat(displayEmployee.withholdingTax).toLocaleString()}`
+                  : "",
+              },
+              {
+                label: "L.RET:",
+                value: displayEmployee.personalLifeRetIns
+                  ? `₱${parseFloat(displayEmployee.personalLifeRetIns).toLocaleString()}`
+                  : "",
+              },
+              {
+                label: "GSIS SALARY LOAN:",
+                value: displayEmployee.gsisSalaryLoan
+                  ? `₱${parseFloat(displayEmployee.gsisSalaryLoan).toLocaleString()}`
+                  : "",
+              },
+              {
+                label: "POLICY:",
+                value: displayEmployee.gsisPolicyLoan
+                  ? `₱${parseFloat(displayEmployee.gsisPolicyLoan).toLocaleString()}`
+                  : "",
+              },
+
+              {
+                label: "HOUSING LOAN:",
+                value: displayEmployee.gsisSalaryLoan
+                ? `₱${parseFloat(displayEmployee.gsisSalaryLoan || 0).toLocaleString()}`
+                : "", 
+              },
+              {
+                label: "GSIS ARREARS:",
+                value: displayEmployee.gsisArrears
+                    ? `₱${parseFloat(displayEmployee.gsisArrears).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "GFAL:",
+                value: '',           
+               },
+               {
+                label: "CPL:",
+                value: displayEmployee.cpl
+                    ? `₱${parseFloat(displayEmployee.cpl).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "MPL:",
+                value: displayEmployee.mpl
+                    ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "MPL LITE:",
+                value: displayEmployee.mplLite
+                    ? `₱${parseFloat(displayEmployee.mplLite).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "ELA:",
+                value: "",              
+               },
+               {
+                label: "PAG-IBIG:",
+                value: displayEmployee.pagibigFundCont
+                    ? `₱${parseFloat(displayEmployee.pagibigFundCont).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "MPL:",
+                value: displayEmployee.mpl
+                    ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "PHILHEALTH:",
+                value: displayEmployee.PhilHealthContribution
+                    ? `₱${parseFloat(displayEmployee.PhilHealthContribution).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "PHILHEALTH (DIFF'L):",
+                value: "",              
+               },
+               {
+                label: "PAG-IBIG 2:",
+                value: displayEmployee.PhilHealthContribution
+                    ? `₱${parseFloat(displayEmployee.PhilHealthContribution).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "LBP LOAN:",
+                value: "",              
+               },
+               {
+                label: "MTSLAI:",
+                value: "",              
+               },
+               {
+                label: "ECC:",
+                value: "",              
+               },
+               {
+                label: "TO BE REFUNDED:",
+                value: "",              
+               },
+               {
+                label: "FEU:",
+                value: displayEmployee.feu
+                    ? `₱${parseFloat(displayEmployee.feu).toLocaleString()}`
+                    : "",              
+               },
+              {
+                label: "ESLAI:",
+                value: "",              
+               },
+               {
+                label: "TOTAL DEDUCTIONS:",
+                value: displayEmployee.totalDeductions
+                    ? `₱${parseFloat(displayEmployee.totalDeductions).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "NET SALARY:",
+                value: displayEmployee.netSalary
+                    ? `₱${parseFloat(displayEmployee.netSalary).toLocaleString()}`
+                    : "",              
+               },
+              {
+                label: "1ST QUINCENA:",
+                value: displayEmployee.pay1st
+                    ? `₱${parseFloat(displayEmployee.pay1st).toLocaleString()}`
+                    : "",              
+               },
+               {
+                label: "2ND QUINCENA:",
+                value: displayEmployee.pay1st
+                    ? `₱${parseFloat(displayEmployee.pay2nd).toLocaleString()}`
+                    : "",              
+               },
+            ].map((row, index) => (
+              <Box
+                key={index}
+                sx={{
+                  display: "flex",
+                  borderBottom: "1px solid black", // ✅ always show border
+
+                }}
+              >
+                {/* Left column (label) */}
+                <Box sx={{ p: 1, width: "25%" }}>
+                  <Typography fontWeight="bold">{row.label}</Typography>
                 </Box>
-                <Box display="flex" justifyContent="space-between" py={0.5}>
-                  <Typography fontWeight="bold">Name:</Typography>
-                  <Typography>{currentEmployee.name}</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6}>
-                <Box display="flex" justifyContent="space-between" py={0.5}>
-                  <Typography fontWeight="bold">Position:</Typography>
-                  <Typography>{currentEmployee.position}</Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between" py={0.5}>
-                  <Typography fontWeight="bold">Department:</Typography>
-                  <Typography>{currentEmployee.department || "—"}</Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
 
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Earnings Section */}
-          <Box textAlign="left" mb={3}>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "#6D2323", mb: 2 }}>
-              EARNINGS
-            </Typography>
-            <Box display="flex" justifyContent="space-between" py={1} sx={{ backgroundColor: "#f8f9fa", px: 2 }}>
-              <Typography fontWeight="bold" variant="h6">Gross Salary:</Typography>
-              <Typography fontWeight="bold" variant="h6" sx={{ color: "#2e7d32" }}>
-                ₱{parseFloat(currentEmployee.grossSalary || 0).toLocaleString()}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Deductions Section */}
-          <Box textAlign="left" mb={3}>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "#6D2323", mb: 2 }}>
-              DEDUCTIONS
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", border: "none", py: 0.5 }}>
-                      Withholding Tax
-                    </TableCell>
-                    <TableCell align="right" sx={{ border: "none", py: 0.5 }}>
-                      ₱{parseFloat(currentEmployee.withholdingTax || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", border: "none", py: 0.5 }}>
-                      GSIS Contributions
-                    </TableCell>
-                    <TableCell align="right" sx={{ border: "none", py: 0.5 }}>
-                      ₱{parseFloat(currentEmployee.totalGsisDeds || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", border: "none", py: 0.5 }}>
-                      Pag-IBIG Contributions
-                    </TableCell>
-                    <TableCell align="right" sx={{ border: "none", py: 0.5 }}>
-                      ₱{parseFloat(currentEmployee.totalPagibigDeds || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", border: "none", py: 0.5 }}>
-                      PhilHealth 
-                    </TableCell>
-                    <TableCell align="right" sx={{ border: "none", py: 0.5 }}>
-                      ₱{parseFloat(currentEmployee.PhilHealthContribution || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", border: "none", py: 0.5 }}>
-                      Other Deductions
-                    </TableCell>
-                    <TableCell align="right" sx={{ border: "none", py: 0.5 }}>
-                      ₱{parseFloat(currentEmployee.totalOtherDeds || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow sx={{ backgroundColor: "#ffebee" }}>
-                    <TableCell sx={{ fontWeight: "bold", fontSize: "1.1rem", border: "none", py: 1 }}>
-                      TOTAL DEDUCTIONS:
-                    </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: "bold", fontSize: "1.1rem", color: "#d32f2f", border: "none", py: 1 }}>
-                      ₱{parseFloat(currentEmployee.totalDeductions || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Net Pay Section */}
-          <Box textAlign="left" mb={3}>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "#6D2323", mb: 2 }}>
-              NET PAY COMPUTATION
-            </Typography>
-            <Box display="flex" justifyContent="space-between" py={1} sx={{ backgroundColor: "#e8f5e8", px: 2, mb: 2 }}>
-              <Typography fontWeight="bold" variant="h6">Net Salary:</Typography>
-              <Typography fontWeight="bold" variant="h6" sx={{ color: "#2e7d32" }}>
-                ₱{parseFloat(currentEmployee.netSalary || 0).toLocaleString()}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Pay Distribution */}
-          <Box textAlign="left">
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "#6D2323", mb: 2 }}>
-              PAY DISTRIBUTION
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={6}>
-                <Box 
-                  sx={{ 
-                    backgroundColor: "#fff3e0", 
-                    p: 2, 
-                    borderRadius: 2, 
-                    border: "2px solid #ff9800",
-                    textAlign: "center"
+                {/* Right column (value with left border) */}
+                <Box
+                  sx={{
+                    flex: 1,
+                    p: 1,
+                    borderLeft: "1px solid black",
                   }}
                 >
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ color: "#e65100" }}>
-                    1st Pay Period
-                  </Typography>
-                  <Typography variant="h5" fontWeight="bold" sx={{ color: "#e65100", mt: 1 }}>
-                    ₱{parseFloat(currentEmployee.pay1st || 0).toLocaleString()}
-                  </Typography>
+                  <Typography>{row.value}</Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={6}>
-                <Box 
-                  sx={{ 
-                    backgroundColor: "#e3f2fd", 
-                    p: 2, 
-                    borderRadius: 2, 
-                    border: "2px solid #2196f3",
-                    textAlign: "center"
-                  }}
-                >
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ color: "#0d47a1" }}>
-                    2nd Pay Period
-                  </Typography>
-                  <Typography variant="h5" fontWeight="bold" sx={{ color: "#0d47a1", mt: 1 }}>
-                    ₱{parseFloat(currentEmployee.pay2nd || 0).toLocaleString()}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
+              </Box>
+            ))}
           </Box>
+
 
           {/* Footer */}
-          <Box mt={4} pt={3} borderTop="1px solid #eee">
-            <Typography variant="body2" color="textSecondary" textAlign="center">
-              This payslip is computer generated and does not require signature.
-            </Typography>
-            <Typography variant="body2" color="textSecondary" textAlign="center" sx={{ mt: 1 }}>
-              For any payroll inquiries, please contact the Human Resources Department.
-            </Typography>
-          </Box>
-        </Paper>
-      ) : (
-        <Alert severity="info" sx={{ mt: 3 }}>
-          No employee data available. Please check if the payroll data is loaded correctly.
-        </Alert>
-      )}
-
-      {/* Download PDF Button */}
-      {currentEmployee && (
-        <Box display="flex" justifyContent="center" mt={2}>
-          <Button
-            variant="contained"
-            onClick={downloadPDF}
-            sx={{
-              backgroundColor: "#6D2323",
-              "&:hover": { backgroundColor: "#B22222" },
-              px: 4,
-              py: 1.5,
-              fontSize: "1.1rem",
-            }}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mt={2}
+            sx={{ fontSize: "0.85rem" }}
           >
-            Download Payslip | PDF
-          </Button>
-        </Box>
+            <Typography>Certified Correct:</Typography>
+            <Typography>plus PERA – 2,000.00</Typography>
+          </Box>
+
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mt={2}
+          >
+            <Typography  sx={{ fontSize: "0.85rem", fontWeight:'bold' }}
+            >GIOVANNI L. AHUNIN</Typography> 
+          </Box>
+          <Typography>Director, Administrative Services</Typography>
+        </Paper>
+          ) : selectedMonth ? (
+            <Alert
+              severity="info"
+              sx={{
+                mt: 3,
+                backgroundColor: "rgba(255, 255, 255, 0.8)", // lighter bg
+                border: '1px solid #6d2323',
+                color: "#6d2323",
+                "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
+              }}
+            >
+              There's no payslip saved for the month of {selectedMonth}.
+            </Alert>
+          ) : (
+            <Alert
+              severity="info"
+              sx={{
+                mt: 3,
+                backgroundColor: "rgba(109, 35, 35, 0.1)", // lighter bg
+                color: "#6D2323",
+                "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
+              }}
+            >
+              No employee data available. Please check if the payroll data is loaded correctly.
+            </Alert>
       )}
 
-      {/* Search Error Snackbar */}
-      <Snackbar
-        open={showSearchError}
-        autoHideDuration={4000}
-        onClose={() => setShowSearchError(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={() => setShowSearchError(false)} 
-          severity={searchError.includes('Found') ? 'info' : 'warning'}
+      {/* Download Button */}
+      {/* Action Buttons */}
+      {displayEmployee && (
+        <Box display="flex" justifyContent="center" mt={2} gap={2}>
+        <Button
+          variant="contained"
+          onClick={downloadPDF}
+          sx={{
+            backgroundColor: "#6D2323",
+            "&:hover": { backgroundColor: "#B22222" },
+            px: 4,
+            py: 1.5,
+            fontSize: "1.1rem",
+          }}
         >
-          {searchError}
-        </Alert>
-      </Snackbar>
+          Download Payslip | PDF
+        </Button>
+
+        <Button
+          variant="contained"
+          onClick={sendPayslipViaGmail}
+          disabled={sending}
+          sx={{
+            backgroundColor: "#1976d2",
+            "&:hover": { backgroundColor: "#1565c0" },
+            px: 4,
+            py: 1.5,
+            fontSize: "1.1rem",
+          }}
+        >
+          {sending ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Send via Gmail"}
+        </Button>
+      </Box>
+
+      )}
+     <Dialog
+      open={modal.open}
+      onClose={() => setModal({ ...modal, open: false })}
+    >
+      <DialogTitle>
+        {modal.type === "success" ? "✅ Success" : "❌ Error"}
+      </DialogTitle>
+      <DialogContent>
+        <Typography>{modal.message}</Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setModal({ ...modal, open: false })} autoFocus>
+          OK
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    
     </Container>
+
+    
   );
+ 
 });
 
+
+
+
 export default Payslip;
+
+

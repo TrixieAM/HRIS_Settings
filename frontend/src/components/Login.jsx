@@ -12,6 +12,8 @@ import {
   Modal,
 } from "@mui/material";
 import logo from "../assets/logo.PNG";
+import LoadingOverlay from "../components/LoadingOverlay";
+
 
 
 const Login = () => {
@@ -92,7 +94,7 @@ const Login = () => {
       const data = await res.json();
       if (res.ok) {
         setSuccess("Verification code sent to your email.");
-        setCodeTimer(15 * 60); // 15 minutes
+        setCodeTimer(3 * 60); // 15 minutes
         setTimeout(() => setSuccess(""), 3000);
       } else {
         setTwoFactorError(data.error || "Failed to send code.");
@@ -227,6 +229,8 @@ const Login = () => {
 
 
   return (
+
+    
     <Container
       maxWidth="sm"
       sx={{
@@ -234,7 +238,10 @@ const Login = () => {
         minHeight: "70vh",
         backgroundColor: "#fff8e1",
       }}
+      
     >
+          <LoadingOverlay open={loading || twoFactorLoading || resendLoading} message="Please wait..." />
+
       <Paper
         elevation={4}
         sx={{

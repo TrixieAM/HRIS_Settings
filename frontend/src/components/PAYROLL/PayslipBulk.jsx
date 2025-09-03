@@ -1,4 +1,3 @@
-// Payslip.jsx
 import React, { useRef, forwardRef, useState, useEffect } from "react";
 import {
   Container,
@@ -7,17 +6,21 @@ import {
   Box,
   Button,
   CircularProgress,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
   TextField,
-  InputAdornment
+  Select,
+  MenuItem,
 } from "@mui/material";
-import Search from "@mui/icons-material/Search";
-
-
 import WorkIcon from "@mui/icons-material/Work";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -25,7 +28,7 @@ import axios from "axios";
 import logo from "../../assets/logo.png";
 
 
-const PayslipOverall = forwardRef(({ employee }, ref) => {
+const PayslipBulk = forwardRef(({ employee }, ref) => {
   const payslipRef = ref || useRef();
 
 
@@ -34,30 +37,42 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
   const [loading, setLoading] = useState(!employee);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
-  const [modal, setModal] = useState({ open: false, type: "success", message: "" });
+  const [modal, setModal] = useState({
+    open: false,
+    type: "success",
+    message: "",
+  });
 
 
-  const [search, setSearch] = useState("");                // search input
-  const [hasSearched, setHasSearched] = useState(false);  // flag if search was done
-  const [selectedMonth, setSelectedMonth] = useState(""); // which month is selected
-  const [filteredPayroll, setFilteredPayroll] = useState([]); // search r
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  // 🔍 Search & Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [filteredPayroll, setFilteredPayroll] = useState([]);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
 
 
- 
+  const months = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
 
 
-  // Fetch payroll data
+  // Generate year options (current year ± 5 years)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+
+
+  // 📌 Fetch payroll
   useEffect(() => {
     if (!employee) {
       const fetchData = async () => {
         try {
           setLoading(true);
-          const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+          const res = await axios.get(
+            "http://localhost:5000/api/finalized-payroll"
+          );
           setAllPayroll(res.data);
-          // if (res.data.length > 0) {
-          //   setDisplayEmployee(res.data[0]);
-          // }
           setLoading(false);
         } catch (err) {
           console.error("Error fetching payroll:", err);
@@ -70,168 +85,143 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
   }, [employee]);
 
 
-  // Download PDF
-  const downloadPDF = () => {
-    const input = payslipRef.current;
-    html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${displayEmployee?.name || "EARIST"}-Payslip.pdf`);
-    });
+  // 📌 Filter payroll by Year, Month, and Search
+  useEffect(() => {
+    let result = [...allPayroll];
+
+
+    if (selectedMonth) {
+      const monthIndex = months.indexOf(selectedMonth);
+      result = result.filter((emp) => {
+        if (!emp.startDate) return false;
+        const date = new Date(emp.startDate);
+        return date.getMonth() === monthIndex && date.getFullYear() === selectedYear;
+      });
+    }
+
+
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (emp) =>
+          emp.name.toLowerCase().includes(q) ||
+          emp.employeeNumber.toString().includes(q)
+      );
+    }
+
+
+    setFilteredPayroll(result);
+    setSelectedEmployees([]); // reset selection when filters change
+  }, [selectedMonth, selectedYear, searchQuery, allPayroll]);
+
+
+  // 📌 Month select
+  const handleMonthSelect = (month) => {
+    setSelectedMonth(month);
+    setDisplayEmployee(null);
   };
 
 
-// Send Payslip via Gmail
-const sendPayslipViaGmail = async () => {
-  if (!displayEmployee) return;
+  // ☑️ Checkbox logic
+  const allSelected =
+    filteredPayroll.length > 0 &&
+    selectedEmployees.length === filteredPayroll.length;
+  const someSelected =
+    selectedEmployees.length > 0 &&
+    selectedEmployees.length < filteredPayroll.length;
 
 
-  setSending(true);
-  try {
-    const input = payslipRef.current;
-    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedEmployees(filteredPayroll.map((emp) => emp.employeeNumber));
+    } else {
+      setSelectedEmployees([]);
+    }
+  };
 
 
-    // Convert PDF to Blob
-    const pdfBlob = pdf.output("blob");
-    const formData = new FormData();
-    formData.append("pdf", pdfBlob, `${displayEmployee.name}_payslip.pdf`);
-    formData.append("name", displayEmployee.name);
-    formData.append("employeeNumber", displayEmployee.employeeNumber);
+  const handleSelectOne = (id) => {
+    if (selectedEmployees.includes(id)) {
+      setSelectedEmployees(selectedEmployees.filter((empId) => empId !== id));
+    } else {
+      setSelectedEmployees([...selectedEmployees, id]);
+    }
+  };
 
 
-    const res = await axios.post(
-      "http://localhost:5000/SendPayslipRoute/send-payslip",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
+  // 📤 Bulk send selected payslips
+  const sendSelectedPayslips = async () => {
+    if (selectedEmployees.length === 0) return;
 
 
-    if (res.data.success) {
+    setSending(true);
+    try {
+      const formData = new FormData();
+      let payslipMeta = [];
+
+
+      for (const emp of filteredPayroll.filter((e) =>
+        selectedEmployees.includes(e.employeeNumber)
+      )) {
+        setDisplayEmployee(emp);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+
+        const input = payslipRef.current;
+        if (!input) throw new Error("Payslip element not found");
+
+
+        const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/png");
+
+
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+
+        const pdfBlob = pdf.output("blob");
+        formData.append("pdfs", pdfBlob, `${emp.name}_payslip.pdf`);
+
+
+        payslipMeta.push({
+          name: emp.name,
+          employeeNumber: emp.employeeNumber,
+        });
+      }
+
+
+      formData.append("payslips", JSON.stringify(payslipMeta));
+
+
+      await axios.post(
+        "http://localhost:5000/SendPayslipRoute/send-bulk",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+
       setModal({
         open: true,
         type: "success",
-        message: "Payslip sent successfully via Gmail!",
+        message: "Selected payslips sent successfully via Gmail!",
       });
-    } else {
+    } catch (err) {
+      console.error("Error sending bulk payslips:", err);
       setModal({
         open: true,
         type: "error",
-        message: res.data.error || "Failed to send payslip.",
+        message: "An error occurred while sending bulk payslips.",
       });
+    } finally {
+      setSending(false);
     }
-  } catch (err) {
-    console.error("Error sending payslip:", err);
-    setModal({
-      open: true,
-      type: "error",
-      message: "An error occurred while sending the payslip.",
-    });
-  } finally {
-    setSending(false);
-  }
-};
-
-
-// For Search
-const handleSearch = () => {
-  if (!search.trim()) return;
-
-
-  const result = allPayroll.filter(
-    (emp) =>
-      emp.employeeNumber.toString().includes(search.trim()) ||
-      emp.name.toLowerCase().includes(search.trim().toLowerCase())
-  );
-
-
-  if (result.length > 0) {
-    setFilteredPayroll(result);
-    setDisplayEmployee(result[0]);   // ✅ show first search match
-    setHasSearched(true);
-  } else {
-  setFilteredPayroll([]);
-  setDisplayEmployee(null);   // clear display
-  setSelectedMonth("");       // ✅ reset month filter
-  setHasSearched(true);
-}
-};
-
-
-
-
-// For Clear / Reset
-const clearSearch = () => {
-  setSearch("");
-  setHasSearched(false);
-  setSelectedMonth("");
-  setFilteredPayroll([]);
-
-
-  // ✅ Restore original employee (logged-in) or fallback to first payroll
-  if (employee) {
-    setDisplayEmployee(employee);
-  }
-  // else if (allPayroll.length > 0) {
-  //   setDisplayEmployee(allPayroll[0]);
-  // }
-  else {
-    setDisplayEmployee(null);
-  }
-};
-
-
-
-
-// 📅 Month filter
-const handleMonthSelect = (month) => {
-  setSelectedMonth(month);
-
-
-  const monthIndex = months.indexOf(month); // Jan=0, Feb=1, ...
-
-
-  const result = allPayroll.filter((emp) => {
-    if (!emp.startDate) return false;
-    const empMonth = new Date(emp.startDate).getMonth();
-    return (
-      (emp.employeeNumber.toString().includes(search.trim()) ||
-        emp.name.toLowerCase().includes(search.trim().toLowerCase())) &&
-      empMonth === monthIndex
-    );
-  });
-
-
-  setFilteredPayroll(result);
-
-
-  if (result.length > 0) {
-    setDisplayEmployee(result[0]);   // ✅ show first match for that month
-  } else {
-    setDisplayEmployee(null);        // ✅ no data for this month
-  }
-
-
-  setHasSearched(true);
-};
-
-
-
-
-
-
+  };
 
 
   return (
-    <Container maxWidth="10%">
+    <Container maxWidth="lg">
       {/* Header Bar */}
       <Paper
         elevation={6}
@@ -258,131 +248,172 @@ const handleMonthSelect = (month) => {
       </Paper>
 
 
+      {/* Filters: Search + Year + Month */}
       <Box
-      mb={2}
-      display="flex"
-      flexDirection="column"
-      gap={2}
-      sx={{
-        backgroundColor: "white",
-        border: "2px solid #6D2323",
-        borderRadius: 2,
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-        p: 3,
-      }}
-    >
-    {/* Search Bar */}
-    <Box display="flex" alignItems="center" gap={2}>
-      <TextField
-        size="small"
-        variant="outlined"
-        placeholder="Search by Employee # or Name"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search sx={{ color: "#6D2323", marginRight: 1 }} />
-            </InputAdornment>
-          ),
-        }}
+        mb={2}
+        display="flex"
+        flexDirection="column"
+        gap={2}
         sx={{
           backgroundColor: "white",
-          borderRadius: 1,
-          flex: 1,
+          border: "2px solid #6D2323",
+          borderRadius: 2,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          p: 3,
         }}
-      />
-      <Box display="flex" gap={1}>
-        <Button
-          variant="contained"
-          onClick={handleSearch}
-          disabled={!search.trim()}
-          sx={{
-            backgroundColor: "#6D2323",
-            "&:hover": { backgroundColor: "#B22222" },
-            "&:disabled": { backgroundColor: "#ccc" },
-          }}
-        >
-          Search Employee
-        </Button>
-        <Button
+      >
+        {/* Search Bar */}
+        <TextField
+          label="Search by Name or Employee Number"
           variant="outlined"
-          onClick={clearSearch}
-          sx={{
-            borderColor: "#6D2323",
-            color: "#6D2323",
-            "&:hover": {
-              borderColor: "#B22222",
-              backgroundColor: "#f5f5f5",
-            },
-          }}
-        >
-          Clear
-        </Button>
-      </Box>
-    </Box>
-
-
-    {/* Month Filter */}
-    <Typography
-      variant="subtitle2"
-      color={hasSearched ? "textSecondary" : "textDisabled"}
-    >
-      Filter By Month {!hasSearched && "(Search for an employee first)"}
-    </Typography>
-    <Box display="flex" flexWrap="wrap" gap={1}>
-      {months.map((m) => (
-        <Button
-          key={m}
-          variant={m === selectedMonth ? "contained" : "outlined"}
           size="small"
-          disabled={!hasSearched}
-          sx={{
-            backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
-            color:
-              m === selectedMonth
-                ? "#fff"
-                : hasSearched
-                ? "#6D2323"
-                : "#ccc",
-            borderColor: hasSearched ? "#6D2323" : "#ccc",
-            "&:hover": {
-              backgroundColor: hasSearched
-                ? m === selectedMonth
-                  ? "#B22222"
-                  : "#f5f5f5"
-                : "#fff",
-            },
-            "&:disabled": {
-              backgroundColor: "#f5f5f5",
-              color: "#ccc",
-              borderColor: "#ccc",
-            },
-          }}
-          onClick={() => handleMonthSelect(m)}
-        >
-          {m}
-        </Button>
-      ))}
-    </Box>
-  </Box>
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ maxWidth: 400 }}
+        />
 
 
-      {/* Payslip Content */}
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={10}>
-          <CircularProgress sx={{ color: "#6D2323" }} />
+        {/* Year + Month */}
+        <Box display="flex" gap={2} alignItems="center">
+          {/* Year Dropdown */}
+          <Select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            size="small"
+          >
+            {years.map((year) => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
+
+
+          {/* Month Buttons */}
+          <Box display="flex" flexWrap="wrap" gap={1}>
+            {months.map((m) => (
+              <Button
+                key={m}
+                variant={m === selectedMonth ? "contained" : "outlined"}
+                size="small"
+                sx={{
+                  backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
+                  color: m === selectedMonth ? "#fff" : "#6D2323",
+                  borderColor: "#6D2323",
+                  "&:hover": {
+                    backgroundColor:
+                      m === selectedMonth ? "#B22222" : "#f5f5f5",
+                  },
+                }}
+                onClick={() => handleMonthSelect(m)}
+              >
+                {m}
+              </Button>
+            ))}
+          </Box>
         </Box>
-      ) : error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : displayEmployee ? (
-        <Paper
+      </Box>
+
+
+      {/* Employee Table */}
+      {selectedMonth && (
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={someSelected}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell><b>Name</b></TableCell>
+                  <TableCell><b>Employee Number</b></TableCell>
+                  <TableCell><b>Payslip</b></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredPayroll.length > 0 ? (
+                  filteredPayroll.map((emp) => {
+                    const hasPayslip = !!emp.startDate;
+                    return (
+                      <TableRow key={emp.employeeNumber}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedEmployees.includes(
+                              emp.employeeNumber
+                            )}
+                            onChange={() =>
+                              handleSelectOne(emp.employeeNumber)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>{emp.name}</TableCell>
+                        <TableCell>{emp.employeeNumber}</TableCell>
+                        <TableCell>
+                          {hasPayslip ? (
+                            <Typography color="green">✔</Typography>
+                          ) : (
+                            <Typography color="red">✖</Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      No employee data available.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+
+
+      {/* Bulk Send Button */}
+      {selectedMonth && filteredPayroll.length > 0 && (
+        <Box display="flex" justifyContent="flex-end" mt={2}>
+          <Button
+            variant="contained"
+            onClick={sendSelectedPayslips}
+            disabled={sending || selectedEmployees.length === 0}
+            sx={{
+              backgroundColor: "#1976d2",
+              "&:hover": { backgroundColor: "#115293" },
+              px: 4,
+              py: 1.5,
+              fontSize: "1rem",
+            }}
+          >
+            {sending ? (
+              <CircularProgress size={24} sx={{ color: "white" }} />
+            ) : (
+              "Bulk Send Payslips"
+            )}
+          </Button>
+        </Box>
+      )}
+
+
+      {/* Hidden Payslip Renderer */}
+      {displayEmployee && (
+                <Paper
+
+
           ref={payslipRef}
           elevation={4}
           sx={{
             p: 3,
+            position: "absolute",  // 👈 offscreen instead of display:none
+            top: "-9999px",   // 👈 render offscreen but still "visible"
+            left: "-9999px",
             mt: 2,
             border: "2px solid black",
             borderRadius: 1,
@@ -666,110 +697,32 @@ const handleMonthSelect = (month) => {
           </Box>
           <Typography>Director, Administrative Services</Typography>
         </Paper>
-          ) : selectedMonth ? (
-            <Alert
-              severity="info"
-              sx={{
-                mt: 3,
-                backgroundColor: "rgba(255, 255, 255, 0.8)", // lighter bg
-                border: '1px solid #6d2323',
-                color: "#6d2323",
-                "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
-              }}
-            >
-              There's no payslip saved for the month of {selectedMonth}.
-            </Alert>
-         ) : hasSearched ? (
-            <Alert
-              severity="info"
-              sx={{
-                mt: 3,
-                backgroundColor: "rgba(109, 35, 35, 0.1)", // lighter bg
-                color: "#6D2323",
-                "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
-              }}
-            >
-              No employee data available. Please check if the payroll data is loaded correctly.
-            </Alert>
-          ) : null}
-
-
-
-
-      {/* Download Button */}
-      {/* Action Buttons */}
-      {displayEmployee && (
-        <Box display="flex" justifyContent="center" mt={2} gap={2} mb={3}>
-        <Button
-          variant="contained"
-          onClick={downloadPDF}
-          sx={{
-            backgroundColor: "#6D2323",
-            "&:hover": { backgroundColor: "#B22222" },
-            px: 4,
-            py: 1.5,
-            fontSize: "1.1rem",
-          }}
-        >
-          Download Payslip | PDF
-        </Button>
-
-
-        <Button
-          variant="contained"
-          onClick={sendPayslipViaGmail}
-          disabled={sending}
-          sx={{
-            backgroundColor: "#000000",
-            "&:hover": { backgroundColor: "#2f2f2f" },
-            px: 4,
-            py: 1.5,
-            fontSize: "1.1rem",
-          }}
-        >
-          {sending ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Send via Gmail"}
-        </Button>
-      </Box>
-
-
       )}
-     <Dialog
-      open={modal.open}
-      onClose={() => setModal({ ...modal, open: false })}
-    >
-      <DialogTitle>
-        {modal.type === "success" ? "✅ Success" : "❌ Error"}
-      </DialogTitle>
-      <DialogContent>
-        <Typography>{modal.message}</Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setModal({ ...modal, open: false })} autoFocus>
-          OK
-        </Button>
-      </DialogActions>
-    </Dialog>
 
 
-   
+      {/* Modal */}
+      <Dialog
+        open={modal.open}
+        onClose={() => setModal({ ...modal, open: false })}
+      >
+        <DialogTitle>
+          {modal.type === "success" ? "✅ Success" : "❌ Error"}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>{modal.message}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setModal({ ...modal, open: false })} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
-
-
-   
   );
- 
 });
 
 
-
-
-
-
-
-
-export default PayslipOverall;
-
-
+export default PayslipBulk;
 
 
 

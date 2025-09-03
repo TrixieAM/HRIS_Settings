@@ -16,6 +16,7 @@ import {
   InputAdornment
 } from "@mui/material";
 import Search from "@mui/icons-material/Search";
+import LoadingOverlay from "../LoadingOverlay";
 
 import WorkIcon from "@mui/icons-material/Work";
 import jsPDF from "jspdf";
@@ -85,24 +86,9 @@ const Payslip = forwardRef(({ employee }, ref) => {
 
   
   // Download PDF
-  const downloadPDF = () => {
-    const input = payslipRef.current;
-    html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${displayEmployee?.name || "EARIST"}-Payslip.pdf`);
-    });
-  };
-
-// Send Payslip via Gmail
-const sendPayslipViaGmail = async () => {
-  if (!displayEmployee) return;
-
-  setSending(true);
+const downloadPDF = async () => {
   try {
+    setLoading(true); // 🔥 show loading
     const input = payslipRef.current;
     const canvas = await html2canvas(input, { scale: 2, useCORS: true });
     const imgData = canvas.toDataURL("image/png");
@@ -110,42 +96,16 @@ const sendPayslipViaGmail = async () => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-    // Convert PDF to Blob
-    const pdfBlob = pdf.output("blob");
-    const formData = new FormData();
-    formData.append("pdf", pdfBlob, `${displayEmployee.name}_payslip.pdf`);
-    formData.append("name", displayEmployee.name);
-    formData.append("employeeNumber", displayEmployee.employeeNumber);
-
-    const res = await axios.post(
-      "http://localhost:5000/SendPayslipRoute/send-payslip",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-
-    if (res.data.success) {
-      setModal({
-        open: true,
-        type: "success",
-        message: "Payslip sent successfully via Gmail!",
-      });
-    } else {
-      setModal({
-        open: true,
-        type: "error",
-        message: res.data.error || "Failed to send payslip.",
-      });
-    }
+    pdf.save(`${displayEmployee?.name || "EARIST"}-Payslip.pdf`);
   } catch (err) {
-    console.error("Error sending payslip:", err);
+    console.error("Error generating PDF:", err);
     setModal({
       open: true,
       type: "error",
-      message: "An error occurred while sending the payslip.",
+      message: "An error occurred while downloading the PDF.",
     });
   } finally {
-    setSending(false);
+    setLoading(false); 
   }
 };
 
@@ -222,6 +182,8 @@ const handleMonthSelect = (month) => {
 
   return (
     <Container maxWidth="10%">
+                <LoadingOverlay open={loading } message="Please wait..." />
+
       {/* Header Bar */}
       <Paper
         elevation={6}
@@ -646,9 +608,8 @@ const handleMonthSelect = (month) => {
       )}
 
       {/* Download Button */}
-      {/* Action Buttons */}
       {displayEmployee && (
-        <Box display="flex" justifyContent="center" mt={2} gap={2}>
+        <Box display="flex" justifyContent="center" mt={2} gap={2} mb={3}>
         <Button
           variant="contained"
           onClick={downloadPDF}
@@ -662,21 +623,6 @@ const handleMonthSelect = (month) => {
         >
           Download Payslip | PDF
         </Button>
-
-        <Button
-          variant="contained"
-          onClick={sendPayslipViaGmail}
-          disabled={sending}
-          sx={{
-            backgroundColor: "#1976d2",
-            "&:hover": { backgroundColor: "#1565c0" },
-            px: 4,
-            py: 1.5,
-            fontSize: "1.1rem",
-          }}
-        >
-          {sending ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Send via Gmail"}
-        </Button>
       </Box>
 
       )}
@@ -685,7 +631,7 @@ const handleMonthSelect = (month) => {
       onClose={() => setModal({ ...modal, open: false })}
     >
       <DialogTitle>
-        {modal.type === "success" ? "✅ Success" : "❌ Error"}
+        {modal.type === "success" ? " Success" : " Error"}
       </DialogTitle>
       <DialogContent>
         <Typography>{modal.message}</Typography>

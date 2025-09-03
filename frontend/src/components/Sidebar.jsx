@@ -13,6 +13,10 @@ import {
   Avatar,
   Box,
   Divider,
+  Dialog,
+  DialogContent,
+  CircularProgress,
+  
 } from '@mui/material';
 import {
   House,
@@ -66,6 +70,8 @@ import {
 
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import logo from "../assets/logo.PNG";
+
 
 const drawerWidth = 270;
 const collapsedWidth = 60;
@@ -107,6 +113,8 @@ const Sidebar = ({
   const [profilePicture, setProfilePicture] = useState('');
   const navigate = useNavigate();
   const [employeeNumber, setEmployeeNumber] = useState('');
+  const [logoutOpen, setLogoutOpen] = useState(false);
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem('username');
@@ -134,11 +142,15 @@ const Sidebar = ({
     }
   }, [employeeNumber]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+const handleLogout = () => {
+  setLogoutOpen(true); // Show logout modal
+
+  setTimeout(() => {
+    localStorage.removeItem("token");
     localStorage.clear();
-    window.location.href = '/';
-  };
+    window.location.href = "/"; // Redirect after short delay
+  }, 1500);
+};
 
   const handleToggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -260,10 +272,88 @@ const Sidebar = ({
             </Tooltip>
 
             <Tooltip title="Logout">
-              <IconButton onClick={handleLogout} size="small" sx={{ ml: 5.5, color: 'black' }}>
+              <IconButton
+                onClick={handleLogout}
+                size="small"
+                sx={{ ml: 5.5, color: "black" }}
+              >
                 <LogoutIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+
+           <Dialog
+              open={logoutOpen}
+              fullScreen
+              PaperProps={{
+                sx: {
+                  backgroundColor: "transparent",
+                  boxShadow: "none",
+                },
+              }}
+              BackdropProps={{
+                sx: {
+                  backgroundColor: "rgba(255, 255, 255, 0.8)",
+                  backdropFilter: "blur(4px)",
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "column",
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: 120,
+                    height: 120,
+                  }}
+                >
+                  <CircularProgress
+                    size={120}
+                    thickness={4}
+                    sx={{ color: "#6D2323" }}
+                  />
+
+                  {/* Beating logo */}
+                  <Box
+                    component="img"
+                    src={logo}
+                    alt="Logo"
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      width: 60,
+                      height: 60,
+                      transform: "translate(-50%, -50%)",
+                      animation: "beat 1s infinite",
+                    }}
+                  />
+                </Box>
+
+                <Typography
+                  variant="h6"
+                  sx={{ mt: 2, fontWeight: "bold", color: "#6D2323" }}
+                >
+                  Logging out...
+                </Typography>
+              </Box>
+              <Box
+                component="style"
+                children={`
+                  @keyframes beat {
+                    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+                    50% { transform: translate(-50%, -50%) scale(1.2); }
+                  }
+                `}
+              />
+            </Dialog>
           </Box>
         </Box>
       </List>  

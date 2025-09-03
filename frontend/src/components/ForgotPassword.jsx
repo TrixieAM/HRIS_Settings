@@ -19,6 +19,9 @@ const ForgotPassword = () => {
   const [passwordConfirmed, setPasswordConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+
   const handleChanges = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -48,12 +51,12 @@ const ForgotPassword = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
-        setCurrentStep(2);
-        alert("Verification code sent to your email. Please check your inbox.");
-      } else {
-        setErrorMessage(data.error || "Failed to send verification code.");
-      }
+     if (response.ok) {
+      setCurrentStep(2);
+      setShowVerificationModal(true);
+    } else {
+      setErrorMessage(data.error || "Failed to send verification code.");
+    }
     } catch (error) {
       console.error("Error sending verification code:", error);
       setErrorMessage("Something went wrong. Please try again.");
@@ -313,7 +316,7 @@ const ForgotPassword = () => {
                 onChange={handleChanges}
                 style={{
                   width: "100%",
-                  padding: "12px 50px 12px 16px",
+                  padding: "12px 25px 12px 16px",
                   border: "1px solid #ddd",
                   borderRadius: "4px",
                   fontSize: "16px",
@@ -336,7 +339,6 @@ const ForgotPassword = () => {
                   color: "#666",
                 }}
               >
-                {showPasswords.new ? "👁️" : "👁️‍🗨️"}
               </button>
             </div>
 
@@ -352,7 +354,7 @@ const ForgotPassword = () => {
                 onChange={handleChanges}
                 style={{
                   width: "100%",
-                  padding: "12px 50px 12px 16px",
+                  padding: "12px 25px 12px 16px",
                   border: "1px solid #ddd",
                   borderRadius: "4px",
                   fontSize: "16px",
@@ -375,7 +377,6 @@ const ForgotPassword = () => {
                   color: "#666",
                 }}
               >
-                {showPasswords.confirm ? "👁️" : "👁️‍🗨️"}
               </button>
             </div>
 
@@ -621,6 +622,70 @@ const ForgotPassword = () => {
           </div>
         </div>
       )}
+
+      {/* Verification Code Sent Modal */}
+{showVerificationModal && (
+  <div style={{
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  }}>
+    <div style={{
+      backgroundColor: "white",
+      padding: "32px",
+      borderRadius: "8px",
+      textAlign: "center",
+      maxWidth: "400px",
+      width: "90%",
+    }}>
+      <div style={{
+        fontSize: "50px",
+        color: "#6d2323",
+        marginBottom: "16px",
+      }}>✉</div>
+      <div style={{
+        fontSize: "1.25rem",
+        fontWeight: "bold",
+        marginBottom: "16px",
+        color: "#333",
+      }}>
+        Verification Code Sent
+      </div>
+      <div style={{
+        color: "#666",
+        marginBottom: "24px",
+        lineHeight: "1.5",
+      }}>
+        A verification code has been sent to <b>{formData.email}</b>.  
+        Please check your inbox and enter the code to proceed.
+      </div>
+      <button
+        onClick={() => setShowVerificationModal(false)}
+        style={{
+          width: "100%",
+          padding: "12px 24px",
+          backgroundColor: "#A31D1D",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          fontSize: "16px",
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+      >
+        Okay
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

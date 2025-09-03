@@ -25,6 +25,7 @@ import Register from './components/Register';
 import Unauthorized from './components/Unauthorized';
 import AllIcons from './components/Page';
 import SettingsForm from './SettingsForm';
+import LoadingOverlay from './components/LoadingOverlay';
 
 
 
@@ -117,8 +118,7 @@ import LeaveRequest from './components/LEAVE/LeaveRequest';
 import Registration from './components/Registration';
 import Payslip from './components/PAYROLL/Payslip';
 import PayslipOverall from './components/PAYROLL/PayslipOverall';
-import SendPayslip from './components/PAYROLL/SendPayslip';
-
+import PayslipBulk from './components/PAYROLL/PayslipBulk';
 
 
 
@@ -858,7 +858,16 @@ function App() {
               path="/send-payslip"
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
-                  <SendPayslip />
+                  <PayslipBulk />
+                </ProtectedRoute>
+              }
+            />
+
+             <Route
+              path="/loading-overlay"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <LoadingOverlay/>
                 </ProtectedRoute>
               }
             />

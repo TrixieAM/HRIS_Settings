@@ -2,261 +2,558 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Container,
-  Paper,
   Typography,
-  Box,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
-  Button,
-  CircularProgress,
-  Alert,
   TextField,
-} from '@mui/material';
-import WorkIcon from '@mui/icons-material/Work';
-import { InputAdornment } from '@mui/material';
-import { Search } from '@mui/icons-material';
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+} from "@mui/icons-material";
 
+import WorkIcon from '@mui/icons-material/Work';
+import SearchIcon from '@mui/icons-material/Search';
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const PhilHealthTable = () => {
-  const [philhealthData, setPhilhealthData] = useState([]);
-  const [employeeNumber, setEmployeeNumber] = useState('');
-  const [PhilHealthContribution, setPhilHealthContribution] = useState('');
-  const [editId, setEditId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-
+  const [data, setData] = useState([]);
+  const [newPhilHealth, setNewPhilHealth] = useState({
+    employeeNumber: '',
+    PhilHealthContribution: '',
+  });
+  const [editPhilHealth, setEditPhilHealth] = useState(null);
+  const [originalPhilHealth, setOriginalPhilHealth] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/philhealth')
-      .then((response) => {
-        setPhilhealthData(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-        setError('An error occurred while fetching the PhilHealth contributions.');
-        setLoading(false);
-      });
+    fetchPhilHealthData();
   }, []);
 
-
-  const handleSubmit = () => {
-    const newContribution = { employeeNumber, PhilHealthContribution: parseFloat(PhilHealthContribution) };
-
-
-    if (editId) {
-      axios.put(`http://localhost:5000/api/philhealth/${editId}`, newContribution)
-        .then(() => {
-          setPhilhealthData(philhealthData.map((item) => (item.id === editId ? { ...item, ...newContribution } : item)));
-          resetForm();
-        })
-        .catch((error) => console.error('Error updating contribution:', error));
-    } else {
-      axios.post('http://localhost:5000/api/philhealth', newContribution)
-        .then(() => {
-          setPhilhealthData([...philhealthData, newContribution]);
-          resetForm();
-        })
-        .catch((error) => console.error('Error adding contribution:', error));
+  const fetchPhilHealthData = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/philhealth');
+      setData(res.data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
     }
   };
 
-
-  const handleDelete = (id) => {
-    axios.delete(`http://localhost:5000/api/philhealth/${id}`)
-      .then(() => {
-        setPhilhealthData(philhealthData.filter((item) => item.id !== id));
-      })
-      .catch((error) => console.error('Error deleting contribution:', error));
+  const handleAdd = async () => {
+    setLoading(true);
+    try {
+      const contributionData = {
+        ...newPhilHealth,
+        PhilHealthContribution: parseFloat(newPhilHealth.PhilHealthContribution)
+      };
+      
+      await axios.post('http://localhost:5000/api/philhealth', contributionData);
+      setNewPhilHealth({
+        employeeNumber: '',
+        PhilHealthContribution: '',
+      });
+      setTimeout(() => {
+        setLoading(false);
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);
+      fetchPhilHealthData();
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
+    }
   };
 
-
-  const handleEdit = (id) => {
-    const contribution = philhealthData.find((item) => item.id === id);
-    setEmployeeNumber(contribution.employeeNumber);
-    setPhilHealthContribution(contribution.PhilHealthContribution);
-    setEditId(id);
+  const handleUpdate = async () => {
+    try {
+      const contributionData = {
+        ...editPhilHealth,
+        PhilHealthContribution: parseFloat(editPhilHealth.PhilHealthContribution)
+      };
+      
+      await axios.put(`http://localhost:5000/api/philhealth/${editPhilHealth.id}`, contributionData);
+      setEditPhilHealth(null);
+      setOriginalPhilHealth(null);
+      setIsEditing(false);
+      fetchPhilHealthData();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
+    }
   };
 
-
-  const resetForm = () => {
-    setEmployeeNumber('');
-    setPhilHealthContribution('');
-    setEditId(null);
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/philhealth/${id}`);
+      setEditPhilHealth(null);
+      setOriginalPhilHealth(null);
+      setIsEditing(false);
+      fetchPhilHealthData();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
+    }
   };
 
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditPhilHealth({ ...editPhilHealth, [field]: value });
+    } else {
+      setNewPhilHealth({ ...newPhilHealth, [field]: value });
+    }
+  };
 
-  // Filter the records based on the search query
-  const filteredData = philhealthData.filter((entry) =>
-    entry.employeeNumber.includes(searchQuery)
-  );
+  const handleOpenModal = (philHealth) => {
+    setEditPhilHealth({ ...philHealth });
+    setOriginalPhilHealth({ ...philHealth });
+    setIsEditing(false);
+  };
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditPhilHealth({ ...originalPhilHealth });
+    setIsEditing(false);
+  };
+
+  const handleCloseModal = () => {
+    setEditPhilHealth(null);
+    setOriginalPhilHealth(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   return (
-    <Container maxWidth="xl" sx={{  }}>
-      <Paper
-        elevation={6}
-        sx={{ backgroundColor: 'rgb(109, 35, 35)', color: '#fff', p: 3, borderRadius: 3, borderEndEndRadius: '0', borderEndStartRadius: '0' }}
+    <Container sx={{ mt: 0 }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding PhilHealth record..." />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
+        }}
       >
-        <Box display="flex" alignItems="center" gap={2}>
-          <WorkIcon fontSize="large" />
-          <Box>
-            <Typography variant="h4" fontWeight="bold">
-              PhilHealth Contributions
-            </Typography>
-            <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              Manage employee PhilHealth contributions
-            </Typography>
-          </Box>
-        </Box>
-      </Paper>
-
-
-      <Box mt={4} sx={{ backgroundColor: '#fff', p: 3, boxShadow: 3, marginBottom: '15px', marginTop: '0px' }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-          {editId ? 'Edit Contribution' : 'Add New Contribution'}
-        </Typography>
-        <Box display="flex" flexDirection="column" gap={2}>
-          <input
-            type="text"
-            value={employeeNumber}
-            onChange={(e) => setEmployeeNumber(e.target.value)}
-            placeholder="Employee Number"
-            style={{
-              padding: '10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              fontSize: '16px',
-            }}
-          />
-          <input
-            type="text"
-            value={PhilHealthContribution}
-            onChange={(e) => setPhilHealthContribution(e.target.value)}
-            placeholder="PhilHealth Contribution"
-            style={{
-              padding: '10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              fontSize: '16px',
-            }}
-          />
-          <Button
-            variant="contained"
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "120%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
             sx={{
-              backgroundColor: '#6D2323', // Maroon for primary button
-              '&:hover': {
-                backgroundColor: '#B22222', // Lighter Maroon on hover
-              },
-              padding: '10px',
-              fontSize: '16px',
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
             }}
-            onClick={handleSubmit}
           >
-            {editId ? 'Update Contribution' : 'Add Contribution'}
-          </Button>
+            <WorkIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                PhilHealth Contributions
+              </Typography>
+              <Typography variant="body2">
+                Manage employee PhilHealth contributions
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newPhilHealth.employeeNumber}
+                  onChange={(e) => handleChange("employeeNumber", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* PhilHealth Contribution */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  PhilHealth Contribution
+                </Typography>
+                <TextField
+                  value={newPhilHealth.PhilHealthContribution}
+                  onChange={(e) => handleChange("PhilHealthContribution", e.target.value)}
+                  fullWidth
+                  type="number"
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              style={{
+                backgroundColor: '#6D2323',
+                display: 'flex',
+                color: '#ffffff',
+                width: '640px',
+                marginTop: '35px',
+              }}
+            >
+              Add
+            </Button>
+          </Container>
         </Box>
       </Box>
 
-
-      {/* Search Section */}
-       <TextField
-        size="small"
-        variant="outlined"
-        placeholder="Search by Employee Number"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ backgroundColor: 'white', borderRadius: 1, marginLeft: '870px' }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search sx={{ color: '#6D2323', marginRight: 1 }} />
-            </InputAdornment>
-          ),
-        }}
-      />
-
-
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={10}>
-          <CircularProgress />
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "120%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              PhilHealth Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage PhilHealth contributions
+            </Typography>
+          </Box>
         </Box>
-      ) : error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : (
-        <Paper elevation={4} sx={{ borderRadius: 3, p: 3 }}>
-          <TableContainer component={Box} sx={{ maxHeight: 600 }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Employee Number</TableCell>
-                  <TableCell>PhilHealth Contribution</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredData.length > 0 ? (
-                  filteredData.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{entry.id}</TableCell>
-                      <TableCell>{entry.employeeNumber}</TableCell>
-                      <TableCell>{parseFloat(entry.PhilHealthContribution).toFixed(2)}</TableCell>
-                      <TableCell>
+
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
+
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Employee Number"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((philHealth) => {
+                const employeeNumber = philHealth.employeeNumber?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return employeeNumber.includes(search);
+              })
+              .map((philHealth) => (
+                <Grid item xs={12} sm={6} md={4} key={philHealth.id}>
+                  <Box
+                    onClick={() => handleOpenModal(philHealth)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 2 }}
+                    >
+                      {philHealth.employeeNumber}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Contribution:
+                    </Typography>
+                    <Chip
+                      label={`₱${parseFloat(philHealth.PhilHealthContribution).toFixed(2)}`}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((philHealth) => {
+              const employeeNumber = philHealth.employeeNumber?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return employeeNumber.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        {/* Modal */}
+        <Modal
+          open={!!editPhilHealth}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editPhilHealth && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit PhilHealth Information" : "PhilHealth Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editPhilHealth.employeeNumber}
+                        onChange={(e) =>
+                          setEditPhilHealth({ ...editPhilHealth, employeeNumber: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* PhilHealth Contribution */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        PhilHealth Contribution
+                      </Typography>
+                      <TextField
+                        value={editPhilHealth.PhilHealthContribution}
+                        onChange={(e) =>
+                          setEditPhilHealth({ ...editPhilHealth, PhilHealthContribution: e.target.value })
+                        }
+                        fullWidth
+                        type="number"
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      <>
                         <Button
-                          variant="contained"
-                          color="primary"
-                          sx={{
-                            backgroundColor: '#6D2323', // Maroon
-                            '&:hover': {
-                              backgroundColor: '#B22222', // Lighter Maroon (for hover)
-                            },
-                            marginRight: '8px',
-                          }}
-                          onClick={() => handleEdit(entry.id)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
+                          onClick={() => handleDelete(editPhilHealth.id)}
                           variant="outlined"
-                          color="error"
+                          startIcon={<DeleteIcon />}
                           sx={{
-                            bgcolor: '#000000',
-                            borderColor: '#D3D3D3',
-                            color: '#ffffff',
-                            '&:hover': {
-                              borderColor: '#D3D3D3',
-                            },
+                            color: "#ffffff",
+                            backgroundColor: 'black'
                           }}
-                          onClick={() => handleDelete(entry.id)}
                         >
                           Delete
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center" sx={{ color: 'red' }}>
-                      No PhilHealth contributions available.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      )}
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };
 
-
 export default PhilHealthTable;
- 
-

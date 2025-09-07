@@ -9,10 +9,14 @@ import {
   Container,
   Grid,
   Typography,
-  Divider,
-  Paper,
+  Chip,
   Modal,
-  Slide
+  IconButton,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
+  Paper,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -20,94 +24,26 @@ import {
   Delete as DeleteIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-  ExitToApp as ExitToAppIcon,
+  Close,
   Person as PersonIcon,
   Search as SearchIcon,
+  NavigateNext as NextIcon,
+  NavigateBefore as PrevIcon,
+  Reorder,
 } from '@mui/icons-material';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
-
-
-const fieldRefs = {}; // Global object to track refs for each field
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const sectionHeaderStyle = {
-  background: 'linear-gradient(to right, #8B1E1E, #A32F2F)',
-  color: 'white',
-  fontWeight: 'bold',
-  padding: '16px',
-  borderRadius: '10px 10px 0 0',
-};
-
-
-
-
-
-
-
-
-const sectionContainerStyle = {
-  backgroundColor: '#FFFFFF',
-  borderRadius: '10px',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  marginBottom: '40px',
-};
-
-
-
-
-
-
-
-
-const fieldStyle = {
-  borderRadius: '10px',
-  backgroundColor: 'white',
-};
-
-
-
-
-
-
-
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const PersonTable = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-const [filteredData, setFilteredData] = useState([]);
-const [isEditModalOpen, setEditModalOpen] = useState(false);
-const newRecordRef = useRef(null);
-
-
-
-
-
-
-
-
-
-
-
-
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
+  
+  // Stepper state
+  const [activeStep, setActiveStep] = useState(0);
   const [newPerson, setNewPerson] = useState({
     firstName: '',
     middleName: '',
@@ -174,64 +110,25 @@ const newRecordRef = useRef(null);
     secondaryYearGraduated: '',
     secondaryScholarshipAcademicHonorsReceived: '',
   });
+
+  // Modal state for viewing/editing
   const [editPerson, setEditPerson] = useState(null);
-
-
-  const [errorMessage, setErrorMessage] = useState('');
-  const [errorFields, setErrorFields] = useState([false]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [slideIn, setSlideIn] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-
-
-
+  const [originalPerson, setOriginalPerson] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success', // success | error | info | warning
+    severity: 'success',
   });
 
-
- 
   const showSnackbar = (message, severity = 'success') => {
-  setSnackbar({ open: true, message, severity });
-};
+    setSnackbar({ open: true, message, severity });
+  };
 
-
-
-
-
-
-
-
-
-
-
-
-const fetchItems = async () => {
-  try {
-    const response = await axios.get('http://localhost:5000/personalinfo/person_table');
-    setData(response.data);
-    setFilteredData(response.data);
-  } catch (error) {
-    console.error("Failed to fetch data:", error);
-  }
-};
-
-
-
-
-useEffect(() => {
-  fetchItems();
-}, []);
-
-
-
-
-
-
-
+  useEffect(() => {
+    fetchPersons();
+  }, []);
 
   useEffect(() => {
     const query = searchQuery.toLowerCase();
@@ -243,1343 +140,588 @@ useEffect(() => {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-
-
-
-  useEffect(() => {
-    if (modalOpen) {
-      const timer = setTimeout(() => {
-        setModalOpen(false);
-      }, 3000); // 3 seconds
- 
-      return () => clearTimeout(timer);
-    }
-  }, [modalOpen]);
-
-
- 
- 
-
-
- 
-
-
-
-
-
-
-
-
-  const addItem = async () => {
-    const requiredFields = [
-      'firstName', 'lastName', 'birthDate', 'sex', 'nameExtension', 'civilStatus', 'citizenship',  
-      'residential_houseBlockLotNum', 'residential_streetName', 'residential_subdivisionOrVillage', 'residential_barangayName',
-      'residential_cityOrMunicipality', 'residential_provinceName', 'residential_zipcode',
-      'permanent_houseBlockLotNum', 'permanent_streetName', 'permanent_subdivisionOrVillage', 'permanent_barangay',
-      'heightCm', 'weightKg', 'bloodType', 'sssNum', 'tinNum', 'agencyEmployeeNum', 'pagibigNum', 'philhealthNum',
-
-
-    ];
-    const missing = requiredFields.filter(field => !newPerson[field]?.trim());
- 
-    if (missing.length > 0) {
-      const fieldList = missing.map(f =>
-        f.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())
-      ).join(', ');
- 
-      setErrorFields(missing); // Step 1: show red borders
- 
-      // Step 2: scroll to first missing field
-      const firstMissingField = missing[0];
-      const fieldElement = fieldRefs[firstMissingField];
-      if (fieldElement?.scrollIntoView) {
-        fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        fieldElement.focus();
-      }
- 
-      // Step 3: Delay the modal animation slightly
-      setTimeout(() => {
-        setErrorMessage(`You need to fill up: ${fieldList}`);
-        setModalOpen(true);
-        setSlideIn(true);
-      }, 50); // allow error fields to render first
- 
-      // Step 4: Auto-close modal, but DO NOT reset red borders
-      setTimeout(() => {
-        setSlideIn(false);
-        setTimeout(() => setModalOpen(false), 300); // wait for Slide to exit
-        setErrorMessage('');
-        // DO NOT reset errorFields here — let user fix them manually
-      }, 2000);
- 
-      return;
-    }
- 
+  const fetchPersons = async () => {
     try {
-      await axios.post('http://localhost:5000/personalinfo/person_table', newPerson);
- 
-      setNewPerson(Object.fromEntries(Object.keys(newPerson).map(k => [k, ''])));
-      fetchItems();
- 
-      setTimeout(() => {
-        if (newRecordRef.current) {
-          newRecordRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 300);
+      const response = await axios.get('http://localhost:5000/personalinfo/person_table');
+      setData(response.data);
+      setFilteredData(response.data);
     } catch (error) {
-      console.error('Add person failed:', error.response?.data || error.message);
-      setErrorMessage('Failed to add person. Check console for error.');
-      setModalOpen(true);
-      setTimeout(() => setModalOpen(false), 5000);
+      console.error("Failed to fetch data:", error);
     }
   };
- 
- 
- 
- 
-  const updateItem = async () => {
-    if (!editPerson || !editPerson.id) {
-      alert("Missing person ID for update.");
-      return;
+
+  const handleAdd = async () => {
+    setLoading(true);
+    try {
+      await axios.post('http://localhost:5000/personalinfo/person_table', newPerson);
+      setNewPerson(Object.fromEntries(Object.keys(newPerson).map(k => [k, ''])));
+      setActiveStep(0); // Reset to first step
+      setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
+      fetchPersons();
+    } catch (error) {
+      console.error('Error adding person:', error);
+      setLoading(false);
     }
- 
-    const requiredFields = ['firstName', 'lastName', 'birthDate', 'sex'];
-    const missing = requiredFields.filter(field => !editPerson[field]?.trim());
- 
-    if (missing.length > 0) {
-      alert(`Please fill in: ${missing.join(', ')}`);
-      return;
-    }
- 
+  };
+
+  const handleUpdate = async () => {
     try {
       await axios.put(`http://localhost:5000/personalinfo/person_table/${editPerson.id}`, editPerson);
       setEditPerson(null);
-      fetchItems();
-      showSnackbar('Person updated successfully!', 'success'); // Snackbar
+      setOriginalPerson(null);
+      setIsEditing(false);
+      fetchPersons();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
-      console.error("Update failed:", error.response?.data || error.message);
-      alert("Update failed. Check console for error details.");
+      console.error('Error updating person:', error);
     }
   };
- 
 
-
-
-
-
-
-
-
-  const deleteItem = async (id) => {
-    await axios.delete(`http://localhost:5000/personalinfo/person_table/${id}`);
-    fetchItems();
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/personalinfo/person_table/${id}`);
+      setEditPerson(null);
+      setOriginalPerson(null);
+      setIsEditing(false);
+      fetchPersons();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (error) {
+      console.error('Error deleting person:', error);
+    }
   };
 
-
-
-
-
-
-
-
-  const handleInputChange = (e, isEdit = false) => {
-    const { name, value } = e.target;
+  const handleChange = (field, value, isEdit = false) => {
     if (isEdit) {
-      setEditPerson((prev) => ({ ...prev, [name]: value }));
-    } else  {
-      setNewPerson((prev) => ({ ...prev, [name]: value }));
+      setEditPerson({ ...editPerson, [field]: value });
+    } else {
+      setNewPerson({ ...newPerson, [field]: value });
     }
   };
 
+  const handleOpenModal = (person) => {
+    setEditPerson({ ...person });
+    setOriginalPerson({ ...person });
+    setIsEditing(false);
+  };
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
 
+  const handleCancelEdit = () => {
+    setEditPerson({ ...originalPerson });
+    setIsEditing(false);
+  };
 
- 
+  const handleCloseModal = () => {
+    setEditPerson(null);
+    setOriginalPerson(null);
+    setIsEditing(false);
+  };
 
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
 
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
 
+  const steps = [
+    {
+      label: 'Personal Information',
+      subtitle: 'Basic details about yourself',
+      fields: [
+        'firstName', 'middleName', 'lastName', 'nameExtension', 'birthDate', 'placeOfBirth',
+        'sex', 'civilStatus', 'citizenship', 'heightCm', 'weightKg', 'bloodType',
+        'mobileNum', 'telephone', 'emailAddress',
+      ]
+    },
+    {
+      label: 'Government ID Information',
+      subtitle: 'Your government identification numbers',
+      fields: [
+        'gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum',
+      ]
+    },
+    {
+      label: 'Address Information',
+      subtitle: 'Your permanent and residential addresses',
+      fields: [
+        'permanent_houseBlockLotNum', 'permanent_streetName', 'permanent_subdivisionOrVillage', 
+        'permanent_barangayName', 'permanent_cityOrMunicipality', 'permanent_provinceName', 'permanent_zipcode',
+        'residential_houseBlockLotNum', 'residential_streetName', 'residential_subdivisionOrVillage', 
+        'residential_barangayName', 'residential_cityOrMunicipality', 'residential_provinceName', 'residential_zipcode',
+      ]
+    },
+    {
+      label: 'Spouse Information',
+      subtitle: 'Information about your spouse',
+      fields: [
+        'spouseFirstName', 'spouseMiddleName', 'spouseLastName', 'spouseNameExtension',
+        'spouseOccupation', 'spouseEmployerBusinessName', 'spouseBusinessAddress', 'spouseTelephone',
+      ]
+    },
+    {
+      label: "Parents' Information",
+      subtitle: 'Information about your parents',
+      fields: [
+        'fatherFirstName', 'fatherMiddleName', 'fatherLastName', 'fatherNameExtension',
+        'motherMaidenFirstName', 'motherMaidenMiddleName', 'motherMaidenLastName',
+      ]
+    },
+    {
+      label: 'Educational Background',
+      subtitle: 'Your elementary and secondary education',
+      fields: [
+        'elementaryNameOfSchool', 'elementaryDegree', 'elementaryPeriodFrom', 'elementaryPeriodTo',
+        'elementaryHighestAttained', 'elementaryYearGraduated', 'elementaryScholarshipAcademicHonorsReceived',
+        'secondaryNameOfSchool', 'secondaryDegree', 'secondaryPeriodFrom', 'secondaryPeriodTo',
+        'secondaryHighestAttained', 'secondaryYearGraduated', 'secondaryScholarshipAcademicHonorsReceived',
+      ]
+    }
+  ];
 
- 
-
-
-
-
-  const renderSection = (groupedFields) => (
-    <Box sx={sectionContainerStyle}>
-      {groupedFields.map((group, idx) => (
-        <Box key={idx} sx={{ mb: 4 }}>
-          <Box
-            sx={{
-              background: 'linear-gradient(90deg, #6D2323, #8B0000)',
-              color: '#fff',
-              px: 3,
-              py: 2,
-              borderRadius: '10px',
-              mb: 2,
-              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-              {group.title}
-            </Typography>
-            {group.subtitle && (
-              <Typography variant="body2" sx={{ color: '#FFE' }}>
-                {group.subtitle}
-              </Typography>
-            )}
-          </Box>
- 
-          <Grid container spacing={2} sx={{ padding: '16px' }}>
-            {group.fields.map((field, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-                <TextField
-                  fullWidth
-                  inputRef={(el) => {
-                    if (el) fieldRefs[field] = el;
-                  }}
-                  error={errorFields.includes(field)}
-                  sx={fieldStyle}
-                  label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                  name={field}
-                  value={newPerson[field]}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
+  const renderStepContent = (step) => (
+    <Grid container spacing={3} sx={{ mt: 1 }}>
+      {step.fields.map((field) => (
+        <Grid item xs={12} sm={6} key={field}>
+          <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+            {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+          </Typography>
+          <TextField
+            value={newPerson[field]}
+            onChange={(e) => handleChange(field, e.target.value)}
+            fullWidth
+          />
+        </Grid>
       ))}
-    </Box>
+    </Grid>
   );
 
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
-
-
-
-
-
-
-
-
-
-
-
-
- 
   return (
-   
-    <Container sx={{ backgroundColor: '#FEF9E1', padding: '32px', borderRadius: '15px', alignContent:'center', marginTop: '-20px' }}>
+    <Container sx={{ mt: 0 }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding person record..." />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
 
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <PersonIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Personal Information
+              </Typography>
+              <Typography variant="body2">
+                Add Your Personal Information
+              </Typography>
+            </Box>
+          </Box>
 
-  {/* MODAL BEFORE ADDING // RECHECKING ALL INFOS BEFORE ADDING */}
-
-
-        <Dialog open={confirmModalOpen} onClose={() => setConfirmModalOpen(false)} maxWidth="md" fullWidth>
-          <DialogTitle>Confirm New Person Details</DialogTitle>
-          <DialogContent dividers>
-            <Grid container spacing={2}>
-              {Object.entries(newPerson).map(([key, value]) => (
-                <Grid item xs={12} sm={6} key={key}>
-                  <Typography variant="body2">
-                    <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}:</strong> {value || '—'}
-                  </Typography>
-                </Grid>
+          {/* Content/Form with Stepper */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Stepper activeStep={activeStep} orientation="vertical">
+              {steps.map((step, index) => (
+                <Step key={step.label}>
+                  <StepLabel>
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      {step.label}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#666" }}>
+                      {step.subtitle}
+                    </Typography>
+                  </StepLabel>
+                  <StepContent>
+                    {renderStepContent(step)}
+                    <Box sx={{ mb: 2, mt: 3 }}>
+                      <div>
+                        {index === steps.length - 1 ? (
+                          <Button
+                            variant="contained"
+                            onClick={handleAdd}
+                            startIcon={<AddIcon />}
+                            sx={{
+                              mr: 1,
+                              backgroundColor: "#6D2323",
+                              color: "#FEF9E1",
+                              "&:hover": { backgroundColor: "#a31d1d" },
+                              width: '80%'
+                            }}
+                          >
+                            Add Person
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            onClick={handleNext}
+                            sx={{
+                              mr: 1,
+                              backgroundColor: "#6D2323",
+                              color: "#FEF9E1",
+                              "&:hover": { backgroundColor: "#a31d1d" },
+                            }}
+                            endIcon={<NextIcon />}
+                          >
+                            Next
+                          </Button>
+                        )}
+                        <Button
+                          disabled={index === 0}
+                          onClick={handleBack}
+                          sx={{ mr: 1, 
+                              border: "1px solid #6d2323",
+                              color: "#6d2323",
+                              }}
+                          startIcon={<PrevIcon />}
+                        >
+                          Back
+                        </Button>
+                      </div>
+                    </Box>
+                  </StepContent>
+                </Step>
               ))}
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirmModalOpen(false)} color="secondary" variant="outlined" style={{ backgroundColor: '#000000', color: 'white' }}>
-              Cancel
-            </Button>
-            <Button onClick={() => {
-              setConfirmModalOpen(false);
-              addItem(); // Call the original function
-              showSnackbar('Person successfully added!', 'success');
-            }} color="primary" variant="contained" style={{ backgroundColor: '#6D2323', color: '#FEF9E1' }}>
-              Confirm & Add
-            </Button>
-          </DialogActions>
-        </Dialog>
+            </Stepper>
+          </Container>
+        </Box>
+      </Box>
 
-
-        {/* MODAL END */}
-
-
-
-
-       
-
-
-
-
- 
-      {renderSection([
-        {
-          title: 'Personal Information',
-          subtitle: 'Basic details about yourself',
-          fields: [
-            'firstName', 'middleName', 'lastName', 'nameExtension', 'birthDate', 'placeOfBirth',
-            'sex', 'civilStatus', 'citizenship', 'heightCm', 'weightKg', 'bloodType',
-            'mobileNum', 'telephone', 'emailAddress',
-          ],
-        },
-        {
-          title: 'Government ID Information',
-          fields: [
-            'gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum',
-          ],
-        },
-        {
-          title: 'Spouse Information',
-          fields: [
-            'spouseFirstName', 'spouseMiddleName', 'spouseLastName', 'spouseNameExtension',
-            'spouseOccupation', 'spouseEmployerBusinessName', 'spouseBusinessAddress', 'spouseTelephone',
-          ],
-        },
-        {
-          title: 'Address Information',
-          subtitle: 'Input your Permanent Address',
-          fields: [
-            'permanent_houseBlockLotNum', 'permanent_streetName', 'permanent_subdivisionOrVillage', 'permanent_barangay',
-            'permanent_cityOrMunicipality', 'permanent_provinceName', 'permanent_zipcode',  
-          ]
-        },
-        {
-            subtitle: 'Input your Residential Address',
-            fields: ['residential_houseBlockLotNum', 'residential_streetName',
-            'residential_subdivisionOrVillage', 'residential_barangayName', 'residential_cityOrMunicipality', 'residential_provinceName', 'residential_zipcode',
-          ],
-        },
-        {
-          title: "Parents' Information",
-          fields: [
-            'fatherFirstName', 'fatherMiddleName', 'fatherLastName', 'fatherNameExtension',
-            'motherMaidenFirstName', 'motherMaidenMiddleName', 'motherMaidenLastName',
-          ],
-        },
-        {
-          title: 'Elementary Education',
-          fields: [
-            'elementaryNameOfSchool', 'elementaryDegree', 'elementaryPeriodFrom', 'elementaryPeriodTo',
-            'elementaryHighestAttained', 'elementaryYearGraduated', 'elementaryScholarshipAcademicHonorsReceived',
-          ],
-        },
-        {
-          title: 'Secondary Education',
-          fields: [
-            'secondaryNameOfSchool', 'secondaryDegree', 'secondaryPeriodFrom', 'secondaryPeriodTo',
-            'secondaryHighestAttained', 'secondaryYearGraduated', 'secondaryScholarshipAcademicHonorsReceived',
-          ],
-        },
-      ])}
- 
-      <Box sx={{ marginTop: 3, marginBottom: 3 }}>
-        <Button
-          onClick={() => setConfirmModalOpen(true)}
-          variant="contained"
+      {/* Records Section */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
           sx={{
-            backgroundColor: '#6D2323',
-            color: '#FEF9E1',
-            width: '100%',
-            fontSize: '16px',
-            padding: '12px',
-            borderRadius: '10px',
-            '&:hover': { backgroundColor: '#541818' },
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
           }}
         >
-          <AddIcon sx={{ mr: 1 }} /> Add Person
-        </Button>
-      </Box>  
-
-
-
-
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <Slide direction="down" in={slideIn} mountOnEnter>
-          <Box sx={{
-            position: 'absolute',
-            top: '35%',
-            left: '40%',
-            transform: 'translateX(-50%)',
-            bgcolor: '#fff5f5',
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-            border: '2px solid #d32f2f',
-            minWidth: 300,
-            maxWidth: 400,
-            textAlign: 'center',
-          }}>
-            <Typography variant="h6" sx={{ color: '#d32f2f', mb: 2 }}>
-              ⚠ Missing Required Fields
+          <Reorder sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Personal Information Records
             </Typography>
-            <Typography variant="body1">{errorMessage}</Typography>
+            <Typography variant="body2">
+              View and manage personal information
+            </Typography>
           </Box>
-        </Slide>
-      </Modal>
+        </Box>
 
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number or Name
+            </Typography>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<br />
-<br />
-<br />
-            {/* List All Persons */}
-            <Box sx={{ marginBottom: 3 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" backgroundColor="#6D2323 " padding={2} borderRadius={1} marginBottom={2}>
-              <Box display="flex" alignItems="center">
-                <PersonIcon sx={{ mr: 1, fontSize: 50, color: 'white' }} />
-                <Typography variant="h5" sx={{ margin: 0, color: '#ffffff', fontWeight: 'bold' }}>
-                  Personal Information Records
-                </Typography>
-              </Box>
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
               <TextField
                 size="small"
                 variant="outlined"
-                placeholder="Search Name"
+                placeholder="Search by Employee Number or Name"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                sx={{ backgroundColor: 'white', borderRadius: 1 }}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
                 InputProps={{
                   startAdornment: (
-                    <SearchIcon sx={{ color: '#6D2323', marginRight:1 }} />
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
                   ),
                 }}
               />
             </Box>
-
-
-
-
-            {filteredData.length === 0 ? (
-              <Typography variant="h6" sx={{ color: '#8B0000', textAlign: 'center', marginTop: 2 }}>
-                No matching records found.
-              </Typography>
-                ) : (
-                filteredData.map((person, index) => (
-                <   Box key={person.id}
-                    ref={index === filteredData.length - 1 ? newRecordRef : null}
-                    sx={{ marginBottom: 3, padding: 3, border: '1px solid #400000 ', borderRadius: 1, backgroundColor: '#f9f9f9' }}>
-           
-                        {/* Display Person ID to the Left of the Name */}
-                        <Grid container alignItems="center">
-                        <Grid item>
-                                <Typography variant="h5" color="textSecondary" sx={{ marginRight: 1, marginBottom: '10px', color: '#800000' }}>
-                                    {person.id}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Typography variant="h4" gutterBottom>
-                                    | {person.firstName} {person.lastName}
-                                </Typography>
-                            </Grid>
-                        </Grid>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* Personal Information Section */}
-                        <Box sx={{ marginBottom: 3 }}>
-                            <Typography variant="subtitle1"><h3>Personal Information</h3></Typography>
-                            <Grid container spacing={2}>
-                                {['firstName', 'middleName', 'lastName', 'nameExtension', 'birthDate', 'placeOfBirth', 'sex', 'civilStatus', 'citizenship', 'heightCm', 'weightKg', 'bloodType', 'mobileNum', 'telephone', 'emailAddress'].map((field) => (
-                                    <Grid item xs={3} key={field}>
-                                        <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                        {editPerson && editPerson.id === person.id ? (
-                                            <TextField
-                                                fullWidth
-                                                name={field}
-                                                value={editPerson[field]}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Typography variant="body1">{person[field]}</Typography>
-                                        )}
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <Divider sx={{ marginY: 3 }} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* Goverment ID Information Section */}
-                        <Box sx={{ marginBottom: 3 }}>
-                            <Typography variant="subtitle1"><h3>Goverment ID Information</h3></Typography>
-                            <Grid container spacing={2}>
-                                {['gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum'].map((field) => (
-                                    <Grid item xs={3} key={field}>
-                                        <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                        {editPerson && editPerson.id === person.id ? (
-                                            <TextField
-                                                fullWidth
-                                                name={field}
-                                                value={editPerson[field]}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Typography variant="body1">{person[field]}</Typography>
-                                        )}
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <Divider sx={{ marginY: 3 }} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* Spouse Information Section */}
-                        <Box sx={{ marginBottom: 3 }}>
-                            <Typography variant="subtitle1"><h3>Spouse Information</h3></Typography>
-                            <Grid container spacing={2}>
-                                {['spouseFirstName', 'spouseMiddleName', 'spouseLastName', 'spouseNameExtension', 'spouseOccupation', 'spouseEmployerBusinessName', 'spouseBusinessAddress', 'spouseTelephone'].map((field) => (
-                                    <Grid item xs={3} key={field}>
-                                        <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                        {editPerson && editPerson.id === person.id ? (
-                                            <TextField
-                                                fullWidth
-                                                name={field}
-                                                value={editPerson[field]}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Typography variant="body1">{person[field]}</Typography>
-                                        )}
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <Divider sx={{ marginY: 3 }} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* Address Information Section */}
-                        <Box sx={{ marginBottom: 3 }}>
-                            <Typography variant="subtitle1"><h3>Address Information</h3></Typography>
-                            <Grid container spacing={2}>
-                                {['permanent_houseBlockLotNum', 'permanent_streetName', 'permanent_subdivisionOrVillage', 'permanent_barangay', 'permanent_cityOrMunicipality', 'permanent_provinceName', 'permanent_zipcode', 'residential_houseBlockLotNum', 'residential_streetName', 'residential_subdivisionOrVillage', 'residential_barangayName', 'residential_cityOrMunicipality', 'residential_provinceName', 'residential_zipcode'].map((field) => (
-                                    <Grid item xs={3} key={field}>
-                                        <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                        {editPerson && editPerson.id === person.id ? (
-                                            <TextField
-                                                fullWidth
-                                                name={field}
-                                                value={editPerson[field]}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Typography variant="body1">{person[field]}</Typography>
-                                        )}
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <Divider sx={{ marginY: 3 }} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* Parents Information Section */}
-                        <Box sx={{ marginBottom: 3 }}>
-                            <Typography variant="subtitle1"><h3>Parent's Information</h3></Typography>
-                            <Grid container spacing={2}>
-                                {['fatherFirstName', 'fatherMiddleName', 'fatherLastName', 'fatherNameExtension', 'motherMaidenFirstName', 'motherMaidenMiddleName', 'motherMaidenLastName'].map((field) => (
-                                    <Grid item xs={3} key={field}>
-                                        <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                        {editPerson && editPerson.id === person.id ? (
-                                            <TextField
-                                                fullWidth
-                                                name={field}
-                                                value={editPerson[field]}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Typography variant="body1">{person[field]}</Typography>
-                                        )}
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <Divider sx={{ marginY: 3 }} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          {/* Educational Information Section */}
-                          <Box sx={{ marginBottom: 3 }}>
-                            <Typography variant="subtitle1"><h3>Educational Information</h3></Typography>
-                           
-                            {/* Elementary Educational Information */}
-                            <Box sx={{ marginBottom: 3 }}>
-                                <Typography variant="subtitle2"><h4>Elementary Education</h4></Typography>
-                                <Grid container spacing={2}>
-                                    {['elementaryNameOfSchool', 'elementaryDegree', 'elementaryPeriodFrom', 'elementaryPeriodTo', 'elementaryHighestAttained', 'elementaryYearGraduated', 'elementaryScholarshipAcademicHonorsReceived'].map((field) => (
-                                        <Grid item xs={3} key={field}>
-                                            <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                            {editPerson && editPerson.id === person.id ? (
-                                                <TextField
-                                                    fullWidth
-                                                    name={field}
-                                                    value={editPerson[field]}
-                                                    onChange={(e) => handleInputChange(e, true)}
-                                                    variant="outlined"
-                                                />
-                                            ) : (
-                                                <Typography variant="body1">{person[field]}</Typography>
-                                            )}
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                            {/* Secondary Educational Information */}
-                            <Box sx={{ marginBottom: 3 }}>
-                                <Typography variant="subtitle2"><h4>Secondary Education</h4></Typography>
-                                <Grid container spacing={2}>
-                                    {['secondaryNameOfSchool', 'secondaryDegree', 'secondaryPeriodFrom', 'secondaryPeriodTo', 'secondaryHighestAttained', 'secondaryYearGraduated', 'secondaryScholarshipAcademicHonorsReceived'].map((field) => (
-                                        <Grid item xs={3} key={field}>
-                                            <Typography variant="body2" color="textSecondary">{field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Typography>
-                                            {editPerson && editPerson.id === person.id ? (
-                                                <TextField
-                                                    fullWidth
-                                                    name={field}
-                                                    value={editPerson[field]}
-                                                    onChange={(e) => handleInputChange(e, true)}
-                                                    variant="outlined"
-                                                />
-                                            ) : (
-                                                <Typography variant="body1">{person[field]}</Typography>
-                                            )}
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-                        </Box>
-
-
-
-
-                        <Snackbar
-                          open={snackbar.open}
-                          autoHideDuration={3000}
-                          onClose={() => setSnackbar({ ...snackbar, open: false })}
-                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        >
-                          <Alert
-                            onClose={() => setSnackbar({ ...snackbar, open: false })}
-                            icon={false}
-                            sx={{
-                              width: '100%',
-                              backgroundColor: '#ffffff',
-                              color: '#6D2323',
-                              fontWeight: 'bold',
-                              boxShadow: '0px 4px 12px rgba(0,0,0,0.3)',
-                              borderRadius: '8px',
-                              fontSize: '14px',
-                            }}
-                            variant="filled"
-                          >
-                            {snackbar.message}
-                          </Alert>
-                        </Snackbar>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* Action Buttons */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          {editPerson && editPerson.id === person.id ? (
-                            <>
-                              <Button
-                                onClick={updateItem}
-                                variant="contained"
-                                style={{
-                                  backgroundColor: '#6D2323',
-                                  color: '#FEF9E1',
-                                  width: '100px',
-                                  height: '40px',
-                                  marginBottom: '5px',
-                                }}
-                                startIcon={<SaveIcon />}
-                              >
-                                Update
-                              </Button>
-                              <Button
-                                onClick={() => setEditPerson(null)}
-                                variant="contained"
-                                color="secondary"
-                                style={{
-                                  backgroundColor: 'black',
-                                  color: 'white',
-                                  width: '100px',
-                                  height: '40px',
-                                  marginBottom: '5px',
-                                  marginLeft: '10px',
-                                }}
-                                startIcon={<CancelIcon />}
-                              >
-                                Cancel
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                onClick={() => {
-                                  setEditPerson(person);
-                                  setEditModalOpen(true);
-                                }}
-                                variant="contained"
-                                style={{
-                                  backgroundColor: '#6D2323',
-                                  color: '#FEF9E1',
-                                  width: '100px',
-                                  height: '40px',
-                                  marginBottom: '5px',
-                                }}
-                                startIcon={<EditIcon />}
-                              >
-                                Edit
-                              </Button>
-
-
-                              <Button
-                                onClick={() => {
-                                  deleteItem(person.id);
-                                  showSnackbar('Person deleted successfully!', 'info');
-                                }}
-                                variant="contained"
-                                color="secondary"
-                                style={{
-                                  backgroundColor: 'black',
-                                  color: 'white',
-                                  width: '100px',
-                                  height: '40px',
-                                  marginBottom: '5px',
-                                  marginLeft: '10px',
-                                }}
-                                startIcon={<DeleteIcon />}
-                              >
-                                Delete
-                              </Button>
-                          </>
-                        )}
-                      </Box>
-
-
-                    </Box>
-                ))
-              )}
-            </Box>
-            <Dialog
-  open={isEditModalOpen}
-  onClose={() => setEditModalOpen(false)}
-  maxWidth="lg"
-  fullWidth
->
-  <DialogTitle>Edit Person</DialogTitle>
-  <DialogContent dividers>
-    {editPerson && (
-      <>
-        <Typography variant="h6" gutterBottom>Personal Information</Typography>
-        <Grid container spacing={2} mb={3}>
-          {['firstName', 'middleName', 'lastName', 'nameExtension', 'birthDate', 'placeOfBirth', 'sex', 'civilStatus', 'citizenship', 'heightCm', 'weightKg', 'bloodType', 'mobileNum', 'telephone', 'emailAddress'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-
-
-
-
-        <Typography variant="h6" gutterBottom>Government ID Information</Typography>
-        <Grid container spacing={2} mb={3}>
-          {['gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-
-
-
-
-        <Typography variant="h6" gutterBottom>Spouse Information</Typography>
-        <Grid container spacing={2} mb={3}>
-          {['spouseFirstName', 'spouseMiddleName', 'spouseLastName', 'spouseNameExtension', 'spouseOccupation', 'spouseEmployerBusinessName', 'spouseBusinessAddress', 'spouseTelephone'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-
-
-
-
-        <Typography variant="h6" gutterBottom>Address Information</Typography>
-        <Grid container spacing={2} mb={3}>
-          {['permanent_houseBlockLotNum', 'permanent_streetName', 'permanent_subdivisionOrVillage', 'permanent_barangay', 'permanent_cityOrMunicipality', 'permanent_provinceName', 'permanent_zipcode', 'residential_houseBlockLotNum', 'residential_streetName', 'residential_subdivisionOrVillage', 'residential_barangayName', 'residential_cityOrMunicipality', 'residential_provinceName', 'residential_zipcode'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-
-
-
-
-        <Typography variant="h6" gutterBottom>Parent's Information</Typography>
-        <Grid container spacing={2} mb={3}>
-          {['fatherFirstName', 'fatherMiddleName', 'fatherLastName', 'fatherNameExtension', 'motherMaidenFirstName', 'motherMaidenMiddleName', 'motherMaidenLastName'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-
-
-
-
-        <Typography variant="h6" gutterBottom>Educational Background</Typography>
-        <Grid container spacing={2} mb={1}>
-          {['elementaryNameOfSchool', 'elementaryDegree', 'elementaryPeriodFrom', 'elementaryPeriodTo', 'elementaryHighestAttained', 'elementaryYearGraduated', 'elementaryScholarshipAcademicHonorsReceived'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-        <Grid container spacing={2}>
-          {['secondaryNameOfSchool', 'secondaryDegree', 'secondaryPeriodFrom', 'secondaryPeriodTo', 'secondaryHighestAttained', 'secondaryYearGraduated', 'secondaryScholarshipAcademicHonorsReceived'].map((field) => (
-            <Grid item xs={12} sm={6} md={4} key={field}>
-              <TextField
-                fullWidth
-                label={field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                name={field}
-                value={editPerson[field] || ''}
-                onChange={(e) => handleInputChange(e, true)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </>
-    )}
-  </DialogContent>
-  <DialogActions>
-    <Button
-      onClick={() => {
-        updateItem();
-        setEditModalOpen(false);
-      }}
-      variant="contained"
-      style={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: '100px', height: '40px',  }}
-      startIcon={<SaveIcon />}
-    >
-      Save
-    </Button>
-    <Button
-      onClick={() => {
-        setEditModalOpen(false);
-        setEditPerson(null);
-       
-      }}
-      variant="outlined"
-      style={{ width: '100px', height: '40px', marginLeft: '10px' , backgroundColor: 'black', color: 'white' }}
-      startIcon={<CancelIcon />}
-    >
-      Cancel
-    </Button>
-  </DialogActions>
-</Dialog>
-
-
-
-
-
-
-
-
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {filteredData.map((person) => (
+              <Grid item xs={12} sm={6} md={4} key={person.id}>
+                <Box
+                  onClick={() => handleOpenModal(person)}
+                  sx={{
+                    border: "1px solid #6d2323",
+                    borderRadius: 2,
+                    p: 2,
+                    cursor: "pointer",
+                    transition: "0.2s",
+                    "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                    height: "80%",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                  >
+                    Employee Number:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                  >
+                    {person.agencyEmployeeNum}
+                  </Typography>
+
+                  <Chip
+                    label={`${person.firstName} ${person.lastName}`}
+                    sx={{
+                      backgroundColor: "#6d2323",
+                      color: "#fff",
+                      borderRadius: "50px",
+                      px: 2,
+                      fontWeight: "bold",
+                      maxWidth: "100%",
+                    }}
+                  />
+                </Box>
+              </Grid>
+            ))}
+            {filteredData.length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
         </Container>
-    );
+
+        {/* Edit Modal */}
+        <Modal
+          open={!!editPerson}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "90%",
+              maxWidth: "1200px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editPerson && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Personal Information" : "Personal Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content */}
+                <Box sx={{ p: 3 }}>
+                  {steps.map((step, stepIndex) => (
+                    <Box key={stepIndex} sx={{ mb: 4 }}>
+                      <Typography variant="h6" sx={{ mb: 2, color: "#6D2323", fontWeight: "bold" }}>
+                        {step.label}
+                      </Typography>
+                      <Grid container spacing={3}>
+                        {step.fields.map((field) => (
+                          <Grid item xs={12} sm={6} md={4} key={field}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                              {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            </Typography>
+                            <TextField
+                              value={editPerson[field] || ''}
+                              onChange={(e) => handleChange(field, e.target.value, true)}
+                              fullWidth
+                              disabled={!isEditing}
+                              sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                            />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  ))}
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editPerson.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Container>
+  );
 };
 
-
-
 export default PersonTable;
-

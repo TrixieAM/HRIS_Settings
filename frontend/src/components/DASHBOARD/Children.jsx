@@ -1,12 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Button, TextField, Table, TableBody, TableCell, TableHead, TableRow, Container, Typography, Box } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon, Search as SearchIcon } from '@mui/icons-material';
-import ChildCareIcon from '@mui/icons-material/ChildCare';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+  Person as PersonIcon,
+  Search as SearchIcon,
+} from "@mui/icons-material";
+
 import ChildFriendlyIcon from '@mui/icons-material/ChildFriendly';
-
-
-
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const Children = () => {
   const [children, setChildren] = useState([]);
@@ -18,19 +41,17 @@ const Children = () => {
     dateOfBirth: '',
     person_id: ''
   });
-  const [editingChildId, setEditingChildId] = useState(null);
-  const [editChildData, setEditChildData] = useState({});
+  const [editChild, setEditChild] = useState(null);
+  const [originalChild, setOriginalChild] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
-
-
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
 
   useEffect(() => {
     fetchChildren();
   }, []);
-
-
-
 
   const fetchChildren = async () => {
     try {
@@ -41,126 +62,10 @@ const Children = () => {
     }
   };
 
-
-
-
-  const updateChild = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
-      await axios.put(`http://localhost:5000/childrenRoute/children-table/${editingChildId}`, editChildData);
-      setEditingChildId(null);
-      fetchChildren();
-    } catch (error) {
-      console.error('Failed to update child:', error);
-    }
-  };
-
-
-
-
-  const deleteChild = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/childrenRoute/children-table/${id}`);
-      fetchChildren();
-    } catch (error) {
-      console.error('Error deleting child:', error);
-    }
-  };
-
-
-
-
-  return (
-    <Container style={{ marginTop: '0px', backgroundColor: '#FEF9E1' }}>
-
-        <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      borderBottomLeftRadius: '0px',
-      borderBottomRightRadius: '0px',
-    }}
-    
-  >
-<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-  <ChildFriendlyIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
-
-  <div>
-    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-      Children Information
-    </h4>
-    <p style={{ margin: 0, fontSize: '85%' }}>
-      Insert Your Children Information
-    </p>
-  </div>
-</div>
-
-  </div>
-      {/* Red Header Section */}
-      <div
-  style={{
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-    marginBottom: '20px'
-  }}
-  
->
-  
-  {/* Header Section */}
-
-
-
-
-
-  {/* Form Section */}
-  <TextField
-    label="First Name"
-    value={newChild.childrenFirstName}
-    onChange={(e) => setNewChild({ ...newChild, childrenFirstName: e.target.value })}
-    style={{ marginRight: '10px', marginBottom: '20px', width: '324.25px', marginLeft:'50px' }}
-  />
-  <TextField
-    label="Middle Name"
-    value={newChild.childrenMiddleName}
-    onChange={(e) => setNewChild({ ...newChild, childrenMiddleName: e.target.value })}
-    style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px' }}
-  />
-  <TextField
-    label="Last Name"
-    value={newChild.childrenLastName}
-    onChange={(e) => setNewChild({ ...newChild, childrenLastName: e.target.value })}
-    style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px' }}
-  />
-  <TextField
-    label="Name Extension"
-    value={newChild.childrenNameExtension}
-    onChange={(e) => setNewChild({ ...newChild, childrenNameExtension: e.target.value })}
-    style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px', marginLeft:'50px' }}
-  />
-  <TextField
-    type="Date"
-    label=""
-    value={newChild.dateOfBirth}
-    onChange={(e) => setNewChild({ ...newChild, dateOfBirth: e.target.value })}
-    style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px' }}
-  />
-  <TextField
-    label="Employee Number"
-    value={newChild.person_id}
-    onChange={(e) => setNewChild({ ...newChild, person_id: e.target.value })}
-    style={{ marginRight: '10px', marginBottom: '10px', width: '324.25px' }}
-  />
-
-
-
-
-  <Button
-    onClick={async () => {
       await axios.post('http://localhost:5000/childrenRoute/children-table', newChild);
-      fetchChildren();
       setNewChild({
         childrenFirstName: '',
         childrenMiddleName: '',
@@ -169,253 +74,620 @@ const Children = () => {
         dateOfBirth: '',
         person_id: ''
       });
-    }}
-    variant="contained"
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      width: '1000px',
-      marginTop: '35px',
-      marginLeft: '50px'
-    }}
-    startIcon={<AddIcon />}
-  >
-    Add
-  </Button>
-      </div>
+      setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
+      fetchChildren();
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
+    }
+  };
 
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/childrenRoute/children-table/${editChild.id}`, editChild);
+      setEditChild(null);
+      setOriginalChild(null);
+      setIsEditing(false);
+      fetchChildren();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
+    }
+  };
 
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/childrenRoute/children-table/${id}`);
+      setEditChild(null);
+      setOriginalChild(null);
+      setIsEditing(false);
+      fetchChildren();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
+    }
+  };
 
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditChild({ ...editChild, [field]: value });
+    } else {
+      setNewChild({ ...newChild, [field]: value });
+    }
+  };
 
+  const handleOpenModal = (child) => {
+    setEditChild({ ...child });
+    setOriginalChild({ ...child });
+    setIsEditing(false);
+  };
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
 
+  const handleCancelEdit = () => {
+    setEditChild({ ...originalChild });
+    setIsEditing(false);
+  };
 
+  const handleCloseModal = () => {
+    setEditChild(null);
+    setOriginalChild(null);
+    setIsEditing(false);
+  };
 
-      {/* Children Table Styled Like Personal Info */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px'
+  const getAge = (dateOfBirth) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
+
+  return (
+    <Container sx={{ mt: 0, }}>
+
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding child record..."  />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
         }}
       >
-<Box
-  display="flex"
-  alignItems="center"
-  justifyContent="space-between"
-  padding={2}
-  borderRadius={1}
-  marginBottom={2}
->
-  <Box display="flex" alignItems="center">
-  <ChildCareIcon sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <ChildFriendlyIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Children Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your Children Information
+              </Typography>
+            </Box>
+          </Box>
 
-    <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
-      Children Records
-    </Typography>
-  </Box>
-
-
-  <TextField
-    size="small"
-    variant="outlined"
-    placeholder="Search by Employee Number"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    sx={{ backgroundColor: 'white', borderRadius: 1 }}
-    InputProps={{
-      startAdornment: (
-        <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
-      ),
-    }}
-  />
-</Box>
-
-
-
-
-        <Table>
-         
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>First Name</TableCell>
-              <TableCell>Middle Name</TableCell>
-              <TableCell>Last Name</TableCell>
-              <TableCell>Name Extension</TableCell>
-              <TableCell>Date of Birth</TableCell>
-              <TableCell>Employee Number</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-  {children.filter((child) => {
-    const fullName = `${child.childrenFirstName} ${child.childrenMiddleName} ${child.childrenLastName}`.toLowerCase();
-    const search = searchTerm.toLowerCase();
-    return (
-      child.person_id?.toString().includes(search) ||
-      fullName.includes(search)
-    );
-  }).length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={8} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">
-          No matching records found.
-        </Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    children
-      .filter((child) => {
-        const fullName = `${child.childrenFirstName} ${child.childrenMiddleName} ${child.childrenLastName}`.toLowerCase();
-        const search = searchTerm.toLowerCase();
-        return (
-          child.person_id?.toString().includes(search) ||
-          fullName.includes(search)
-        );
-      })
-      .map((child) => (
-        <TableRow key={child.id}>
-          {editingChildId === child.id ? (
-            <>
-              <TableCell>{child.id}</TableCell>
-              <TableCell>
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* First Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  First Name
+                </Typography>
                 <TextField
-                  value={editChildData.childrenFirstName}
-                  onChange={(e) => setEditChildData({ ...editChildData, childrenFirstName: e.target.value })}
+                  value={newChild.childrenFirstName}
+                  onChange={(e) => handleChange("childrenFirstName", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
                 />
-              </TableCell>
-              <TableCell>
+              </Grid>
+
+              {/* Middle Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Middle Name
+                </Typography>
                 <TextField
-                  value={editChildData.childrenMiddleName}
-                  onChange={(e) => setEditChildData({ ...editChildData, childrenMiddleName: e.target.value })}
+                  value={newChild.childrenMiddleName}
+                  onChange={(e) => handleChange("childrenMiddleName", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
                 />
-              </TableCell>
-              <TableCell>
+              </Grid>
+
+              {/* Last Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Last Name
+                </Typography>
                 <TextField
-                  value={editChildData.childrenLastName}
-                  onChange={(e) => setEditChildData({ ...editChildData, childrenLastName: e.target.value })}
+                  value={newChild.childrenLastName}
+                  onChange={(e) => handleChange("childrenLastName", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
                 />
-              </TableCell>
-              <TableCell>
+              </Grid>
+
+              {/* Name Extension */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Name Extension
+                </Typography>
                 <TextField
-                  value={editChildData.childrenNameExtension}
-                  onChange={(e) => setEditChildData({ ...editChildData, childrenNameExtension: e.target.value })}
+                  value={newChild.childrenNameExtension}
+                  onChange={(e) => handleChange("childrenNameExtension", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
                 />
-              </TableCell>
-              <TableCell>
+              </Grid>
+
+              {/* Date of Birth */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date of Birth
+                </Typography>
                 <TextField
-                  type="text"
-                  value={editChildData.dateOfBirth}
-                  onChange={(e) => setEditChildData({ ...editChildData, dateOfBirth: e.target.value })}
+                  type="date"
+                  value={newChild.dateOfBirth}
+                  onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                  InputLabelProps={{ shrink: true }}
                 />
-              </TableCell>
-              <TableCell>
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
                 <TextField
-                  value={editChildData.person_id}
-                  onChange={(e) => setEditChildData({ ...editChildData, person_id: e.target.value })}
+                  value={newChild.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
                 />
-              </TableCell>
-              <TableCell>
-                <Button
-                  onClick={updateChild}
-                  variant="contained"
-                  style={{
-                    backgroundColor: '#6D2323',
-                    color: '#FEF9E1',
-                    width: '100px',
-                    height: '40px',
-                    marginBottom: '5px'
-                  }}
-                  startIcon={<SaveIcon />}
-                >
-                  Update
-                </Button>
-                <Button
-                  onClick={() => setEditingChildId(null)}
-                  variant="contained"
-                  style={{
-                    backgroundColor: 'black',
-                    color: 'white',
-                    width: '100px',
-                    height: '40px',
-                    marginBottom: '5px',
-                    marginLeft: '10px'
-                  }}
-                  startIcon={<CancelIcon />}
-                >
-                  Cancel
-                </Button>
-              </TableCell>
-            </>
-          ) : (
-            <>
-              <TableCell>{child.id}</TableCell>
-              <TableCell>{child.childrenFirstName}</TableCell>
-              <TableCell>{child.childrenMiddleName}</TableCell>
-              <TableCell>{child.childrenLastName}</TableCell>
-              <TableCell>{child.childrenNameExtension}</TableCell>
-              <TableCell>{child.dateOfBirth?.split('T')[0]}</TableCell>
-              <TableCell>{child.person_id}</TableCell>
-              <TableCell>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Button
-                    onClick={() => {
-                      setEditChildData(child);
-                      setEditingChildId(child.id);
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Children Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage children information
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number or Name
+            </Typography>
+
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or Child Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {children
+              .filter((child) => {
+                const fullName = `${child.childrenFirstName} ${child.childrenMiddleName} ${child.childrenLastName}`.toLowerCase();
+                const personId = child.person_id?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return personId.includes(search) || fullName.includes(search);
+              })
+              .map((child) => (
+                <Grid item xs={12} sm={6} md={4} key={child.id}>
+                  <Box
+                    onClick={() => handleOpenModal(child)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
                     }}
-                    variant="contained"
-                    style={{
-                      backgroundColor: '#6D2323',
-                      color: '#FEF9E1',
-                      width: '100px',
-                      height: '40px',
-                      marginBottom: '5px'
-                    }}
-                    startIcon={<EditIcon />}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => deleteChild(child.id)}
-                    variant="contained"
-                    style={{
-                      backgroundColor: 'black',
-                      color: 'white',
-                      width: '100px',
-                      height: '40px',
-                      marginBottom: '5px'
-                    }}
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </TableCell>
-            </>
-          )}
-        </TableRow>
-      ))
-  )}
-</TableBody>
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {child.person_id}
+                    </Typography>
 
-        </Table>
-      </div>
+                    {/* Child Name and Age Pills */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Chip
+                        label={`${child.childrenFirstName} ${child.childrenLastName}`}
+                        sx={{
+                          backgroundColor: "#6d2323",
+                          color: "#fff",
+                          borderRadius: "50px",
+                          px: 2,
+                          fontWeight: "bold",
+                          maxWidth: "100%",
+                        }}
+                      />
+                      {child.dateOfBirth && (
+                        <Chip
+                          label={`Age: ${getAge(child.dateOfBirth)}`}
+                          size="small"
+                          sx={{
+                            backgroundColor: "#ffffff",
+                            color: "#6d2323",
+                            border: "1px solid #6d2323",
+                            borderRadius: "50px",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
+            {children.filter((child) => {
+              const fullName = `${child.childrenFirstName} ${child.childrenMiddleName} ${child.childrenLastName}`.toLowerCase();
+              const personId = child.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || fullName.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editChild}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editChild && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Child Information" : "Child Information"}
+                    
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content */}
+                <Box sx={{ p: 3, display: 'flex', flexDirection: 'row', gap: 3 }}>
+                  {/* Table Section */}
+                  <Table sx={{ flex: 1 }}>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>First Name</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              value={editChild.childrenFirstName}
+                              onChange={(e) => handleChange("childrenFirstName", e.target.value, true)}
+                              size="small"
+                              fullWidth
+                              
+                            />
+                            
+                          ) : (
+                            editChild.childrenFirstName
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Middle Name</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              value={editChild.childrenMiddleName}
+                              onChange={(e) => handleChange("childrenMiddleName", e.target.value, true)}
+                              size="small"
+                              fullWidth
+                            />
+                          ) : (
+                            editChild.childrenMiddleName
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Last Name</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              value={editChild.childrenLastName}
+                              onChange={(e) => handleChange("childrenLastName", e.target.value, true)}
+                              size="small"
+                              fullWidth
+                            />
+                          ) : (
+                            editChild.childrenLastName
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Name Extension</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              value={editChild.childrenNameExtension}
+                              onChange={(e) => handleChange("childrenNameExtension", e.target.value, true)}
+                              size="small"
+                              fullWidth
+                            />
+                          ) : (
+                            editChild.childrenNameExtension
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Date of Birth</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              type="date"
+                              value={editChild.dateOfBirth?.split('T')[0] || ''}
+                              onChange={(e) => handleChange("dateOfBirth", e.target.value, true)}
+                              size="small"
+                              fullWidth
+                            />
+                          ) : (
+                            editChild.dateOfBirth?.split('T')[0]
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Employee Number</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <TextField
+                              value={editChild.person_id}
+                              onChange={(e) => handleChange("person_id", e.target.value, true)}
+                              size="small"
+                              fullWidth
+                            />
+                          ) : (
+                            editChild.person_id
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+
+                  {/* Buttons Section */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                      {!isEditing ? (
+                        // View mode buttons
+                        <>
+                          <Button
+                            onClick={() => handleDelete(editChild.id)}
+                            variant="outlined"
+                            startIcon={<DeleteIcon />}
+                            sx={{
+                              color: "#ffffff",
+                              backgroundColor: 'black'
+                            }}
+                          >
+                            Delete
+                          </Button>
+                          <Button
+                            onClick={handleStartEdit}
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                          >
+                            Edit
+                          </Button>
+                        </>
+                      ) : (
+                        // Edit mode buttons
+                        <>
+                          <Button
+                            onClick={handleCancelEdit}
+                            variant="outlined"
+                            startIcon={<CancelIcon />}
+                            sx={{
+                              color: "#ffffff",
+                            backgroundColor: 'black'
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleUpdate}
+                            variant="contained"
+                            startIcon={<SaveIcon />}
+                            sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                          >
+                            Save
+                          </Button>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };
 
-
-
-
 export default Children;
-
-
-
-
-
-
-
-

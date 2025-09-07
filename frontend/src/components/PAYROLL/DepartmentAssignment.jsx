@@ -1,42 +1,53 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Button, TextField, Table, TableBody, TableCell,
-  TableHead, TableRow, Container, Box, InputAdornment
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
 } from "@mui/material";
 import {
-  Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon, Search as SearchIcon,
-  Domain
-} from '@mui/icons-material';
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+  Domain,
+  Search as SearchIcon,
+  Assignment as ReorderIcon,
+} from "@mui/icons-material";
 
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const DepartmentAssignment = () => {
   const [data, setData] = useState([]);
-  const [newEntry, setNewEntry] = useState({
+  const [newAssignment, setNewAssignment] = useState({
     code: "",
     name: "",
     employeeNumber: "",
   });
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({});
+  const [editAssignment, setEditAssignment] = useState(null);
+  const [originalAssignment, setOriginalAssignment] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [departmentCodes, setDepartmentCodes] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-
-
-  const filteredData = data.filter((item) =>
-    (item?.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-    (item?.employeeNumber?.toLowerCase() || "").includes(searchQuery.toLowerCase())
-  );
-
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
 
   useEffect(() => {
-    fetchData();
+    fetchAssignments();
     fetchDepartmentCodes();
   }, []);
 
-
-  const fetchData = async () => {
+  const fetchAssignments = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/department-assignment");
       setData(Array.isArray(response.data) ? response.data : []);
@@ -44,7 +55,6 @@ const DepartmentAssignment = () => {
       console.error("Error fetching data", error);
     }
   };
-
 
   const fetchDepartmentCodes = async () => {
     try {
@@ -55,288 +65,559 @@ const DepartmentAssignment = () => {
     }
   };
 
-
-  const addEntry = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/department-assignment", newEntry);
-      setNewEntry({ code: "", name: "", employeeNumber: "" });
-      fetchData();
+      // Filter out empty fields
+      const filteredAssignment = Object.fromEntries(
+        Object.entries(newAssignment).filter(([_, value]) => value !== '')
+      );
+      
+      await axios.post("http://localhost:5000/api/department-assignment", filteredAssignment);
+      setNewAssignment({
+        code: "",
+        name: "",
+        employeeNumber: "",
+      });
+      setTimeout(() => {
+        setLoading(false);
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);
+      fetchAssignments();
     } catch (error) {
       console.error("Error adding entry", error);
+      setLoading(false);
     }
   };
 
-
-  const updateEntry = async () => {
+  const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/department-assignment/${editingId}`, editData);
-      setEditingId(null);
-      fetchData();
+      await axios.put(`http://localhost:5000/api/department-assignment/${editAssignment.id}`, editAssignment);
+      setEditAssignment(null);
+      setOriginalAssignment(null);
+      setIsEditing(false);
+      fetchAssignments();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
       console.error("Error updating entry", error);
     }
   };
 
-
-  const deleteEntry = async (id) => {
+  const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/department-assignment/${id}`);
-      fetchData();
+      setEditAssignment(null);
+      setOriginalAssignment(null);
+      setIsEditing(false);
+      fetchAssignments();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
       console.error("Error deleting entry", error);
     }
   };
 
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditAssignment({ ...editAssignment, [field]: value });
+    } else {
+      setNewAssignment({ ...newAssignment, [field]: value });
+    }
+  };
+
+  const handleOpenModal = (assignment) => {
+    setEditAssignment({ ...assignment });
+    setOriginalAssignment({ ...assignment });
+    setIsEditing(false);
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditAssignment({ ...originalAssignment });
+    setIsEditing(false);
+  };
+
+  const handleCloseModal = () => {
+    setEditAssignment(null);
+    setOriginalAssignment(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
+
+  const fieldLabels = {
+    code: 'Department Code',
+    name: 'Name',
+    employeeNumber: 'Employee Number'
+  };
 
   return (
-    <Box>
-          <div style={{
-        backgroundColor: '#6D2323',
-        color: '#ffffff',
-        padding: '25px',
-        width: '89.5%',
-        marginLeft: '24px',
-        borderRadius: '8px',
-        borderBottomLeftRadius: '0px',
-        borderBottomRightRadius: '0px',
-        display: 'flex',
-      }}>
-        <Domain sx={{ fontSize: '3rem', marginRight: '15px', marginTop: '5px', marginLeft: '5px' }} />
-     
-        <div>
-          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-            Department Assignment
-          </h4>
-          <p style={{ margin: 0, fontSize: '85%' }}>
-            Manage Department Assignment
-          </p>
-        </div>
-      </div>
-    <Container style={{  backgroundColor: '#FEF9E1', marginRight: '50px' }}>
+    <Container sx={{ mt: 0 }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding department assignment..." />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
 
-
-
-
-      <div style={{
-        backgroundColor: 'white', padding: '20px', borderRadius: '8px',
-        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', marginBottom: '20px'
-      }}>
-        {/* Add New Entry Section */}
-        <Box display="flex" gap={2} marginLeft="0px" marginBottom="20px">
-          <TextField
-            label=" "
-            select
-            value={newEntry.code}
-            onChange={(e) => setNewEntry({ ...newEntry, code: e.target.value })}
-            style={{ width: '220px' }}
-            SelectProps={{
-              native: true,
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
             }}
           >
-            <option value="">Select Department</option>
-            {departmentCodes.map((code, index) => (
-              <option key={index} value={code}>
-                {code}
-              </option>
-            ))}
-          </TextField>
-          <TextField
-            label="Name"
-            value={newEntry.name}
-            onChange={(e) => setNewEntry({ ...newEntry, name: e.target.value })}
-            style={{ width: '220px' }}
-          />
-          <TextField
-            label="Employee Number"
-            value={newEntry.employeeNumber}
-            onChange={(e) => setNewEntry({ ...newEntry, employeeNumber: e.target.value })}
-            style={{ width: '220px' }}
-          />
-          <Button
-            onClick={addEntry}
-            variant="contained"
-            startIcon={<AddIcon />}
-            style={{
-              backgroundColor: '#6D2323', color: '#FEF9E1',
-              textTransform: 'none'
+            <Domain
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Department Assignment
+              </Typography>
+              <Typography variant="body2">
+                Manage Department Assignment
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
             }}
           >
-            Add
-          </Button>
+            <Grid container spacing={3}>
+              {/* Department Code Field */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  {fieldLabels.code}
+                </Typography>
+                <TextField
+                  select
+                  value={newAssignment.code}
+                  onChange={(e) => handleChange('code', e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                  SelectProps={{
+                    native: true,
+                  }}
+                >
+                  <option value="">Select Department</option>
+                  {departmentCodes.map((code, index) => (
+                    <option key={index} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </TextField>
+              </Grid>
+
+              {/* Name Field */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  {fieldLabels.name}
+                </Typography>
+                <TextField
+                  value={newAssignment.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Employee Number Field */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  {fieldLabels.employeeNumber}
+                </Typography>
+                <TextField
+                  value={newAssignment.employeeNumber}
+                  onChange={(e) => handleChange('employeeNumber', e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
         </Box>
-      </div>
+      </Box>
 
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Assignment Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage department assignments
+            </Typography>
+          </Box>
+        </Box>
 
-      </Container>
-     
-        <Box mb={2} position={"relative"} display="flex" justifyContent="flex-end" marginRight="25px" height="45px">
-          <TextField
-            label="Search Name "
-            variant="outlined"
-            size="medium"
-            sx={{ backgroundColor: "white", borderRadius: 1, maxWidth: "250px" , }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" style={{ color: "#6D2323" }}>
-                  <SearchIcon />
-                </InputAdornment>
-              ),
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number or Name
+            </Typography>
+
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Employee Number or Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((assignment) => {
+                const name = assignment.name?.toLowerCase() || "";
+                const employeeNumber = assignment.employeeNumber?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return employeeNumber.includes(search) || name.includes(search);
+              })
+              .map((assignment) => (
+                <Grid item xs={12} sm={6} md={4} key={assignment.id}>
+                  <Box
+                    onClick={() => handleOpenModal(assignment)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {assignment.employeeNumber}
+                    </Typography>
+
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                      <Chip
+                        label={assignment.name || 'No Name'}
+                        sx={{
+                          backgroundColor: "#6d2323",
+                          color: "#fff",
+                          borderRadius: "50px",
+                          px: 2,
+                          fontWeight: "bold",
+                          maxWidth: "100%",
+                        }}
+                      />
+                      <Chip
+                        label={`Dept: ${assignment.code || 'No Code'}`}
+                        sx={{
+                          backgroundColor: "#f5f5f5",
+                          color: "#6d2323",
+                          borderRadius: "50px",
+                          px: 2,
+                          fontWeight: "bold",
+                          maxWidth: "100%",
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((assignment) => {
+              const name = assignment.name?.toLowerCase() || "";
+              const employeeNumber = assignment.employeeNumber?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return employeeNumber.includes(search) || name.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        {/* Modal */}
+        <Modal
+          open={!!editAssignment}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
             }}
-          />
-        </Box>
+          >
+            {editAssignment && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Department Assignment" : "Department Assignment Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
 
-
-      <Container style={{ backgroundColor: '#FFFFFF', padding: '0px', borderRadius: '8px', marginBottom: '50px', width: '95%', marginLeft: '24px' }}>
-
-
-        {/* Search Bar */}
-
-
-        {/* Table */}
-        <Table style={{ backgroundColor: 'white' }}>
-          <TableHead>
-            <TableRow style={{ backgroundColor: '#6D2323' }}>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>NO.</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>DEPARTMENT CODE</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>NAME</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>EMPLOYEE NUMBER</TableCell>
-              <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>ACTIONS</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredData.length > 0 ? (
-              filteredData.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  {editingId === item.id ? (
-                    <>
-                      <TableCell>
+                {/* Modal Content */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Department Code Field in Modal */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        {fieldLabels.code}
+                      </Typography>
+                      {isEditing ? (
                         <TextField
                           select
-                          value={editData.code}
-                          onChange={(e) => setEditData({ ...editData, code: e.target.value })}
-                          style={{ width: '150px' }}
+                          value={editAssignment.code || ''}
+                          onChange={(e) => setEditAssignment({ ...editAssignment, code: e.target.value })}
+                          fullWidth
                           SelectProps={{
                             native: true,
                           }}
                         >
+                          <option value="">Select Department</option>
                           {departmentCodes.map((code, index) => (
                             <option key={index} value={code}>
                               {code}
                             </option>
                           ))}
                         </TextField>
-                      </TableCell>
-                      <TableCell>
+                      ) : (
                         <TextField
-                          value={editData.name}
-                          onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                          style={{ width: '150px' }}
+                          value={editAssignment.code || ''}
+                          fullWidth
+                          disabled
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#000000",
+                              color: "#000000"
+                            }
+                          }}
                         />
-                      </TableCell>
-                      <TableCell>
+                      )}
+                    </Grid>
+
+                    {/* Name and Employee Number Fields */}
+                    {['name', 'employeeNumber'].map((field) => (
+                      <Grid item xs={12} sm={6} key={field}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                          {fieldLabels[field]}
+                        </Typography>
                         <TextField
-                          value={editData.employeeNumber}
-                          onChange={(e) => setEditData({ ...editData, employeeNumber: e.target.value })}
-                          style={{ width: '150px' }}
+                          value={editAssignment[field] || ''}
+                          onChange={(e) =>
+                            setEditAssignment({ ...editAssignment, [field]: e.target.value })
+                          }
+                          fullWidth
+                          disabled={!isEditing}
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#000000",
+                              color: "#000000"
+                            }
+                          }}
                         />
-                      </TableCell>
-                    </>
-                  ) : (
-                    <>
-                      <TableCell>{item.code}</TableCell>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.employeeNumber}</TableCell>
-                    </>
-                  )}
-                  <TableCell>
-                    {editingId === item.id ? (
-                      <Box display="flex" gap={1}>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      <>
                         <Button
-                          onClick={updateEntry}
-                          variant="contained"
-                          startIcon={<SaveIcon />}
-                          style={{
-                            backgroundColor: '#6D2323',
-                            color: '#FEF9E1',
-                            textTransform: 'none',
-                            width: '100px'
-                          }}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          onClick={() => setEditingId(null)}
-                          variant="contained"
-                          startIcon={<CancelIcon />}
-                          style={{
-                            backgroundColor: '#000000',
-                            color: '#ffffff',
-                            textTransform: 'none',
-                            width: '100px'
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </Box>
-                    ) : (
-                      <Box display="flex" gap={1}>
-                        <Button
-                          onClick={() => {
-                            setEditingId(item.id);
-                            setEditData({
-                              code: item.code,
-                              name: item.name,
-                              employeeNumber: item.employeeNumber,
-                            });
-                          }}
-                          variant="contained"
-                          startIcon={<EditIcon />}
-                          style={{
-                            backgroundColor: '#6D2323',
-                            color: '#FEF9E1',
-                            textTransform: 'none',
-                            width: '100px'
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() => deleteEntry(item.id)}
-                          variant="contained"
+                          onClick={() => handleDelete(editAssignment.id)}
+                          variant="outlined"
                           startIcon={<DeleteIcon />}
-                          style={{
-                            backgroundColor: '#000000',
-                            color: '#ffffff',
-                            textTransform: 'none',
-                            width: '100px'
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
                           }}
                         >
                           Delete
                         </Button>
-                      </Box>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
                     )}
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ color: "red" }}>
-                  No matching records found.
-                </TableCell>
-              </TableRow>
+                  </Box>
+                </Box>
+              </>
             )}
-          </TableBody>
-        </Table>
+          </Box>
+        </Modal>
+      </Box>
     </Container>
-    </Box>
   );
 };
 
-
 export default DepartmentAssignment;
-
-
-

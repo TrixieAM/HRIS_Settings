@@ -5,24 +5,26 @@ import {
   Typography,
   TextField,
   Button,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Box,
-} from '@mui/material';
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-} from '@mui/icons-material';
+  Close,
+} from "@mui/icons-material";
 
 import SchoolIcon from '@mui/icons-material/School';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const College = () => {
   const [data, setData] = useState([]);
@@ -37,8 +39,13 @@ const College = () => {
     person_id: '',
   });
   const [editCollege, setEditCollege] = useState(null);
+  const [originalCollege, setOriginalCollege] = useState(null); // Store original data for cancel
+  const [isEditing, setIsEditing] = useState(false); // Track edit mode
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
+  
 
   useEffect(() => {
     fetchColleges();
@@ -54,6 +61,7 @@ const College = () => {
   };
 
   const handleAdd = async () => {
+    setLoading(true);
     try {
       await axios.post('http://localhost:5000/college/college-table', newCollege);
       setNewCollege({
@@ -66,9 +74,16 @@ const College = () => {
         collegeScholarshipAcademicHonorsReceived: '',
         person_id: '',
       });
+     setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
       fetchColleges();
     } catch (err) {
       console.error('Error adding data:', err);
+      setLoading(false);
     }
   };
 
@@ -76,7 +91,12 @@ const College = () => {
     try {
       await axios.put(`http://localhost:5000/college/college-table/${editCollege.id}`, editCollege);
       setEditCollege(null);
+      setOriginalCollege(null);
+      setIsEditing(false);
       fetchColleges();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
     }
@@ -85,7 +105,13 @@ const College = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/college/college-table/${id}`);
+      setEditCollege(null);
+      setOriginalCollege(null);
+      setIsEditing(false);
       fetchColleges();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
     }
@@ -99,237 +125,650 @@ const College = () => {
     }
   };
 
-  const inputStyle = { marginRight: 10, marginBottom: 10, width: 324.25 };
+  // Handle opening the modal (view mode initially)
+  const handleOpenModal = (college) => {
+    setEditCollege({ ...college });
+    setOriginalCollege({ ...college });
+    setIsEditing(false);
+  };
+
+  // Handle entering edit mode
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditCollege({ ...originalCollege });
+    setIsEditing(false);
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setEditCollege(null);
+    setOriginalCollege(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   return (
-    <Container sx={{ mt: 4 }}>
-              <div
-          style={{
-            backgroundColor: '#6D2323',
-            color: '#ffffff',
-            padding: '20px',
-            borderRadius: '8px',
-            borderBottomLeftRadius: '0px',
-            borderBottomRightRadius: '0px',
-          }}
-          
-        >
-      <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-      <SchoolIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+    <Container sx={{ mt: 0, }}>
 
-        <div>
-          <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-            College Information
-          </h4>
-          <p style={{ margin: 0, fontSize: '85%' }}>
-            Insert Your College Information
-          </p>
-        </div>
-      </div>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding college record..."  />
       
-        </div>
-      <Container
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <Box
         sx={{
-          backgroundColor: '#fff',
-          p: 3,
-          borderRadius: 2,
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           mb: 4,
         }}
       >
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <SchoolIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                College Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your College Information
+              </Typography>
+            </Box>
+          </Box>
 
-       
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* College Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  College Name
+                </Typography>
+                <TextField
+                  value={newCollege.collegeNameOfSchool}
+                  onChange={(e) => handleChange("collegeNameOfSchool", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
 
-        <TextField label="College Name" value={newCollege.collegeNameOfSchool} onChange={(e) => handleChange('collegeNameOfSchool', e.target.value)} style={inputStyle} />
-        <TextField label="Degree" value={newCollege.collegeDegree} onChange={(e) => handleChange('collegeDegree', e.target.value)} style={inputStyle} />
-        <TextField label="Period From" value={newCollege.collegePeriodFrom} onChange={(e) => handleChange('collegePeriodFrom', e.target.value)} style={inputStyle} />
-        <TextField label="Period To" value={newCollege.collegePeriodTo} onChange={(e) => handleChange('collegePeriodTo', e.target.value)} style={inputStyle} />
-        <TextField label="Highest Attained" value={newCollege.collegeHighestAttained} onChange={(e) => handleChange('collegeHighestAttained', e.target.value)} style={inputStyle} />
-        <TextField label="Year Graduated" value={newCollege.collegeYearGraduated} onChange={(e) => handleChange('collegeYearGraduated', e.target.value)} style={inputStyle} />
-        <TextField label="Honors Received" value={newCollege.collegeScholarshipAcademicHonorsReceived} onChange={(e) => handleChange('collegeScholarshipAcademicHonorsReceived', e.target.value)} style={inputStyle} />
-        <TextField label="Employee Number" value={newCollege.person_id} onChange={(e) => handleChange('person_id', e.target.value)} style={inputStyle} />
-        <Button
-          onClick={handleAdd}
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{
-            mt: 3,
-            width: '100%',
-            backgroundColor: '#6D2323',
-            color: '#FEF9E1',
-            '&:hover': { backgroundColor: '#5a1d1d' },
-          }}
-        >
-          Add
-        </Button>
-      </Container>
-      <div
-      style={{
-        marginTop: '20px',
-        backgroundColor: '#fff',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-      }}
-    >
-      {/* Header and Search */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-      >
+              {/* Degree */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Degree
+                </Typography>
+                <TextField
+                  value={newCollege.collegeDegree}
+                  onChange={(e) => handleChange("collegeDegree", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
 
-        <Box display="flex" alignItems="center">
-          <ReorderIcon sx={{ color: '#6D2323',  fontSize:'2rem', marginRight: 1}} />
-        
-        <Typography variant="h5" sx={{ color: '#000', fontWeight: 'bold' }}>
-          College Records
-        </Typography>
+              {/* Period From */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Period From
+                </Typography>
+                <TextField
+                  value={newCollege.collegePeriodFrom}
+                  onChange={(e) => handleChange("collegePeriodFrom", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Period To */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Period To
+                </Typography>
+                <TextField
+                  value={newCollege.collegePeriodTo}
+                  onChange={(e) => handleChange("collegePeriodTo", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Highest Attained */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Highest Attained
+                </Typography>
+                <TextField
+                  value={newCollege.collegeHighestAttained}
+                  onChange={(e) => handleChange("collegeHighestAttained", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Year Graduated */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Year Graduated
+                </Typography>
+                <TextField
+                  value={newCollege.collegeYearGraduated}
+                  onChange={(e) => handleChange("collegeYearGraduated", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Honors Received */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Honors Received
+                </Typography>
+                <TextField
+                  value={newCollege.collegeScholarshipAcademicHonorsReceived}
+                  onChange={(e) =>
+                    handleChange("collegeScholarshipAcademicHonorsReceived", e.target.value)
+                  }
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newCollege.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
         </Box>
-
-        <TextField
-          size="small"
-          variant="outlined"
-          placeholder="Search by Person ID or College Name"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ backgroundColor: 'white', borderRadius: 1, width: '300px' }}
-          InputProps={{
-            startAdornment: (
-              <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
-            ),
-          }}
-        />
-       
       </Box>
 
-      {/* Table */}
-      <Table>
-        <TableHead sx={{ backgroundColor: '' }}>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>College Name</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Degree</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Period From</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Period To</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Highest Attained</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Year Graduated</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Honors Received</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Employee Number</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-          </TableRow>
-        </TableHead>
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              College Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage college information
+            </Typography>
+          </Box>
+        </Box>
 
-        <TableBody>
-  {data.filter((college) => {
-    const collegeName = college.collegeNameOfSchool?.toLowerCase() || '';
-    const personId = college.person_id?.toString() || '';
-    const search = searchTerm.toLowerCase();
-    return personId.includes(search) || collegeName.includes(search);
-  }).length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={10} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">
-          No matching records found.
-        </Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    data
-      .filter((college) => {
-        const collegeName = college.collegeNameOfSchool?.toLowerCase() || '';
-        const personId = college.person_id?.toString() || '';
-        const search = searchTerm.toLowerCase();
-        return personId.includes(search) || collegeName.includes(search);
-      })
-      .map((college) => (
-        <TableRow key={college.id}>
-          <TableCell>{college.id}</TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegeNameOfSchool} onChange={(e) => handleChange('collegeNameOfSchool', e.target.value, true)} />
-            ) : (
-              college.collegeNameOfSchool
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegeDegree} onChange={(e) => handleChange('collegeDegree', e.target.value, true)} />
-            ) : (
-              college.collegeDegree
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegePeriodFrom} onChange={(e) => handleChange('collegePeriodFrom', e.target.value, true)} />
-            ) : (
-              college.collegePeriodFrom
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegePeriodTo} onChange={(e) => handleChange('collegePeriodTo', e.target.value, true)} />
-            ) : (
-              college.collegePeriodTo
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegeHighestAttained} onChange={(e) => handleChange('collegeHighestAttained', e.target.value, true)} />
-            ) : (
-              college.collegeHighestAttained
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegeYearGraduated} onChange={(e) => handleChange('collegeYearGraduated', e.target.value, true)} />
-            ) : (
-              college.collegeYearGraduated
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.collegeScholarshipAcademicHonorsReceived} onChange={(e) => handleChange('collegeScholarshipAcademicHonorsReceived', e.target.value, true)} />
-            ) : (
-              college.collegeScholarshipAcademicHonorsReceived
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <TextField value={editCollege.person_id} onChange={(e) => handleChange('person_id', e.target.value, true)} />
-            ) : (
-              college.person_id
-            )}
-          </TableCell>
-          <TableCell>
-            {editCollege?.id === college.id ? (
-              <>
-                <Button onClick={handleUpdate} variant="contained" startIcon={<SaveIcon />} sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: 100, mr: 1, mb: 1 }}>
-                  Update
-                </Button>
-                <Button onClick={() => setEditCollege(null)} variant="outlined" startIcon={<CancelIcon />} sx={{ backgroundColor: 'black', color: 'white', width: 100, mb: 1 }}>
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button onClick={() => setEditCollege(college)} variant="outlined" startIcon={<EditIcon />} sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: 100, mr: 1, mb: 1 }}>
-                  Edit
-                </Button>
-                <Button onClick={() => handleDelete(college.id)} variant="outlined" startIcon={<DeleteIcon />} sx={{ backgroundColor: 'black', color: 'white', width: 100, mb: 1 }}>
-                  Delete
-                </Button>
-              </>
-            )}
-          </TableCell>
-        </TableRow>
-      ))
-  )}
-</TableBody>
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
 
-      </Table>
-    </div>
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or College Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((college) => {
+                const collegeName = college.collegeNameOfSchool?.toLowerCase() || "";
+                const personId = college.person_id?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return personId.includes(search) || collegeName.includes(search);
+              })
+              .map((college) => (
+                <Grid item xs={12} sm={6} md={4} key={college.id}>
+                  <Box
+                    onClick={() => handleOpenModal(college)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {college.person_id}
+                    </Typography>
+
+                    {/* College Name Pill */}
+                    <Chip
+                      label={college.collegeNameOfSchool}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((college) => {
+              const collegeName = college.collegeNameOfSchool?.toLowerCase() || "";
+              const personId = college.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || collegeName.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editCollege}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editCollege && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit College Information" : "College Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content (Form Style) */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* College Name */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        College Name
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegeNameOfSchool}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, collegeNameOfSchool: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Degree */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Degree
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegeDegree}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, collegeDegree: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Period From */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Period From
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegePeriodFrom}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, collegePeriodFrom: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Period To */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Period To
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegePeriodTo}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, collegePeriodTo: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Highest Attained */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Highest Attained
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegeHighestAttained}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, collegeHighestAttained: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Year Graduated */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Year Graduated
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegeYearGraduated}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, collegeYearGraduated: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Honors Received */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Honors Received
+                      </Typography>
+                      <TextField
+                        value={editCollege.collegeScholarshipAcademicHonorsReceived}
+                        onChange={(e) =>
+                          setEditCollege({
+                            ...editCollege,
+                            collegeScholarshipAcademicHonorsReceived: e.target.value,
+                          })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editCollege.person_id}
+                        onChange={(e) =>
+                          setEditCollege({ ...editCollege, person_id: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      // View mode buttons
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editCollege.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                            
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      // Edit mode buttons
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };

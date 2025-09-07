@@ -119,6 +119,7 @@ import Registration from './components/Registration';
 import Payslip from './components/PAYROLL/Payslip';
 import PayslipOverall from './components/PAYROLL/PayslipOverall';
 import PayslipBulk from './components/PAYROLL/PayslipBulk';
+import SuccessfullOverlay from './components/SuccessfullOverlay';
 
 
 
@@ -855,7 +856,7 @@ function App() {
             />
 
             <Route
-              path="/send-payslip"
+              path="/bulk-payslip"
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
                   <PayslipBulk />
@@ -868,6 +869,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
                   <LoadingOverlay/>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/successfull-overlay"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <SuccessfullOverlay/>
                 </ProtectedRoute>
               }
             />

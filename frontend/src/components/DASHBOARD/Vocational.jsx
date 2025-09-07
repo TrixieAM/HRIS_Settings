@@ -1,18 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Button, TextField, Table, TableBody, TableCell, TableHead, TableRow, Container, Box, Typography
-} from '@mui/material';
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
 import {
-  Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon,
-  WorkHistory
-} from '@mui/icons-material';
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+} from "@mui/icons-material";
+
 import ConstructionIcon from '@mui/icons-material/Construction';
 import SearchIcon from '@mui/icons-material/Search';
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const Vocational = () => {
-  const [vocationalData, setVocationalData] = useState([]);
+  const [data, setData] = useState([]);
   const [newVocational, setNewVocational] = useState({
     vocationalNameOfSchool: '',
     vocationalDegree: '',
@@ -20,11 +35,17 @@ const Vocational = () => {
     vocationalPeriodTo: '',
     vocationalHighestAttained: '',
     vocationalYearGraduated: '',
-    person_id: ''
+    vocationalScholarshipAcademicHonorsReceived: '',
+    person_id: '',
   });
-  const [editingVocationalId, setEditingVocationalId] = useState(null);
-  const [editVocationalData, setEditVocationalData] = useState({});
+  const [editVocational, setEditVocational] = useState(null);
+  const [originalVocational, setOriginalVocational] = useState(null); // Store original data for cancel
+  const [isEditing, setIsEditing] = useState(false); // Track edit mode
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
+  
 
   useEffect(() => {
     fetchVocationalData();
@@ -32,17 +53,17 @@ const Vocational = () => {
 
   const fetchVocationalData = async () => {
     try {
-      const result = await axios.get('http://localhost:5000/vocational/vocational-table');
-      setVocationalData(result.data);
-    } catch (error) {
-      console.error('Error fetching vocational data:', error);
+      const res = await axios.get('http://localhost:5000/vocational/vocational-table');
+      setData(res.data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
     }
   };
 
-  const handleAddVocational = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
       await axios.post('http://localhost:5000/vocational/vocational-table', newVocational);
-      fetchVocationalData();
       setNewVocational({
         vocationalNameOfSchool: '',
         vocationalDegree: '',
@@ -50,261 +71,704 @@ const Vocational = () => {
         vocationalPeriodTo: '',
         vocationalHighestAttained: '',
         vocationalYearGraduated: '',
-        person_id: ''
+        vocationalScholarshipAcademicHonorsReceived: '',
+        person_id: '',
       });
-    } catch (error) {
-      console.error('Error adding vocational data:', error);
-    }
-  };
-
-  const updateVocational = async () => {
-    try {
-      await axios.put(`http://localhost:5000/vocational/vocational-table/${editingVocationalId}`, editVocationalData);
-      setEditingVocationalId(null);
+     setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
       fetchVocationalData();
-    } catch (error) {
-      console.error('Failed to update vocational data:', error);
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
     }
   };
 
-  const deleteVocational = async (id) => {
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/vocational/vocational-table/${editVocational.id}`, editVocational);
+      setEditVocational(null);
+      setOriginalVocational(null);
+      setIsEditing(false);
+      fetchVocationalData();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/vocational/vocational-table/${id}`);
+      setEditVocational(null);
+      setOriginalVocational(null);
+      setIsEditing(false);
       fetchVocationalData();
-    } catch (error) {
-      console.error('Error deleting vocational data:', error);
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
     }
   };
 
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditVocational({ ...editVocational, [field]: value });
+    } else {
+      setNewVocational({ ...newVocational, [field]: value });
+    }
+  };
+
+  // Handle opening the modal (view mode initially)
+  const handleOpenModal = (vocational) => {
+    setEditVocational({ ...vocational });
+    setOriginalVocational({ ...vocational });
+    setIsEditing(false);
+  };
+
+  // Handle entering edit mode
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditVocational({ ...originalVocational });
+    setIsEditing(false);
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setEditVocational(null);
+    setOriginalVocational(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
+
   return (
-    <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1', padding: '20px', borderRadius: '10px' }}>
-      {/* Header Section */}
-      <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      borderBottomLeftRadius: '0px',
-      borderBottomRightRadius: '0px',
-    }}
-    
-  >
-<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-      <ConstructionIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+    <Container sx={{ mt: 0, }}>
 
-      <div>
-        <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-          Vocational Information
-        </h4>
-        <p style={{ margin: 0, fontSize: '85%' }}>
-          Insert Your Vocational Information
-        </p>
-      </div>
-    </div>
-
-      </div>
-
-      {/* Add New Vocational Form Box */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px',
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding vocational record..."  />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
         }}
       >
-         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginLeft: '50px', marginBottom: '20px' }}>
-          {[
-            { label: 'School', key: 'vocationalNameOfSchool' },
-            { label: 'Degree', key: 'vocationalDegree' },
-            { label: 'From Year', key: 'vocationalPeriodFrom' },
-            { label: 'To Year', key: 'vocationalPeriodTo' },
-            { label: 'Highest Attained', key: 'vocationalHighestAttained' },
-            { label: 'Year Graduated', key: 'vocationalYearGraduated' },
-            { label: 'Person ID', key: 'person_id' },
-          ].map(({ label, key }) => (
-            <TextField
-              key={key}
-              label={label}
-              value={newVocational[key]}
-              onChange={(e) => setNewVocational({ ...newVocational, [key]: e.target.value })}
-              style={{ width: '324px' }}
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <ConstructionIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
             />
-          ))}
-        </div>
-        <Button
-          onClick={handleAddVocational}
-          variant="contained"
-          style={{ backgroundColor: '#6D2323', color: '#FEF9E1', marginTop: '20px', width: '100%' }}
-          startIcon={<AddIcon />}
-        >
-          Add
-        </Button>
-      </div>
-
-      {/* Vocational Table */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px'
-        }}
-      >
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          padding={2}
-          borderRadius={1}
-          marginBottom={2}
-        >
-          <Box display="flex" alignItems="center">
-          <WorkHistory sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
-        
-            <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
-              Vocational Records
-            </Typography>
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Vocational Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your Vocational Information
+              </Typography>
+            </Box>
           </Box>
 
-           <TextField
-              size="small"
-              variant="outlined"
-              placeholder="Search by Employee Number"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ backgroundColor: 'white', borderRadius: 1 }}
-              InputProps={{
-                startAdornment: (
-                  <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
-                ),
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* Vocational School Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Vocational School Name
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalNameOfSchool}
+                  onChange={(e) => handleChange("vocationalNameOfSchool", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Degree */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Degree
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalDegree}
+                  onChange={(e) => handleChange("vocationalDegree", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Period From */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Period From
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalPeriodFrom}
+                  onChange={(e) => handleChange("vocationalPeriodFrom", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Period To */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Period To
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalPeriodTo}
+                  onChange={(e) => handleChange("vocationalPeriodTo", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Highest Attained */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Highest Attained
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalHighestAttained}
+                  onChange={(e) => handleChange("vocationalHighestAttained", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Year Graduated */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Year Graduated
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalYearGraduated}
+                  onChange={(e) => handleChange("vocationalYearGraduated", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Honors Received */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Honors Received
+                </Typography>
+                <TextField
+                  value={newVocational.vocationalScholarshipAcademicHonorsReceived}
+                  onChange={(e) =>
+                    handleChange("vocationalScholarshipAcademicHonorsReceived", e.target.value)
+                  }
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newVocational.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
               }}
-            />
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Vocational Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage vocational information
+            </Typography>
+          </Box>
         </Box>
 
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>School</TableCell>
-            <TableCell>Degree</TableCell>
-            <TableCell>From</TableCell>
-            <TableCell>To</TableCell>
-            <TableCell>Highest Attained</TableCell>
-            <TableCell>Year Graduated</TableCell>
-            <TableCell>Person ID</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-  {vocationalData.filter((voc) => {
-    const search = searchTerm.toLowerCase();
-    const fullName = `${voc.vocationalNameOfSchool} ${voc.vocationalDegree}`.toLowerCase();
-    return (
-      voc.person_id?.toString().includes(search) ||
-      fullName.includes(search)
-    );
-  }).length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={9} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">
-          No matching records found.
-        </Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    vocationalData
-      .filter((voc) => {
-        const search = searchTerm.toLowerCase();
-        const fullName = `${voc.vocationalNameOfSchool} ${voc.vocationalDegree}`.toLowerCase();
-        return (
-          voc.person_id?.toString().includes(search) ||
-          fullName.includes(search)
-        );
-      })
-      .map((voc) => (
-        <TableRow key={voc.id}>
-          {editingVocationalId === voc.id ? (
-            <>
-              <TableCell>{voc.id}</TableCell>
-              {[
-                'vocationalNameOfSchool', 'vocationalDegree', 'vocationalPeriodFrom',
-                'vocationalPeriodTo', 'vocationalHighestAttained',
-                'vocationalYearGraduated', 'person_id'
-              ].map((key) => (
-                <TableCell key={key}>
-                  <TextField
-                    value={editVocationalData[key]}
-                    onChange={(e) =>
-                      setEditVocationalData({ ...editVocationalData, [key]: e.target.value })
-                    }
-                  />
-                </TableCell>
-              ))}
-              <TableCell>
-                <Button
-                  onClick={updateVocational}
-                  variant="contained"
-                  style={{ backgroundColor: '#6D2323', color: '#FEF9E1', marginBottom: '5px', width: '100px' }}
-                  startIcon={<SaveIcon />}
-                >
-                  Save
-                </Button>
-                <Button
-                  onClick={() => setEditingVocationalId(null)}
-                  variant="contained"
-                  style={{ backgroundColor: 'black', color: 'white', marginLeft: '10px', width: '100px' }}
-                  startIcon={<CancelIcon />}
-                >
-                  Cancel
-                </Button>
-              </TableCell>
-            </>
-          ) : (
-            <>
-              <TableCell>{voc.id}</TableCell>
-              <TableCell>{voc.vocationalNameOfSchool}</TableCell>
-              <TableCell>{voc.vocationalDegree}</TableCell>
-              <TableCell>{voc.vocationalPeriodFrom}</TableCell>
-              <TableCell>{voc.vocationalPeriodTo}</TableCell>
-              <TableCell>{voc.vocationalHighestAttained}</TableCell>
-              <TableCell>{voc.vocationalYearGraduated}</TableCell>
-              <TableCell>{voc.person_id}</TableCell>
-              <TableCell>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <Button
-                    onClick={() => {
-                      setEditingVocationalId(voc.id);
-                      setEditVocationalData(voc);
-                    }}
-                    variant="contained"
-                    style={{ backgroundColor: '#6D2323', color: '#ffffff' }}
-                    startIcon={<EditIcon />}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => deleteVocational(voc.id)}
-                    variant="contained"
-                    style={{ backgroundColor: '#000000', color: '#FEF9E1' }}
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </TableCell>
-            </>
-          )}
-        </TableRow>
-      ))
-  )}
-</TableBody>
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
 
-      </Table>
-      </div>
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or School Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((vocational) => {
+                const schoolName = vocational.vocationalNameOfSchool?.toLowerCase() || "";
+                const personId = vocational.person_id?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return personId.includes(search) || schoolName.includes(search);
+              })
+              .map((vocational) => (
+                <Grid item xs={12} sm={6} md={4} key={vocational.id}>
+                  <Box
+                    onClick={() => handleOpenModal(vocational)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {vocational.person_id}
+                    </Typography>
+
+                    {/* School Name Pill */}
+                    <Chip
+                      label={vocational.vocationalNameOfSchool}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((vocational) => {
+              const schoolName = vocational.vocationalNameOfSchool?.toLowerCase() || "";
+              const personId = vocational.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || schoolName.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editVocational}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editVocational && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Vocational Information" : "Vocational Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content (Form Style) */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Vocational School Name */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Vocational School Name
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalNameOfSchool}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, vocationalNameOfSchool: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Degree */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Degree
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalDegree}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, vocationalDegree: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Period From */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Period From
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalPeriodFrom}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, vocationalPeriodFrom: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Period To */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Period To
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalPeriodTo}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, vocationalPeriodTo: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Highest Attained */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Highest Attained
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalHighestAttained}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, vocationalHighestAttained: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Year Graduated */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Year Graduated
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalYearGraduated}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, vocationalYearGraduated: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Honors Received */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Honors Received
+                      </Typography>
+                      <TextField
+                        value={editVocational.vocationalScholarshipAcademicHonorsReceived}
+                        onChange={(e) =>
+                          setEditVocational({
+                            ...editVocational,
+                            vocationalScholarshipAcademicHonorsReceived: e.target.value,
+                          })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editVocational.person_id}
+                        onChange={(e) =>
+                          setEditVocational({ ...editVocational, person_id: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      // View mode buttons
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editVocational.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                            
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      // Edit mode buttons
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };

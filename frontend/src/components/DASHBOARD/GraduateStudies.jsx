@@ -5,28 +5,30 @@ import {
   Typography,
   TextField,
   Button,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Box,
-} from '@mui/material';
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-  School as SchoolIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material';
+  Close,
+} from "@mui/icons-material";
 
+import SchoolIcon from '@mui/icons-material/School';
+import SearchIcon from '@mui/icons-material/Search';
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const GraduateTable = () => {
-  const [graduateData, setGraduateData] = useState([]);
-  const [form, setForm] = useState({
-    person_id: '',
+  const [data, setData] = useState([]);
+  const [newGraduate, setNewGraduate] = useState({
     graduateNameOfSchool: '',
     graduateDegree: '',
     graduatePeriodFrom: '',
@@ -34,42 +36,35 @@ const GraduateTable = () => {
     graduateHighestAttained: '',
     graduateYearGraduated: '',
     graduateScholarshipAcademicHonorsReceived: '',
+    person_id: '',
   });
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({});
+  const [editGraduate, setEditGraduate] = useState(null);
+  const [originalGraduate, setOriginalGraduate] = useState(null); // Store original data for cancel
+  const [isEditing, setIsEditing] = useState(false); // Track edit mode
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
+  
 
   useEffect(() => {
-    fetchGraduateData();
+    fetchGraduates();
   }, []);
 
-
-  const fetchGraduateData = async () => {
+  const fetchGraduates = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/GraduateRoute/graduate-table");
-      setGraduateData(res.data);
+      const res = await axios.get('http://localhost:5000/GraduateRoute/graduate-table');
+      setData(res.data);
     } catch (err) {
-      console.error('Error fetching graduate data:', err);
+      console.error('Error fetching data:', err);
     }
   };
 
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-
-  const handleSubmit = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
-      if (editingId) {
-        await axios.put(`http://localhost:5000/GraduateRoute/graduate-table/${editingId}`, form);
-        setEditingId(null);
-      } else {
-        await axios.post('http://localhost:5000/GraduateRoute/graduate-table', form);
-      }
-      setForm({
-        person_id: '',
+      await axios.post('http://localhost:5000/GraduateRoute/graduate-table', newGraduate);
+      setNewGraduate({
         graduateNameOfSchool: '',
         graduateDegree: '',
         graduatePeriodFrom: '',
@@ -77,215 +72,705 @@ const GraduateTable = () => {
         graduateHighestAttained: '',
         graduateYearGraduated: '',
         graduateScholarshipAcademicHonorsReceived: '',
+        person_id: '',
       });
-      fetchGraduateData();
+      setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
+      fetchGraduates();
     } catch (err) {
-      console.error('Error saving data:', err);
+      console.error('Error adding data:', err);
+      setLoading(false);
     }
   };
-
-
-  const handleEdit = (row) => {
-    setEditData(row);
-    setEditingId(row.id);
-  };
-
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/GraduateRoute/graduate-table/${editingId}`, editData);
-      setEditingId(null);
-      fetchGraduateData();
+      await axios.put(`http://localhost:5000/GraduateRoute/graduate-table/${editGraduate.id}`, editGraduate);
+      setEditGraduate(null);
+      setOriginalGraduate(null);
+      setIsEditing(false);
+      fetchGraduates();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
-      console.error('Update failed:', err);
+      console.error('Error updating data:', err);
     }
   };
-
 
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/GraduateRoute/graduate-table/${id}`);
-      fetchGraduateData();
+      setEditGraduate(null);
+      setOriginalGraduate(null);
+      setIsEditing(false);
+      fetchGraduates();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
     }
   };
 
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditGraduate({ ...editGraduate, [field]: value });
+    } else {
+      setNewGraduate({ ...newGraduate, [field]: value });
+    }
+  };
+
+  // Handle opening the modal (view mode initially)
+  const handleOpenModal = (graduate) => {
+    setEditGraduate({ ...graduate });
+    setOriginalGraduate({ ...graduate });
+    setIsEditing(false);
+  };
+
+  // Handle entering edit mode
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditGraduate({ ...originalGraduate });
+    setIsEditing(false);
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setEditGraduate(null);
+    setOriginalGraduate(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   return (
-    <Container style={{ backgroundColor: '#FEF9E1', paddingBottom: '40px' }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: '#6D2323',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '8px 8px 0 0'
-      }}>
-        <Box display="flex" alignItems="center">
-          <SchoolIcon sx={{ fontSize: '3rem', marginRight: 2 }} />
-          <div>
-            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-              Graduate Studies Information
-            </Typography>
-            <Typography variant="body2">
-              Insert Your Graduate Studies Information
-            </Typography>
-          </div>
-        </Box>
-      </div>
+    <Container sx={{ mt: 0, }}>
 
-
-      {/* Form */}
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '0 0 8px 8px',
-        marginBottom: '20px',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-      }}>
-        {Object.entries(form).map(([key, value], index) => (
-          <TextField
-            key={key}
-            label={key}
-            name={key}
-            value={value}
-            onChange={handleChange}
-            style={{
-              width: '300px',
-              marginRight: '10px',
-              marginBottom: '20px',
-              marginLeft: index % 1 === 0 ? '50px' : '10px'
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding graduate record..."  />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
             }}
-          />
-        ))}
+          >
+            <SchoolIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Graduate Studies Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your Graduate Studies Information
+              </Typography>
+            </Box>
+          </Box>
 
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* Graduate School Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Graduate School Name
+                </Typography>
+                <TextField
+                  value={newGraduate.graduateNameOfSchool}
+                  onChange={(e) => handleChange("graduateNameOfSchool", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
 
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          startIcon={editingId ? <SaveIcon /> : <AddIcon />}
-          style={{
-            backgroundColor: '#6D2323',
-            color: '#ffffff',
-            width: '940px',
-            marginTop: '20px',
-            marginLeft: '80px'
+              {/* Degree */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Degree
+                </Typography>
+                <TextField
+                  value={newGraduate.graduateDegree}
+                  onChange={(e) => handleChange("graduateDegree", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Period From */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Period From
+                </Typography>
+                <TextField
+                  value={newGraduate.graduatePeriodFrom}
+                  onChange={(e) => handleChange("graduatePeriodFrom", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Period To */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Period To
+                </Typography>
+                <TextField
+                  value={newGraduate.graduatePeriodTo}
+                  onChange={(e) => handleChange("graduatePeriodTo", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Highest Attained */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Highest Attained
+                </Typography>
+                <TextField
+                  value={newGraduate.graduateHighestAttained}
+                  onChange={(e) => handleChange("graduateHighestAttained", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Year Graduated */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Year Graduated
+                </Typography>
+                <TextField
+                  value={newGraduate.graduateYearGraduated}
+                  onChange={(e) => handleChange("graduateYearGraduated", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Honors Received */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Honors Received
+                </Typography>
+                <TextField
+                  value={newGraduate.graduateScholarshipAcademicHonorsReceived}
+                  onChange={(e) =>
+                    handleChange("graduateScholarshipAcademicHonorsReceived", e.target.value)
+                  }
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newGraduate.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
           }}
         >
-          {editingId ? 'Update' : 'Add'}
-        </Button>
-      </div>
-
-
-      {/* Table + Search */}
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-      }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-          <Box display="flex" alignItems="center">
-            <SchoolIcon sx={{ color: '#6D2323', fontSize: '2.5rem', mr: 2 }} />
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#000' }}>
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
               Graduate Records
             </Typography>
+            <Typography variant="body2">
+              View and manage graduate studies information
+            </Typography>
           </Box>
-          <TextField
-            size="small"
-            variant="outlined"
-            placeholder="Search by Employee No. or School"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ backgroundColor: 'white', borderRadius: 1 }}
-            InputProps={{
-              startAdornment: <SearchIcon sx={{ color: '#6D2323', mr: 1 }} />
-            }}
-          />
         </Box>
 
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
 
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Employee Number</TableCell>
-              <TableCell>School</TableCell>
-              <TableCell>Degree</TableCell>
-              <TableCell>From</TableCell>
-              <TableCell>To</TableCell>
-              <TableCell>Units</TableCell>
-              <TableCell>Graduated</TableCell>
-              <TableCell>Scholarship</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {graduateData.filter((row) => {
-              const search = searchTerm.toLowerCase();
-              return (
-                row.person_id?.toString().includes(search) ||
-                row.graduateNameOfSchool?.toLowerCase().includes(search)
-              );
-            }).length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  <Typography variant="h6" color="error">No matching records found.</Typography>
-                </TableCell>
-              </TableRow>
-            ) : graduateData
-              .filter((row) => {
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or School Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((graduate) => {
+                const schoolName = graduate.graduateNameOfSchool?.toLowerCase() || "";
+                const personId = graduate.person_id?.toString() || "";
                 const search = searchTerm.toLowerCase();
-                return (
-                  row.person_id?.toString().includes(search) ||
-                  row.graduateNameOfSchool?.toLowerCase().includes(search)
-                );
+                return personId.includes(search) || schoolName.includes(search);
               })
-              .map((row) => (
-                <TableRow key={row.id}>
-                  {editingId === row.id ? (
-                    <>
-                      <TableCell>{row.person_id}</TableCell>
-                      <TableCell><TextField value={editData.graduateNameOfSchool} onChange={(e) => setEditData({ ...editData, graduateNameOfSchool: e.target.value })} /></TableCell>
-                      <TableCell><TextField value={editData.graduateDegree} onChange={(e) => setEditData({ ...editData, graduateDegree: e.target.value })} /></TableCell>
-                      <TableCell><TextField value={editData.graduatePeriodFrom} onChange={(e) => setEditData({ ...editData, graduatePeriodFrom: e.target.value })} /></TableCell>
-                      <TableCell><TextField value={editData.graduatePeriodTo} onChange={(e) => setEditData({ ...editData, graduatePeriodTo: e.target.value })} /></TableCell>
-                      <TableCell><TextField value={editData.graduateHighestAttained} onChange={(e) => setEditData({ ...editData, graduateHighestAttained: e.target.value })} /></TableCell>
-                      <TableCell><TextField value={editData.graduateYearGraduated} onChange={(e) => setEditData({ ...editData, graduateYearGraduated: e.target.value })} /></TableCell>
-                      <TableCell><TextField value={editData.graduateScholarshipAcademicHonorsReceived} onChange={(e) => setEditData({ ...editData, graduateScholarshipAcademicHonorsReceived: e.target.value })} /></TableCell>
-                      <TableCell>
-                        <Button onClick={handleUpdate} variant="contained" sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', mb: 1, mr: 1 }} startIcon={<SaveIcon />}>Update</Button>
-                        <Button onClick={() => setEditingId(null)} variant="contained" sx={{ backgroundColor: 'black', color: '#fff' }} startIcon={<CancelIcon />}>Cancel</Button>
-                      </TableCell>
-                    </>
-                  ) : (
-                    <>
-                      <TableCell>{row.person_id}</TableCell>
-                      <TableCell>{row.graduateNameOfSchool}</TableCell>
-                      <TableCell>{row.graduateDegree}</TableCell>
-                      <TableCell>{row.graduatePeriodFrom}</TableCell>
-                      <TableCell>{row.graduatePeriodTo}</TableCell>
-                      <TableCell>{row.graduateHighestAttained}</TableCell>
-                      <TableCell>{row.graduateYearGraduated}</TableCell>
-                      <TableCell>{row.graduateScholarshipAcademicHonorsReceived}</TableCell>
-                      <TableCell>
-                        <Box display="flex" gap={1}>
-                          <Button onClick={() => handleEdit(row)} variant="contained" sx={{ backgroundColor: '#6D2323', color: '#FEF9E1' }} startIcon={<EditIcon />}>Edit</Button>
-                          <Button onClick={() => handleDelete(row.id)} variant="contained" sx={{ backgroundColor: 'black', color: '#fff' }} startIcon={<DeleteIcon />}>Delete</Button>
-                        </Box>
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
+              .map((graduate) => (
+                <Grid item xs={12} sm={6} md={4} key={graduate.id}>
+                  <Box
+                    onClick={() => handleOpenModal(graduate)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {graduate.person_id}
+                    </Typography>
+
+                    {/* School Name Pill */}
+                    <Chip
+                      label={graduate.graduateNameOfSchool}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
               ))}
-          </TableBody>
-        </Table>
-      </div>
+            {data.filter((graduate) => {
+              const schoolName = graduate.graduateNameOfSchool?.toLowerCase() || "";
+              const personId = graduate.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || schoolName.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editGraduate}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editGraduate && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Graduate Studies Information" : "Graduate Studies Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content (Form Style) */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Graduate School Name */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Graduate School Name
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduateNameOfSchool}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, graduateNameOfSchool: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Degree */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Degree
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduateDegree}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, graduateDegree: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Period From */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Period From
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduatePeriodFrom}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, graduatePeriodFrom: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Period To */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Period To
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduatePeriodTo}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, graduatePeriodTo: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Highest Attained */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Highest Attained
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduateHighestAttained}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, graduateHighestAttained: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Year Graduated */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Year Graduated
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduateYearGraduated}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, graduateYearGraduated: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Honors Received */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Honors Received
+                      </Typography>
+                      <TextField
+                        value={editGraduate.graduateScholarshipAcademicHonorsReceived}
+                        onChange={(e) =>
+                          setEditGraduate({
+                            ...editGraduate,
+                            graduateScholarshipAcademicHonorsReceived: e.target.value,
+                          })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editGraduate.person_id}
+                        onChange={(e) =>
+                          setEditGraduate({ ...editGraduate, person_id: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      // View mode buttons
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editGraduate.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                            
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      // Edit mode buttons
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };
 
-
 export default GraduateTable;
-
-
-

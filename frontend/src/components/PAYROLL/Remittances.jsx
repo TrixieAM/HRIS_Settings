@@ -1,391 +1,570 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Button, TextField, Table, TableBody, TableCell,
-  TableHead, TableRow, Container, Box, Typography
-} from '@mui/material';
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
 import {
-  Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
   Paid,
-  Payment,
-  Search,
-} from '@mui/icons-material';
-import {
-  Dialog, DialogTitle, DialogContent, DialogActions
-} from '@mui/material';
-import { InputAdornment } from '@mui/material';
+  Search as SearchIcon,
+  Payment as ReorderIcon,
+} from "@mui/icons-material";
 
-
-
-
-
-
-
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const EmployeeRemittance = () => {
-  const [remittances, setRemittances] = useState([]);
+  const [data, setData] = useState([]);
   const [newRemittance, setNewRemittance] = useState({
-    employeeNumber: '', name: '',  liquidatingCash: '', gsisSalaryLoan: '', gsisPolicyLoan: '', gsisArrears: '',
-    cpl: '', mpl: '', mplLite: '', emergencyLoan: '', nbc594: '',
-    increment: '',  pagibigFundCont: '', pagibig2: '', multiPurpLoan: '',
-    landbankSalaryLoan: '', earistCreditCoop: '', feu: ''
+    employeeNumber: '',
+    name: '',
+    liquidatingCash: '',
+    gsisSalaryLoan: '',
+    gsisPolicyLoan: '',
+    gsisArrears: '',
+    cpl: '',
+    mpl: '',
+    mplLite: '',
+    emergencyLoan: '',
+    nbc594: '',
+    increment: '',
+    pagibigFundCont: '',
+    pagibig2: '',
+    multiPurpLoan: '',
+    landbankSalaryLoan: '',
+    earistCreditCoop: '',
+    feu: '',
   });
-  const [editingRemittanceId, setEditingRemittanceId] = useState(null);
-  const [editRemittanceData, setEditRemittanceData] = useState({});
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-
-
-
-  const filteredRemittances = remittances.filter(remittance =>
-  remittance.employeeNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  remittance.name?.toLowerCase().includes(searchQuery.toLowerCase())
-);
-
-
-
-
-
-
-
-
-
-
-
-
-
+  const [editRemittance, setEditRemittance] = useState(null);
+  const [originalRemittance, setOriginalRemittance] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
 
   useEffect(() => {
     fetchRemittances();
   }, []);
 
-
-
-
-
-
-
-
   const fetchRemittances = async () => {
     try {
-      const result = await axios.get('http://localhost:5000/Remittance/employee-remittance');
-      setRemittances(result.data);
-    } catch (error) {
-      console.error('Error fetching remittances:', error);
+      const res = await axios.get('http://localhost:5000/Remittance/employee-remittance');
+      setData(res.data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
     }
   };
 
-
-
-
-
-
-
-
-  const updateRemittance = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
-      await axios.put(`http://localhost:5000/Remittance/employee-remittance/${editingRemittanceId}`, editRemittanceData);
-      setEditingRemittanceId(null);
+      // Filter out empty fields
+      const filteredRemittance = Object.fromEntries(
+        Object.entries(newRemittance).filter(([_, value]) => value !== '')
+      );
+      
+      await axios.post('http://localhost:5000/Remittance/employee-remittance', filteredRemittance);
+      setNewRemittance({
+        employeeNumber: '',
+        name: '',
+        liquidatingCash: '',
+        gsisSalaryLoan: '',
+        gsisPolicyLoan: '',
+        gsisArrears: '',
+        cpl: '',
+        mpl: '',
+        mplLite: '',
+        emergencyLoan: '',
+        nbc594: '',
+        increment: '',
+        pagibigFundCont: '',
+        pagibig2: '',
+        multiPurpLoan: '',
+        landbankSalaryLoan: '',
+        earistCreditCoop: '',
+        feu: '',
+      });
+      setTimeout(() => {
+        setLoading(false);
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);
       fetchRemittances();
-    } catch (error) {
-      console.error('Failed to update remittance:', error);
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
     }
   };
 
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/Remittance/employee-remittance/${editRemittance.id}`, editRemittance);
+      setEditRemittance(null);
+      setOriginalRemittance(null);
+      setIsEditing(false);
+      fetchRemittances();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
+    }
+  };
 
-
-
-
-
-
-
-  const deleteRemittance = async (id) => {
+  const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/Remittance/employee-remittance/${id}`);
+      setEditRemittance(null);
+      setOriginalRemittance(null);
+      setIsEditing(false);
       fetchRemittances();
-    } catch (error) {
-      console.error('Error deleting remittance:', error);
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
     }
   };
 
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditRemittance({ ...editRemittance, [field]: value });
+    } else {
+      setNewRemittance({ ...newRemittance, [field]: value });
+    }
+  };
 
+  const handleOpenModal = (remittance) => {
+    setEditRemittance({ ...remittance });
+    setOriginalRemittance({ ...remittance });
+    setIsEditing(false);
+  };
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
 
+  const handleCancelEdit = () => {
+    setEditRemittance({ ...originalRemittance });
+    setIsEditing(false);
+  };
 
+  const handleCloseModal = () => {
+    setEditRemittance(null);
+    setOriginalRemittance(null);
+    setIsEditing(false);
+  };
 
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
+  const fieldLabels = {
+    employeeNumber: 'Employee Number',
+    name: 'Name',
+    liquidatingCash: 'Liquidating Cash',
+    gsisSalaryLoan: 'GSIS Salary Loan',
+    gsisPolicyLoan: 'GSIS Policy Loan',
+    gsisArrears: 'GSIS Arrears',
+    cpl: 'CPL',
+    mpl: 'MPL',
+    mplLite: 'MPL Lite',
+    emergencyLoan: 'Emergency Loan',
+    nbc594: 'NBC 594',
+    increment: 'Increment',
+    pagibigFundCont: 'Pag-IBIG Fund Cont.',
+    pagibig2: 'Pag-IBIG 2',
+    multiPurpLoan: 'Multi-Purpose Loan',
+    landbankSalaryLoan: 'Landbank Salary Loan',
+    earistCreditCoop: 'EARIST Credit Coop',
+    feu: 'FEU'
+  };
 
   return (
-    <Container>
-<div
+    <Container sx={{ mt: 0 }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding remittance record..." />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
 
-
-
-
-  style={{
-    backgroundColor: '#6D2323',
-    color: '#ffffff',
-    padding: '20px',
-    borderRadius: '8px',
-    borderEndEndRadius: '0px',
-    borderEndStartRadius: '0px',
-    width: '92.5%',
-    marginLeft: '25px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  }}
->
-  <Paid fontSize="large" />
-
-
-  <div>
-    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>Employee Remittance</h4>
-    <p style={{ margin: 0, fontSize: '85%' }}>Insert Employee Other Deductions</p>
-  </div>
-
-
- 
-
-
-</div>
-
-
-    <Container style={{ backgroundColor: '#FEF9E1' }}>
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px'
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
         }}
       >
-
-
-
-
-
-
-
-
-
-
-        <Box display="flex" flexWrap="wrap" gap={2} marginLeft="50px">
-          {Object.keys(newRemittance).map((key) => (
-            <TextField
-              key={key}
-              label={key}
-              value={newRemittance[key]}
-              onChange={(e) => setNewRemittance({ ...newRemittance, [key]: e.target.value })}
-              style={{ width: '300px', marginLeft: '15px' }}
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <Paid
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
             />
-          ))}
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Employee Remittance
+              </Typography>
+              <Typography variant="body2">
+                Insert Employee Other Deductions
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {Object.keys(newRemittance).map((field) => (
+                <Grid item xs={12} sm={6} key={field}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                    {fieldLabels[field]}
+                  </Typography>
+                  <TextField
+                    value={newRemittance[field]}
+                    onChange={(e) => handleChange(field, e.target.value)}
+                    fullWidth
+                    style={inputStyle}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Remittance Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage remittance information
+            </Typography>
+          </Box>
         </Box>
 
-
-
-
-
-
-
-
-        <Button
-          onClick={async () => {
-            // Filter out empty fields
-            const filteredRemittance = Object.fromEntries(
-              Object.entries(newRemittance).filter(([_, value]) => value !== '')
-            );
-         
-            await axios.post('http://localhost:5000/Remittance/employee-remittance', filteredRemittance);
-            fetchRemittances();
-            setNewRemittance(Object.fromEntries(Object.keys(newRemittance).map(k => [k, ''])));
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
           }}
-         
-          variant="contained"
-          style={{
-            backgroundColor: '#6D2323',
-            color: '#ffffff',
-            width: '1000px',
-            marginTop: '35px',
-            marginLeft: '50px'
-          }}
-          startIcon={<AddIcon />}
         >
-          Add
-        </Button>
-      </div>
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
 
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Employee Number or Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
 
-      <br />
-      <br />
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((remittance) => {
+                const name = remittance.name?.toLowerCase() || "";
+                const employeeNumber = remittance.employeeNumber?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return employeeNumber.includes(search) || name.includes(search);
+              })
+              .map((remittance) => (
+                <Grid item xs={12} sm={6} md={4} key={remittance.id}>
+                  <Box
+                    onClick={() => handleOpenModal(remittance)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {remittance.employeeNumber}
+                    </Typography>
 
-
-      <TextField
-        size="small"
-        variant="outlined"
-        placeholder="Search by Employee Number"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ backgroundColor: 'white', borderRadius: 1, marginLeft: '870px' }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search sx={{ color: '#6D2323', marginRight: 1 }} />
-            </InputAdornment>
-          ),
-        }}
-      />
-
-
-
-
-
-
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px',
-          overflowX: 'auto'
-        }}
-      >
-       
-      <Box display="flex" alignItems="center">
-        <Payment sx={{ color: '#6D2323', fontSize: '3rem', marginRight: 2, marginLeft: 2, }} />
-        <Typography variant="h5" sx={{ color: '#000000', fontWeight: 'bold' }}>
-          Remittance Records
-        </Typography>
-
-
-
-
-      </Box>
-      <br />
-       
-        <Table>
-          <TableHead>
-            <TableRow >
-              {Object.keys(newRemittance).map((key) => (
-                <TableCell key={key}>{key}</TableCell>
+                    <Chip
+                      label={remittance.name || 'No Name'}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
               ))}
-             
+            {data.filter((remittance) => {
+              const name = remittance.name?.toLowerCase() || "";
+              const employeeNumber = remittance.employeeNumber?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return employeeNumber.includes(search) || name.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
 
+        {/* Modal */}
+        <Modal
+          open={!!editRemittance}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editRemittance && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Remittance Information" : "Remittance Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
 
+                {/* Modal Content */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {Object.keys(newRemittance).map((field) => (
+                      <Grid item xs={12} sm={6} key={field}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                          {fieldLabels[field]}
+                        </Typography>
+                        <TextField
+                          value={editRemittance[field] || ''}
+                          onChange={(e) =>
+                            setEditRemittance({ ...editRemittance, [field]: e.target.value })
+                          }
+                          fullWidth
+                          disabled={!isEditing}
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#000000",
+                              color: "#000000"
+                            }
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
 
-
-
-
-
-
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-
-
-
-
-
-
-
-
-          <TableBody>
-  {filteredRemittances.length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={Object.keys(newRemittance).length + 1} style={{ textAlign: 'left', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">
-          No matching records found.
-        </Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    filteredRemittances.map((remittance) => (
-      <TableRow key={remittance.id}>
-        {Object.keys(newRemittance).map((key) => (
-          <TableCell key={key}>{remittance[key]}</TableCell>
-        ))}
-        <TableCell>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <Button
-              onClick={() => {
-                setEditRemittanceData(remittance);
-                setEditingRemittanceId(remittance.id);
-                setOpenEditModal(true);
-              }}
-              variant="contained"
-              style={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: '100px' }}
-              startIcon={<EditIcon />}
-            >
-              Edit
-            </Button>
-            <Button
-              onClick={() => deleteRemittance(remittance.id)}
-              variant="contained"
-              style={{ backgroundColor: 'black', color: 'white' }}
-              startIcon={<DeleteIcon />}
-            >
-              Delete
-            </Button>
-          </div>
-        </TableCell>
-      </TableRow>
-    ))
-  )}
-          </TableBody>
-
-
-        </Table>
-        <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)} maxWidth="md" fullWidth>
-  <DialogTitle>Edit Remittance</DialogTitle>
-  <DialogContent>
-    <Box display="flex" flexWrap="wrap" gap={2}>
-      {Object.keys(newRemittance).map((key) => (
-        <TextField
-          key={key}
-          label={key}
-          value={editRemittanceData[key] || ''}
-          onChange={(e) =>
-            setEditRemittanceData({ ...editRemittanceData, [key]: e.target.value })
-          }
-          style={{ width: '200px' }}
-        />
-      ))}
-    </Box>
-  </DialogContent>
-  <DialogActions>
-    <Button
-      onClick={() => {
-        updateRemittance();
-        setOpenEditModal(false);
-      }}
-      variant="contained"
-      style={{ backgroundColor: '#6D2323', color: '#FEF9E1' }}
-      startIcon={<SaveIcon />}
-    >
-      Update
-    </Button>
-    <Button
-      onClick={() => setOpenEditModal(false)}
-      variant="contained"
-      style={{ backgroundColor: 'black', color: 'white' }}
-      startIcon={<CancelIcon />}
-    >
-      Cancel
-    </Button>
-  </DialogActions>
-</Dialog>
-
-
-      </div>
-    </Container>
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editRemittance.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };
-
-
 
 export default EmployeeRemittance;

@@ -1,17 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Button, TextField, Table, TableBody, TableCell,
-  TableHead, TableRow, Container, Box, Typography,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  InputAdornment
-} from '@mui/material';
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
 import {
-  Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-  Save as SaveIcon, Cancel as CancelIcon,
-  Search, EventNote,
-  Reorder as ReorderIcon
-} from '@mui/icons-material';
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+  EventNote,
+  Search as SearchIcon,
+  Reorder as ReorderIcon,
+} from "@mui/icons-material";
+
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const LeaveTable = () => {
   const [leaveTypes, setLeaveTypes] = useState([]);
@@ -20,15 +33,13 @@ const LeaveTable = () => {
     leave_code: '',
     leave_hours: ''
   });
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({});
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredLeaveTypes = leaveTypes.filter((item) =>
-    item.leave_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.leave_code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [editLeaveType, setEditLeaveType] = useState(null);
+  const [originalLeaveType, setOriginalLeaveType] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
 
   useEffect(() => {
     fetchLeaveTypes();
@@ -43,230 +54,482 @@ const LeaveTable = () => {
     }
   };
 
-  const addLeaveType = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
-      await axios.post('http://localhost:5000/leaveRoute/leave_table', newLeaveType);
+      // Filter out empty fields
+      const filteredLeaveType = Object.fromEntries(
+        Object.entries(newLeaveType).filter(([_, value]) => value !== '')
+      );
+      
+      await axios.post('http://localhost:5000/leaveRoute/leave_table', filteredLeaveType);
+      setNewLeaveType({
+        leave_description: '',
+        leave_code: '',
+        leave_hours: ''
+      });
+      setTimeout(() => {
+        setLoading(false);
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);
       fetchLeaveTypes();
-      setNewLeaveType({ leave_description: '', leave_code: '', leave_hours: '' });
     } catch (error) {
       console.error('Error adding data:', error);
+      setLoading(false);
     }
   };
 
-  const updateLeaveType = async () => {
+  const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/leaveRoute/leave_table/${editingId}`, editData);
-      setOpenEditModal(false);
-      setEditingId(null);
+      await axios.put(`http://localhost:5000/leaveRoute/leave_table/${editLeaveType.id}`, editLeaveType);
+      setEditLeaveType(null);
+      setOriginalLeaveType(null);
+      setIsEditing(false);
       fetchLeaveTypes();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
       console.error('Error updating data:', error);
     }
   };
 
-  const deleteLeaveType = async (id) => {
+  const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/leaveRoute/leave_table/${id}`);
+      setEditLeaveType(null);
+      setOriginalLeaveType(null);
+      setIsEditing(false);
       fetchLeaveTypes();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
       console.error('Error deleting data:', error);
     }
   };
 
-  const inputStyle = { marginRight: 10, marginBottom: 10, width: 324.25 };
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditLeaveType({ ...editLeaveType, [field]: value });
+    } else {
+      setNewLeaveType({ ...newLeaveType, [field]: value });
+    }
+  };
+
+  const handleOpenModal = (leaveType) => {
+    setEditLeaveType({ ...leaveType });
+    setOriginalLeaveType({ ...leaveType });
+    setIsEditing(false);
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditLeaveType({ ...originalLeaveType });
+    setIsEditing(false);
+  };
+
+  const handleCloseModal = () => {
+    setEditLeaveType(null);
+    setOriginalLeaveType(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
+
+  const fieldLabels = {
+    leave_description: 'Leave Description',
+    leave_code: 'Leave Code',
+    leave_hours: 'Leave Hours'
+  };
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <div
-        style={{
-          backgroundColor: '#6D2323',
-          color: '#ffffff',
-          padding: '20px',
-          borderRadius: '8px',
-          borderBottomLeftRadius: '0px',
-          borderBottomRightRadius: '0px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-          <EventNote sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
-          <div>
-            <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-              Leave Types
-            </h4>
-            <p style={{ margin: 0, fontSize: '85%' }}>
-              Manage Leave Types and Hours
-            </p>
-          </div>
-        </div>
-      </div>
+    <Container sx={{ mt: 0 }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding leave type record..." />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
 
-      <Container
+      <Box
         sx={{
-          backgroundColor: '#fff',
-          p: 3,
-          borderRadius: 2,
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           mb: 4,
         }}
       >
-        <Box display="flex" flexWrap="wrap" gap={2}>
-          {Object.keys(newLeaveType).map((key) => (
-            <TextField
-              key={key}
-              label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              value={newLeaveType[key]}
-              onChange={(e) => setNewLeaveType({ ...newLeaveType, [key]: e.target.value })}
-              style={inputStyle}
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <EventNote
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
             />
-          ))}
-        </Box>
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Leave Types
+              </Typography>
+              <Typography variant="body2">
+                Manage Leave Types and Hours
+              </Typography>
+            </Box>
+          </Box>
 
-        <Button
-          onClick={addLeaveType}
-          variant="contained"
-          startIcon={<AddIcon />}
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {Object.keys(newLeaveType).map((field) => (
+                <Grid item xs={12} sm={6} key={field}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                    {fieldLabels[field]}
+                  </Typography>
+                  <TextField
+                    value={newLeaveType[field]}
+                    onChange={(e) => handleChange(field, e.target.value)}
+                    fullWidth
+                    style={inputStyle}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
           sx={{
-            mt: 3,
-            width: '100%',
-            backgroundColor: '#6D2323',
-            color: '#FEF9E1',
-            '&:hover': { backgroundColor: '#5a1d1d' },
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
           }}
         >
-          Add
-        </Button>
-      </Container>
-
-      <div
-        style={{
-          marginTop: '20px',
-          backgroundColor: '#fff',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px'
-        }}
-      >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-        >
-          <Box display="flex" alignItems="center">
-            <ReorderIcon sx={{ color: '#6D2323', fontSize: '2rem', marginRight: 1 }} />
-            <Typography variant="h5" sx={{ color: '#000', fontWeight: 'bold' }}>
-              Leave Types
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Leave Types Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage leave type information
             </Typography>
           </Box>
-
-          <TextField
-            size="small"
-            variant="outlined"
-            placeholder="Search by Description or Code"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ backgroundColor: 'white', borderRadius: 1, width: '300px' }}
-            InputProps={{
-              startAdornment: (
-                <Search sx={{ color: '#6D2323', marginRight: 1 }} />
-              ),
-            }}
-          />
         </Box>
 
-        <Table>
-          <TableHead>
-            <TableRow>
-              {Object.keys(newLeaveType).map(key => (
-                <TableCell key={key} sx={{ fontWeight: 'bold' }}>
-                  {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </TableCell>
-              ))}
-              <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredLeaveTypes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-                  <Typography variant="h6">
-                    No matching records found.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredLeaveTypes.map(item => (
-                <TableRow key={item.id}>
-                  {Object.keys(newLeaveType).map(key => (
-                    <TableCell key={key}>{item[key]}</TableCell>
-                  ))}
-                  <TableCell>
-                    <Button 
-                      onClick={() => { setEditData(item); setEditingId(item.id); setOpenEditModal(true); }} 
-                      variant="outlined" 
-                      startIcon={<EditIcon />} 
-                      sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: 100, mr: 1, mb: 1 }}
-                    >
-                      Edit
-                    </Button>
-                    <Button 
-                      onClick={() => deleteLeaveType(item.id)} 
-                      variant="outlined" 
-                      startIcon={<DeleteIcon />} 
-                      sx={{ backgroundColor: 'black', color: 'white', width: 100, mb: 1 }}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Leave Description or Code
+            </Typography>
 
-      <Dialog 
-        open={openEditModal} 
-        onClose={() => setOpenEditModal(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Edit Leave Type</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexWrap="wrap" gap={2} sx={{ mt: 2 }}>
-            {Object.keys(newLeaveType).map(key => (
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
               <TextField
-                key={key}
-                label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                value={editData[key] || ''}
-                onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
-                style={inputStyle}
+                size="small"
+                variant="outlined"
+                placeholder="Search by Description or Code"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
               />
-            ))}
+            </Box>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button 
-            onClick={updateLeaveType} 
-            variant="contained" 
-            startIcon={<SaveIcon />}
-            sx={{ backgroundColor: '#6D2323', color: '#FEF9E1', width: 100, mr: 1 }}
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {leaveTypes
+              .filter((leaveType) => {
+                const description = leaveType.leave_description?.toLowerCase() || "";
+                const code = leaveType.leave_code?.toLowerCase() || "";
+                const search = searchTerm.toLowerCase();
+                return description.includes(search) || code.includes(search);
+              })
+              .map((leaveType) => (
+                <Grid item xs={12} sm={6} md={4} key={leaveType.id}>
+                  <Box
+                    onClick={() => handleOpenModal(leaveType)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "100px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                      >
+                        Leave Code:{leaveType.leave_code}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: "bold", color: "#6d2323", mb: 2 }}
+                      >
+                         Hours: {leaveType.leave_hours || 'Not specified'}
+                      </Typography>
+                    </Box>
+
+                    <Box>
+                      <Chip
+                        label={leaveType.leave_description || 'No Description'}
+                        sx={{
+                          backgroundColor: "#6d2323",
+                          color: "#fff",
+                          borderRadius: "50px",
+                          px: 2,
+                          fontWeight: "bold",
+                          maxWidth: "100%",
+                          mb: 2
+                        }}
+                      />
+                      
+                     
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
+            {leaveTypes.filter((leaveType) => {
+              const description = leaveType.leave_description?.toLowerCase() || "";
+              const code = leaveType.leave_code?.toLowerCase() || "";
+              const search = searchTerm.toLowerCase();
+              return description.includes(search) || code.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        {/* Modal */}
+        <Modal
+          open={!!editLeaveType}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "600px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
           >
-            Update
-          </Button>
-          <Button 
-            onClick={() => setOpenEditModal(false)} 
-            variant="outlined" 
-            startIcon={<CancelIcon />}
-            sx={{ backgroundColor: 'black', color: 'white', width: 100 }}
-          >
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
+            {editLeaveType && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Leave Type Information" : "Leave Type Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {Object.keys(newLeaveType).map((field) => (
+                      <Grid item xs={12} key={field}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                          {fieldLabels[field]}
+                        </Typography>
+                        <TextField
+                          value={editLeaveType[field] || ''}
+                          onChange={(e) =>
+                            setEditLeaveType({ ...editLeaveType, [field]: e.target.value })
+                          }
+                          fullWidth
+                          disabled={!isEditing}
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#000000",
+                              color: "#000000"
+                            }
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editLeaveType.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };
 
-export default LeaveTable; 
+export default LeaveTable;

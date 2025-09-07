@@ -1,433 +1,704 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
+  Container,
+  Typography,
+  TextField,
   Button,
   Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Container,
-  Paper,
   Grid,
-  Typography,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
-import AddIcon from '@mui/icons-material/Add';
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+} from "@mui/icons-material";
+
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import SearchIcon from '@mui/icons-material/Search';
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const VoluntaryWork = () => {
   const [data, setData] = useState([]);
-  const [newItem, setNewItem] = useState('');
-  const [newItem2, setNewItem2] = useState('');
-  const [newItem3, setNewItem3] = useState('');
-  const [newItem4, setNewItem4] = useState('');
-  const [newItem5, setNewItem5] = useState('');
-  const [newItem6, setNewItem6] = useState('');
-  const [editItem, setEditItem] = useState(null);
+  const [newVoluntary, setNewVoluntary] = useState({
+    nameAndAddress: '',
+    dateFrom: '',
+    dateTo: '',
+    numberOfHours: '',
+    natureOfWork: '',
+    person_id: '',
+  });
+  const [editVoluntary, setEditVoluntary] = useState(null);
+  const [originalVoluntary, setOriginalVoluntary] = useState(null); // Store original data for cancel
+  const [isEditing, setIsEditing] = useState(false); // Track edit mode
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
 
   useEffect(() => {
-    fetchItems();
+    fetchVoluntaryWork();
   }, []);
 
-  const fetchItems = async () => {
-    const response = await axios.get(
-      'http://localhost:5000/VoluntaryRoute/voluntary-work'
-    );
-    setData(response.data);
+  const fetchVoluntaryWork = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/VoluntaryRoute/voluntary-work');
+      setData(res.data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    }
   };
 
-  const addItem = async () => {
-    if (
-      newItem.trim() === '' ||
-      newItem2.trim() === '' ||
-      newItem3.trim() === '' ||
-      newItem4.trim() === '' ||
-      newItem5.trim() === '' ||
-      newItem6.trim() === ''
-    )
-      return;
-    await axios.post('http://localhost:5000/VoluntaryRoute/voluntary-work', {
-      nameAndAddress: newItem,
-      dateFrom: newItem2,
-      dateTo: newItem3,
-      numberOfHours: newItem4,
-      natureOfWork: newItem5,
-      person_id: newItem6,
-    });
-    setNewItem('');
-    setNewItem2('');
-    setNewItem3('');
-    setNewItem4('');
-    setNewItem5('');
-    setNewItem6('');
-    fetchItems();
+  const handleAdd = async () => {
+    setLoading(true);
+    try {
+      await axios.post('http://localhost:5000/VoluntaryRoute/voluntary-work', newVoluntary);
+      setNewVoluntary({
+        nameAndAddress: '',
+        dateFrom: '',
+        dateTo: '',
+        numberOfHours: '',
+        natureOfWork: '',
+        person_id: '',
+      });
+     setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
+      fetchVoluntaryWork();
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
+    }
   };
 
-  const updateItem = async () => {
-    if (
-      !editItem ||
-      editItem.nameAndAddress.trim() === '' ||
-      editItem.dateFrom.trim() === '' ||
-      editItem.dateTo.trim() === '' ||
-      String(editItem.numberOfHours).trim() === '' ||
-      String(editItem.natureOfWork).trim() === '' ||
-      String(editItem.person_id).trim() === ''
-    )
-      return;
-
-    await axios.put(
-      `http://localhost:5000/VoluntaryRoute/voluntary-work/${editItem.id}`,
-      {
-        nameAndAddress: editItem.nameAndAddress,
-        dateFrom: editItem.dateFrom,
-        dateTo: editItem.dateTo,
-        numberOfHours: String(editItem.numberOfHours),
-        natureOfWork: String(editItem.natureOfWork),
-        person_id: editItem.person_id,
-      }
-    );
-
-    setEditItem(null);
-    fetchItems();
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/VoluntaryRoute/voluntary-work/${editVoluntary.id}`, editVoluntary);
+      setEditVoluntary(null);
+      setOriginalVoluntary(null);
+      setIsEditing(false);
+      fetchVoluntaryWork();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
+    }
   };
 
-  const deleteItem = async (id) => {
-    await axios.delete(
-      `http://localhost:5000/VoluntaryRoute/voluntary-work/${id}`
-    );
-    fetchItems();
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/VoluntaryRoute/voluntary-work/${id}`);
+      setEditVoluntary(null);
+      setOriginalVoluntary(null);
+      setIsEditing(false);
+      fetchVoluntaryWork();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
+    }
   };
+
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditVoluntary({ ...editVoluntary, [field]: value });
+    } else {
+      setNewVoluntary({ ...newVoluntary, [field]: value });
+    }
+  };
+
+  // Handle opening the modal (view mode initially)
+  const handleOpenModal = (voluntary) => {
+    setEditVoluntary({ ...voluntary });
+    setOriginalVoluntary({ ...voluntary });
+    setIsEditing(false);
+  };
+
+  // Handle entering edit mode
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditVoluntary({ ...originalVoluntary });
+    setIsEditing(false);
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setEditVoluntary(null);
+    setOriginalVoluntary(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   return (
-    <Container>
-      {/* Styled Header */}
-      <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      borderBottomLeftRadius: '0px',
-      borderBottomRightRadius: '0px',
-    }}
-    
-  >
-<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-  <VolunteerActivismIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+    <Container sx={{ mt: 0, }}>
 
-  <div>
-    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-      Voluntary Information
-    </h4>
-    <p style={{ margin: 0, fontSize: '85%' }}>
-      Insert Your Voluntary Information
-    </p>
-  </div>
-</div>
-
-  </div>
-
-
-
-<Paper elevation={3} sx={{ padding: 5, marginBottom: 3 }}>
-  <Box display="flex" flexDirection="column" alignItems="flex-start" sx={{ marginBottom: 2, width: '100%' }}>
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Name and Address"
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Date From"
-          InputLabelProps={{ shrink: true }}
-          type="date"
-          value={newItem2}
-          onChange={(e) => setNewItem2(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Date To"
-          InputLabelProps={{ shrink: true }}
-          type="date"
-          value={newItem3}
-          onChange={(e) => setNewItem3(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Number of Hours"
-          value={newItem4}
-          onChange={(e) => setNewItem4(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Nature of Works"
-          value={newItem5}
-          onChange={(e) => setNewItem5(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Person ID"
-          value={newItem6}
-          onChange={(e) => setNewItem6(e.target.value)}
-        />
-      </Grid>
-    </Grid>
-
-    <Button
-      onClick={addItem}
-      variant="contained"
-      color="primary"
-      sx={{
-        backgroundColor: '#6D2323',
-        color: '#FEF9E1',
-        width: '100%',
-        marginTop: 5,
-      }}
-      startIcon={<AddIcon />}
-    >
-      Add
-    </Button>
-  </Box>
-</Paper>
-
-
-      {/* Items Table */}
-      <Paper elevation={3} sx={{ padding: 2 }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding voluntary work record..."  />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
       <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          padding={2}
-          borderRadius={1}
-          marginBottom={2}
-        >
-          <Box display="flex" alignItems="center">
-          <VolunteerActivismIcon sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
-
-            <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
-              Voluntary Records
-            </Typography>
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <VolunteerActivismIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Voluntary Work Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your Voluntary Work Information
+              </Typography>
+            </Box>
           </Box>
 
-
-          <TextField
-            size="small"
-            variant="outlined"
-            placeholder="Search by Employee Number"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ backgroundColor: 'white', borderRadius: 1 }}
-            InputProps={{
-              startAdornment: (
-                <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
-              ),
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
             }}
-          />
-        </Box>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Name and Address</TableCell>
-              <TableCell>Date From</TableCell>
-              <TableCell>Date To</TableCell>
-              <TableCell>Number of Hours</TableCell>
-              <TableCell>Nature of Works</TableCell>
-              <TableCell>Person ID</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-  {data.filter((item) => {
-    const fullSearchText = `${item.nameAndAddress} ${item.natureOfWork}`.toLowerCase();
-    const search = searchTerm.toLowerCase();
-    return (
-      item.person_id?.toString().includes(search) ||
-      fullSearchText.includes(search)
-    );
-  }).length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={8} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">No matching records found.</Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    data
-      .filter((item) => {
-        const fullSearchText = `${item.nameAndAddress} ${item.natureOfWork} ${item.person_id}`.toLowerCase();
-        const search = searchTerm.toLowerCase();
-        return (
-          item.person_id?.toString().includes(search) ||
-          fullSearchText.includes(search)
-        );
-      })
-      .map((item) => (
-        <TableRow key={item.id}>
-          <TableCell>{item.id}</TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <TextField
-                value={editItem.nameAndAddress}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, nameAndAddress: e.target.value })
-                }
-              />
-            ) : (
-              item.nameAndAddress
-            )}
-          </TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <TextField
-                value={editItem.dateFrom}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, dateFrom: e.target.value })
-                }
-              />
-            ) : (
-              item.dateFrom
-            )}
-          </TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <TextField
-                value={editItem.dateTo}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, dateTo: e.target.value })
-                }
-              />
-            ) : (
-              item.dateTo
-            )}
-          </TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <TextField
-                value={String(editItem.numberOfHours)}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, numberOfHours: e.target.value })
-                }
-              />
-            ) : (
-              item.numberOfHours
-            )}
-          </TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <TextField
-                value={String(editItem.natureOfWork)}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, natureOfWork: e.target.value })
-                }
-              />
-            ) : (
-              item.natureOfWork
-            )}
-          </TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <TextField
-                value={String(editItem.person_id)}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, person_id: e.target.value })
-                }
-              />
-            ) : (
-              item.person_id
-            )}
-          </TableCell>
-          <TableCell>
-            {editItem && editItem.id === item.id ? (
-              <>
-                <Button
-                  onClick={updateItem}
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    width: '100px',
-                    backgroundColor: '#6D2323',
-                    color: 'white',
-                  }}
-                  startIcon={<SaveIcon />}
-                >
-                  Update
-                </Button>
-                <Button
-                  onClick={() => setEditItem(null)}
-                  variant="outlined"
-                  color="secondary"
-                  sx={{
-                    width: '100px',
-                    color: 'white',
-                    backgroundColor: '#000000',
-                    marginTop: '5px',
-                  }}
-                  startIcon={<CancelIcon />}
-                >
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={() => setEditItem(item)}
-                  variant="outlined"
-                  color="primary"
-                  sx={{
-                    marginRight: 2,
-                    width: '100px',
-                    backgroundColor: '#6d2323',
-                    color: 'white',
-                  }}
-                  startIcon={<EditIcon />}
-                >
-                  Edit
-                </Button>
-                <Button
-                  onClick={() => deleteItem(item.id)}
-                  variant="outlined"
-                  color="secondary"
-                  sx={{
-                    width: '100px',
-                    color: 'white',
-                    backgroundColor: '#000000',
-                    marginTop: '5px',
-                  }}
-                  startIcon={<DeleteIcon />}
-                >
-                  Delete
-                </Button>
-              </>
-            )}
-          </TableCell>
-        </TableRow>
-      ))
-  )}
-</TableBody>
+          >
+            <Grid container spacing={3}>
+              {/* Name and Address */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Name and Address
+                </Typography>
+                <TextField
+                  value={newVoluntary.nameAndAddress}
+                  onChange={(e) => handleChange("nameAndAddress", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
 
-        </Table>
-      </Paper>
+              {/* Date From */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date From
+                </Typography>
+                <TextField
+                  value={newVoluntary.dateFrom}
+                  onChange={(e) => handleChange("dateFrom", e.target.value)}
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Date To */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date To
+                </Typography>
+                <TextField
+                  value={newVoluntary.dateTo}
+                  onChange={(e) => handleChange("dateTo", e.target.value)}
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Number of Hours */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Number of Hours
+                </Typography>
+                <TextField
+                  value={newVoluntary.numberOfHours}
+                  onChange={(e) => handleChange("numberOfHours", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Nature of Work */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Nature of Work
+                </Typography>
+                <TextField
+                  value={newVoluntary.natureOfWork}
+                  onChange={(e) => handleChange("natureOfWork", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newVoluntary.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Voluntary Work Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage voluntary work information
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number or Organization Name
+            </Typography>
+
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or Organization Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((voluntary) => {
+                const orgName = voluntary.nameAndAddress?.toLowerCase() || "";
+                const personId = voluntary.person_id?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return personId.includes(search) || orgName.includes(search);
+              })
+              .map((voluntary) => (
+                <Grid item xs={12} sm={6} md={4} key={voluntary.id}>
+                  <Box
+                    onClick={() => handleOpenModal(voluntary)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {voluntary.person_id}
+                    </Typography>
+
+                    {/* Organization Name Pill */}
+                    <Chip
+                      label={voluntary.nameAndAddress}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((voluntary) => {
+              const orgName = voluntary.nameAndAddress?.toLowerCase() || "";
+              const personId = voluntary.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || orgName.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editVoluntary}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editVoluntary && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Voluntary Work Information" : "Voluntary Work Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content (Form Style) */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Name and Address */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Name and Address
+                      </Typography>
+                      <TextField
+                        value={editVoluntary.nameAndAddress}
+                        onChange={(e) =>
+                          setEditVoluntary({ ...editVoluntary, nameAndAddress: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Date From */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Date From
+                      </Typography>
+                      <TextField
+                        value={editVoluntary.dateFrom}
+                        onChange={(e) =>
+                          setEditVoluntary({ ...editVoluntary, dateFrom: e.target.value })
+                        }
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Date To */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Date To
+                      </Typography>
+                      <TextField
+                        value={editVoluntary.dateTo}
+                        onChange={(e) =>
+                          setEditVoluntary({ ...editVoluntary, dateTo: e.target.value })
+                        }
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Number of Hours */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Number of Hours
+                      </Typography>
+                      <TextField
+                        value={editVoluntary.numberOfHours}
+                        onChange={(e) =>
+                          setEditVoluntary({ ...editVoluntary, numberOfHours: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Nature of Work */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Nature of Work
+                      </Typography>
+                      <TextField
+                        value={editVoluntary.natureOfWork}
+                        onChange={(e) =>
+                          setEditVoluntary({ ...editVoluntary, natureOfWork: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editVoluntary.person_id}
+                        onChange={(e) =>
+                          setEditVoluntary({ ...editVoluntary, person_id: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      // View mode buttons
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editVoluntary.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                            
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      // Edit mode buttons
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };

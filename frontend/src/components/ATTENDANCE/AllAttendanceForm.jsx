@@ -98,6 +98,8 @@ const AllAttendanceRecord = () => {
           backgroundColor: '#ffffff',
           borderBottomLeftRadius: '5px',
           borderBottomRightRadius: '5px',
+          border: '1px solid #6d2323',
+          borderTop: 'none'
         }}
       >
         {/* Month Buttons */}
@@ -195,19 +197,19 @@ const AllAttendanceRecord = () => {
           sx={{ mt: 4, mb: 6 }}
           elevation={3}
         >
-          <Table>
-            <TableHead>
-              <TableRow style={{ backgroundColor: '#6D2323' }}>
-                <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>
+          <Table style={{border:'1px solid #6d2323'}}>
+            <TableHead >
+              <TableRow style={{ backgroundColor: '#ffffff', border: '1px solid #6d2323' }}>
+                <TableCell style={{ color: '#6d2323', fontWeight: 'bold' }}>
                   Employee Number
                 </TableCell>
-                <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>
+                <TableCell style={{ color: '#6d2323', fontWeight: 'bold' }}>
                   Date
                 </TableCell>
-                <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>
+                <TableCell style={{ color: '#6d2323', fontWeight: 'bold' }}>
                   Time
                 </TableCell>
-                <TableCell style={{ color: '#FEF9E1', fontWeight: 'bold' }}>
+                <TableCell style={{ color: '#6d2323', fontWeight: 'bold' }}>
                   Attendance State
                 </TableCell>
               </TableRow>

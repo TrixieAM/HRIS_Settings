@@ -1,408 +1,741 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Button, Box, Table, TableBody, TableCell, TableHead, TableRow, TextField, Container, Typography, Paper } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon, LocalLibrary } from '@mui/icons-material';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+} from "@mui/icons-material";
+
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SearchIcon from '@mui/icons-material/Search';
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const LearningAndDevelopment = () => {
   const [data, setData] = useState([]);
-  const [newItem, setNewItem] = useState('');
-  const [newItem2, setNewItem2] = useState('');
-  const [newItem3, setNewItem3] = useState('');
-  const [newItem4, setNewItem4] = useState('');
-  const [newItem5, setNewItem5] = useState('');
-  const [newItem6, setNewItem6] = useState('');
-  const [newItem7, setNewItem7] = useState('');
-  const [editItem, setEditItem] = useState(null);
+  const [newLearning, setNewLearning] = useState({
+    titleOfProgram: '',
+    dateFrom: '',
+    dateTo: '',
+    numberOfHours: '',
+    typeOfLearningDevelopment: '',
+    conductedSponsored: '',
+    person_id: '',
+  });
+  const [editLearning, setEditLearning] = useState(null);
+  const [originalLearning, setOriginalLearning] = useState(null); // Store original data for cancel
+  const [isEditing, setIsEditing] = useState(false); // Track edit mode
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
+  
 
   useEffect(() => {
-    fetchItems();
+    fetchLearning();
   }, []);
 
-  const fetchItems = async () => {
-    const response = await axios.get('http://localhost:5000/learning_and_development_table');
-    setData(response.data);
+  const fetchLearning = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/learning_and_development_table');
+      setData(res.data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    }
   };
 
-  const addItem = async () => {
-    if (
-      newItem.trim() === '' ||
-      newItem2.trim() === '' ||
-      newItem3.trim() === '' ||
-      newItem4.trim() === '' ||
-      newItem5.trim() === '' ||
-      newItem6.trim() === '' ||
-      newItem7.trim() === ''
-    )
-      return;
-    await axios.post('http://localhost:5000/learning_and_development_table', {
-      titleOfProgram: newItem,
-      dateFrom: newItem2,
-      dateTo: newItem3,
-      numberOfHours: newItem4,
-      typeOfLearningDevelopment: newItem5,
-      conductedSponsored: newItem6,
-      person_id: newItem7,
-    });
-    setNewItem('');
-    setNewItem2('');
-    setNewItem3('');
-    setNewItem4('');
-    setNewItem5('');
-    setNewItem6('');
-    setNewItem7('');
-    fetchItems();
+  const handleAdd = async () => {
+    setLoading(true);
+    try {
+      await axios.post('http://localhost:5000/learning_and_development_table', newLearning);
+      setNewLearning({
+        titleOfProgram: '',
+        dateFrom: '',
+        dateTo: '',
+        numberOfHours: '',
+        typeOfLearningDevelopment: '',
+        conductedSponsored: '',
+        person_id: '',
+      });
+     setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
+      fetchLearning();
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
+    }
   };
 
-  const updateItem = async () => {
-    if (
-      !editItem ||
-      editItem.titleOfProgram.trim() === '' ||
-      editItem.dateFrom.trim() === '' ||
-      editItem.dateTo.trim() === '' ||
-      editItem.numberOfHours === '' ||
-      editItem.typeOfLearningDevelopment.trim() === '' ||
-      editItem.conductedSponsored === '' ||
-      editItem.person_id === ''
-    )
-      return;
-    await axios.put(`http://localhost:5000/learning_and_development_table/${editItem.id}`, {
-      titleOfProgram: editItem.titleOfProgram,
-      dateFrom: editItem.dateFrom,
-      dateTo: editItem.dateTo,
-      numberOfHours: editItem.numberOfHours,
-      typeOfLearningDevelopment: editItem.typeOfLearningDevelopment,
-      conductedSponsored: editItem.conductedSponsored,
-      person_id: editItem.person_id,
-    });
-    setEditItem(null);
-    fetchItems();
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/learning_and_development_table/${editLearning.id}`, editLearning);
+      setEditLearning(null);
+      setOriginalLearning(null);
+      setIsEditing(false);
+      fetchLearning();
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
+    }
   };
 
-  const deleteItem = async (id) => {
-    await axios.delete(`http://localhost:5000/learning_and_development_table/${id}`);
-    fetchItems();
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/learning_and_development_table/${id}`);
+      setEditLearning(null);
+      setOriginalLearning(null);
+      setIsEditing(false);
+      fetchLearning();
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
+    }
   };
+
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditLearning({ ...editLearning, [field]: value });
+    } else {
+      setNewLearning({ ...newLearning, [field]: value });
+    }
+  };
+
+  // Handle opening the modal (view mode initially)
+  const handleOpenModal = (learning) => {
+    setEditLearning({ ...learning });
+    setOriginalLearning({ ...learning });
+    setIsEditing(false);
+  };
+
+  // Handle entering edit mode
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditLearning({ ...originalLearning });
+    setIsEditing(false);
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setEditLearning(null);
+    setOriginalLearning(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   return (
-    <Container style={{ marginTop: '20px', backgroundColor: '#FEF9E1' }}>
-      {/* Red Header Section */}
-      <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      borderBottomLeftRadius: '0px',
-      borderBottomRightRadius: '0px',
-    }}
-    
-  >
-<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-      <LightbulbIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+    <Container sx={{ mt: 0, }}>
 
-      <div>
-        <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-          Learning and Development Information
-        </h4>
-        <p style={{ margin: 0, fontSize: '85%' }}>
-          Insert Your Learning and Development Information
-        </p>
-      </div>
-    </div>
-
-      </div>
-
-      {/* Add New Learning and Development Form Box */}
-      <Paper
-        elevation={3}
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px',
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding learning record..."  />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
         }}
       >
-        <Box display="flex" flexWrap="wrap" gap={2} style={{ marginLeft: '20px' }}>
-          <TextField
-            label="Title of Program"
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
-          <TextField
-            label="Date From"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={newItem2}
-            onChange={(e) => setNewItem2(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
-          <TextField
-            label="Date To"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={newItem3}
-            onChange={(e) => setNewItem3(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
-          <TextField
-            label="Number of Hours"
-            value={newItem4}
-            onChange={(e) => setNewItem4(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
-          <TextField
-            label="Type of Learning Development"
-            value={newItem5}
-            onChange={(e) => setNewItem5(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
-          <TextField
-            label="Conducted/Sponsored"
-            value={newItem6}
-            onChange={(e) => setNewItem6(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
-          <TextField
-            label="Person ID"
-            value={newItem7}
-            onChange={(e) => setNewItem7(e.target.value)}
-            style={{ width: '324.25px' }}
-          />
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
+          >
+            <LightbulbIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Learning and Development Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your Learning and Development Information
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* Title of Program */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Title of Program
+                </Typography>
+                <TextField
+                  value={newLearning.titleOfProgram}
+                  onChange={(e) => handleChange("titleOfProgram", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Date From */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date From
+                </Typography>
+                <TextField
+                  type="date"
+                  value={newLearning.dateFrom}
+                  onChange={(e) => handleChange("dateFrom", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              {/* Date To */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date To
+                </Typography>
+                <TextField
+                  type="date"
+                  value={newLearning.dateTo}
+                  onChange={(e) => handleChange("dateTo", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              {/* Number of Hours */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Number of Hours
+                </Typography>
+                <TextField
+                  value={newLearning.numberOfHours}
+                  onChange={(e) => handleChange("numberOfHours", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Type of Learning Development */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Type of Learning Development
+                </Typography>
+                <TextField
+                  value={newLearning.typeOfLearningDevelopment}
+                  onChange={(e) => handleChange("typeOfLearningDevelopment", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Conducted/Sponsored */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Conducted/Sponsored
+                </Typography>
+                <TextField
+                  value={newLearning.conductedSponsored}
+                  onChange={(e) => handleChange("conductedSponsored", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newLearning.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
         </Box>
-        <Button
-          onClick={addItem}
-          variant="contained"
-          style={{
-            backgroundColor: '#6D2323',
-            color: '#FEF9E1',
-            width: '100%',
-            marginTop: '35px',
-          }}
-          startIcon={<AddIcon />}
-        >
-          Add
-        </Button>
-      </Paper>
+      </Box>
 
-      {/* Learning and Development Table */}
-      <Paper
-        elevation={3}
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-          marginBottom: '20px',
-        }}
-      >
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
         <Box
-  display="flex"
-  alignItems="center"
-  justifyContent="space-between"
-  padding={2}
-  borderRadius={1}
-  marginBottom={2}
->
-  <Box display="flex" alignItems="center">
-  <LocalLibrary sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
+        >
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
+              Program Records
+            </Typography>
+            <Typography variant="body2">
+              View and manage learning and development programs
+            </Typography>
+          </Box>
+        </Box>
 
-    <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
-      Program Records
-    </Typography>
-  </Box>
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
 
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or Program Title"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
 
-  <TextField
-    size="small"
-    variant="outlined"
-    placeholder="Search by Employee Number"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    sx={{ backgroundColor: 'white', borderRadius: 1 }}
-    InputProps={{
-      startAdornment: (
-        <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
-      ),
-    }}
-  />
-</Box>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Title of Program</TableCell>
-              <TableCell>Date From</TableCell>
-              <TableCell>Date To</TableCell>
-              <TableCell>Hours</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Conducted/Sponsored</TableCell>
-              <TableCell>Person ID</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-  {data.filter((item) => {
-    const fullTitle = `${item.titleOfProgram} ${item.conductedSponsored}`.toLowerCase();
-    const search = searchTerm.toLowerCase();
-    return (
-      item.person_id?.toString().includes(search) ||
-      fullTitle.includes(search)
-    );
-  }).length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={9} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">No matching records found.</Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    data
-      .filter((item) => {
-        const fullTitle = `${item.titleOfProgram} ${item.conductedSponsored} ${item.person_id}  `.toLowerCase();
-        const search = searchTerm.toLowerCase();
-        return (
-          item.person_id?.toString().includes(search) ||
-          fullTitle.includes(search)
-        );
-      })
-      .map((item) => {
-        const isEditing = editItem && editItem.id === item.id;
-        return (
-          <TableRow key={item.id}>
-            {isEditing ? (
-              <>
-                <TableCell>{item.id}</TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.titleOfProgram}
-                    onChange={(e) =>
-                      setEditItem({ ...editItem, titleOfProgram: e.target.value })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.dateFrom}
-                    onChange={(e) =>
-                      setEditItem({ ...editItem, dateFrom: e.target.value })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.dateTo}
-                    onChange={(e) =>
-                      setEditItem({ ...editItem, dateTo: e.target.value })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.numberOfHours}
-                    onChange={(e) =>
-                      setEditItem({ ...editItem, numberOfHours: e.target.value })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.typeOfLearningDevelopment}
-                    onChange={(e) =>
-                      setEditItem({
-                        ...editItem,
-                        typeOfLearningDevelopment: e.target.value,
-                      })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.conductedSponsored}
-                    onChange={(e) =>
-                      setEditItem({
-                        ...editItem,
-                        conductedSponsored: e.target.value,
-                      })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editItem.person_id}
-                    onChange={(e) =>
-                      setEditItem({ ...editItem, person_id: e.target.value })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <Button
-                    onClick={updateItem}
-                    variant="contained"
-                    style={{ backgroundColor: '#6D2323', color: '#FEF9E1' }}
-                    startIcon={<SaveIcon />}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    onClick={() => setEditItem(null)}
-                    variant="contained"
-                    style={{
-                      backgroundColor: 'black',
-                      color: 'white',
-                      marginLeft: '10px',
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((learning) => {
+                const programTitle = learning.titleOfProgram?.toLowerCase() || "";
+                const personId = learning.person_id?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return personId.includes(search) || programTitle.includes(search);
+              })
+              .map((learning) => (
+                <Grid item xs={12} sm={6} md={4} key={learning.id}>
+                  <Box
+                    onClick={() => handleOpenModal(learning)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
                     }}
-                    startIcon={<CancelIcon />}
                   >
-                    Cancel
-                  </Button>
-                </TableCell>
-              </>
-            ) : (
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {learning.person_id}
+                    </Typography>
+
+                    {/* Program Title Pill */}
+                    <Chip
+                      label={learning.titleOfProgram}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((learning) => {
+              const programTitle = learning.titleOfProgram?.toLowerCase() || "";
+              const personId = learning.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || programTitle.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editLearning}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editLearning && (
               <>
-                <TableCell>{item.id}</TableCell>
-                <TableCell>{item.titleOfProgram}</TableCell>
-                <TableCell>{item.dateFrom}</TableCell>
-                <TableCell>{item.dateTo}</TableCell>
-                <TableCell>{item.numberOfHours}</TableCell>
-                <TableCell>{item.typeOfLearningDevelopment}</TableCell>
-                <TableCell>{item.conductedSponsored}</TableCell>
-                <TableCell>{item.person_id}</TableCell>
-                <TableCell>
-                  <Button
-                    onClick={() => setEditItem(item)}
-                    variant="contained"
-                    style={{
-                      backgroundColor: '#6D2323',
-                      color: '#FEF9E1',
-                      marginRight: '10px',
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Learning & Development Information" : "Learning & Development Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content (Form Style) */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Title of Program */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Title of Program
+                      </Typography>
+                      <TextField
+                        value={editLearning.titleOfProgram}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, titleOfProgram: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Date From */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Date From
+                      </Typography>
+                      <TextField
+                        type="date"
+                        value={editLearning.dateFrom}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, dateFrom: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+
+                    {/* Date To */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Date To
+                      </Typography>
+                      <TextField
+                        type="date"
+                        value={editLearning.dateTo}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, dateTo: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+
+                    {/* Number of Hours */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Number of Hours
+                      </Typography>
+                      <TextField
+                        value={editLearning.numberOfHours}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, numberOfHours: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Type of Learning Development */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Type of Learning Development
+                      </Typography>
+                      <TextField
+                        value={editLearning.typeOfLearningDevelopment}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, typeOfLearningDevelopment: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Conducted/Sponsored */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Conducted/Sponsored
+                      </Typography>
+                      <TextField
+                        value={editLearning.conductedSponsored}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, conductedSponsored: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editLearning.person_id}
+                        onChange={(e) =>
+                          setEditLearning({ ...editLearning, person_id: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
                     }}
-                    startIcon={<EditIcon />}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => deleteItem(item.id)}
-                    variant="contained"
-                    style={{ backgroundColor: 'black', color: 'white' }}
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
+                    {!isEditing ? (
+                      // View mode buttons
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editLearning.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                            
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      // Edit mode buttons
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
               </>
             )}
-          </TableRow>
-        );
-      })
-  )}
-</TableBody>
-
-        </Table>
-      </Paper>
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };

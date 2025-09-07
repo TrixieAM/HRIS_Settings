@@ -18,6 +18,8 @@ const OverallAttendance = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [editRecord, setEditRecord] = useState([]);
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   
 
   useEffect(() => {
@@ -86,48 +88,90 @@ const updateRecord = async () => {
     alert("The Data was Successfully Deleted");
   };
 
-  const submitToPayroll = async () => {
-    try {
-      // Check each record first for duplicates
-      for (const record of attendanceData) {
-        const { personID, startDate, endDate } = record;
+const submitToPayroll = async () => {
+  // Prevent multiple submissions
+  if (isSubmitting) return;
   
-        const response = await axios.get(`http://localhost:5000/api/payroll-with-remittance`, {
-          params: { employeeNumber: personID, startDate, endDate },
-        });
+  // Check if there's data to submit
+  if (!attendanceData || attendanceData.length === 0) {
+    alert("No attendance data to submit.");
+    return;
+  }
+
+  setIsSubmitting(true);
   
-        if (response.data.exists) {
-          // If record exists, STOP and alert
-          alert(`Existing payroll entry found for Employee Number ${personID} from ${startDate} to ${endDate}. Submission cancelled.`);
-          return;
-        }
+  try {
+    // Create payload first to ensure data consistency
+    const payload = attendanceData.map(record => ({
+      employeeNumber: record.personID,
+      startDate: record.startDate,
+      endDate: record.endDate,
+      overallRenderedOfficialTimeTardiness: record.overallRenderedOfficialTimeTardiness,
+      department: record.code,
+    }));
+
+    // Validate payload data
+    const invalidRecords = payload.filter(record => 
+      !record.employeeNumber || !record.startDate || !record.endDate
+    );
+    
+    if (invalidRecords.length > 0) {
+      alert("Some records have missing required fields (Employee Number, Start Date, or End Date). Please check your data.");
+      return;
+    }
+
+    // Check each record for duplicates with the exact payload data
+    for (const payloadRecord of payload) {
+      const { employeeNumber, startDate, endDate } = payloadRecord;
+
+      const response = await axios.get(`http://localhost:5000/api/payroll-with-remittance`, {
+        params: { employeeNumber, startDate, endDate },
+      });
+
+      if (response.data.exists) {
+        alert(`Existing payroll entry found for Employee Number ${employeeNumber} from ${startDate} to ${endDate}. Submission cancelled.`);
+        return;
       }
-  
-      // If no duplicates, proceed to submit
-      const payload = attendanceData.map(record => ({
-        employeeNumber: record.personID,
-        startDate: record.startDate,
-        endDate: record.endDate,
-        overallRenderedOfficialTimeTardiness: record.overallRenderedOfficialTimeTardiness,
-        department: record.code,
-      }));
-  
-      await axios.post("http://localhost:5000/api/add-rendered-time", payload);
-  
+    }
+
+    // Submit all records at once
+    const submitResponse = await axios.post("http://localhost:5000/api/add-rendered-time", payload);
+    
+    // Check if submission was successful
+    if (submitResponse.status === 200 || submitResponse.status === 201) {
       alert("Submitted to payroll successfully!");
       navigate('/payroll-table');
-    } catch (error) {
-      console.error("Error submitting to payroll:", error);
-      alert("Submission failed.");
+    } else {
+      throw new Error(`Unexpected response status: ${submitResponse.status}`);
     }
-  };
-  
-  
 
-  
-
-  
-  
+  } catch (error) {
+    console.error("Error submitting to payroll:", error);
+    
+    // More specific error messages
+    if (error.response) {
+      // Server responded with error status
+      const status = error.response.status;
+      const message = error.response.data?.message || error.response.data?.error || 'Server error occurred';
+      
+      if (status === 409) {
+        alert("Duplicate entry detected. Some records may already exist in payroll.");
+      } else if (status === 400) {
+        alert(`Invalid data: ${message}`);
+      } else {
+        alert(`Server error (${status}): ${message}`);
+      }
+    } else if (error.request) {
+      // Network error
+      alert("Network error. Please check your connection and try again.");
+    } else {
+      // Other error
+      alert("An unexpected error occurred. Please try again.");
+    }
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   
 
   return (
@@ -388,18 +432,22 @@ const updateRecord = async () => {
     </Box>
 
     <Button
-  variant="contained"
-  sx={{
-    mt: 3,
-    backgroundColor: '#6D2323',
-    color: '#ffffff',
-    width: '100%',
-    fontWeight: 'bold'
-  }}
-  onClick={submitToPayroll}
->
-  Submit Overall Rendered Time to Payroll
-</Button>
+      variant="contained"
+      sx={{
+        mt: 3,
+        backgroundColor: isSubmitting ? '#9e9e9e' : '#6D2323',
+        color: '#ffffff',
+        width: '100%',
+        fontWeight: 'bold',
+        '&:hover': {
+          backgroundColor: isSubmitting ? '#9e9e9e' : '#5a1e1e',
+        }
+      }}
+      onClick={submitToPayroll}
+      disabled={isSubmitting || attendanceData.length === 0}
+    >
+      {isSubmitting ? 'Submitting to Payroll...' : 'Submit Overall Rendered Time to Payroll'}
+    </Button>
 
     
     </Container>

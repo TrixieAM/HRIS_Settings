@@ -1,28 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Button,
-  Table,
-  Box,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
   Container,
-  Grid,
-  Paper,
   Typography,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
-import AddIcon from '@mui/icons-material/Add';
-import UploadIcon from '@mui/icons-material/Upload';
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Chip,
+  Modal,
+  IconButton,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Close,
+} from "@mui/icons-material";
+
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import SearchIcon from '@mui/icons-material/Search';
-import { Grading } from '@mui/icons-material';
+import ReorderIcon from '@mui/icons-material/Reorder';
+import LoadingOverlay from '../LoadingOverlay';
+import SuccessfullOverlay from '../SuccessfullOverlay';
 
 const Eligibility = () => {
   const [data, setData] = useState([]);
@@ -36,7 +38,13 @@ const Eligibility = () => {
     person_id: '',
   });
   const [editEligibility, setEditEligibility] = useState(null);
+  const [originalEligibility, setOriginalEligibility] = useState(null); // Store original data for cancel
+  const [isEditing, setIsEditing] = useState(false); // Track edit mode
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successAction, setSuccessAction] = useState("");
+  
 
   useEffect(() => {
     fetchEligibility();
@@ -44,34 +52,17 @@ const Eligibility = () => {
 
   const fetchEligibility = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:5000/eligibilityRoute/eligibility'
-      );
-      setData(response.data);
-    } catch (error) {
-      console.error('Error fetching eligibility:', error);
+      const res = await axios.get('http://localhost:5000/eligibilityRoute/eligibility');
+      setData(res.data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
     }
   };
 
-  const addEligibility = async () => {
+  const handleAdd = async () => {
+    setLoading(true);
     try {
-      if (
-        !newEligibility.eligibilityName ||
-        !newEligibility.eligibilityRating ||
-        !newEligibility.eligibilityDateOfExam ||
-        !newEligibility.eligibilityPlaceOfExam ||
-        !newEligibility.licenseNumber ||
-        !newEligibility.DateOfValidity ||
-        !newEligibility.person_id
-      ) {
-        alert('All field are required');
-        return;
-      } else {
-        await axios.post(
-          'http://localhost:5000/eligibilityRoute/eligibility',
-          newEligibility
-        );
-      }
+      await axios.post('http://localhost:5000/eligibilityRoute/eligibility', newEligibility);
       setNewEligibility({
         eligibilityName: '',
         eligibilityRating: '',
@@ -81,377 +72,670 @@ const Eligibility = () => {
         DateOfValidity: '',
         person_id: '',
       });
+     setTimeout(() => {     
+      setLoading(false);  
+      setSuccessAction("adding");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    }, 300);  
       fetchEligibility();
-    } catch (error) {
-      console.error('Error adding eligibility:', error);
+    } catch (err) {
+      console.error('Error adding data:', err);
+      setLoading(false);
     }
   };
 
-  const updateEligibility = async () => {
-    if (!editEligibility) return;
+  const handleUpdate = async () => {
     try {
-      await axios.put(
-        `http://localhost:5000/eligibilityRoute/eligibility/${editEligibility.id}`,
-        editEligibility
-      );
+      await axios.put(`http://localhost:5000/eligibilityRoute/eligibility/${editEligibility.id}`, editEligibility);
       setEditEligibility(null);
+      setOriginalEligibility(null);
+      setIsEditing(false);
       fetchEligibility();
-    } catch (error) {
-      console.error('Error updating eligibility:', error);
+      setSuccessAction("edit");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error updating data:', err);
     }
   };
 
-  const deleteEligibility = async (id) => {
+  const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `http://localhost:5000/eligibilityRoute/eligibility/${id}`
-      );
+      await axios.delete(`http://localhost:5000/eligibilityRoute/eligibility/${id}`);
+      setEditEligibility(null);
+      setOriginalEligibility(null);
+      setIsEditing(false);
       fetchEligibility();
-    } catch (error) {
-      console.error('Error deleting eligibility:', error);
+      setSuccessAction("delete");
+      setSuccessOpen(true);
+      setTimeout(() => setSuccessOpen(false), 2000);
+    } catch (err) {
+      console.error('Error deleting data:', err);
     }
   };
+
+  const handleChange = (field, value, isEdit = false) => {
+    if (isEdit) {
+      setEditEligibility({ ...editEligibility, [field]: value });
+    } else {
+      setNewEligibility({ ...newEligibility, [field]: value });
+    }
+  };
+
+  // Handle opening the modal (view mode initially)
+  const handleOpenModal = (eligibility) => {
+    setEditEligibility({ ...eligibility });
+    setOriginalEligibility({ ...eligibility });
+    setIsEditing(false);
+  };
+
+  // Handle entering edit mode
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditEligibility({ ...originalEligibility });
+    setIsEditing(false);
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setEditEligibility(null);
+    setOriginalEligibility(null);
+    setIsEditing(false);
+  };
+
+  const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   return (
-    <Container>
-        <div
-    style={{
-      backgroundColor: '#6D2323',
-      color: '#ffffff',
-      padding: '20px',
-      borderRadius: '8px',
-      borderBottomLeftRadius: '0px',
-      borderBottomRightRadius: '0px',
-    }}
-    
-  >
-<div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
-  <FactCheckIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
+    <Container sx={{ mt: 0, }}>
 
-  <div>
-    <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-      Eligibility Information
-    </h4>
-    <p style={{ margin: 0, fontSize: '85%' }}>
-      Insert Your Eligibility Information
-    </p>
-  </div>
-</div>
-
-  </div>
-
-      {/* Add New Eligibility */}
-      <Paper elevation={3} style={{ padding: '16px', marginBottom: '20px' }}>
-        <Grid container spacing={2}>
-          {Object.keys(newEligibility).map((key) => (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <TextField
-                label={key
-                  .replace(/([A-Z])/g, ' $1')
-                  .replace(/^./, (str) => str.toUpperCase())}
-                value={newEligibility[key]}
-                onChange={(e) =>
-                  setNewEligibility({
-                    ...newEligibility,
-                    [key]: e.target.value,
-                  })
-                }
-                type={key.includes('Date') ? 'date' : 'text'}
-                InputLabelProps={key.includes('Date') ? { shrink: true } : {}}
-                fullWidth
-              />
-            </Grid>
-          ))}
-          <Grid
-            item
-            xs={12}
-            sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}
+      {/* Loading Overlay */}
+      <LoadingOverlay open={loading} message="Adding eligibility record..."  />
+      
+      {/* Success Overlay */}
+      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        {/* Outer wrapper for header + content */}
+        <Box sx={{ width: "75%", maxWidth: "100%" }}>
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "#ffffff",
+              p: 2,
+              borderRadius: "8px 8px 0 0",
+              display: "flex",
+              alignItems: "center",
+              pb: '15px'
+            }}
           >
+            <FactCheckIcon
+              sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }}
+            />
             <Box>
-              <Button
-                onClick={addEligibility}
-                variant="contained"
-                color="primary"
-                style={{
-                  backgroundColor: '#6D2323',
-                  color: '#FEF9E1',
-                  width: '1130px',
-                  marginTop: '35px',
-                  marginLeft: '-5px',
-                }}
-                startIcon={<AddIcon />}
-              >
-                Add
-              </Button>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>
+                Eligibility Information
+              </Typography>
+              <Typography variant="body2">
+                Insert Your Eligibility Information
+              </Typography>
             </Box>
-          </Grid>
-        </Grid>
-      </Paper>
+          </Box>
 
-      {/* Eligibility Table */}
-      <Paper elevation={3} style={{ padding: '16px' }}>
+          {/* Content/Form */}
+          <Container
+            sx={{
+              backgroundColor: "#fff",
+              p: 3,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #6d2323",
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={3}>
+              {/* Eligibility Name */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Eligibility Name
+                </Typography>
+                <TextField
+                  value={newEligibility.eligibilityName}
+                  onChange={(e) => handleChange("eligibilityName", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Rating */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Rating
+                </Typography>
+                <TextField
+                  value={newEligibility.eligibilityRating}
+                  onChange={(e) => handleChange("eligibilityRating", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Date of Exam */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date of Exam
+                </Typography>
+                <TextField
+                  type="date"
+                  value={newEligibility.eligibilityDateOfExam}
+                  onChange={(e) => handleChange("eligibilityDateOfExam", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              {/* Place of Exam */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Place of Exam
+                </Typography>
+                <TextField
+                  value={newEligibility.eligibilityPlaceOfExam}
+                  onChange={(e) => handleChange("eligibilityPlaceOfExam", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* License Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  License Number
+                </Typography>
+                <TextField
+                  value={newEligibility.licenseNumber}
+                  onChange={(e) => handleChange("licenseNumber", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+
+              {/* Date of Validity */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Date of Validity
+                </Typography>
+                <TextField
+                  type="date"
+                  value={newEligibility.DateOfValidity}
+                  onChange={(e) => handleChange("DateOfValidity", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              {/* Employee Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  Employee Number
+                </Typography>
+                <TextField
+                  value={newEligibility.person_id}
+                  onChange={(e) => handleChange("person_id", e.target.value)}
+                  fullWidth
+                  style={inputStyle}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 3,
+                width: "100%",
+                backgroundColor: "#6D2323",
+                color: "#FEF9E1",
+                "&:hover": { backgroundColor: "#5a1d1d" },
+              }}
+            >
+              Add
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* Outer wrapper for header + content */}
+      <Box sx={{ width: "75%", maxWidth: "100%", margin: "20px auto" }}>
+        {/* Header */}
         <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          padding={2}
-          borderRadius={1}
-          marginBottom={2}
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#6d2323",
+            p: 2,
+            borderRadius: "8px 8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            pb: "15px",
+            border: '1px solid #6d2323',
+            borderBottom: 'none'
+          }}
         >
-          <Box display="flex" alignItems="center">
-          <Grading sx={{ color: '#6D2323', marginRight: 2, fontSize:'3rem', }} />
-        
-            <Typography variant="h5" sx={{ margin: 0, color: '#000000', fontWeight: 'bold' }}  >
-              
+          <ReorderIcon sx={{ fontSize: "3rem", mr: 2, mt: "5px", ml: "5px" }} />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 0.5 }}>
               Eligibility Records
             </Typography>
+            <Typography variant="body2">
+              View and manage eligibility information
+            </Typography>
           </Box>
-        
-        
-          <TextField
-            size="small"
-            variant="outlined"
-            placeholder="Search by Employee Number"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ backgroundColor: 'white', borderRadius: 1 }}
-            InputProps={{
-              startAdornment: (
-                <SearchIcon sx={{ color: '#6D2323', marginRight: 1 }} />
-              ),
-            }}
-          />
         </Box>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell style={{  fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>Eligibility Name</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>Rating</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>Date of Exam</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>Place of Exam</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>License Number</TableCell>
-              <TableCell style={{ fontWeight: 'bold' }}>Date of Validity</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>Person ID</TableCell>
-              <TableCell style={{  fontWeight: 'bold' }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-  {data
-    .filter((eligibility) => {
-      const search = searchTerm.toLowerCase();
-      const combinedFields = `${eligibility.eligibilityName || ''} ${eligibility.eligibilityRating || ''} ${eligibility.person_id || ''}`.toLowerCase();
-      return combinedFields.includes(search);
-    }).length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={Object.keys(data[0] || {}).length + 1} style={{ textAlign: 'center', color: '#8B0000', padding: '20px' }}>
-        <Typography variant="h6">No matching records found.</Typography>
-      </TableCell>
-    </TableRow>
-  ) : (
-    data
-      .filter((eligibility) => {
-        const search = searchTerm.toLowerCase();
-        const combinedFields = `${eligibility.eligibilityName || ''} ${eligibility.eligibilityRating || ''} ${eligibility.person_id || ''}`.toLowerCase();
-        return combinedFields.includes(search);
-      })
-      .map((eligibility) => (
-        <TableRow key={eligibility.id}>
-          <TableCell>{eligibility.id}</TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.eligibilityName}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    eligibilityName: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-            ) : (
-              eligibility.eligibilityName
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.eligibilityRating}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    eligibilityRating: e.target.value,
-                  })
-                }
-                type="text"
-                fullWidth
-              />
-            ) : (
-              eligibility.eligibilityRating
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.eligibilityDateOfExam}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    eligibilityDateOfExam: e.target.value,
-                  })
-                }
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-            ) : (
-              eligibility.eligibilityDateOfExam
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.eligibilityPlaceOfExam}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    eligibilityPlaceOfExam: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-            ) : (
-              eligibility.eligibilityPlaceOfExam
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.licenseNumber}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    licenseNumber: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-            ) : (
-              eligibility.licenseNumber
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.DateOfValidity}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    DateOfValidity: e.target.value,
-                  })
-                }
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-            ) : (
-              eligibility.DateOfValidity
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <TextField
-                value={editEligibility.person_id}
-                onChange={(e) =>
-                  setEditEligibility({
-                    ...editEligibility,
-                    person_id: e.target.value,
-                  })
-                }
-                type="number"
-                fullWidth
-              />
-            ) : (
-              eligibility.person_id
-            )}
-          </TableCell>
-          <TableCell>
-            {editEligibility && editEligibility.id === eligibility.id ? (
-              <>
-                <Button
-                  onClick={updateEligibility}
-                  variant="contained"
-                  color="primary"
-                  style={{
-                    backgroundColor: '#6D2323',
-                    color: '#FEF9E1',
-                    width: '100px',
-                    height: '40px',
-                    marginBottom: '5px',
-                  }}
-                  startIcon={<SaveIcon />}
-                >
-                  Update
-                </Button>
-                <Button
-                  onClick={() => setEditEligibility(null)}
-                  variant="outlined"
-                  color="secondary"
-                  style={{
-                    backgroundColor: 'black',
-                    color: 'white',
-                    width: '100px',
-                    height: '40px',
-                    marginBottom: '5px',
-                  }}
-                  startIcon={<CancelIcon />}
-                >
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={() => setEditEligibility(eligibility)}
-                  variant="contained"
-                  color="primary"
-                  style={{
-                    backgroundColor: '#6D2323',
-                    color: '#FEF9E1',
-                    width: '100px',
-                    height: '40px',
-                    marginBottom: '5px',
-                  }}
-                  startIcon={<EditIcon />}
-                >
-                  Edit
-                </Button>
-                <Button
-                  onClick={() => deleteEligibility(eligibility.id)}
-                  variant="contained"
-                  style={{
-                    backgroundColor: 'black',
-                    color: 'white',
-                    width: '100px',
-                    height: '40px',
-                    marginBottom: '5px',
-                  }}
-                  startIcon={<DeleteIcon />}
-                >
-                  Delete
-                </Button>
-              </>
-            )}
-          </TableCell>
-        </TableRow>
-      ))
-  )}
-</TableBody>
 
+        {/* Content */}
+        <Container
+          sx={{
+            backgroundColor: "#fff",
+            p: 3,
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #6d2323",
+            width: "100%",
+          }}
+        >
+          {/* Search Section */}
+          <Box sx={{ mb: 3, width: "100%" }}>
+            {/* Subtitle */}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#6D2323", mb: 1 }}
+            >
+              Search Records using Employee Number
+            </Typography>
 
-        </Table>
-      </Paper>
+            {/* Search Box */}
+            <Box display="flex" justifyContent="flex-start" alignItems="center" width="100%">
+              <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Search by Person ID or Eligibility Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                  width: "100%",
+                  maxWidth: "800px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6D2323",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#6D2323", marginRight: 1 }} />
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Records as Boxes */}
+          <Grid container spacing={2}>
+            {data
+              .filter((eligibility) => {
+                const eligibilityName = eligibility.eligibilityName?.toLowerCase() || "";
+                const personId = eligibility.person_id?.toString() || "";
+                const search = searchTerm.toLowerCase();
+                return personId.includes(search) || eligibilityName.includes(search);
+              })
+              .map((eligibility) => (
+                <Grid item xs={12} sm={6} md={4} key={eligibility.id}>
+                  <Box
+                    onClick={() => handleOpenModal(eligibility)}
+                    sx={{
+                      border: "1px solid #6d2323",
+                      borderRadius: 2,
+                      p: 2,
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": { boxShadow: "0px 4px 10px rgba(0,0,0,0.2)" },
+                      height: "80%",
+                    }}
+                  >
+                    {/* Employee Number */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black", mb: 1 }}
+                    >
+                      Employee Number:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "#6d2323", mb: 1 }}
+                    >
+                      {eligibility.person_id}
+                    </Typography>
+
+                    {/* Eligibility Name Pill */}
+                    <Chip
+                      label={eligibility.eligibilityName}
+                      sx={{
+                        backgroundColor: "#6d2323",
+                        color: "#fff",
+                        borderRadius: "50px",
+                        px: 2,
+                        fontWeight: "bold",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            {data.filter((eligibility) => {
+              const eligibilityName = eligibility.eligibilityName?.toLowerCase() || "";
+              const personId = eligibility.person_id?.toString() || "";
+              const search = searchTerm.toLowerCase();
+              return personId.includes(search) || eligibilityName.includes(search);
+            }).length === 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  sx={{ textAlign: "center", color: "#6D2323", fontWeight: "bold", mt: 2 }}
+                >
+                  No Records Found
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+
+        <Modal
+          open={!!editEligibility}
+          onClose={handleCloseModal}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "#fff",
+              border: "1px solid #6d2323",
+              borderRadius: 2,
+              width: "75%",
+              maxWidth: "900px",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            {editEligibility && (
+              <>
+                {/* Modal Header */}
+                <Box
+                  sx={{
+                    backgroundColor: "#6D2323",
+                    color: "#ffffff",
+                    p: 2,
+                    borderRadius: "8px 8px 0 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6">
+                    {isEditing ? "Edit Eligibility Information" : "Eligibility Information"}
+                  </Typography>
+                  <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                {/* Modal Content (Form Style) */}
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    {/* Eligibility Name */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Eligibility Name
+                      </Typography>
+                      <TextField
+                        value={editEligibility.eligibilityName}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, eligibilityName: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Rating */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Rating
+                      </Typography>
+                      <TextField
+                        value={editEligibility.eligibilityRating}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, eligibilityRating: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Date of Exam */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Date of Exam
+                      </Typography>
+                      <TextField
+                        type="date"
+                        value={editEligibility.eligibilityDateOfExam}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, eligibilityDateOfExam: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+
+                    {/* Place of Exam */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Place of Exam
+                      </Typography>
+                      <TextField
+                        value={editEligibility.eligibilityPlaceOfExam}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, eligibilityPlaceOfExam: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* License Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        License Number
+                      </Typography>
+                      <TextField
+                        value={editEligibility.licenseNumber}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, licenseNumber: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+
+                    {/* Date of Validity */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Date of Validity
+                      </Typography>
+                      <TextField
+                        type="date"
+                        value={editEligibility.DateOfValidity}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, DateOfValidity: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+
+                    {/* Employee Number */}
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                        Employee Number
+                      </Typography>
+                      <TextField
+                        value={editEligibility.person_id}
+                        onChange={(e) =>
+                          setEditEligibility({ ...editEligibility, person_id: e.target.value })
+                        }
+                        fullWidth
+                        disabled={!isEditing}
+                        sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#000000",
+                                  color: "#000000"
+                                }
+                              }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                      gap: 2,
+                    }}
+                  >
+                    {!isEditing ? (
+                      // View mode buttons
+                      <>
+                        <Button
+                          onClick={() => handleDelete(editEligibility.id)}
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                            
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={handleStartEdit}
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    ) : (
+                      // Edit mode buttons
+                      <>
+                        <Button
+                          onClick={handleCancelEdit}
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          sx={{
+                            color: "#ffffff",
+                            backgroundColor: 'black'
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdate}
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{ backgroundColor: "#6D2323", color: "#FEF9E1" }}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </Container>
   );
 };

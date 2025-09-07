@@ -113,7 +113,7 @@ const ViewAttendanceRecord = () => {
 
   return (
     <Container>
-      <div style={{ backgroundColor: '#6D2323', color: '#ffffff', padding: '20px', width: '96.5%', borderRadius: '8px', borderBottomLeftRadius: '0px', borderBottomRightRadius: '0px' }}>
+      <div style={{ backgroundColor: '#6D2323', color: '#ffffff', padding: '20px', width: '96.5%', borderRadius: '8px', borderBottomLeftRadius: '0px', borderBottomRightRadius: '0px', }}>
         <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
           <SearchIcon sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
           <div>
@@ -123,7 +123,7 @@ const ViewAttendanceRecord = () => {
         </div>
       </div>
 
-      <Container sx={{ bgcolor: "white", height: "90%", paddingTop: "-5px", paddingBottom: '-10px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px' }}>
+      <Container sx={{ bgcolor: "white", height: "90%", paddingTop: "-5px", paddingBottom: '-10px', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', border: '1px solid #6d2323', borderTop: 'none'}}>
         {/* Month Buttons */}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, pt: 5, ml: 12.7 }}>
           {months.map((month, index) => (
@@ -210,8 +210,17 @@ const ViewAttendanceRecord = () => {
               variant="contained"
               color="secondary"
               onClick={() => handleSaveAndNavigate('/attendance_module_faculty')}
-              style={{ marginTop: "16px", backgroundColor: '#6D2323', marginLeft: '150px', marginBottom: '20px' }}
               startIcon={<SaveAsIcon />}
+               sx={{
+                mt: 2,
+                ml: "150px",
+                mb: 2,
+                backgroundColor: "#6D2323",
+                "&:hover": {
+                  backgroundColor: "#a31d1d",
+                },
+              }}
+
             >
               Save Faculty 30hrs
             </Button>
@@ -220,8 +229,17 @@ const ViewAttendanceRecord = () => {
               variant="contained"
               color="secondary"
               onClick={() => handleSaveAndNavigate('/attendance_module_faculty_40hrs')}
-              style={{ marginTop: "16px", backgroundColor: '#6D2323', marginLeft: '20px', marginBottom: '20px' }}
               startIcon={<SaveAsIcon />}
+              sx={{ 
+                marginTop: "16px", 
+                marginLeft: '20px', 
+                marginBottom: '20px',
+                backgroundColor: '#6D2323', 
+                "&:hover": {
+                  backgroundColor: "#a31d1d",
+                }, 
+               }}
+             
             >
               Save Faculty Designated
             </Button>
@@ -230,7 +248,9 @@ const ViewAttendanceRecord = () => {
               variant="contained"
               color="secondary"
               onClick={() => handleSaveAndNavigate('/attendance_module')}
-              style={{ marginTop: "16px", backgroundColor: '#6D2323', marginLeft: '20px', marginBottom: '20px' }}
+              sx={{ marginTop: "16px", backgroundColor: '#6D2323', marginLeft: '20px', marginBottom: '20px', "&:hover": {
+                  backgroundColor: "#a31d1d",
+                },  }}
               startIcon={<SaveAsIcon />}
             >
             Save Non-Teaching

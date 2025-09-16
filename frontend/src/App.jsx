@@ -32,6 +32,7 @@ import LoadingOverlay from './components/LoadingOverlay';
 
 import Home from './components/Home';
 import Sidebar from './components/Sidebar';
+import AdminHome from './components/HomeAdmin';
 
 
 //DASHBOARD
@@ -48,11 +49,12 @@ import GraduateTable from './components/DASHBOARD/GraduateStudies';
 
 
 //RECORDS
-import ViewAttendanceRecord from './components/ATTENDANCE/ViewAttendanceRecord';
-import AttendanceSearch from './components/ATTENDANCE/SearchAttendance';
+import ViewAttendanceRecord from './components/ATTENDANCE/AttendanceDevice';
+import AttendanceSearch from './components/ATTENDANCE/AttendanceManagement';
+import AttendanceUserState from './components/ATTENDANCE/AttendanceUserState';
 import DailyTimeRecord from './components/ATTENDANCE/DailyTimeRecord';
-import DailyTimeRecordFaculty from './components/ATTENDANCE/DailyTimeRecordFaculty';
-import AttendanceForm from './components/ATTENDANCE/AllAttendanceForm';
+import DailyTimeRecordFaculty from './components/ATTENDANCE/DailyTimeRecordOverall';
+import AttendanceForm from './components/ATTENDANCE/AttendanceState';
 import AttendanceModule from './components/ATTENDANCE/AttendanceModuleNonTeaching';
 import AttendanceModuleFaculty from './components/ATTENDANCE/AttendanceModuleFaculty30hrs';
 import AttendanceModuleFaculty40 from './components/ATTENDANCE/AttendanceModuleFacultyDesignated';
@@ -67,9 +69,7 @@ import ItemTable from './components/PAYROLL/ItemTable';
 import SalaryGradeTable from './components/PAYROLL/SalaryGradeTable';
 import DepartmentTable from './components/PAYROLL/DepartmentTable';
 import DepartmentAssignment from './components/PAYROLL/DepartmentAssignment';
-import HolidaySuspension from './components/PAYROLL/HolidaySuspension';
-import Leave from './components/PAYROLL/Leave';
-import LeaveAssignment from './components/PAYROLL/LeaveAssignment';
+import Holiday from './components/PAYROLL/Holiday';
 import PhilHealthTable from './components/PAYROLL/PhilHealth';
 import PayrollProcessed from './components/PAYROLL/PayrollProcessed';
 import PlantillaTable from './components/PAYROLL/Plantillia';
@@ -109,17 +109,19 @@ import ForgotPassword from './components/ForgotPassword';
 import AnnouncementForm from './components/Announcement';
 
 //CAROUSEL
-import PostCarousel from './components/DASHBOARD/PostCarousel';
-import PostPlatform from './components/DASHBOARD/PostPlatform';
 import Profile from './components/DASHBOARD/Profile';
 import BulkRegister from './components/BulkRegister';
 import LeaveTable from './components/LEAVE/LeaveTable';
 import LeaveRequest from './components/LEAVE/LeaveRequest';
+import LeaveDatePickerModal from './components/LEAVE/LeaveDatePicker';
+import LeaveAssignment from './components/LEAVE/LeaveAssignment';
+import LeaveCredits from './components/LEAVE/LeaveCredits';
 import Registration from './components/Registration';
 import Payslip from './components/PAYROLL/Payslip';
 import PayslipOverall from './components/PAYROLL/PayslipOverall';
 import PayslipBulk from './components/PAYROLL/PayslipBulk';
 import SuccessfullOverlay from './components/SuccessfullOverlay';
+import LeaveRequestStaff from './components/LEAVE/LeaveRequestStaff';
 
 
 
@@ -202,6 +204,7 @@ function App() {
           flexDirection: 'column',
           minHeight: '10vh',
           overflow: 'hidden',
+          
         }}
       >
        <AppBar
@@ -379,6 +382,17 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+             <Route
+              path="/attendance-user-state"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin', 'staff']}>
+                  <AttendanceUserState />
+                </ProtectedRoute>
+              }
+            />
+
+
             <Route
               path="/daily_time_record"
               element={
@@ -628,10 +642,10 @@ function App() {
 
 
             <Route
-              path="/holiday-suspension"
+              path="/holiday"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <HolidaySuspension />
+                  <Holiday />
                 </ProtectedRoute>
               }
             />
@@ -800,23 +814,6 @@ function App() {
               }
             />
 
-             <Route
-              path="/carousel"
-              element={
-                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
-                  <PostCarousel />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/platform"
-              element={
-                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
-                  <PostPlatform />
-                </ProtectedRoute>
-              }
-            />
 
             <Route
               path="/profile"
@@ -878,6 +875,72 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
                   <SuccessfullOverlay/>
+                </ProtectedRoute>
+              }
+            />
+
+             <Route
+              path="admin-home"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <AdminHome/>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leave-table"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <LeaveTable />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leave-request"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <LeaveRequest />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leave-request-staff"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin', 'staff']}>
+                  <LeaveRequestStaff />
+                </ProtectedRoute>
+              }
+            />
+
+
+
+
+            <Route
+              path="/leave-assignment"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <LeaveAssignment />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leave-date-picker"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <LeaveDatePickerModal />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leave-credits"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin', 'staff']}>
+                  <LeaveCredits />
                 </ProtectedRoute>
               }
             />

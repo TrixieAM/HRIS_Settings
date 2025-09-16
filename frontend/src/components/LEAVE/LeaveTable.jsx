@@ -145,7 +145,7 @@ const LeaveTable = () => {
   const fieldLabels = {
     leave_description: 'Leave Description',
     leave_code: 'Leave Code',
-    leave_hours: 'Leave Hours'
+    leave_hours: 'Leave Days '
   };
 
   return (
@@ -353,19 +353,21 @@ const LeaveTable = () => {
                         Leave Code:{leaveType.leave_code}
                       </Typography>
                       <Typography
-                        variant="body2"
-                        sx={{ fontWeight: "bold", color: "#6d2323", mb: 2 }}
-                      >
-                         Hours: {leaveType.leave_hours || 'Not specified'}
-                      </Typography>
+                          variant="body2"
+                          sx={{ fontWeight: "bold", color: "#6d2323", mb: 2 }}
+                        >
+                          Days: {leaveType.leave_hours 
+                            ? (leaveType.leave_hours / 8)
+                            : 'Not specified'}
+                        </Typography>
                     </Box>
 
                     <Box>
                       <Chip
                         label={leaveType.leave_description || 'No Description'}
                         sx={{
-                          backgroundColor: "#6d2323",
-                          color: "#fff",
+                          border: "solid 1px #6d2323",
+                          color: "#6d2323",
                           borderRadius: "50px",
                           px: 2,
                           fontWeight: "bold",

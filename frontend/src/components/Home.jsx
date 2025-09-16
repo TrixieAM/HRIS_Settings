@@ -1,1216 +1,951 @@
+// Home.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { IconButton, Modal, Tooltip, Card, CardContent } from '@mui/material';
+import {
+  IconButton,
+  Modal,
+  Tooltip,
+  Container,
+  Box,
+  Grid,
+  Typography,
+  Avatar,
+  Button,
+  Badge,
+} from '@mui/material';
+
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import LogoutIcon from '@mui/icons-material/Logout';
-
-
-import { Container, Box, Grid, Typography, Avatar, Button, Stack, Badge } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { AccessTime, AccountBalance, Campaign, Description, Download, KeyboardArrowDown, Person } from '@mui/icons-material';
+import {
+  AccessTime,
+  AccountBalance,
+  Description,
+  Download,
+  KeyboardArrowDown,
+  Person,
+  ContactPage,
+  Receipt
+} from '@mui/icons-material';
 
+const API_BASE = 'http://localhost:5000'; // adjust as needed
+const ACCENT = '#8B2635';
 
 const Home = () => {
- const [currentDate, setCurrentDate] = useState(new Date());
-const [username, setUsername] = useState('');
-const [employeeNumber, setEmployeeNumber] = useState('');
-const [announcements, setAnnouncements] = useState([]);
-const [currentSlide, setCurrentSlide] = useState(0);
-const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-const [openModal, setOpenModal] = useState(false);
-const [profilePicture, setProfilePicture] = useState(null);
-const navigate = useNavigate();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [username, setUsername] = useState('');
+  const [employeeNumber, setEmployeeNumber] = useState('');
+  const [announcements, setAnnouncements] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
 
+  // payroll
+  const [payrollData, setPayrollData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [notifModalOpen, setNotifModalOpen] = useState(false);
 
-const monthName = currentDate.toLocaleString('default', { month: 'long' });
-const year = currentDate.getFullYear();
-const month = currentDate.getMonth(); // 0-based
-const firstDay = new Date(year, month, 1).getDay(); // Sunday = 0
-const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const navigate = useNavigate();
 
+  // date parts
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-//bago 'to (hanna)
+  // update live clock/date (if you want time)
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentDate(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-
-const [notifModalOpen, setNotifModalOpen] = useState(false);
-
-
-
-
-useEffect(() => {
-  const interval = setInterval(() => {
-    setCurrentDate(new Date());
-  }, 1000);
-
-
-  return () => clearInterval(interval);
-}, []);
-
-
-const getUserInfo = () => {
-  const token = localStorage.getItem('token');
-  if (!token) return {};
-
-
-  try {
-    const decoded = JSON.parse(atob(token.split('.')[1]));
-    return {
-      role: decoded.role,
-      employeeNumber: decoded.employeeNumber,
-      username: decoded.username,
-    };
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return {};
-  }
-};
-
-
-useEffect(() => {
-  const userInfo = getUserInfo();
-  if (userInfo.username && userInfo.employeeNumber) {
-    setUsername(userInfo.username);
-    setEmployeeNumber(userInfo.employeeNumber);
-  }
-}, []);
-
-
-useEffect(() => {
-  const fetchAnnouncements = async () => {
+  const getUserInfo = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return {};
     try {
-      const response = await axios.get('http://localhost:5000/api/announcements');
-      setAnnouncements(response.data);
-    } catch (error) {
-      console.error('Error fetching announcements:', error);
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      return {
+        role: decoded.role,
+        employeeNumber: decoded.employeeNumber,
+        username: decoded.username,
+      };
+    } catch (err) {
+      console.error('Error decoding token:', err);
+      return {};
     }
   };
 
+  // read token once on mount
+  useEffect(() => {
+    const userInfo = getUserInfo();
+    if (userInfo.username) setUsername(userInfo.username);
+    if (userInfo.employeeNumber) setEmployeeNumber(userInfo.employeeNumber);
+  }, []);
 
-  fetchAnnouncements();
-}, []);
+  // fetch announcements
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/announcements`);
+        setAnnouncements(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error('Error fetching announcements:', err);
+        setAnnouncements([]);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
-
-// Auto-slide effect
-useEffect(() => {
-  if (announcements.length > 0) {
-    const timer = setInterval(() => {
+  // auto slide when there are announcements
+  useEffect(() => {
+    if (announcements.length === 0) return;
+    const t = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % announcements.length);
-    }, 5000); // Change slide every 5 seconds
-    return () => clearInterval(timer);
-  }
-}, [announcements]);
+    }, 5000);
+    return () => clearInterval(t);
+  }, [announcements]);
 
+  const handlePrevSlide = () => {
+    if (announcements.length === 0) return;
+    setCurrentSlide((prev) => (prev - 1 + announcements.length) % announcements.length);
+  };
+  const handleNextSlide = () => {
+    if (announcements.length === 0) return;
+    setCurrentSlide((prev) => (prev + 1) % announcements.length);
+  };
 
-const handlePrevSlide = () => {
-  setCurrentSlide((prev) => (prev - 1 + announcements.length) % announcements.length);
-};
-
-
-const handleNextSlide = () => {
-  setCurrentSlide((prev) => (prev + 1) % announcements.length);
-};
-
-
- const today = new Date();
-  const formattedDate = today.toLocaleDateString(undefined, {
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 
-
-
-
-// Sample Philippine holidays (MM-DD format)
-const philippineHolidays = [
-  '01-01', // New Year's Day
-  '04-09', // Araw ng Kagitingan
-  '05-01', // Labor Day
-  '06-12', // Independence Day
-  '08-21', // Ninoy Aquino Day
-  '08-26', // National Heroes Day (variable)
-  '11-01', // All Saints' Day
-  '11-30', // Bonifacio Day
-  '12-25', // Christmas Day
-  '12-30'  // Rizal Day
-];
-
-
-const handleOpenModal = (announcement) => {
-  setSelectedAnnouncement(announcement);
-  setOpenModal(true);
-};
-
-
-const handleCloseModal = () => {
-  setOpenModal(false);
-  setSelectedAnnouncement(null);
-};
-
-
-const handleLogout = () => {
-  localStorage.removeItem('token');
-  navigate('/login');
-};
-
-
-useEffect(() => {
-  const fetchProfilePicture = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/personalinfo/person_table');
-      const match = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
-      if (match && match.profile_picture) {
-        setProfilePicture(match.profile_picture);
-      }
-    } catch (err) {
-      console.error('Error loading profile picture:', err);
-    }
+  const handleOpenModal = (announcement) => {
+    setSelectedAnnouncement(announcement);
+    setOpenModal(true);
+  };
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedAnnouncement(null);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
-  if (employeeNumber) {
-    fetchProfilePicture();
-  }
-}, [employeeNumber]);
+  // fetch profile picture from person_table
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/personalinfo/person_table`);
+        const list = Array.isArray(res.data) ? res.data : [];
+        const match = list.find((p) => String(p.agencyEmployeeNum) === String(employeeNumber));
+        if (match && match.profile_picture) setProfilePicture(match.profile_picture);
+      } catch (err) {
+        console.error('Error loading profile picture:', err);
+      }
+    };
 
+    if (employeeNumber) fetchProfilePicture();
+  }, [employeeNumber]);
 
- 
+  // fetch payroll for the user
+  useEffect(() => {
+    const fetchPayrollData = async () => {
+      if (!employeeNumber) return;
+      try {
+        setLoading(true);
+        const res = await axios.get(`${API_BASE}/api/finalized-payroll`);
+        const list = Array.isArray(res.data) ? res.data : [];
+        const userPayroll = list.find((p) =>
+          String(p.employeeNumber) === String(employeeNumber) ||
+          String(p.agencyEmployeeNum) === String(employeeNumber)
+        );
+        setPayrollData(userPayroll || null);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching payroll:', err);
+        setError('Failed to fetch payroll data');
+        setLoading(false);
+      }
+    };
+    fetchPayrollData();
+  }, [employeeNumber]);
+
+  const formatCurrency = (value) => {
+    if (value === undefined || value === null || value === '' || value === '0') return '₱0.00';
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(num)) return '₱0.00';
+    return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // calendar generation (Monday start)
+  const generateCalendar = () => {
+    const days = [];
+    const totalCells = 42;
+    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+    for (let i = 0; i < adjustedFirstDay; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    const remaining = totalCells - days.length;
+    for (let i = 0; i < remaining; i++) days.push(null);
+    return days;
+  };
+  const calendarDays = generateCalendar();
+
+  // mock leave data (replace with API data if you have)
+  const leaveData = [
+    { employeeName: 'John Doe', employeeNumber: '#00000000', leaveType: 'Annual Leave', startDate: '14-06-2025', endDate: '15-07-2025', status: 'Pending' },
+    { employeeName: 'Anna Smith', employeeNumber: '#00000000', leaveType: 'Sick Leave', startDate: '21-02-2025', endDate: '22-02-2025', status: 'Approved' },
+    { employeeName: 'Juan Dela Cruz', employeeNumber: '#00000000', leaveType: 'Casual Leave', startDate: '31-12-2024', endDate: '02-01-2025', status: 'Declined' },
+  ];
+
   return (
-    <Container maxWidth={false} sx={{ backgroundColor: 'inherit', minHeight: '110vh', display: 'flex', ml: 2, mt: -5 }}>
-      {/* Main Content */}
-      <Box sx={{ flexGrow: 1, mr: '520px' }}>
-        {/* Top Profile Row */}
-
-
-        {/*BOX FOR THE THREE COLUMN*/}
-        <Box
-          sx={{
-            minHeight: '200px', // set a fixed or minHeight
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 2,
-            mb: 2,
-          }}
-        >
-
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: "#ffffff",
-            border: '1px solid',         // <-- Add this
-            borderColor: '#6d2323',
-            color: "#fff",
-            borderRadius: 2,
-            p: 1,
-            pt: 2,
-            width: '520px',
-            gap: 1,
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            marginBottom: "15px",
-            position: "relative"
-          }}
-        >
-          {/* Welcome Back! on the left, Date on the right */}
-          <Typography variant="h6" sx={{ color: '#6d2323', ml: 1 }}>
-            Welcome Back, <span style={{ fontWeight: 'bolder' }}>{username || 'User'}</span>.
-          </Typography>
-          <Typography sx={{ color: '#700000', fontSize: '.75rem', fontWeight: 500, mr: 1 }}>
-            {formattedDate}
-          </Typography>
-          {/* Remove Date from here */}
-          {/* Date and Time */}
-          <Link to="/attendance_form" style={{ textDecoration: 'none' }}>
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1,
-                backgroundColor: "#fff",
-                color: "#700000",
-                p: 1.5,
-                borderRadius: 1,
-              }}
-            >
-
-
-             
-             
-
-
-              {/* Time Tracking */}
-              <Box sx={{ display: "flex", gap: 1, color: '#6d2323' }}>
-                {[
-                  { label: "TIME IN", value: "00:00:00 AM" },
-                  { label: "BREAKTIME IN", value: "00:00:00 AM" },
-                  { label: "BREAKTIME OUT", value: "00:00:00 PM" },
-                  { label: "TIME OUT", value: "00:00:00 PM" },
-                ].map((item, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      border: '1px solid #6d2323',
-                      p: 1,
-                      borderRadius: 1,
-                      textAlign: "center",
-                      minWidth: 100,
-                      minHeight: 75
-                    }}
-                  >
-                    <Typography fontSize={12} fontWeight="bold">
-                      {item.label}
-                    </Typography>
-                    <Typography fontSize={12}>{item.value}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          </Link>
-
-
-         
-
-
-         
-        </Box>
-
-
-          {/*BOX FOR THE PAYSLIP*/}
-
-
-          <Box
-                  sx={{
-                    backgroundColor: "#ffffff",
-                    border: "1px solid",
-                    borderColor: "#6d2323",
-                    borderRadius: 2,
-                    p: 2,
-                    marginBottom: '14px',
-                    flexWrap: "wrap",
-                    minWidth:'250px'
-
-
-                   
-                  }}
-                >
-                  
-
-
-                  <Typography sx={{ color: "#6d2323", fontWeight: "bold", mb: 3.5, fontSize: '20px' }}>
-                    Payslip
-                  </Typography>
-                  <Link to="/payslip" style={{ textDecoration: 'none' }}>
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                   
-                    <Box
-                      sx={{
-                        backgroundColor: "#ffffff",
-                        border: "1px solid",
-                        borderColor: "#6d2323",
-                        borderRadius: 2,
-                        p: 2,
-                        flex: 1,
-                       
-                      }}
-                    >
-                      {/* Inner Box 1 Content */}
-                     
-                      <AccountBalance sx={{ fontSize: '2rem', color: '#6d2323', mr: 1 }} />
-                      <Typography sx={{ color: '#6d2323', fontWeight: 'bold' }}>
-                        1st Pay
-                      </Typography>
-                       
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: "#ffffff",
-                        border: "1px solid",
-                        borderColor: "#6d2323",
-                        borderRadius: 2,
-                        p: 2,
-                        flex: 1,
-                       
-                      }}
-                    >
-                      {/* Inner Box 2 Content */}
-                      <AccountBalance sx={{ fontSize: '2rem', color: '#6d2323', mr: 1 }} />
-                      <Typography sx={{ color: '#6d2323', fontWeight: 'bold' }}>
-                        2nd Pay
-                      </Typography>
-                    </Box>
-                   
-                  </Box>
-                  </Link>
-                 
-            </Box>
-
-
-        {/*BOX FOR THE LEAVE*/}
-        <Box
-          sx={{
-            backgroundColor: "#ffffff",
-            border: "1px solid",
-            borderColor: "#6d2323",
-            borderRadius: 2,
-            p: 2,
-            flex: 1,
-            marginBottom: '14px',
-            minHeight: '140px',
-            minWidth: '180px'
-            
-          }}
-        >
-           <Typography sx={{ color: "#6d2323", fontWeight: "bold", mb: 3.5, fontSize: '20px' }}>
-             Leave
-           </Typography>
-            <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',             // vertical centering
-              justifyContent: 'space-between',  // text on the left, icon on the right
-              backgroundColor: '#ffffff',
-              border: '1px solid #6d2323',
+      <Box sx={{ p: 1, pl: 10, mt: -5 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+        {/* Main Content */}
+        <Box sx={{ flex: 1, mr: 2 }}>
+          {/* Top Row: Welcome / Payslip / Leave Balance */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            {/* Welcome Card */}
+            <Box sx={{
+              backgroundColor: '#fff',
+              border: `1px solid ${ACCENT}`,
               borderRadius: 2,
               p: 2,
-             
-              width: '70px'
-            }}
-          >
-          <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            paddingRight: '30px',
-            color: '#6d2323',
-            fontWeight: 'bold',
-            fontSize: '20px',
-          }}
-        >
-          <Typography sx={{ color: '#6d2323', fontWeight: 'bold', fontSize: '19px', }}>
-            All Leave
-          </Typography>
-          <KeyboardArrowDown
-            sx={{
-              fontSize: '2rem',
+              flex: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Typography variant="h5" sx={{ color: '#000', fontWeight: 'bold' }}>
+                  Welcome Back, {username || 'Name'}!
+                </Typography>
+                <Typography sx={{ color: ACCENT, fontSize: '.875rem', fontWeight: 500 }}>
+                  {formattedDate}
+                </Typography>
+              </Box>
+
+              <Link to="/attendance-user-state" style={{ textDecoration: 'none' }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {[
+                    { label: 'TIME IN', value: '00:00:00 AM', primary: false }, // true = red / false = gray
+                    { label: 'BREAKTIME IN', value: '00:00:00 AM', primary: false },
+                    { label: 'BREAKTIME OUT', value: '00:00:00 AM', primary: false },
+                    { label: 'TIME OUT', value: '00:00:00 AM', primary: false },
+                  ].map((item, idx) => (
+                    <Box key={idx} sx={{
+                      backgroundColor: item.primary ? ACCENT : '#EDEDED',
+                      color: item.primary ? '#fff' : '#333',
+                      p: 1.5,
+                      borderRadius: 1,
+                      textAlign: 'center',
+                      flex: 1,
+                      minHeight: 70,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}>
+                      <Typography fontSize={11} fontWeight="bold" sx={{ mb: 0.5 }}>{item.label}</Typography>
+                      <Typography fontSize={13} fontWeight="bold">{item.value}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Link>
+            </Box>
+
+            {/* Payslip */}
+            <Box sx={{
+              backgroundColor: '#fff',
               color: '#6d2323',
-              marginLeft: '2px' // Add some spacing between text and icon
-            }}
-          />
-        </Box>
+              border: `1px solid ${ACCENT}`,
+              borderRadius: 2,
+              p: 2,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <Box>
+                <Typography sx={{ fontSize: '12px', opacity: 0.9, mb: 0.5 }}>Pay Period: May 15-31, 2025</Typography>
+                <Typography sx={{ fontWeight: 'bold', fontSize: '20px', mb: 2 }}>Payslip</Typography>
+              </Box>
 
+              <Link to="/payslip" style={{ textDecoration: 'none' }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
+                    <AccountBalance sx={{ fontSize: '2rem', mb: 0.5, color: '#6d2323' }} />
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>1st Pay</Typography>
+                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6d2323' }}>{payrollData ? formatCurrency(payrollData.pay1st) : '₱386.00'}</Typography>
+                  </Box>
+                  <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
+                    <AccountBalance sx={{ fontSize: '2rem', mb: 0.5, color: '#6d2323' }} />
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>2nd Pay</Typography>
+                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6d2323' }}>{payrollData ? formatCurrency(payrollData.pay2nd) : '₱268.00'}</Typography>
+                  </Box>
+                </Box>
+              </Link>
+            </Box>
 
+            {/* Leave Balance */}
+            <Box sx={{
+              backgroundColor: '#fff',
+              color: '#6d2323',
+              border: `1px solid ${ACCENT}`,
+              borderRadius: 2,
+              p: 2,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <Box>
+                <Typography sx={{ fontSize: '12px', opacity: 0.9, mb: 0.5 }}>As of May 15, 2025</Typography>
+                <Typography sx={{ fontWeight: 'bold', fontSize: '20px', mb: 2 }}>Leave Balance</Typography>
+              </Box>
 
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 2, width: '100%', textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+                    <Typography sx={{ fontSize: '14px', fontWeight: 'bold', color: '#6d2323', mr: 1 }}>All Leaves</Typography>
+                    <KeyboardArrowDown sx={{ fontSize: '1.5rem', color: '#6d2323' }} />
+                  </Box>
+                  <Typography sx={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#6d2323' }}>386</Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
 
- 
-      </Box>
-
-
-        </Box>
-
-
-
-
-        </Box>
-
-
-       
-
-
-       
-       
-
-
-        {/* Middle Grid */}
-        <Grid container spacing={2} sx={{marginLeft: '1px'}}>
-          {/* Announcement Slideshow */}
+       {/* Middle Section - Announcement Slideshow */}
+        <Grid container spacing={2}>
+     {/* slideshow */}
           <Grid item xs={12} md={8}>
             <Box
-              sx={{
-                border: '1px solid #700000',
+                sx={{
+                position: "relative",
                 borderRadius: 2,
-                overflow: 'hidden',
-                textAlign: 'center',
-                backgroundColor: '#ffffff',
-                p: 3,
-                position: 'relative',
-                minHeight: '450px',
-                minWidth: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-               
-                ml: -2,
-                mt: -2
-              }}
+                overflow: "hidden",
+                border: "1px solid #8B2635",
+                height: "400px",
+                mb: -3,
+                cursor: "pointer",
+                }}
+                onClick={() => {
+                const announcement = announcements[currentSlide];
+                if (announcement) {
+                    setSelectedAnnouncement(announcement);
+                    setOpenModal(true);
+                }
+                }}
             >
-              {announcements.length > 0 && (
+                {announcements.length > 0 && (
                 <>
-                  {/* Previous Button */}
-                  <IconButton
-                    onClick={handlePrevSlide}
-                    sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: 10,
-                      transform: 'translateY(-50%)',
-                      backgroundColor: 'rgba(255,255,255,0.7)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                      },
-                      zIndex: 2,
-                     
+                    {/* Previous button */}
+                    <IconButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrevSlide();
                     }}
-                  >
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: 15,
+                        transform: "translateY(-50%)",
+                        backgroundColor: "rgba(255,255,255,0.9)",
+                        zIndex: 2,
+                    }}
+                    >
                     <ArrowBackIosNewIcon />
-                  </IconButton>
+                    </IconButton>
 
-
-                  {/* Image */}
-                  <Box
+                    {/* Slide image */}
+                    <Box
                     component="img"
-                    src={`http://localhost:5000${announcements[currentSlide].image}`}
-                    alt={announcements[currentSlide].title}
+                    src={
+                        announcements[currentSlide]?.image
+                        ? `http://localhost:5000${announcements[currentSlide].image}`
+                        : "/api/placeholder/800/400"
+                    }
+                    alt={announcements[currentSlide]?.title || "Announcement"}
                     sx={{
-                      border: '2px solid #700000',
-                      borderRadius: 1,
-                      width: '99%',
-                      height: '450px',
-                      objectFit: 'cover',
-                      marginBottom: 1,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
                     }}
-                  />
+                    />
 
-
-                  {/* Next Button */}
-                  <IconButton
-                    onClick={handleNextSlide}
+                    {/* Inner shadow overlay */}
+                    <Box
                     sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      right: 10,
-                      transform: 'translateY(-50%)',
-                      backgroundColor: 'rgba(255,255,255,0.7)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                      },
-                      zIndex: 2,
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        background:
+                        "radial-gradient(circle at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%)",
                     }}
-                  >
+                    />
+
+                    {/* Next button */}
+                    <IconButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextSlide();
+                    }}
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        right: 15,
+                        transform: "translateY(-50%)",
+                        backgroundColor: "rgba(255,255,255,0.9)",
+                        zIndex: 2,
+                    }}
+                    >
                     <ArrowForwardIosIcon />
-                  </IconButton>
+                    </IconButton>
 
-
-                  <Typography fontWeight="bold" fontSize="x-large" sx={{ mt: 1 }}>
-                    {announcements[currentSlide].title}
-                  </Typography>
-                  <Typography fontSize="small">
-                    {new Date(announcements[currentSlide].date).toLocaleDateString()}
-                  </Typography>
+                    {/* Caption box */}
+                    <Box
+                    sx={{
+                        position: "absolute",
+                        bottom: 20,
+                        left: 20,
+                        p: 2,
+                        borderRadius: 2,
+                        backgroundColor: "rgba(0,0,0,0.4)",
+                        backdropFilter: "blur(4px)",
+                    }}
+                    >
+                    <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                        sx={{
+                        color: "white",
+                        textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                        }}
+                    >
+                        {announcements[currentSlide]?.title}
+                    </Typography>
+                    <Typography
+                        fontSize="small"
+                        sx={{
+                        color: "white",
+                        textShadow: "1px 1px 3px rgba(0,0,0,0.7)",
+                        }}
+                    >
+                        {new Date(announcements[currentSlide]?.date).toDateString()}
+                    </Typography>
+                    </Box>
                 </>
-              )}
+                )}
             </Box>
-          </Grid>
-           {/* Announcements */}
-          <Grid item xs={12} md={2}>
-            <Box sx={{ minWidth: '300px', height: '550px',backgroundColor: '#ffffff', color: '#6d2323', p: 1.5 , borderRadius: 2, border: '1px solid #6d2323', mt: -2,      overflowY: 'auto' // <-- Vertical scroll only
-}}>
-              <Typography fontWeight="bolder" fontSize="1.3rem" textAlign="center">Announcements</Typography>
 
-
-              {announcements.map((announcement) => (
-                <Box key={announcement.id} sx={{ backgroundColor: '#ffffff', color: 'black', borderRadius: 1, p: 3, mt: 2, border: '2px solid #6d2323'}}>
-                  <Typography fontWeight="bold">• {announcement.title}</Typography>
-                  <Typography fontSize="small" sx={{ mb: 1.5 }}>
-                    {announcement.about.split('.')[0]}.
-                  </Typography>
-                 <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    mt: 1,
-                    borderColor: '#700000',
-                    color: '#700000',
-                    '&:hover': {
-                      borderColor: '#6d2323',
-                      color: '#6d2323',
-                    },
-                  }}
-                  onClick={() => handleOpenModal(announcement)}
-                >
-                  See More
-                </Button>
-
-
-                </Box>
-              ))}
-
-
-              {/* Modal for full announcement details */}
-              <Modal
+            {/* Modal for full announcement details */}
+            <Modal
                 open={openModal}
                 onClose={handleCloseModal}
                 aria-labelledby="announcement-modal"
                 aria-describedby="announcement-details"
-              >
-                <Box sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '80%',
-                  maxWidth: 600,
-                  bgcolor: 'background.paper',
-                  boxShadow: 24,
-                  p: 4,
-                  borderRadius: 2,
-                  maxHeight: '90vh',
-                  overflow: 'auto'
-                }}>
-                  {selectedAnnouncement && (
+            >
+                <Box
+                sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: "80%",
+                    maxWidth: 600,
+                    bgcolor: "background.paper",
+                    boxShadow: 24,
+                    p: 4,
+                    borderRadius: 2,
+                    maxHeight: "90vh",
+                    overflow: "auto",
+                }}
+                >
+                {selectedAnnouncement && (
                     <>
-                      <Typography variant="h5" component="h2" gutterBottom>
+                    <Typography variant="h5" component="h2" gutterBottom>
                         {selectedAnnouncement.title}
-                      </Typography>
-                      <Box
+                    </Typography>
+                    {selectedAnnouncement.image && (
+                        <Box
                         component="img"
                         src={`http://localhost:5000${selectedAnnouncement.image}`}
                         alt={selectedAnnouncement.title}
                         sx={{
-                          width: '100%',
-                          height: 'auto',
-                          maxHeight: 300,
-                          objectFit: 'cover',
-                          borderRadius: 1,
-                          mb: 2
-                        }}
-                      />
-                      <Typography variant="body1" paragraph>
-                        {selectedAnnouncement.about}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Posted on: {new Date(selectedAnnouncement.date).toLocaleDateString()}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button
-                          variant="contained"
-                          onClick={handleCloseModal}
-                          sx={{
-                            mt: 2,
-                            backgroundColor: '#700000',
-                            '&:hover': {
-                              backgroundColor: '#500000'
-                            }
-                          }}
-                        >
-                          Close
-                        </Button>
-                      </Box>
-                    </>
-                  )}
-                </Box>
-              </Modal>
-            </Box>
-          </Grid>
-
-
-         
-        </Grid>
-
-
-        {/* Bottom Grid */}
-        <Grid container spacing={1} sx={{ mt: 1 }}>
-          {/* Leave Tracker */}
-          <Grid item xs={12} md={6.4}>
-            <Box sx={{ width: '65rem', backgroundColor: '#ffffff', color: '#6d2323', p: 1.5, borderRadius: 2, border: '1px solid #6d2323',  }}>
-              <Typography fontWeight="bolder" fontSize="1.5rem">Leave Tracker</Typography>
-              <Typography fontSize="small" mb={2}>Check leave status and availability</Typography>
-
-
-              <Grid container spacing={1}>
-                {/* Table Section */}
-                <Grid item xs={12} md={7}>
-                  <Box sx={{ backgroundColor: 'white', color: 'black', borderRadius: 1, overflow: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead style={{ backgroundColor: '#f2f2f2' }}>
-                        <tr style={{ fontSize: 'medium'}}>
-                          <th style={{ padding: '10px', border: '1px solid #ddd' }}>Leave Type</th>
-                          <th style={{ padding: '10px', border: '1px solid #ddd' }}>Start Date</th>
-                          <th style={{ padding: '10px', border: '1px solid #ddd' }}>End Date</th>
-                          <th style={{ padding: '10px', border: '1px solid #ddd' }}>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr style={{ fontSize: 'small'}}>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>Annual Leave</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>14-06-2025</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>15-07-2025</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd', color: 'orange' }}>Pending</td>
-                        </tr>
-                        <tr style={{ fontSize: 'small'}}>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>Sick Leave</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>21-02-2025</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>22-02-2025</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd', color: 'green' }}>Approved</td>
-                        </tr>
-                        <tr style={{ fontSize: 'small'}}>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>Casual Leave</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>31-12-2024</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd' }}>02-01-2025</td>
-                          <td style={{ padding: '10px', border: '1px solid #ddd', color: 'red' }}>Declined</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </Box>
-                </Grid>
-
-
-                {/* Leaves Section */}
-                <Grid item xs={12} md={5}>
-                  <Box sx={{ backgroundColor: 'white', borderRadius: 1, p: 1.5, color: 'black' }}>
-                    <Typography fontWeight="bold" sx={{ mb: 1 }}>Leaves</Typography>
-
-
-                    <Box
-                      sx={{
-                        backgroundColor: '#fff5f5',
-                        border: '1px solid #ddd',
-                        borderRadius: 1,
-                        p: 1,
-                        height: '42px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        color: 'black',
-                        mb: '8px',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, width: '100%' }}>
-                        <Typography fontWeight="bold">25 DAYS</Typography>
-                        <Typography fontSize="0.75rem" sx={{ mt: 0.5, textAlign: 'center' }}>Available Leaves</Typography>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          sx={{
-                            backgroundColor: '#700000',
-                            color: 'white',
-                            fontSize: '0.7rem',
-                            padding: '2px 5px',
-                            minWidth: 'unset',
-                            mr: '10px'
-                          }}
-                        >
-                          Request
-                        </Button>
-                      </Box>
-                    </Box>
-
-
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-                      {[
-                        { type: 'Annual', count: 10 },
-                        { type: 'Casual', count: 3 },
-                        { type: 'Sick', count: 7 },
-                        { type: 'Vacation', count: 5 },
-                        { type: 'Holiday', count: 5 },
-                        { type: 'Study', count: 5 },
-                      ].map((leave, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{
-                            backgroundColor: '#fff5f5',
-                            border: '1px solid #ddd',
+                            width: "100%",
+                            height: "auto",
+                            maxHeight: 300,
+                            objectFit: "cover",
                             borderRadius: 1,
-                            p: 1,
-                            height: '45px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            color: 'black'
-                          }}
+                            mb: 2,
+                        }}
+                        />
+                    )}
+                    <Typography variant="body1" paragraph>
+                        {selectedAnnouncement.about}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        Posted on: {new Date(selectedAnnouncement.date).toLocaleDateString()}
+                    </Typography>
+                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                        <Button
+                        variant="contained"
+                        onClick={handleCloseModal}
+                        sx={{
+                            mt: 2,
+                            backgroundColor: "#700000",
+                            "&:hover": { backgroundColor: "#500000" },
+                        }}
                         >
-                          <Typography fontSize="1rem" fontWeight="bold">{leave.count}</Typography>
-                          <Typography fontSize="0.75rem">{leave.type}</Typography>
-                        </Box>
-                      ))}
+                        Close
+                        </Button>
                     </Box>
-                  </Box>
+                    </>
+                )}
+                </Box>
+            </Modal>
+            </Grid>
+
+
+          {/* Right side: Calendar + Announcements */}
+          <Grid item xs={12} md={4}>
+            {/* Calendar */}
+            <Box
+              sx={{
+                border: "1px solid #6d2323",
+                borderRadius: 2,
+                mb: 2,
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ backgroundColor: "#6d2323", p: 1.5, textAlign: "center" }}>
+                <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+                  May {year}
+                </Typography>
+              </Box>
+              <Box sx={{ p: 1, backgroundColor: "white" }}>
+                <Grid container spacing={0}>
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                    <Grid item xs={12 / 7} key={day}>
+                      <Typography
+                        sx={{
+                          textAlign: "center",
+                          fontSize: "0.75rem",
+                          fontWeight: "bold",
+                          color: "#8B2635",
+                        }}
+                      >
+                        {day}
+                      </Typography>
+                    </Grid>
+                  ))}
                 </Grid>
-              </Grid>
+                <Grid container spacing={0}>
+                  {calendarDays.map((day, index) => (
+                    <Grid item xs={12 / 7} key={index}>
+                      <Box
+                        sx={{
+                          textAlign: "center",
+                          p: 0.5,
+                          fontSize: "0.8rem",
+                          color: day ? "#333" : "transparent",
+                        }}
+                      >
+                        {day || ""}
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
             </Box>
+
+            {/* Announcements list */}
+               <Box
+                            sx={{
+                                border: "1px solid #8B2635",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                                height: "153px",
+                            }}
+                            >
+                            <Box sx={{ backgroundColor: "#fff", p: 1.5, textAlign: "center" }}>
+                                <Typography sx={{ color: "#8B2635", fontWeight: "bolder", fontSize: "16px" }}>
+                                Announcements
+                                </Typography>
+                            </Box>
+                            <Box sx={{ p: 1.5, backgroundColor: "white", height: "calc(100% - 60px)", overflowY: "auto" }}>
+                                {announcements.map((a, i) => (
+                                <Box 
+                                    key={i} 
+                                    sx={{ 
+                                    mb: 2, 
+                                    p: 1.5, 
+                                    border: "1px solid #8B2635", 
+                                    borderRadius: 1,
+                                    cursor: "pointer",
+                                    "&:hover": { backgroundColor: "#f9f9f9" }
+                                    }}
+                                    onClick={() => {
+                                    setSelectedAnnouncement(a);
+                                    setOpenModal(true);
+                                    }}
+                                >
+                                    <Typography
+                                    fontSize="0.85rem"
+                                    fontWeight="bold"
+                                    sx={{ color: "#8B2635", mb: 0.5 }}
+                                    >
+                                    📢 {a.title}
+                                    </Typography>
+                                    <Typography fontSize="0.75rem" sx={{ color: "#666", mb: 0.5 }}>
+                                    {new Date(a.date).toDateString()}
+                                    </Typography>
+                                    <Typography fontSize="0.7rem" sx={{ color: "#888" }}>
+                                    {a.about && a.about.length > 80 ? `${a.about.substring(0, 80)}...` : a.about}
+                                    </Typography>
+                                </Box>
+                                ))}
+                                {announcements.length === 0 && (
+                                <Typography sx={{ textAlign: "center", color: "#666", mt: 4 }}>
+                                    No announcements available
+                                </Typography>
+                                )}
+                            </Box>
+                            </Box>
           </Grid>
-
-
-         
         </Grid>
-      </Box>
+        </Box>
 
+       {/* Right Sidebar */}
+<Box
+  sx={{
+    width: 320,
+    backgroundColor: "#ffffff",
+    border: "1px solid #8B2635",
+    borderRadius: 2,
+    p: 1.5,
+    height: "fit-content",
+    position: "sticky",
+    top: 20,
+    cursor: "pointer", // shows pointer on hover
+    "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } // optional hover effect
+  }}
+  onClick={() => {
+    // action when sidebar is clicked
+    navigate("/profile"); // example: navigate to profile page
+  }}
+>
+  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+    <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 2, gap: 1 }}>
+      <Tooltip title="Notifications">
+        <IconButton size="small" sx={{ color: "black" }} onClick={(e) => { e.stopPropagation(); setNotifModalOpen(true); }}>
+          <Badge badgeContent={3} color="error">
+            <NotificationsIcon fontSize="small" />
+          </Badge>
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="More Options">
+        <IconButton size="small" sx={{ color: "black" }} onClick={(e) => e.stopPropagation()}>
+          <ArrowDropDownIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
 
-      {/* Sidebar */}
-      <Box
-        sx={{
-          width: '300px',
-          backgroundColor: '#ffffff',
-          color: '#fff',
-          border: '2px solid #700000',
-          borderRadius: '5px',
-          p: 2.5,
-          position: 'fixed',
-          right: 0,
-          bottom: -40,
-          height: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto',
-          zIndex: 1000,
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: '#700000',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#500000',
-          }
-        }}
-      >
-        {/* Header - Profile Info */}
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 1,
-          mb: 2,
-          pt: 2,
-          position: 'sticky',
-          top: 30,
-          backgroundColor: '#ffffff',
-          zIndex: 1
-        }}>
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            width: '100%',
-            position: 'absolute',
-            top: 40,
-            right: -20,
-            gap: 1
-          }}>
+    <Avatar
+      alt={username}
+      src={profilePicture ? `http://localhost:5000${profilePicture}` : undefined}
+      sx={{
+        width: 80,
+        height: 80,
+        border: "3px solid #8B2635",
+        mb: 1,
+      }}
+    />
+    <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
+      {username || "Admin Name"}
+    </Typography>
+    <Typography variant="body2" sx={{ color: "#666", textAlign: "center" }}>
+      {employeeNumber || "#00000000"}
+    </Typography>
+  </Box>
 
+          {/* Quick Links */}
+          <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
+            <Box
+              sx={{
+                backgroundColor: '#6d2323',
+                p: 1,
+                textAlign: 'center',
+              }}
+            >
+              <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                USER PANEL
+              </Typography>
+            </Box>
 
-            <Tooltip title="Notifications">
-              <IconButton size="small" sx={{ color: 'black' }} onClick={() => setNotifModalOpen(true)}>
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon fontSize="small" />
-              </Badge>
-            </IconButton>
-
-
-            </Tooltip>
-            <Tooltip title="More Options">
-              <IconButton size="small" sx={{ color: 'black' }}>
-                <ArrowDropDownIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-
-
+            {/* Grid of Cards */}
+            <Grid container spacing={0} sx={{ p: 1 }}>
+               {/* DTR */}
+               <Grid item xs={3}>
+                 <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
+                   <Box
+                     sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 50,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <AccessTime sx={{ fontSize: 30 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
+                   </Box>
+         
+                 </Link>
+               </Grid>
+         
+               {/* PDS */}
+               <Grid item xs={3}>
+                 <Link to="/pds1" style={{ textDecoration: "none" }}>
+                   <Box
+                    sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 50,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <ContactPage sx={{ fontSize: 30 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
+                   </Box>
+                 </Link>
+               </Grid>
+         
+               {/* Payslip */}
+               <Grid item xs={3}>
+                 <Link to="/payslip" style={{ textDecoration: "none" }}>
+                   <Box
+                   sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 50,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <Receipt sx={{ fontSize: 30 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
+                   </Box>
+                 </Link>
+               </Grid>
+         
+               {/* Request Leave */}
+               {/* <Grid item xs={3}>
+                 <Link to="/leave-request" style={{ textDecoration: "none" }}>
+                   <Box
+                     sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 50,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         border: "1px solid #6d2323"
+                       }
+                     }}
+                   >
+                     <Description sx={{ fontSize: 20 }} />
+                     <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
+                       Leave Request
+                     </Typography>
+                   </Box>
+                 </Link>
+               </Grid> */}
+         
+               {/* Attendance */}
+               <Grid item xs={3}>
+                 <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
+                   <Box
+                    sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 50,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <Person sx={{ fontSize: 30 }} />
+                     <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
+                       Attendance
+                     </Typography>
+                   </Box>
+                 </Link>
+               </Grid>
+             </Grid>
           </Box>
 
 
-          <Tooltip title="Go to Profile">
-            <Box
-              onClick={() => navigate('/profile')}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <Avatar
-                alt={username}
-                src={profilePicture ? `http://localhost:5000${profilePicture}` : undefined}
-                sx={{
-                  width: 120,
-                  height: 120,
-                  color: '#000000',
-                  bgcolor: '#ffffff',
-                  border: '2px solid #700000',
-                }}
-              />
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                sx={{
-                  fontFamily: 'Poppins, sans-serif',
-                  color: 'black',
-                  textAlign: 'center',
-                  fontSize: '1.1rem'
-                }}>
-                {username || 'Loading...'}
-              </Typography>
-
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  fontFamily: 'Poppins, sans-serif',
-                  color: 'black',
-                  textAlign: 'center',
-                  fontSize: '0.9rem',
-                  borderBottom: '2px solid #700000',
-                  pb: 1,
-                  width: '80%',
-                  mx: 'auto'
-                }}
-              >
-                {employeeNumber || 'Loading...'}
-              </Typography>
+          {/* Recent Activity */}
+          <Box sx={{ border: `1px solid ${ACCENT}`, borderRadius: 2, overflow: 'hidden' }}>
+            <Box sx={{ backgroundColor: '#6d2323', p: 1.5, textAlign: 'center' }}>
+              <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>RECENT ACTIVITY</Typography>
             </Box>
-          </Tooltip>
+
+            <Box sx={{ p: 1.5, backgroundColor: 'white', maxHeight: 180, overflowY: 'auto' }}>
+              <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Leave Request Submitted</Typography>
+                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Annual Leave - June 14-15, 2025</Typography>
+              </Box>
+
+              <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Payslip Generated</Typography>
+                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>May 2025 - Available for download</Typography>
+              </Box>
+
+              <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Profile Updated</Typography>
+                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Personal information updated successfully</Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
-
-
-        {/* Divider */}
-        <Box sx={{ borderBottom: '2px solid #700000', mb: 3 }} />
-
-
-       
-
-
-
-
-<Box
-  sx={{
-    border: '1px solid #6d2323',
-    borderRadius: 2,
-    overflow: 'hidden',
-    width: '100%',
-    maxWidth: 300, // Optional width control
-   
-  }}
->
-  {/* Header */}
-  <Box
-    sx={{
-      backgroundColor: '#6d2323',
-      p: 1,
-      textAlign: 'center',
-    }}
-  >
-    <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
-      QUICK LINKS
-    </Typography>
-  </Box>
-
-
-  {/* Grid of Cards */}
-  <Grid container spacing={0} sx={{ p: 1 }}>
-    {/* DTR */}
-    <Grid item xs={3}>
-      <Link to="/daily_time_record" style={{ textDecoration: 'none' }}>
-        <Box
-          sx={{
-            m: 0.5,
-            p: 1,
-            backgroundColor: '#6d2323',
-            color: '#fff',
-            borderRadius: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 50,
-            textAlign: 'center',
-          }}
-        >
-          <AccessTime sx={{ fontSize: 30 }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-            View DTR
-          </Typography>
-        </Box>
-      </Link>
-    </Grid>
-
-
-    {/* PDS */}
-    <Grid item xs={3}>
-      <Link to="/pds1" style={{ textDecoration: 'none' }}>
-        <Box
-          sx={{
-            m: 0.5,
-            p: 1,
-            backgroundColor: '#6d2323',
-            color: '#fff',
-            borderRadius: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 50,
-            textAlign: 'center',
-          }}
-        >
-          <Person sx={{ fontSize: 30 }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-            View PDS
-          </Typography>
-        </Box>
-      </Link>
-    </Grid>
-
-
-    {/* Payslip */}
-    <Grid item xs={3}>
-      <Link to="/payslip" style={{ textDecoration: 'none' }}>
-        <Box
-          sx={{
-            m: 0.5,
-            p: 1,
-            backgroundColor: '#6d2323',
-            color: '#fff',
-            borderRadius: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 50,
-            textAlign: 'center',
-          }}
-        >
-          <Download sx={{ fontSize: 30 }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-            Download Payslip
-          </Typography>
-        </Box>
-      </Link>
-    </Grid>
-
-
-    {/* Request Leave */}
-    <Grid item xs={3}>
-      <Link to="/leave-request" style={{ textDecoration: 'none' }}>
-        <Box
-          sx={{
-            m: 0.5,
-            p: 1,
-            backgroundColor: '#6d2323',
-            color: '#fff',
-            borderRadius: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 50,
-            textAlign: 'center',
-          }}
-        >
-          <Description sx={{ fontSize: 30 }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-            Request Leave
-          </Typography>
-        </Box>
-      </Link>
-    </Grid>
-  </Grid>
-
-</Box>
-
-{/* Admin Panel */}
-            <Card sx={{border: "1px solid #6d2323", borderRadius: 2, mt: 1.5}}>
-              <Box
-    sx={{
-      backgroundColor: '#6d2323',
-      p: 1,
-      textAlign: 'center',
-    }}
-  >
-    <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
-      ADMIN PANEL
-    </Typography>
-  </Box>
-              <CardContent>
-                <Grid container spacing={1}>
-                  {[
-                    "Registration",
-                    "Announcement",
-                    "Leaves",
-                    "Payroll",
-                    "DTRs",
-                    "Audit",
-                  ].map((btn, i) => {
-                    let link = null;
-
-                    if (btn === "Registration") link = "/registration";
-                    if (btn === "Announcement") link = "/announcement";
-                    if (btn === "Leaves") link = "/leave-request";
-                    if (btn === "Payroll") link = "/payroll-table";
-                    if (btn === "DTRs") link = "/daily_time_record_faculty";
-                    if (btn === "Audit") link = "/audit-logs";
-
-                     return (
-                      <Grid item xs={6} key={i}>
-                        {link ? (
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            component={Link}
-                            to={link}
-                            sx={{ borderColor: "#6a1b1a", color: "#6a1b1a" }}
-                          >
-                            {btn}
-                          </Button>
-                        ) : (
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            sx={{ borderColor: "#6a1b1a", color: "#6a1b1a" }}
-                          >
-                            {btn}
-                          </Button>
-                        )}
-                      </Grid>
-                    );
-                  })}
-                </Grid>
-              </CardContent>
-            </Card>
-
-<Box
-  sx={{
-    border: '1px solid #6d2323',
-    borderRadius: 2,
-    overflow: 'hidden',
-    width: '100%',
-    maxWidth: 300, // Optional width control
-    mt: 1.5,
-   
-  }}
->
-
-
-  
-  {/* NOTIFICATIONS */}
-  <Box
-    sx={{
-      backgroundColor: '#6d2323',
-      p: 1,
-      textAlign: 'center',
-    }}
-  >
-    <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
-      NOTIFICATIONS
-    </Typography>
-  </Box>
-<Box
-    onClick={() => window.location.href = '/home'} // ← change URL here
-    sx={{
-      border: '1px solid #6d2323',
-      borderRadius: 1,
-      m: 1,
-      p: 1,
-      cursor: 'pointer',
-      backgroundColor: '#fff3f3',
-      transition: '0.2s',
-      '&:hover': {
-        backgroundColor: '#fce8e8',
-      }
-    }}
-  >
-    <Typography sx={{ color: '#6d2323', fontWeight: 'bold', fontSize: '0.65rem' }}>
-      📢 Important:  Set up your personal information. Click to read more.
-    </Typography>
-  </Box>
-  </Box>
       </Box>
 
+      {/* Announcement Modal */}
+      <Modal open={openModal} onClose={handleCloseModal} aria-labelledby="announcement-modal" aria-describedby="announcement-details">
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%,-50%)',
+          width: '80%',
+          maxWidth: 600,
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}>
+          {selectedAnnouncement && (
+            <>
+              <Typography variant="h5" component="h2" gutterBottom>{selectedAnnouncement.title}</Typography>
+              {selectedAnnouncement.image && (
+                <Box component="img" src={`${API_BASE}${selectedAnnouncement.image}`} alt={selectedAnnouncement.title}
+                  sx={{ width: '100%', height: 'auto', maxHeight: 300, objectFit: 'cover', borderRadius: 1, mb: 2 }} />
+              )}
+              <Typography variant="body1" paragraph>{selectedAnnouncement.about || selectedAnnouncement.description}</Typography>
+              <Typography variant="caption" color="text.secondary">Posted on: {selectedAnnouncement.date ? new Date(selectedAnnouncement.date).toLocaleDateString() : ''}</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button variant="contained" onClick={handleCloseModal} sx={{ mt: 2, backgroundColor: ACCENT, '&:hover': { backgroundColor: '#6d1e29' } }}>Close</Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
 
+      {/* Notifications Modal */}
+      <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)} aria-labelledby="notification-modal" aria-describedby="notifications-list">
+        <Box sx={{
+          position: 'absolute',
+          top: '120px',
+          right: '20px',
+          width: '320px',
+          bgcolor: '#fff',
+          boxShadow: 24,
+          borderRadius: 2,
+          p: 2,
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          zIndex: 1500,
+          border: `2px solid ${ACCENT}`,
+          '@media (max-width: 600px)': { width: '90vw', right: '5%' }
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: ACCENT }}>Notifications</Typography>
 
-
-
-
-
-
-{/*MODAL TO PARA SA NOTIFICATIONS POP UP*/}
-      <Modal
-  open={notifModalOpen}
-  onClose={() => setNotifModalOpen(false)}
-  aria-labelledby="notification-modal"
-  aria-describedby="notifications-list"
->
-  <Box sx={{
-    position: 'absolute',
-    top: '120px',
-    right: '20px',
-    width: '290px',
-    bgcolor: '#fff',
-    boxShadow: 24,
-    borderRadius: 2,
-    p: 2,
-    maxHeight: '80vh',
-    overflowY: 'auto',
-    zIndex: 1500,
-    '@media (max-width: 600px)': {
-      width: '90vw',
-      right: '5%',
-    },
-  }}>
-    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#6d2323' }}>
-      Notifications
-    </Typography>
-   
-    {announcements.slice(0, 5).map((item, idx) => (
-      <Box
-        key={idx}
-        sx={{
-          mb: 1.5,
-          p: 1,
-          borderRadius: 1,
-          backgroundColor: '#fff3f3',
-          border: '1px solid #6d2323',
-          cursor: 'pointer',
-          transition: '0.2s',
-          '&:hover': {
-            backgroundColor: '#fce8e8'
-          }
-        }}
-        onClick={() => {
-          setSelectedAnnouncement(item);
-          setNotifModalOpen(false);
-          setOpenModal(true);
-        }}
-      >
-        <Typography fontWeight="bold" fontSize="0.9rem">{item.title}</Typography>
-        <Typography fontSize="0.75rem">{new Date(item.date).toLocaleDateString()}</Typography>
-      </Box>
-    ))}
-    {announcements.length === 0 && (
-      <Typography fontSize="0.85rem">No notifications at the moment.</Typography>
-    )}
-  </Box>
-</Modal>
-
-
-    </Container>
-
-
-   
+          {announcements.length > 0 ? announcements.slice(0, 10).map((item, idx) => (
+            <Box key={idx} sx={{
+              mb: 1.5, p: 1.5, borderRadius: 2, backgroundColor: '#f8f8f8', border: `1px solid ${ACCENT}`, cursor: 'pointer',
+              transition: '0.15s', '&:hover': { backgroundColor: '#f0f0f0' }
+            }} onClick={() => { setSelectedAnnouncement(item); setNotifModalOpen(false); setOpenModal(true); }}>
+              <Typography fontWeight="bold" fontSize="0.9rem" sx={{ color: ACCENT }}>{item.title}</Typography>
+              <Typography fontSize="0.75rem" sx={{ color: '#666' }}>{item.date ? new Date(item.date).toLocaleDateString() : ''}</Typography>
+            </Box>
+          )) : (<Typography fontSize="0.85rem">No notifications at the moment.</Typography>)}
+        </Box>
+      </Modal>
+    </Box>
   );
 };
 
-
 export default Home;
-
-
-

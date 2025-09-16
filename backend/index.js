@@ -486,7 +486,7 @@ app.post("/send-2fa-code", async (req, res) => {
               <h1 style="color: #A31D1D; font-size: 32px; margin: 0; letter-spacing: 5px;">${code}</h1>
             </div>
             
-            <p>This code will expire in 15 minutes. Do not share it with anyone.</p>
+            <p>This code will expire in 2 minutes. Do not share it with anyone.</p>
             <p>If this login attempt wasn’t made by you, we recommend securing your account immediately.</p>
             <hr style="margin: 30px 0;">
             <p style="color: #666; font-size: 12px;">This is an automated message from your HRIS system.</p>
@@ -1900,8 +1900,8 @@ app.delete('/leave_assignment/:id', (req, res) => {
 
 
 
-app.get('/holiday-suspension', (req, res) => {
-  const sql = `SELECT * FROM holidayandsuspension`;
+app.get('/holiday', (req, res) => {
+  const sql = `SELECT * FROM holiday`;
 
 
 
@@ -1918,7 +1918,7 @@ app.get('/holiday-suspension', (req, res) => {
 
 
 
-app.post('/holiday-suspension', (req, res) => {
+app.post('/holiday', (req, res) => {
   const { description, date, status } = req.body;
 
 
@@ -1931,7 +1931,7 @@ app.post('/holiday-suspension', (req, res) => {
 
 
 
-  const sql = `INSERT INTO holidayandsuspension (description, date, status) VALUES (?, ?, ?)`;
+  const sql = `INSERT INTO holiday (description, date, status) VALUES (?, ?, ?)`;
   db.query(sql, [description, date, status], (err, result) => {
     if (err) {
       console.error('Database Insert Error:', err.message);
@@ -1942,7 +1942,7 @@ app.post('/holiday-suspension', (req, res) => {
 
 
     res.status(201).json({
-      message: 'Holiday and Suspension record added successfully',
+      message: 'Holiday record added successfully',
       id: result.insertId,
     });
   });
@@ -1951,7 +1951,7 @@ app.post('/holiday-suspension', (req, res) => {
 
 
 
-app.put('/holiday-suspension/:id', (req, res) => {
+app.put('/holiday/:id', (req, res) => {
   const { id } = req.params;
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
@@ -1968,7 +1968,7 @@ app.put('/holiday-suspension/:id', (req, res) => {
 
 
 
-  const sql = `UPDATE holidayandsuspension SET description = ?, date = ?, status = ? WHERE id = ?`;
+  const sql = `UPDATE holiday SET description = ?, date = ?, status = ? WHERE id = ?`;
   db.query(sql, [description, date, status, id], (err, result) => {
     if (err) {
       console.error('Database Update Error:', err.message);
@@ -1981,20 +1981,20 @@ app.put('/holiday-suspension/:id', (req, res) => {
     if (result.affectedRows === 0) {
       return res
         .status(404)
-        .json({ error: 'Holiday suspension record not found' });
+        .json({ error: 'Hol record not found' });
     }
 
 
 
 
-    res.json({ message: 'Holiday suspension record updated successfully' });
+    res.json({ message: 'Hol record updated successfully' });
   });
 });
 
 
 
 
-app.delete('/holiday-suspension/:id', (req, res) => {
+app.delete('/holiday/:id', (req, res) => {
   const { id } = req.params;
 
 
@@ -2007,7 +2007,7 @@ app.delete('/holiday-suspension/:id', (req, res) => {
 
 
 
-  const sql = `DELETE FROM holidayandsuspension WHERE id = ?`;
+  const sql = `DELETE FROM holiday WHERE id = ?`;
   db.query(sql, [id], (err, result) => {
     if (err) {
       console.error('Database Delete Error:', err.message);
@@ -2020,13 +2020,13 @@ app.delete('/holiday-suspension/:id', (req, res) => {
     if (result.affectedRows === 0) {
       return res
         .status(404)
-        .json({ error: 'Holiday suspension record not found' });
+        .json({ error: 'Hol record not found' });
     }
 
 
 
 
-    res.json({ message: 'Holiday suspension record deleted successfully' });
+    res.json({ message: 'Hol record deleted successfully' });
   });
 });
 
@@ -3529,3 +3529,5 @@ app.delete('/api/announcements/:id', (req, res) => {
     });
   });
 });
+
+

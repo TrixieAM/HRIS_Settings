@@ -1,4 +1,3 @@
-// Payslip.jsx
 import React, { useRef, forwardRef, useState, useEffect } from "react";
 import {
   Container,
@@ -17,17 +16,14 @@ import {
 } from "@mui/material";
 import Search from "@mui/icons-material/Search";
 
-
 import WorkIcon from "@mui/icons-material/Work";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import axios from "axios";
 import logo from "../../assets/logo.png";
 
-
 const PayslipOverall = forwardRef(({ employee }, ref) => {
   const payslipRef = ref || useRef();
-
 
   const [allPayroll, setAllPayroll] = useState([]);
   const [displayEmployee, setDisplayEmployee] = useState(employee || null);
@@ -36,16 +32,11 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
   const [sending, setSending] = useState(false);
   const [modal, setModal] = useState({ open: false, type: "success", message: "" });
 
-
-  const [search, setSearch] = useState("");                // search input
-  const [hasSearched, setHasSearched] = useState(false);  // flag if search was done
-  const [selectedMonth, setSelectedMonth] = useState(""); // which month is selected
-  const [filteredPayroll, setFilteredPayroll] = useState([]); // search r
+  const [search, setSearch] = useState("");                
+  const [hasSearched, setHasSearched] = useState(false);  
+  const [selectedMonth, setSelectedMonth] = useState(""); 
+  const [filteredPayroll, setFilteredPayroll] = useState([]); 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-
- 
-
 
   // Fetch payroll data
   useEffect(() => {
@@ -55,9 +46,6 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
           setLoading(true);
           const res = await axios.get("http://localhost:5000/api/finalized-payroll");
           setAllPayroll(res.data);
-          // if (res.data.length > 0) {
-          //   setDisplayEmployee(res.data[0]);
-          // }
           setLoading(false);
         } catch (err) {
           console.error("Error fetching payroll:", err);
@@ -68,7 +56,6 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
       fetchData();
     }
   }, [employee]);
-
 
   // Download PDF
   const downloadPDF = () => {
@@ -83,152 +70,106 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     });
   };
 
+  // Send Payslip via Gmail
+  const sendPayslipViaGmail = async () => {
+    if (!displayEmployee) return;
 
-// Send Payslip via Gmail
-const sendPayslipViaGmail = async () => {
-  if (!displayEmployee) return;
+    setSending(true);
+    try {
+      const input = payslipRef.current;
+      const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
+      const pdfBlob = pdf.output("blob");
+      const formData = new FormData();
+      formData.append("pdf", pdfBlob, `${displayEmployee.name}_payslip.pdf`);
+      formData.append("name", displayEmployee.name);
+      formData.append("employeeNumber", displayEmployee.employeeNumber);
 
-  setSending(true);
-  try {
-    const input = payslipRef.current;
-    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const res = await axios.post(
+        "http://localhost:5000/SendPayslipRoute/send-payslip",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-
-    // Convert PDF to Blob
-    const pdfBlob = pdf.output("blob");
-    const formData = new FormData();
-    formData.append("pdf", pdfBlob, `${displayEmployee.name}_payslip.pdf`);
-    formData.append("name", displayEmployee.name);
-    formData.append("employeeNumber", displayEmployee.employeeNumber);
-
-
-    const res = await axios.post(
-      "http://localhost:5000/SendPayslipRoute/send-payslip",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-
-
-    if (res.data.success) {
-      setModal({
-        open: true,
-        type: "success",
-        message: "Payslip sent successfully via Gmail!",
-      });
-    } else {
+      if (res.data.success) {
+        setModal({
+          open: true,
+          type: "success",
+          message: "Payslip sent successfully via Gmail!",
+        });
+      } else {
+        setModal({
+          open: true,
+          type: "error",
+          message: res.data.error || "Failed to send payslip.",
+        });
+      }
+    } catch (err) {
+      console.error("Error sending payslip:", err);
       setModal({
         open: true,
         type: "error",
-        message: res.data.error || "Failed to send payslip.",
+        message: "An error occurred while sending the payslip.",
       });
+    } finally {
+      setSending(false);
     }
-  } catch (err) {
-    console.error("Error sending payslip:", err);
-    setModal({
-      open: true,
-      type: "error",
-      message: "An error occurred while sending the payslip.",
-    });
-  } finally {
-    setSending(false);
-  }
-};
+  };
 
+  // For Search
+  const handleSearch = () => {
+    if (!search.trim()) return;
 
-// For Search
-const handleSearch = () => {
-  if (!search.trim()) return;
-
-
-  const result = allPayroll.filter(
-    (emp) =>
-      emp.employeeNumber.toString().includes(search.trim()) ||
-      emp.name.toLowerCase().includes(search.trim().toLowerCase())
-  );
-
-
-  if (result.length > 0) {
-    setFilteredPayroll(result);
-    setDisplayEmployee(result[0]);   // ✅ show first search match
-    setHasSearched(true);
-  } else {
-  setFilteredPayroll([]);
-  setDisplayEmployee(null);   // clear display
-  setSelectedMonth("");       // ✅ reset month filter
-  setHasSearched(true);
-}
-};
-
-
-
-
-// For Clear / Reset
-const clearSearch = () => {
-  setSearch("");
-  setHasSearched(false);
-  setSelectedMonth("");
-  setFilteredPayroll([]);
-
-
-  // ✅ Restore original employee (logged-in) or fallback to first payroll
-  if (employee) {
-    setDisplayEmployee(employee);
-  }
-  // else if (allPayroll.length > 0) {
-  //   setDisplayEmployee(allPayroll[0]);
-  // }
-  else {
-    setDisplayEmployee(null);
-  }
-};
-
-
-
-
-// 📅 Month filter
-const handleMonthSelect = (month) => {
-  setSelectedMonth(month);
-
-
-  const monthIndex = months.indexOf(month); // Jan=0, Feb=1, ...
-
-
-  const result = allPayroll.filter((emp) => {
-    if (!emp.startDate) return false;
-    const empMonth = new Date(emp.startDate).getMonth();
-    return (
-      (emp.employeeNumber.toString().includes(search.trim()) ||
-        emp.name.toLowerCase().includes(search.trim().toLowerCase())) &&
-      empMonth === monthIndex
+    const result = allPayroll.filter(
+      (emp) =>
+        emp.employeeNumber.toString().includes(search.trim()) ||
+        emp.name.toLowerCase().includes(search.trim().toLowerCase())
     );
-  });
 
+    if (result.length > 0) {
+      setFilteredPayroll(result);
+      setDisplayEmployee(null);   // ❌ don’t auto-display
+      setSelectedMonth("");       // reset month filter
+      setHasSearched(true);
+    } else {
+      setFilteredPayroll([]);
+      setDisplayEmployee(null);
+      setSelectedMonth("");
+      setHasSearched(true);
+    }
+  };
 
-  setFilteredPayroll(result);
+  // For Clear / Reset
+  const clearSearch = () => {
+    setSearch("");
+    setHasSearched(false);
+    setSelectedMonth("");
+    setFilteredPayroll([]);
+    if (employee) {
+      setDisplayEmployee(employee);
+    } else {
+      setDisplayEmployee(null);
+    }
+  };
 
+  // 📅 Month filter
+  const handleMonthSelect = (month) => {
+    setSelectedMonth(month);
+    const monthIndex = months.indexOf(month);
 
-  if (result.length > 0) {
-    setDisplayEmployee(result[0]);   // ✅ show first match for that month
-  } else {
-    setDisplayEmployee(null);        // ✅ no data for this month
-  }
+    const result = filteredPayroll.filter((emp) => {
+      if (!emp.startDate) return false;
+      const empMonth = new Date(emp.startDate).getMonth();
+      return empMonth === monthIndex;
+    });
 
-
-  setHasSearched(true);
-};
-
-
-
-
-
-
-
+    setDisplayEmployee(result.length > 0 ? result[0] : null);
+  };
 
   return (
     <Container maxWidth="10%">
@@ -248,10 +189,10 @@ const handleMonthSelect = (month) => {
           <WorkIcon fontSize="large" />
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Overall Employee Payslip
+              Payslip Records
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              Generate and manage employee payslips
+              Generate and manage all employee payslip records
             </Typography>
           </Box>
         </Box>
@@ -677,7 +618,7 @@ const handleMonthSelect = (month) => {
                 "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
               }}
             >
-              There's no payslip saved for the month of {selectedMonth}.
+              There's no payslip saved for the month of <b>{selectedMonth}.</b>
             </Alert>
          ) : hasSearched ? (
             <Alert
@@ -689,7 +630,7 @@ const handleMonthSelect = (month) => {
                 "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
               }}
             >
-              No employee data available. Please check if the payroll data is loaded correctly.
+              Please select a month to view your payslip.
             </Alert>
           ) : null}
 

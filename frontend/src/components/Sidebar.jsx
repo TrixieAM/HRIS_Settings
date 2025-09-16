@@ -55,8 +55,11 @@ import {
   Person as PersonAddIcon,
   AppRegistration,
   EditCalendar,
-  RequestQuote as RequestQuoteIcon,
+  RequestQuote,
   AddBusiness,
+  ReceiptLong,
+  Receipt,
+  Info
 } from '@mui/icons-material';
 import { 
   AccessAlarm, 
@@ -111,18 +114,19 @@ const Sidebar = ({
   const [username, setUsername] = useState('');
   const [userRole, setUserRole] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
-  const navigate = useNavigate();
   const [employeeNumber, setEmployeeNumber] = useState('');
   const [logoutOpen, setLogoutOpen] = useState(false);
 
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('username');
-    const { role, employeeNumber, email, username } = getUserInfo();
+    const { role: decodedRole, employeeNumber, username } = getUserInfo();
+
     setUsername(storedUser || '');
-    setUserRole(role || '');
     setEmployeeNumber(employeeNumber || '');
     setUsername(username || '');
+    setUserRole(decodedRole || '');
 
     // Fetch profile picture
     const fetchProfilePicture = async () => {
@@ -142,15 +146,15 @@ const Sidebar = ({
     }
   }, [employeeNumber]);
 
-const handleLogout = () => {
-  setLogoutOpen(true); // Show logout modal
+  const handleLogout = () => {
+    setLogoutOpen(true);
 
-  setTimeout(() => {
-    localStorage.removeItem("token");
-    localStorage.clear();
-    window.location.href = "/"; // Redirect after short delay
-  }, 1500);
-};
+    setTimeout(() => {
+      localStorage.removeItem("token");
+      localStorage.clear();
+      window.location.href = "/"; // redirect to login
+    }, 1500);
+  };
 
   const handleToggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -158,9 +162,19 @@ const handleLogout = () => {
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
+
+    if (item === 'home') {
+      if (userRole === 'staff') {
+        navigate('/home');
+      } else {
+        navigate('/admin-home');
+      }
+    } else if (item === '#') {
+      navigate('/');}
   };
 
   const dynamicDrawerWidth = drawerOpen ? drawerWidth : collapsedWidth;
+
 
   return (
       <Drawer
@@ -187,9 +201,12 @@ const handleLogout = () => {
   sx={{
     display: 'flex',
     flexDirection: 'column',
-    width: 230, 
+    width: 269, 
     height: '100vh', 
-    transition: 'all 0.3s ease',  
+    transition: 'all 0.9s ease', 
+    overflowY: "auto",
+    "&::-webkit-scrollbar": { width: 8 },
+    "&::-webkit-scrollbar-thumb": { bgcolor: "#6d2323", borderRadius: 2 }, 
    
     
     
@@ -201,6 +218,7 @@ const handleLogout = () => {
       justifyContent: 'space-between',
       alignItems: 'center',
       px: 2,
+      
 
       
     }}
@@ -217,7 +235,7 @@ const handleLogout = () => {
   <List>
   {userRole !== 'administrator' && (
         <>
-        <List component="div" disablePadding sx={{ pl: 2.5}}>
+        <List component="div" disablePadding sx={{ pl: 2.5,}}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, }}>
             <Tooltip title="Go to Profile">
@@ -228,6 +246,7 @@ const handleLogout = () => {
                   alignItems: 'center',
                   gap: 1,
                   cursor: 'pointer',
+                  
                   
 
                 }}
@@ -362,38 +381,69 @@ const handleLogout = () => {
 
 <Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
    
-      <ListItem 
-  button 
-  component={Link} 
-  to='/home' 
-  sx={{
-    color: selectedItem === 'home' ? 'white' : 'inherit',
-    bgcolor: selectedItem === 'home' ? '#A31D1D' : 'inherit',
-    '&:hover': {
-      bgcolor: '#f0f0f0',
-      color: 'black',
-      borderTopRightRadius: '15px',
-      borderBottomRightRadius: '15px',
-      '& .MuiListItemIcon-root': {
-        color: 'black',
-      }
-    },
-    borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
-    borderBottomRightRadius: selectedItem === 'home' ? '15px' : 0,
-    
-  }}
-  onClick={() => handleItemClick('home')}
->
-<ListItemIcon sx={{ color: selectedItem === 'home' ? 'white' : 'inherit',
-                    '&:hover': { color: 'black' }
-                   }}>
-    <House sx={{ fontSize: 29, marginLeft: '-6%' }} />
-  </ListItemIcon>
-  <ListItemText 
-    primary="Home" 
-    sx={{ marginLeft: '-10px' }} 
-  />
-</ListItem>
+      <ListItem
+        button
+        selected={selectedItem === 'home'}
+        onClick={() => handleItemClick('home')}
+        sx={{
+          cursor: 'pointer',
+          color: selectedItem === 'home' ? 'white' : 'inherit',
+          bgcolor: selectedItem === 'home' ? '#A31D1D' : 'inherit',
+          '&:hover': {
+            bgcolor: '#f0f0f0',
+            color: 'black',
+            borderTopRightRadius: '15px',
+            borderBottomRightRadius: '15px',
+            '& .MuiListItemIcon-root': {
+              color: 'black',
+            }
+          },
+          borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
+          borderBottomRightRadius: selectedItem === 'home' ? '15px' : 0,
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            color: selectedItem === 'home' ? 'white' : 'inherit',
+            '&:hover': { color: 'black' },
+          }}
+        >
+          <House sx={{ fontSize: 29, marginLeft: '-6%' }} />
+        </ListItemIcon>
+        <ListItemText
+          primary="Home"
+          sx={{ marginLeft: '-10px' }}
+        />
+      </ListItem>
+
+
+
+            <ListItem
+                  button
+                  component={Link}
+                  to='/attendance-user-state'
+                  sx={{
+                    color: selectedItem === 'attendance-user-state' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'attendance-user-state' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'attendance-user-state' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'attendance-user-state' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('attendance-user-state')}>
+                  <PortraitIcon sx={{ marginRight: '2rem', color: selectedItem === 'attendance-user-state' ?  'white' : 'inherit',
+                    '&:hover': { color: 'black'} }}>
+                    <CalendarToday />
+                  </PortraitIcon>
+                  <ListItemText primary="Attendance" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
 
 
     <ListItem
@@ -443,24 +493,39 @@ const handleLogout = () => {
                     borderBottomRightRadius: selectedItem === 'payslip' ? '15px' : 0,
                   }}
                   onClick={() => handleItemClick('payslip')}>
-                  <RequestQuoteIcon sx={{ marginRight: '2rem', color: selectedItem === 'payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                  <Receipt sx={{ marginRight: '2rem', color: selectedItem === 'payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <CalendarToday />
-                  </RequestQuoteIcon>
+                  </Receipt>
                   <ListItemText primary="Payslip" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
-                <Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
-               
 
-                  {userRole !== 'staff' && (
-                
-                <ListItem
-                  button
-                  component={Link}
-                  to='/overall-payslip'
+                {userRole !== 'administrator' && (
+          <>
+
+        <ListItem
+              button
+              onClick={handleClickPDSFiles}
+              sx={{ color: 'black', cursor: 'pointer' }}
+            >
+              <ListItemIcon>
+              <ContactPageIcon  sx={{ color: 'black'}} />
+              </ListItemIcon>
+              <ListItemText primary="PDS Files" sx={{marginLeft: '-10px'}} />
+              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
+                {open5 ? <ExpandLess /> : <ExpandMore />}
+              </ListItemIcon>
+            </ListItem>
+
+            <Collapse in={open5} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds1' 
                   sx={{
-                    color: selectedItem === 'overall-payslip' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'overall-payslip' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'pds1' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds1' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -470,16 +535,130 @@ const handleLogout = () => {
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'pds1' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds1' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('overall-payslip')}>
-                  <AddBusiness sx={{ marginRight: '2rem', color: selectedItem === 'overall-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
-                    <CalendarToday />
-                  </AddBusiness>
-                  <ListItemText primary="Overall Payslip" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
-                 )}
+                  onClick={() => handleItemClick('pds1')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds1' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS1" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds2' 
+                  sx={{
+                    color: selectedItem === 'pds2' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds2' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds2' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds2' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds2')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+              color: selectedItem === 'pds2' ? 'white' : 'inherit',
+              '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS2" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+        
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds3' 
+                  sx={{
+                    color: selectedItem === 'pds3' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds3' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds3' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds3' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds3')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds3' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS3" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+
+        <Collapse in={open5} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding sx={{ pl: 5.4 }}>
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/pds4' 
+                  sx={{
+                    color: selectedItem === 'pds4' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'pds4' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'pds4' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'pds4' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('pds4')} 
+                  >
+            <ListItemIcon sx={{ marginRight: '-1rem',
+               color: selectedItem === 'pds4' ? 'white' : 'inherit',
+               '&:hover': { color: 'white' }
+             }}>
+              <FileCopy />
+            </ListItemIcon>
+            <ListItemText primary="PDS4" sx={{marginLeft: '-10px'}}/>
+          </ListItem>
+        </List>
+        </Collapse>
+        </>
+        )}
+
+                <Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
+               
+
+                
 
                 {userRole !== 'staff' && (
                     <ListItem 
@@ -674,68 +853,6 @@ const handleLogout = () => {
                 <ListItem 
                   button 
                   component={Link} 
-                  to= '/other-information' 
-                  sx={{
-                    color: selectedItem === 'other-information' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'other-information' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'other-information' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'other-information' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('other-information')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'other-information' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
-                    <ContactPageIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Other Information" sx={{marginLeft: '-10px'}}/>
-                </ListItem>
-
-
-                <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/workexperience' 
-                  sx={{
-                    color: selectedItem === 'workexperience' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'workexperience' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('workexperience')} 
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'work-experience' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
-                    <Streetview />
-                  </ListItemIcon>
-                  <ListItemText primary="Work Experience" sx={{marginLeft: '-10px'}}/>
-                </ListItem>
-
-
-                <ListItem 
-                  button 
-                  component={Link} 
                   to= '/vocational' 
                   sx={{
                     color: selectedItem === 'vocational' ? 'white' : 'inherit',
@@ -758,7 +875,7 @@ const handleLogout = () => {
                     color: selectedItem === 'vocational' ? 'white' : 'inherit',
                     '&:hover': { color: 'white' }
                    }}>
-                    <Streetview />
+                    <School />
                   </ListItemIcon>
                   <ListItemText primary="Vocational" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
@@ -795,6 +912,37 @@ const handleLogout = () => {
                 </ListItem>
 
 
+                 <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/eligibility' 
+                  sx={{
+                    color: selectedItem === 'eligibility' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'eligibility' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('eligibility')} 
+                  >
+                  <ListItemIcon sx={{ marginRight: '-1rem',
+                     color: selectedItem === 'eligibility' ? 'white' : 'inherit',
+                     '&:hover': { color: 'white' }
+                   }}>
+                    <BadgeRounded />
+                  </ListItemIcon>
+                  <ListItemText primary="Eligibility" sx={{marginLeft: '-10px'}}/>
+                </ListItem>
+
+
                 <ListItem 
                   button 
                   component={Link} 
@@ -825,14 +973,14 @@ const handleLogout = () => {
                   <ListItemText primary="Voluntary Work" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
 
-
-                 <ListItem 
+                
+                <ListItem 
                   button 
                   component={Link} 
-                  to= '/eligibility' 
+                  to= '/workexperience' 
                   sx={{
-                    color: selectedItem === 'eligibility' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'eligibility' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'workexperience' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'workexperience' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -842,181 +990,56 @@ const handleLogout = () => {
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('eligibility')} 
+                  onClick={() => handleItemClick('workexperience')} 
                   >
                   <ListItemIcon sx={{ marginRight: '-1rem',
-                     color: selectedItem === 'eligibility' ? 'white' : 'inherit',
-                     '&:hover': { color: 'white' }
+                    color: selectedItem === 'work-experience' ? 'white' : 'inherit',
+                    '&:hover': { color: 'white' }
                    }}>
-                    <BadgeRounded />
+                    <Streetview />
                   </ListItemIcon>
-                  <ListItemText primary="Eligibility" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Work Experience" sx={{marginLeft: '-10px'}}/>
+                </ListItem> 
+
+                 <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/other-information' 
+                  sx={{
+                    color: selectedItem === 'other-information' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'other-information' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'other-information' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'other-information' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('other-information')} 
+                  >
+                  <ListItemIcon sx={{ marginRight: '-1rem',
+                    color: selectedItem === 'other-information' ? 'white' : 'inherit',
+                    '&:hover': { color: 'white' }
+                   }}>
+                    <Info />
+                  </ListItemIcon>
+                  <ListItemText primary="Other Information" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
+
               </List>
             </Collapse>
           </> 
         )}
 
-
-      {userRole !== 'administrator' && (
-          <>
-
-        <ListItem
-              button
-              onClick={handleClickPDSFiles}
-              sx={{ color: 'black', cursor: 'pointer' }}
-            >
-              <ListItemIcon>
-              <DescriptionIcon  sx={{ color: 'black'}} />
-              </ListItemIcon>
-              <ListItemText primary="PDS Files" sx={{marginLeft: '-10px'}} />
-              <ListItemIcon sx={{ marginLeft: '10rem', color: 'black' }}>
-                {open5 ? <ExpandLess /> : <ExpandMore />}
-              </ListItemIcon>
-            </ListItem>
-
-            <Collapse in={open5} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds1' 
-                  sx={{
-                    color: selectedItem === 'pds1' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds1' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds1' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds1' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds1')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-               color: selectedItem === 'pds1' ? 'white' : 'inherit',
-               '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS1" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-
-        <Collapse in={open5} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds2' 
-                  sx={{
-                    color: selectedItem === 'pds2' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds2' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds2' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds2' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds2')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-              color: selectedItem === 'pds2' ? 'white' : 'inherit',
-              '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS2" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-        
-        <Collapse in={open5} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds3' 
-                  sx={{
-                    color: selectedItem === 'pds3' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds3' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds3' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds3' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds3')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-               color: selectedItem === 'pds3' ? 'white' : 'inherit',
-               '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS3" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-
-        <Collapse in={open5} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding sx={{ pl: 5.4 }}>
-          <ListItem 
-                  button 
-                  component={Link} 
-                  to= '/pds4' 
-                  sx={{
-                    color: selectedItem === 'pds4' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'pds4' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'pds4' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'pds4' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('pds4')} 
-                  >
-            <ListItemIcon sx={{ marginRight: '-1rem',
-               color: selectedItem === 'pds4' ? 'white' : 'inherit',
-               '&:hover': { color: 'white' }
-             }}>
-              <FileCopy />
-            </ListItemIcon>
-            <ListItemText primary="PDS4" sx={{marginLeft: '-10px'}}/>
-          </ListItem>
-        </List>
-        </Collapse>
-        </>
-        )}
-
-          {userRole !== 'administrator' && (
+          {userRole !== 'staff' && (
         <>
 
         <ListItem
@@ -1032,7 +1055,7 @@ const handleLogout = () => {
           <ListItemIcon>
             <AccessTimeIcon  sx={{ color: 'black'}}/>
           </ListItemIcon>
-          <ListItemText primary="Attendance Records Management" sx={{marginLeft: '-10px'}}/>
+          <ListItemText primary="Attendance Management" sx={{marginLeft: '-10px'}}/>
           <ListItemIcon sx={{ marginLeft: '10rem', color:'black' }}>
             {open2 ? <ExpandLess /> : <ExpandMore />}
           </ListItemIcon>
@@ -1067,6 +1090,7 @@ const handleLogout = () => {
                   </ListItemIcon>
                   <ListItemText primary="Device Record" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
+
 
                 <ListItem
                   button
@@ -1388,6 +1412,60 @@ const handleLogout = () => {
                   </ListItemIcon>
                   <ListItemText primary="Payroll | Processed" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
+                
+                <ListItem
+                  button
+                  component={Link}
+                  to='/overall-payslip'
+                  sx={{
+                    color: selectedItem === 'overall-payslip' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'overall-payslip' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('overall-payslip')}>
+                  <RequestQuote sx={{ marginRight: '1rem', color: selectedItem === 'overall-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </RequestQuote>
+                  <ListItemText primary="Payslip Records" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+
+
+                <ListItem
+                  button
+                  component={Link}
+                  to='/bulk-payslip'
+                  sx={{
+                    color: selectedItem === 'bulk-payslip' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'bulk-payslip' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'bulk-payslip' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'bulk-payslip' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('bulk-payslip')}>
+                  <ReceiptLong sx={{ marginRight: '1rem', color: selectedItem === 'bulk-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </ReceiptLong>
+                  <ListItemText primary="Payslip Distribution" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+                
 
                 <ListItem
                   button

@@ -26,6 +26,25 @@ const Registration = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const isValidName = (name) => {
+    // Split into words
+    const words = name.trim().split(" ");
+    if (words.length === 0) return false;
+  
+    for (let word of words) {
+      // Check length
+      if (word.length < 2 || word.length > 20) return false;
+  
+      // Check only letters/apostrophes
+      if (!/^[a-zA-Z']+$/.test(word)) return false;
+  
+      // Check at least one vowel in the word
+      if (!/[aeiouAEIOU]/.test(word)) return false;
+    }
+  
+    return true;
+  };
+  
   const handleRegister = async (e) => {
     e.preventDefault();
     const { username, email, employeeNumber, password } = formData;
@@ -35,6 +54,13 @@ const Registration = () => {
       setSuccessMessage("");
       return;
     }
+    
+    if (!isValidName(username)) {
+      setErrorMessage("Please enter a valid name.");
+      setSuccessMessage("");
+      return;
+    }
+    
 
     try {
       const response = await fetch("http://localhost:5000/register", {
@@ -57,6 +83,8 @@ const Registration = () => {
       setSuccessMessage("");
     }
   };
+
+ 
 
   return (
     <Container
@@ -100,10 +128,13 @@ const Registration = () => {
           <TextField
             name="username"
             label="Name"
+            type="text"
             fullWidth
             sx={{ mb: 2, mt: 4 }}
             value={formData.username}
             onChange={handleChanges}
+            InputLabelProps={{ required: false }}
+
           />
           <TextField
             name="email"
@@ -113,14 +144,28 @@ const Registration = () => {
             sx={{ mb: 2 }}
             value={formData.email}
             onChange={handleChanges}
+            InputLabelProps={{ required: false }}
+
           />
           <TextField
             name="employeeNumber"
             label="Employee Number"
+            type="number"
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{
+              mb: 2,
+              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                WebkitAppearance: 'none',
+                margin: 0,
+              },
+              '& input[type=number]': {
+                MozAppearance: 'textfield',
+              },
+            }}
             value={formData.employeeNumber}
             onChange={handleChanges}
+            InputLabelProps={{ required: false }}
+
           />
           <TextField
             name="password"
@@ -131,6 +176,8 @@ const Registration = () => {
             autoComplete="new-password"
             value={formData.password}
             onChange={handleChanges}
+            InputLabelProps={{ required: false }}
+
           />
 
           <Button

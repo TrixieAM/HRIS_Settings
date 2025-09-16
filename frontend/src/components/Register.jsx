@@ -126,13 +126,16 @@ const Register = () => {
             fullWidth
             sx={{ mb: 2, mt: 4 }}
             onChange={handleChanges}
+            required
           />
           <TextField
             name="employeeNumber"
             label="Employee Number"
+            type="number"
             fullWidth
             sx={{ mb: 2 }}
             onChange={handleChanges}
+            required
           />
           <TextField
             name="password"
@@ -142,6 +145,7 @@ const Register = () => {
             sx={{ mb: 3 }}
             autoComplete="new-password"
             onChange={handleChanges}
+            required
           />
 
 

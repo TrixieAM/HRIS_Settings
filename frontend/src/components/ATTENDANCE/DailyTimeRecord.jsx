@@ -93,6 +93,25 @@ const DailyTimeRecord = () => {
     return date.toLocaleDateString(undefined, options).toUpperCase();
   };
 
+  const currentYear = 2024;
+  const months = [
+     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+   const handleMonthClick = (monthIndex) => {
+    const year = 2024;
+    const start = new Date(Date.UTC(year, monthIndex, 1));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); 
+
+    const formattedStart = start.toISOString().substring(0, 10);
+    const formattedEnd = end.toISOString().substring(0, 10);
+
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+  };
+
+  
   
  // Function to format the start date (Month DayNumber)
   const formatStartDate = (dateString) => {
@@ -116,18 +135,6 @@ const DailyTimeRecord = () => {
   const formattedEndDate = formatEndDate(endDate);
 
 
-
-  const handleMonthClick = (monthIndex) => {
-    const year = new Date().getFullYear();
-
-  
-    // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
-    const formattedStart = start.toISOString().substring(0, 10);
-    const formattedEnd = end.toISOString().substring(0, 10);
-  
-    setStartDate(formattedStart);
-    setEndDate(formattedEnd);
-  };
 
   return (
     
@@ -202,11 +209,12 @@ const DailyTimeRecord = () => {
   style={{
     backgroundColor: '#6D2323',
     color: '#ffffff',
-    padding: '20px',
-    width: '97%',
+    padding: '10px',
+    width: '98.5%',
     borderRadius: '8px',
     borderBottomLeftRadius: '0px',
     borderBottomRightRadius: '0px',
+    marginTop: '-15%'
    
   }}
 >
@@ -223,6 +231,7 @@ const DailyTimeRecord = () => {
     </div>
   </div>
       </div>   
+
        
       <div
       className="search-container no-print textfield-container"
@@ -230,25 +239,31 @@ const DailyTimeRecord = () => {
     backgroundColor: 'white',
     padding: '20px',
     paddingTop: '30px',
-    width: '97%',
-    
+    width: '97%',    
     paddingBottom: '30px',
     borderRadius: '0px 0px 8px 8px',
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
   }}
 >
  
-
+  {/* Month Buttons */}
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 5, ml: 30, mt: 0.5 }}>
+                          {months.map((month, index) => (
+                            <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
+                              {month}
+                            </Button>
+                          ))}
+                        </Box>
 
  <div className="search-container no-print textfield-container" >
        
-        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white', paddingLeft: '18px' }} m disabled value={personID} variant="outlined" />
+        <TextField sx={{ width: "350px", paddingLeft: '25px', paddingRight: "10px", backgroundColor:'white'}} m disabled value={personID} variant="outlined" />
 
 
-        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+        <TextField sx={{ width: "350px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
 
 
-        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
+        <TextField sx={{ width: "350px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
 
 
         <Button

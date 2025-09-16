@@ -122,6 +122,20 @@ router.delete('/person_table/:id', (req, res) => {
 });
 
 
+router.delete('/remove-profile-picture/:id', (req, res) => {
+  const { id } = req.params;
+  const query = 'UPDATE person_table SET profile_picture = NULL WHERE id = ?';
+  
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send({ message: 'Database error' });
+    }
+    res.status(200).send({ message: 'Profile picture removed' });
+  });
+});
+
+
 
 
 module.exports = router;

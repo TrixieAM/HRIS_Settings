@@ -41,7 +41,7 @@ const Login = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
 
-
+  
   // Lock timer countdown
   useEffect(() => {
     let interval;
@@ -94,7 +94,7 @@ const Login = () => {
       const data = await res.json();
       if (res.ok) {
         setSuccess("Verification code sent to your email.");
-        setCodeTimer(3 * 60); // 15 minutes
+        setCodeTimer(2 * 60); // 15 minutes
         setTimeout(() => setSuccess(""), 3000);
       } else {
         setTwoFactorError(data.error || "Failed to send code.");
@@ -150,7 +150,7 @@ const Login = () => {
 
           const role = decoded.role || loginData.role;
           if (role === "superadmin" || role === "administrator") {
-            navigate("/home");
+            navigate("/admin-home");
           } else if (role === "staff") {
             navigate("/home");
           } else {

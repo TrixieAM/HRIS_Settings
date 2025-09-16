@@ -55,21 +55,14 @@ const Payslip = forwardRef(({ employee }, ref) => {
     }, []);
 
 
-  useEffect(() => {
+ useEffect(() => {
   if (!employee) {
     const fetchData = async () => {
       try {
         setLoading(true);
         const res = await axios.get("http://localhost:5000/api/finalized-payroll");
-        setAllPayroll(res.data);
-
-        if (res.data.length > 0) {
-          const userPayroll = res.data.find(
-            (emp) => emp.employeeNumber?.toString() === personID.toString()
-          );
-
-          setDisplayEmployee(userPayroll || res.data[0]); 
-        }
+        setAllPayroll(res.data); // ✅ just store everything
+        setDisplayEmployee(null); // ✅ don’t auto-display until month is chosen
         setLoading(false);
       } catch (err) {
         console.error("Error fetching payroll:", err);
@@ -78,9 +71,10 @@ const Payslip = forwardRef(({ employee }, ref) => {
       }
     };
 
-    if (personID) fetchData(); // ✅ only run when we have employeeNumber
+    if (personID) fetchData();
   }
-}, [employee, personID]); 
+}, [employee, personID]);
+
 
 
 
@@ -158,24 +152,13 @@ const handleMonthSelect = (month) => {
   const result = allPayroll.filter((emp) => {
     if (!emp.startDate) return false;
     const empMonth = new Date(emp.startDate).getMonth();
-
-    return (
-      emp.employeeNumber?.toString() === personID.toString() &&
-      empMonth === monthIndex
-    );
+    return emp.employeeNumber?.toString() === personID.toString() && empMonth === monthIndex;
   });
 
   setFilteredPayroll(result);
-
-  if (result.length > 0) {
-    setDisplayEmployee(result[0]);
-  } else {
-    setDisplayEmployee(null);    
-  }
-
+  setDisplayEmployee(result.length > 0 ? result[0] : null);
   setHasSearched(true);
 };
-
 
 
 
@@ -200,10 +183,10 @@ const handleMonthSelect = (month) => {
           <WorkIcon fontSize="large" />
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Employee Payslip
+              Employee Payslip Record
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              View and download employee payslips
+              View and download employee payslip
             </Typography>
           </Box>
         </Box>
@@ -591,7 +574,7 @@ const handleMonthSelect = (month) => {
                 "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
               }}
             >
-              There's no payslip saved for the month of {selectedMonth}.
+              There's no payslip saved for the month of <b>{selectedMonth}</b>.
             </Alert>
           ) : (
             <Alert
@@ -603,7 +586,7 @@ const handleMonthSelect = (month) => {
                 "& .MuiAlert-icon": { color: "#6D2323" },   // icon same color
               }}
             >
-              No employee data available. Please check if the payroll data is loaded correctly.
+              Please select a month to view your payslip.
             </Alert>
       )}
 

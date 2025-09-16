@@ -266,20 +266,20 @@ const PDS3 = () => {
                         {normalizedVoluntaryWork.map((voluntarywork, index) => (
                         <tr key={index}>                        
                             <td colSpan="7" style={{ height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.nameAndAddress: 'N/A'}
+                            {voluntarywork ? voluntarywork.nameAndAddress: ''}
                             </td>
                            
                             <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.dateFrom: 'N/A'}
+                            {voluntarywork ? voluntarywork.dateFrom: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.dateTo: 'N/A'}
+                            {voluntarywork ? voluntarywork.dateTo: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.numberOfHours: 'N/A'}
+                            {voluntarywork ? voluntarywork.numberOfHours: ''}
                             </td>
                             <td colSpan="5" style={{ height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.natureOfWork: 'N/A'}
+                            {voluntarywork ? voluntarywork.natureOfWork: ''}
                             </td>
                         </tr>
                         ))}
@@ -336,22 +336,22 @@ const PDS3 = () => {
                         <tr key={index}>
                        
                             <td colSpan="7" style={{ height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
-                           {learningdevelopment ? learningdevelopment.titleOfProgram: 'N/A'}
+                           {learningdevelopment ? learningdevelopment.titleOfProgram: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.dateFrom: 'N/A'}
+                            {learningdevelopment ? learningdevelopment.dateFrom: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.dateTo: 'N/A'}
+                            {learningdevelopment ? learningdevelopment.dateTo: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.numberOfHours: 'N/A'}
+                            {learningdevelopment ? learningdevelopment.numberOfHours: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.typeOfLearningDevelopment: 'N/A'}
+                            {learningdevelopment ? learningdevelopment.typeOfLearningDevelopment: ''}
                             </td>
                             <td colSpan="4" style={{ height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.conductedSponsored: 'N/A'}
+                            {learningdevelopment ? learningdevelopment.conductedSponsored: ''}
                             </td>
                         </tr>
                         ))}
@@ -393,13 +393,13 @@ const PDS3 = () => {
                         {normalizedOtherInformation.map((otherinformation, index) => (
                         <tr key={index}>
                             <td colSpan="4" style={{ height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                            {otherinformation ? otherinformation.specialSkills: 'N/A'}
+                            {otherinformation ? otherinformation.specialSkills: ''}
                             </td>
                             <td colSpan="7" style={{ height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                            {otherinformation ? otherinformation.nonAcademicDistinctions: 'N/A'}
+                            {otherinformation ? otherinformation.nonAcademicDistinctions: ''}
                             </td>
                             <td colSpan="4" style={{ height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                            {otherinformation ? otherinformation.membershipInAssociation: 'N/A'}
+                            {otherinformation ? otherinformation.membershipInAssociation: ''}
                             </td>
                         </tr>
                         ))}

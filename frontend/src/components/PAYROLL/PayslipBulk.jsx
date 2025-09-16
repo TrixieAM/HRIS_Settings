@@ -238,10 +238,10 @@ const PayslipBulk = forwardRef(({ employee }, ref) => {
           <WorkIcon fontSize="large" />
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Overall Employee Payslip
+              Employee Payslip Distribution
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              Generate and manage employee payslips
+              Manage and distribute employee payslip records
             </Typography>
           </Box>
         </Box>
@@ -263,20 +263,19 @@ const PayslipBulk = forwardRef(({ employee }, ref) => {
           p: 3,
         }}
       >
-        {/* Search Bar */}
-        <TextField
-          label="Search by Name or Employee Number"
-          variant="outlined"
-          size="small"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ maxWidth: 400 }}
-        />
+        {/* Top Row: Search on Left, Year on Right */}
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          {/* Search Bar */}
+          <TextField
+            label="Search by Name or Employee Number"
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ maxWidth: 400 }}
+          />
 
-
-        {/* Year + Month */}
-        <Box display="flex" gap={2} alignItems="center">
-          {/* Year Dropdown */}
+          {/* Year Dropdown (Far Right) */}
           <Select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
@@ -288,30 +287,28 @@ const PayslipBulk = forwardRef(({ employee }, ref) => {
               </MenuItem>
             ))}
           </Select>
+        </Box>
 
-
-          {/* Month Buttons */}
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {months.map((m) => (
-              <Button
-                key={m}
-                variant={m === selectedMonth ? "contained" : "outlined"}
-                size="small"
-                sx={{
-                  backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
-                  color: m === selectedMonth ? "#fff" : "#6D2323",
-                  borderColor: "#6D2323",
-                  "&:hover": {
-                    backgroundColor:
-                      m === selectedMonth ? "#B22222" : "#f5f5f5",
-                  },
-                }}
-                onClick={() => handleMonthSelect(m)}
-              >
-                {m}
-              </Button>
-            ))}
-          </Box>
+        {/* Month Buttons below */}
+        <Box display="flex" flexWrap="wrap" gap={1}>
+          {months.map((m) => (
+            <Button
+              key={m}
+              variant={m === selectedMonth ? "contained" : "outlined"}
+              size="small"
+              sx={{
+                backgroundColor: m === selectedMonth ? "#6D2323" : "#fff",
+                color: m === selectedMonth ? "#fff" : "#6D2323",
+                borderColor: "#6D2323",
+                "&:hover": {
+                  backgroundColor: m === selectedMonth ? "#B22222" : "#f5f5f5",
+                },
+              }}
+              onClick={() => handleMonthSelect(m)}
+            >
+              {m}
+            </Button>
+          ))}
         </Box>
       </Box>
 
@@ -385,8 +382,8 @@ const PayslipBulk = forwardRef(({ employee }, ref) => {
             onClick={sendSelectedPayslips}
             disabled={sending || selectedEmployees.length === 0}
             sx={{
-              backgroundColor: "#1976d2",
-              "&:hover": { backgroundColor: "#115293" },
+              backgroundColor: "#6d2323",
+              "&:hover": { backgroundColor: "#982f2fff" },
               px: 4,
               py: 1.5,
               fontSize: "1rem",
@@ -395,7 +392,7 @@ const PayslipBulk = forwardRef(({ employee }, ref) => {
             {sending ? (
               <CircularProgress size={24} sx={{ color: "white" }} />
             ) : (
-              "Bulk Send Payslips"
+              "Distribute Payslips"
             )}
           </Button>
         </Box>

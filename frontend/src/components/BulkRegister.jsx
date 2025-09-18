@@ -1,6 +1,8 @@
+import API_BASE_URL from "../apiConfig";
 import React, { useState } from "react";
-import { Container, Paper, Typography, Button, Alert, Box, Link } from "@mui/material";
+import { Container, Paper, Typography, Button, Alert, Box } from "@mui/material";
 import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
 
 const BulkRegister = () => {
   const [users, setUsers] = useState([]);
@@ -8,31 +10,32 @@ const BulkRegister = () => {
   const [errors, setErrors] = useState([]);
   const [errMessage, setErrMessage] = useState("");
 
+  const navigate = useNavigate();
+
   // Handle file upload and parse Excel
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    const data = new Uint8Array(evt.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    // Add hidden/default values for each user
-    const processedUsers = worksheet.map((user) => ({
-      ...user,
-      role: "staff",               // 👈 backend-hidden value
-      employmentCategory: "0", 
-      access_level: "user" // 👈 backend-hidden value
-    }));
+      // Add hidden/default values for each user
+      const processedUsers = worksheet.map((user) => ({
+        ...user,
+        role: "staff",               // backend-hidden value
+        employmentCategory: "0", 
+        access_level: "user"         // backend-hidden value
+      }));
 
-    setUsers(processedUsers);
+      setUsers(processedUsers);
+    };
+    reader.readAsArrayBuffer(file);
   };
-  reader.readAsArrayBuffer(file);
-};
-
 
   // Handle register via backend
   const handleRegister = async () => {
@@ -42,7 +45,7 @@ const handleFileUpload = (e) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/excel-register", {
+      const response = await fetch(`${API_BASE_URL}/excel-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ users }),
@@ -74,16 +77,14 @@ const handleFileUpload = (e) => {
         borderRadius: 2,
       }}
     >
-
-      
       <Paper elevation={4} sx={{ p: 4, width: "100%", textAlign: "center" }}>
         <Typography variant="h4" gutterBottom>
           <b>Bulk Users Registration</b>
         </Typography>
 
-        <Typography gutterBottom sx={{ mt: 1, mb: 5}}>
-              <b>Register several users.</b>
-            </Typography>
+        <Typography gutterBottom sx={{ mt: 1, mb: 5 }}>
+          <b>Register several users.</b>
+        </Typography>
 
         {errMessage && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -109,22 +110,14 @@ const handleFileUpload = (e) => {
           Upload & Register
         </Button>
 
-         <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ bgcolor: "black", mt: 2}}
-          >
-            <Link 
-            href="/registration" 
-            underline="none"
-            sx={{
-                color: "white",
-              }}>
-            ⮜ User Registration
-          </Link>
-
-          </Button>
+        <Button
+          variant="contained"
+          fullWidth
+          sx={{ bgcolor: "black", mt: 2 }}
+          onClick={() => navigate("/registration")}
+        >
+          ⮜ User Registration
+        </Button>
 
         {/* Display Results */}
         {success.length > 0 && (

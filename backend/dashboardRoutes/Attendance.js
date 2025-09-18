@@ -12,6 +12,17 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
+// Audit log
+function insertAuditLog(employeeNumber, action) {
+  const sql = `INSERT INTO audit_log (employeeNumber, action) VALUES (?, ?)`;
+  db.query(sql, [employeeNumber, action], (err, result) => {
+    if (err) {
+      console.error("Error inserting audit log:", err);
+    } else {
+      console.log("Audit log inserted:", result.insertId);
+    }
+  });
+}
 
 // Endpoint to fetch attendance records
 router.get("/api/attendance", (req, res) => {
@@ -31,6 +42,7 @@ router.get("/api/attendance", (req, res) => {
       res.status(500).json({ error: "Error fetching data" });
       return;
     }
+    insertAuditLog(personId, `Viewed attendance records of ${personId} from ${startDate} to ${endDate}`);
     res.json(results);
   });
 });
@@ -41,11 +53,10 @@ router.get("/api/check-attendance", (req, res) => {
   const sql = `SELECT EXISTS(SELECT * FROM attendanceRecord WHERE personID = ? AND date = ?) AS exists`;
   db.query(sql, [personID, date], (err, results) => {
     if (err) throw err;
+    insertAuditLog(personID, `Checked attendance for ${date}`);
     res.json(results[0]);
   });
 });
-
-
 
 // Endpoint to update attendance records
 router.post("/api/update-attendance", (req, res) => {
@@ -56,6 +67,7 @@ router.post("/api/update-attendance", (req, res) => {
     return new Promise((resolve, reject) => {
       db.query(sql, [record.timeIN, record.breaktimeIN, record.breaktimeOUT, record.timeOUT, record.id], (err) => {
         if (err) return reject(err);
+        insertAuditLog(record.personID || "SYSTEM", `Updated attendance record for ID ${record.id}`);
         resolve();
       });
     });
@@ -65,9 +77,6 @@ router.post("/api/update-attendance", (req, res) => {
     .then(() => res.json({ message: "Records updated successfully" }))
     .catch((err) => res.status(500).json({ error: err.message }));
 });
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Additional endpoint for attendance with date filtering
 router.post("/api/attendance", (req, res) => {
@@ -87,6 +96,8 @@ router.post("/api/attendance", (req, res) => {
       return res.status(500).json({ error: err.message });
     }
 
+    insertAuditLog(personID, `Viewed Record State of ${personID} from ${startDate} to ${endDate}`);
+
     const records = results.map((record) => {
       const date = new Date(record.AttendanceDateTime);
       const options = {
@@ -102,8 +113,8 @@ router.post("/api/attendance", (req, res) => {
 
       return {
         PersonID: record.PersonID,
-        Date: manilaDate.split(",")[0], // Date part
-        Time: manilaDate.split(",")[1].trim(), // Time part
+        Date: manilaDate.split(",")[0],
+        Time: manilaDate.split(",")[1].trim(),
         AttendanceState: record.AttendanceState,
       };
     });
@@ -137,6 +148,8 @@ router.post("/api/all-attendance", (req, res) => {
       return res.status(500).json({ error: err.message });
     }
 
+    insertAuditLog(personID, `Viewed Device Record of ${personID} from ${startDate} to ${endDate}`);
+
     const records = results.map((record) => {
       const convertToManilaTime = (timestamp) => {
         if (!timestamp) return null;
@@ -169,7 +182,6 @@ router.post("/api/all-attendance", (req, res) => {
   });
 });
 
-
 // Endpoint to save attendance records
 router.post("/api/save-attendance", (req, res) => {
   const { records } = req.body;
@@ -191,6 +203,7 @@ router.post("/api/save-attendance", (req, res) => {
           const insertSql = `INSERT INTO attendanceRecord (personID, date, day, timeIN, breaktimeIN, breaktimeOUT, timeOUT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
           db.query(insertSql, [record.personID, record.date, record.Day, record.timeIN, record.breaktimeIN, record.breaktimeOUT, record.timeOUT], (err) => {
             if (err) return reject(err);
+            insertAuditLog(record.personID, `Saved new attendance record for ${record.date}`);
             resolve({
               status: "saved",
               personID: record.personID,
@@ -206,27 +219,6 @@ router.post("/api/save-attendance", (req, res) => {
     .then((results) => res.json(results))
     .catch((err) => res.status(500).json({ error: err.message }));
 });
-
-// // Fetch records
-// router.post("/api/view-attendance", (req, res) => {
-//   const { personID, startDate, endDate } = req.body;
-
-//   const query = `
-//     SELECT attendanceRecord.personID, attendanceRecord.date,
-//            DAYNAME(date) AS Day,
-//            attendanceRecord.timeIN, attendanceRecord.breaktimeIN, attendanceRecord.breaktimeOUT, attendanceRecord.timeOUT, profile.*
-//     FROM attendanceRecord
-//     INNER JOIN profile ON attendanceRecord.personID = profile.employeeID
-//     INNER JOIN profile ON attendanceRecord.Day = officialtime.day
-//     WHERE personID = ? AND date BETWEEN ? AND ?
-//     ORDER BY date ASC
-//   `;
-
-//   db.query(query, [personID, startDate, endDate], (err, results) => {
-//     if (err) return res.status(500).send(err);
-//     res.send(results);
-//   });
-// });
 
 // Fetch records
 router.post("/api/view-attendance", (req, res) => {
@@ -253,10 +245,10 @@ router.post("/api/view-attendance", (req, res) => {
 
   db.query(query, [personID, startDate, endDate], (err, results) => {
     if (err) return res.status(500).send(err);
+    insertAuditLog(personID, `Viewed Daily Time Record of ${personID} from ${startDate} to ${endDate} in Overall Daily Time Record`);
     res.send(results);
   });
 });
-
 
 // Update records
 router.put("/api/view-attendance", (req, res) => {
@@ -274,7 +266,10 @@ router.put("/api/view-attendance", (req, res) => {
     return new Promise((resolve, reject) => {
       db.query(query, params, (err, result) => {
         if (err) reject(err);
-        else resolve(result);
+        else {
+          insertAuditLog(record.personID, `Updated attendance record of ${record.personID} for ${record.date} in Attendance Management`);
+          resolve(result);
+        }
       });
     });
   });
@@ -283,9 +278,6 @@ router.put("/api/view-attendance", (req, res) => {
     .then(() => res.send({ message: "Records updated successfully." }))
     .catch((err) => res.status(500).send(err));
 });
-
-
-
 
 // GET API for fetching attendance records
 router.get("/api/dtr", (req, res) => {
@@ -309,11 +301,12 @@ router.get("/api/dtr", (req, res) => {
       console.error("Error executing query:", err);
       return res.status(500).json({ error: "Database query failed." });
     }
-
+    insertAuditLog(personID, `Fetched DTR from ${startDate} to ${endDate}`);
     res.json(results);
   });
 });
 
+// Insert overall attendance record
 router.post("/api/overall_attendance", (req, res) => {
   const {
     personID ,
@@ -321,19 +314,14 @@ router.post("/api/overall_attendance", (req, res) => {
     endDate,
     totalRenderedTimeMorning,
     totalRenderedTimeMorningTardiness,
-
     totalRenderedTimeAfternoon,
     totalRenderedTimeAfternoonTardiness,
-
     totalRenderedHonorarium,
     totalRenderedHonorariumTardiness,
-
     totalRenderedServiceCredit,
     totalRenderedServiceCreditTardiness,
-
     totalRenderedOvertime,
     totalRenderedOvertimeTardiness,
-
     overallRenderedOfficialTime,
     overallRenderedOfficialTimeTardiness,
   } = req.body;
@@ -345,22 +333,16 @@ router.post("/api/overall_attendance", (req, res) => {
       endDate, 
       totalRenderedTimeMorning,
       totalRenderedTimeMorningTardiness,
-      
       totalRenderedTimeAfternoon,
       totalRenderedTimeAfternoonTardiness,
-
       totalRenderedHonorarium,
       totalRenderedHonorariumTardiness,
-
       totalRenderedServiceCredit,
       totalRenderedServiceCreditTardiness,
-
       totalRenderedOvertime,
       totalRenderedOvertimeTardiness,
-
       overallRenderedOfficialTime,
       overallRenderedOfficialTimeTardiness
-
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -374,16 +356,12 @@ router.post("/api/overall_attendance", (req, res) => {
       totalRenderedTimeMorningTardiness,
       totalRenderedTimeAfternoon,
       totalRenderedTimeAfternoonTardiness,
-
       totalRenderedHonorarium,
       totalRenderedHonorariumTardiness,
-
       totalRenderedServiceCredit,
       totalRenderedServiceCreditTardiness,
-
       totalRenderedOvertime,
       totalRenderedOvertimeTardiness,
-
       overallRenderedOfficialTime,
       overallRenderedOfficialTimeTardiness,
     ],
@@ -392,11 +370,13 @@ router.post("/api/overall_attendance", (req, res) => {
         console.error("Error inserting data:", error);
         return res.status(500).json({ message: "Database error", error });
       }
+      insertAuditLog(personID, `Inserted overall attendance record from ${startDate} to ${endDate}`);
       res.status(201).json({ message: "Attendance record saved successfully", data: results });
     }
   );
 });
 
+// Fetch overall attendance record
 router.get("/api/overall_attendance_record", (req, res) => {
   const { personID, startDate, endDate } = req.query;
   console.log("Received parameters:", { personID, startDate, endDate });
@@ -422,11 +402,12 @@ WHERE
       console.error("Error Fetching data:", error);
       return res.status(500).json({ message: "Database error", error });
     }
+    insertAuditLog(personID, `Viewed overall attendance record from ${startDate} to ${endDate}`);
     res.status(200).json({ message: "Overall attendance record fetched successfully", data: results });
   });
 });
 
-
+// Update overall attendance record
 router.put("/api/overall_attendance_record/:id", (req, res) => {
   const {
     personID, 
@@ -448,7 +429,6 @@ router.put("/api/overall_attendance_record/:id", (req, res) => {
 
   const { id } = req.params;
 
-  // First, check if the updated data already exists in the database (to prevent duplicates)
   const checkQuery = `
     SELECT * FROM overall_attendance_record WHERE personID = ? AND startDate = ? AND endDate = ? AND id != ?;
   `;
@@ -460,11 +440,9 @@ router.put("/api/overall_attendance_record/:id", (req, res) => {
     }
 
     if (checkResults.length > 0) {
-      // If there's a record with the same personID, startDate, and endDate, return a duplicate error
       return res.status(400).json({ message: "Duplicate record found with the same personID, startDate, and endDate" });
     }
 
-    // Proceed with the update since no duplicates were found
     const query = `
       UPDATE overall_attendance_record SET
       personID = ?, 
@@ -504,16 +482,16 @@ router.put("/api/overall_attendance_record/:id", (req, res) => {
       id
     ], (error, results) => {
       if (error) {
-        console.error(error); // Log error for debugging
+        console.error(error);
         return res.status(500).json({ message: "Database error", error });
       }
+      insertAuditLog(personID, `Updated overall attendance record (ID ${id})`);
       res.status(200).json({ message: "Record updated successfully", data: results });
     });
   });
 });
 
-
-
+// Delete overall attendance record
 router.delete("/api/overall_attendance_record/:id", (req, res) => {
   const { id } = req.params;
 
@@ -521,14 +499,20 @@ router.delete("/api/overall_attendance_record/:id", (req, res) => {
 
   db.query(query, [id], (err, result) => {
     if (err) return res.status(500).send({ message: "Internal Server Error" });
+    insertAuditLog("SYSTEM", `Deleted overall attendance record ID ${id}`);
     res.status(200).send({ message: "Attendance entry deleted" });
   });
 });
 
 
 
-
-
-
+// fetch audit logs
+router.get("/api/audit-log", (req, res) => {
+  const sql = `SELECT * FROM audit_log ORDER BY timestamp DESC`;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: "Error fetching audit logs" });
+    res.json(results);
+  });
+});
 
 module.exports = router;

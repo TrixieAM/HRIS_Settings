@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState } from "react";
 import axios from "axios";
 import {
@@ -26,7 +27,7 @@ const AttendanceSearch = () => {
   const fetchRecords = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/attendance/api/view-attendance",
+        `${API_BASE_URL}/attendance/api/view-attendance`,
         {
           personID,
           startDate,
@@ -42,7 +43,7 @@ const AttendanceSearch = () => {
   const saveAll = async () => {
     try {
       const response = await axios.put(
-        "http://localhost:5000/attendance/api/view-attendance",
+        `${API_BASE_URL}/attendance/api/view-attendance`,
         { records }
       );
       alert(response.data.message);

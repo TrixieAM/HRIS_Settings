@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const GraduateTable = () => {
   const [data, setData] = useState([]);
@@ -53,7 +54,7 @@ const GraduateTable = () => {
 
   const fetchGraduates = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/GraduateRoute/graduate-table');
+      const res = await axios.get(`${API_BASE_URL}/GraduateRoute/graduate-table`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -63,7 +64,7 @@ const GraduateTable = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/GraduateRoute/graduate-table', newGraduate);
+      await axios.post(`${API_BASE_URL}/GraduateRoute/graduate-table`, newGraduate);
       setNewGraduate({
         graduateNameOfSchool: '',
         graduateDegree: '',
@@ -89,7 +90,7 @@ const GraduateTable = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/GraduateRoute/graduate-table/${editGraduate.id}`, editGraduate);
+      await axios.put(`${API_BASE_URL}/GraduateRoute/graduate-table/${editGraduate.id}`, editGraduate);
       setEditGraduate(null);
       setOriginalGraduate(null);
       setIsEditing(false);
@@ -104,7 +105,7 @@ const GraduateTable = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/GraduateRoute/graduate-table/${id}`);
+      await axios.delete(`${API_BASE_URL}/GraduateRoute/graduate-table/${id}`);
       setEditGraduate(null);
       setOriginalGraduate(null);
       setIsEditing(false);

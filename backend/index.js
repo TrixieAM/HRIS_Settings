@@ -38,9 +38,6 @@ const Attendance = require('./dashboardRoutes/Attendance');
 
 
 
-
-const EmployeeSalaryGrade = require('./payrollRoutes/EmployeeSalaryGrade');
-const PlantillaTable = require('./payrollRoutes/PlantilliaTable');
 const SalaryGradeTable = require('./payrollRoutes/SalaryGradeTable');
 const Remittance = require('./payrollRoutes/Remittance');
 
@@ -59,9 +56,31 @@ require('dotenv').config();
 
 
 
-//MIDDLEWARE
 app.use(express.json());
-app.use(cors());
+// Allow requests from frontend
+// Define allowed origins
+const allowedOrigins = [
+  "http://localhost:5137",           // Local dev
+  "http://192.168.10.14:5137",       // LAN
+  "http://136.239.248.42:5137",      // Public
+];
+
+// Use CORS middleware
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like Postman or curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // if you need cookies or auth headers
+  })
+);
 app.use(bodyparser.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -128,8 +147,6 @@ app.use('/allData', AllData);
 app.use('/attendance', Attendance);
 
 
-app.use('/EmployeeSalaryGrade', EmployeeSalaryGrade);
-app.use('/PlantillaTable', PlantillaTable);
 app.use('/SalaryGradeTable', SalaryGradeTable);
 app.use('/Remittance', Remittance);
 
@@ -146,11 +163,24 @@ app.use('/SendPayslipRoute', SendPayslip);
 
 
 //MYSQL CONNECTION
+// Determine which database host to use based on environment
+const getDbHost = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.DB_HOST_PUBLIC;
+  } else if (process.env.NODE_ENV === 'local') {
+    return process.env.DB_HOST_LOCAL;
+  } else {
+    return 'localhost'; // fallback for development
+  }
+};
+
+//MYSQL CONNECTION
 const db = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'earist_hris',
+  host: getDbHost(),
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'earist_hris',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -158,18 +188,26 @@ const db = mysql.createPool({
 
 
 
+const PORT = process.env.WEB_PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 module.exports = db;
 
 
 
-
-
-
-
-
-
-
+// Audit log
+function insertAuditLog(employeeNumber, action) {
+  const sql = `INSERT INTO audit_log (employeeNumber, action) VALUES (?, ?)`;
+  db.query(sql, [employeeNumber, action], (err, result) => {
+    if (err) {
+      console.error("Error inserting audit log:", err);
+    } else {
+      console.log("Audit log inserted:", result.insertId);
+    }
+  });
+}
 
 
 // Test connection
@@ -432,7 +470,7 @@ app.post('/login', (req, res) => {
         email: user.email,
         role: user.role,
       },
-      'secret',
+      process.env.JWT_SECRET || 'secret',
       { expiresIn: '1h' }
     );
     res.status(200).send({
@@ -561,7 +599,7 @@ app.post("/complete-2fa-login", (req, res) => {
           email: user.email,
           role: user.role
         },
-        "secret", // Match your main login JWT secret
+        process.env.JWT_SECRET || "secret", // Match your main login JWT secret
         { expiresIn: "1h" }
       );
 
@@ -586,6 +624,7 @@ app.get('/data', (req, res) => {
     if (err) return res.status(500).send(err);
     res.status(200).send(result);
   });
+  
 });
 
 
@@ -629,6 +668,7 @@ app.post('/learning_and_development_table', (req, res) => {
     ],
     (err, result) => {
       if (err) return res.status(500).send(err);
+              insertAuditLog(person_id || "SYSTEM", `Added Program for ${person_id} in Learning and Development Program`);
       res.status(201).send({ message: 'Item created', id: result.insertId });
     }
   );
@@ -2390,26 +2430,9 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     r.earistCreditCoop,
     r.feu,
     r.liquidatingCash,
-    itt.item_description,
-
-
-
-
-
-
-    pt2.position,
+    itt.item_description AS position,
     sgt.sg_number,
-
-
-
-
-
-
     ph.PhilHealthContribution,
-
-
-
-
     da.code AS department,
 
 
@@ -2431,19 +2454,12 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     ON pt.agencyEmployeeNum = p.employeeNumber
   LEFT JOIN remittance_table r
     ON p.employeeNumber = r.employeeNumber
-  LEFT JOIN plantilla_table pt2
-    ON p.employeeNumber = pt2.employeeNumber
   LEFT JOIN philhealth ph
     ON p.employeeNumber = ph.employeeNumber
   LEFT JOIN department_assignment da
     ON p.employeeNumber = da.employeeNumber
-
-
-
-
   LEFT JOIN item_table as itt
   ON itt.employeeID = p.employeeNumber
- 
   LEFT JOIN salary_grade_table sgt
   ON sgt.sg_number = itt.salary_grade AND sgt.effectivityDate = itt.effectivityDate
   ;
@@ -2587,12 +2603,13 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   const query = `
     UPDATE payroll_processing p
     LEFT JOIN remittance_table r ON p.employeeNumber = r.employeeNumber
-    LEFT JOIN plantilla_table pt2 ON p.employeeNumber = pt2.employeeNumber
+    LEFT JOIN item_table itt ON p.employeeNumber = itt.employeeID
     SET
       p.department = ?,
       p.startDate = ?,
       p.endDate = ?,
       p.name = ?,
+      itt.item_description = ?,
       p.rateNbc584 =?,
       p.rateNbc594 = ?,
       p.nbcDiffl597 =?,
@@ -2632,8 +2649,7 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       r.emergencyLoan = ?,
       r.pagibigFundCont = ?,
       r.pagibig2 = ?,
-      r.multiPurpLoan = ?,
-      pt2.position = ?,      
+      r.multiPurpLoan = ?,    
       r.liquidatingCash = ?,
       r.landBankSalaryLoan = ?,
       r.earistCreditCoop = ?,
@@ -2649,6 +2665,7 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     startDate,
     endDate,
     name,
+    position,
     rateNbc584,
     rateNbc594,
     nbcDiffl597,
@@ -2683,7 +2700,6 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     pagibigFundCont,
     pagibig2,
     multiPurpLoan,
-    position,
     liquidatingCash,
     landbankSalaryLoan,
     earistCreditCoop,
@@ -3430,9 +3446,9 @@ app.post("/excel-register", async (req, res) => {
 
 
 
-app.listen(5000, () => {
-  console.log('Server runnning');
-});
+// app.listen(5000, () => {
+//   console.log('Server runnning');
+// });
 
 // Profile picture upload endpoint
 app.post('/upload-profile-picture/:employeeNumber', profileUpload.single('profile'), async (req, res) => {
@@ -3468,65 +3484,105 @@ app.post('/upload-profile-picture/:employeeNumber', profileUpload.single('profil
   }
 });
 
-// Announcements endpoints
-app.get('/api/announcements', (req, res) => {
-  const query = 'SELECT * FROM announcements ORDER BY date DESC';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching announcements:', err);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    res.json(results);
+  // Announcements endpoints
+  app.get('/api/announcements', (req, res) => {
+    const query = 'SELECT * FROM announcements ORDER BY date DESC';
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error fetching announcements:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.json(results);
+    });
   });
-});
 
-app.post('/api/announcements', upload.single('image'), (req, res) => {
+  app.post('/api/announcements', upload.single('image'), (req, res) => {
+    const { title, about, date } = req.body;
+    const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const query = 'INSERT INTO announcements (title, about, date, image) VALUES (?, ?, ?, ?)';
+    db.query(query, [title, about, date, image], (err, result) => {
+      if (err) {
+        console.error('Error creating announcement:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.status(201).json({ 
+        message: 'Announcement created successfully',
+        id: result.insertId 
+      });
+    });
+  });
+
+  // Update announcement
+app.put('/api/announcements/:id', upload.single('image'), (req, res) => {
+  const { id } = req.params;
   const { title, about, date } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  const query = 'INSERT INTO announcements (title, about, date, image) VALUES (?, ?, ?, ?)';
-  db.query(query, [title, about, date, image], (err, result) => {
+  // Build query dynamically if image is updated
+  let query, params;
+  if (image) {
+    query = 'UPDATE announcements SET title = ?, about = ?, date = ?, image = ? WHERE id = ?';
+    params = [title, about, date, image, id];
+  } else {
+    query = 'UPDATE announcements SET title = ?, about = ?, date = ? WHERE id = ?';
+    params = [title, about, date, id];
+  }
+
+  db.query(query, params, (err, result) => {
     if (err) {
-      console.error('Error creating announcement:', err);
+      console.error('Error updating announcement:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
-    res.status(201).json({ 
-      message: 'Announcement created successfully',
-      id: result.insertId 
-    });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+    res.json({ message: 'Announcement updated successfully' });
   });
 });
 
-app.delete('/api/announcements/:id', (req, res) => {
-  const { id } = req.params;
-  
-  // First get the announcement to check if it has an image
-  const getQuery = 'SELECT image FROM announcements WHERE id = ?';
-  db.query(getQuery, [id], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+
+  app.delete('/api/announcements/:id', (req, res) => {
+    const { id } = req.params;
     
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Announcement not found' });
-    }
-
-    // If there's an image, delete it from the filesystem
-    if (results[0].image) {
-      const imagePath = path.join(__dirname, results[0].image);
-      fs.unlink(imagePath, (err) => {
-        if (err) console.error('Error deleting image:', err);
-      });
-    }
-
-    // Delete the announcement from the database
-    const deleteQuery = 'DELETE FROM announcements WHERE id = ?';
-    db.query(deleteQuery, [id], (err) => {
+    // First get the announcement to check if it has an image
+    const getQuery = 'SELECT image FROM announcements WHERE id = ?';
+    db.query(getQuery, [id], (err, results) => {
       if (err) {
         return res.status(500).json({ error: 'Internal server error' });
       }
-      res.json({ message: 'Announcement deleted successfully' });
+      
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Announcement not found' });
+      }
+
+      // If there's an image, delete it from the filesystem
+      if (results[0].image) {
+        const imagePath = path.join(__dirname, results[0].image);
+        fs.unlink(imagePath, (err) => {
+          if (err) console.error('Error deleting image:', err);
+        });
+      }
+
+      // Delete the announcement from the database
+      const deleteQuery = 'DELETE FROM announcements WHERE id = ?';
+      db.query(deleteQuery, [id], (err) => {
+        if (err) {
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json({ message: 'Announcement deleted successfully' });
+      });
     });
+  });
+
+
+
+// fetch audit logs
+app.get("/api/audit-log", (req, res) => {
+  const sql = `SELECT * FROM audit_log ORDER BY timestamp DESC`;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: "Error fetching audit logs" });
+    res.json(results);
   });
 });
 

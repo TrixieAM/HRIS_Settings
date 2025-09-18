@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const Eligibility = () => {
   const [data, setData] = useState([]);
@@ -52,7 +53,7 @@ const Eligibility = () => {
 
   const fetchEligibility = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/eligibilityRoute/eligibility');
+      const res = await axios.get(`${API_BASE_URL}/eligibilityRoute/eligibility`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -62,7 +63,7 @@ const Eligibility = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/eligibilityRoute/eligibility', newEligibility);
+      await axios.post(`${API_BASE_URL}/eligibilityRoute/eligibility`, newEligibility);
       setNewEligibility({
         eligibilityName: '',
         eligibilityRating: '',
@@ -87,7 +88,7 @@ const Eligibility = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/eligibilityRoute/eligibility/${editEligibility.id}`, editEligibility);
+      await axios.put(`${API_BASE_URL}/eligibilityRoute/eligibility/${editEligibility.id}`, editEligibility);
       setEditEligibility(null);
       setOriginalEligibility(null);
       setIsEditing(false);
@@ -102,7 +103,7 @@ const Eligibility = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/eligibilityRoute/eligibility/${id}`);
+      await axios.delete(`${API_BASE_URL}/eligibilityRoute/eligibility/${id}`);
       setEditEligibility(null);
       setOriginalEligibility(null);
       setIsEditing(false);

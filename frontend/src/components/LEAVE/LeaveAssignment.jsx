@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -30,7 +31,7 @@ import {
 
 // Import your loading and success overlays if they exist
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const LeaveAssignment = () => {
   const [assignments, setAssignments] = useState([]);
@@ -56,8 +57,8 @@ const LeaveAssignment = () => {
 
   const fetchAssignments = async () => {
     try {
-      console.log('Fetching assignments from:', 'http://localhost:5000/leaveRoute/leave_assignment');
-      const res = await axios.get('http://localhost:5000/leaveRoute/leave_assignment');
+      console.log('Fetching assignments from:', `${API_BASE_URL}/leaveRoute/leave_assignment`);
+      const res = await axios.get(`${API_BASE_URL}/leaveRoute/leave_assignment`);
       console.log('Raw assignments response:', res);
       console.log('Assignments data:', res.data);
       console.log('Number of assignments:', res.data?.length || 0);
@@ -86,8 +87,8 @@ const LeaveAssignment = () => {
 
   const fetchLeaveTypes = async () => {
     try {
-      console.log('Fetching leave types from:', 'http://localhost:5000/leaveRoute/leave_table');
-      const res = await axios.get('http://localhost:5000/leaveRoute/leave_table');
+      console.log('Fetching leave types from:', `${API_BASE_URL}/leaveRoute/leave_table`);
+      const res = await axios.get(`${API_BASE_URL}/leaveRoute/leave_table`);
       console.log('Raw leave types response:', res);
       console.log('Leave types data:', res.data);
       console.log('Number of leave types:', res.data?.length || 0);
@@ -149,7 +150,7 @@ const LeaveAssignment = () => {
       
       console.log('Adding assignment with payload:', payload);
       
-      const response = await axios.post('http://localhost:5000/leaveRoute/leave_assignment', payload);
+      const response = await axios.post(`${API_BASE_URL}/leaveRoute/leave_assignment`, payload);
       console.log('Add response:', response.data);
       
       setNewAssignment({
@@ -196,7 +197,7 @@ const LeaveAssignment = () => {
 
       console.log('Updating assignment with payload:', payload);
       
-      const response = await axios.put(`http://localhost:5000/leaveRoute/leave_assignment/${editAssignment.id}`, payload);
+      const response = await axios.put(`${API_BASE_URL}/leaveRoute/leave_assignment/${editAssignment.id}`, payload);
       console.log('Update response:', response.data);
       
       setEditAssignment(null);
@@ -222,7 +223,7 @@ const LeaveAssignment = () => {
     
     try {
       console.log('Deleting assignment with id:', id);
-      const response = await axios.delete(`http://localhost:5000/leaveRoute/leave_assignment/${id}`);
+      const response = await axios.delete(`${API_BASE_URL}/leaveRoute/leave_assignment/${id}`);
       console.log('Delete response:', response.data);
       
       setEditAssignment(null);

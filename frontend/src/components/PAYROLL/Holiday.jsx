@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -41,7 +42,7 @@ const Holiday = () => {
 
   const fetchHoliday = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/holiday");
+      const response = await axios.get(`${API_BASE_URL}/holiday`);
       setData(response.data);
     } catch (err) {
       console.error("Error fetching holiday data", err.message);
@@ -60,7 +61,7 @@ const Holiday = () => {
         return;
       }
 
-      await axios.post("http://localhost:5000/holiday", newHoliday);
+      await axios.post(`${API_BASE_URL}/holiday`, newHoliday);
       fetchHoliday();
       setNewHoliday({ description: "", date: "", status: "Active" });
     } catch (error) {
@@ -82,7 +83,7 @@ const Holiday = () => {
   const handleSaveEdit = async () => {
     try {
       setError("");
-      await axios.put(`http://localhost:5000/holiday/${editingId}`, editForm);
+      await axios.put(`${API_BASE_URL}/holiday/${editingId}`, editForm);
       setOpenEditModal(false);
       setEditingId(null);
       fetchHoliday();
@@ -95,7 +96,7 @@ const Holiday = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       try {
-        await axios.delete(`http://localhost:5000/holiday/${id}`);
+        await axios.delete(`${API_BASE_URL}/holiday/${id}`);
         fetchHoliday();
       } catch (error) {
         console.error("Error deleting holiday record", error);
@@ -274,8 +275,8 @@ const Holiday = () => {
                         px: 1,
                         py: 0.5,
                         borderRadius: "4px",
-                        backgroundColor: item.status === "Active" ? "#4caf50" : "#f44336",
-                        color: "white",
+                        backgroundColor: item.status === "Active" ? "#fff" : "#fff",
+                        color:  item.status === "Active" ? "#236d24ff" : "#6d2323",
                         fontWeight: "bold",
                         fontSize: "0.8rem",
                       }}

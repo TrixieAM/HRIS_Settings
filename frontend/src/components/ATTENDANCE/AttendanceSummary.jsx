@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TextField, Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Box, Container } from "@mui/material";
@@ -43,7 +44,7 @@ const fetchAttendanceData = async () => {
   });
 
   try {
-    const response = await axios.get("http://localhost:5000/attendance/api/overall_attendance_record", {
+    const response = await axios.get(`${API_BASE_URL}/attendance/api/overall_attendance_record`, {
       params: {
         personID: employeeNumber,
         startDate,
@@ -67,7 +68,7 @@ const updateRecord = async () => {
   if (!editRecord || !editRecord.totalRenderedTimeMorning) return;
 
   try {
-    await axios.put(`http://localhost:5000/attendance/api/overall_attendance_record/${editRecord.id}`, editRecord);
+    await axios.put(`${API_BASE_URL}/attendance/api/overall_attendance_record/${editRecord.id}`, editRecord);
     alert("Record was updated successfully");
     fetchAttendanceData();  // Refresh data before clearing edit state
 
@@ -83,7 +84,7 @@ const updateRecord = async () => {
 
 
   const deleteRecord = async (id) => {
-    await axios.delete(`http://localhost:5000/attendance/api/overall_attendance_record/${id}`);
+    await axios.delete(`${API_BASE_URL}/attendance/api/overall_attendance_record/${id}`);
     fetchAttendanceData();
     alert("The Data was Successfully Deleted");
   };
@@ -124,7 +125,7 @@ const submitToPayroll = async () => {
     for (const payloadRecord of payload) {
       const { employeeNumber, startDate, endDate } = payloadRecord;
 
-      const response = await axios.get(`http://localhost:5000/api/payroll-with-remittance`, {
+      const response = await axios.get(`${API_BASE_URL}/api/payroll-with-remittance`, {
         params: { employeeNumber, startDate, endDate },
       });
 
@@ -135,7 +136,7 @@ const submitToPayroll = async () => {
     }
 
     // Submit all records at once
-    const submitResponse = await axios.post("http://localhost:5000/api/add-rendered-time", payload);
+    const submitResponse = await axios.post(`${API_BASE_URL}/api/add-rendered-time`, payload);
     
     // Check if submission was successful
     if (submitResponse.status === 200 || submitResponse.status === 201) {

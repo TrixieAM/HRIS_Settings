@@ -1,3 +1,4 @@
+import API_BASE_URL from "../apiConfig";
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, } from "react-router-dom";
 import axios from "axios";
@@ -119,7 +120,7 @@ const AdminHome = () => {
  useEffect(() => {
   const fetchHolidays = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/holiday");
+      const res = await axios.get(`${API_BASE_URL}/holiday`);
       if (Array.isArray(res.data)) {
         const transformedHolidays = res.data.map(item => {
           // Normalize date to YYYY-MM-DD
@@ -154,11 +155,11 @@ const AdminHome = () => {
     const fetchAll = async () => {
       try {
         // Announcements
-        const annRes = await axios.get("http://localhost:5000/api/announcements");
+        const annRes = await axios.get(`${API_BASE_URL}/api/announcements`);
         setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
 
         // Profile picture (personal info)
-        const piRes = await axios.get("http://localhost:5000/personalinfo/person_table");
+        const piRes = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const match = Array.isArray(piRes.data)
           ? piRes.data.find((p) => p.agencyEmployeeNum?.toString() === employeeNumber?.toString())
           : null;
@@ -167,7 +168,7 @@ const AdminHome = () => {
         // Stats (example endpoint - adapt to your backend)
         // fallback to defaults if endpoints are missing
         try {
-          const statsRes = await axios.get("http://localhost:5000/api/admin/stats");
+          const statsRes = await axios.get(`${API_BASE_URL}/api/admin/stats`);
           setStats(statsRes.data || {});
         } catch {
           // leave stats empty and rely on defaults defined in UI
@@ -176,7 +177,7 @@ const AdminHome = () => {
 
         // Attendance summary for chart
         try {
-          const attRes = await axios.get("http://localhost:5000/api/admin/attendance-summary");
+          const attRes = await axios.get(`${API_BASE_URL}/api/admin/attendance-summary`);
           // expected shape: [{ name: 'Present', value: 500 }, ...] or adapt below if different
           if (Array.isArray(attRes.data) && attRes.data.length > 0) {
             setAttendanceChartData(
@@ -199,7 +200,7 @@ const AdminHome = () => {
 
         // Leave tracker
         try {
-          const leaveRes = await axios.get("http://localhost:5000/api/admin/leave-tracker");
+          const leaveRes = await axios.get(`${API_BASE_URL}/api/admin/leave-tracker`);
           if (Array.isArray(leaveRes.data) && leaveRes.data.length > 0) {
             setLeaveTrackerData(leaveRes.data.map((r) => ({ name: r.name, value: r.value })));
           } else {
@@ -223,7 +224,7 @@ const AdminHome = () => {
 
         // Leave requests table
         try {
-          const lrRes = await axios.get("http://localhost:5000/api/admin/leave-requests");
+          const lrRes = await axios.get(`${API_BASE_URL}/api/admin/leave-requests`);
           setLeaveRequests(Array.isArray(lrRes.data) ? lrRes.data : []);
         } catch {
           // sample fallback
@@ -403,7 +404,7 @@ return (
                     component="img"
                     src={
                         announcements[currentSlide]?.image
-                        ? `http://localhost:5000${announcements[currentSlide].image}`
+                        ? `${API_BASE_URL}${announcements[currentSlide].image}`
                         : "/api/placeholder/800/400"
                     }
                     alt={announcements[currentSlide]?.title || "Announcement"}
@@ -510,7 +511,7 @@ return (
                     {selectedAnnouncement.image && (
                         <Box
                         component="img"
-                        src={`http://localhost:5000${selectedAnnouncement.image}`}
+                        src={`${API_BASE_URL}${selectedAnnouncement.image}`}
                         alt={selectedAnnouncement.title}
                         sx={{
                             width: "100%",
@@ -555,7 +556,7 @@ return (
                 sx={{
                     borderRadius: 2,
                     border: "1px solid #8B2635",
-                    backgroundColor: "#fff6f5",
+                    backgroundColor: "#fff",
                     p: 2,
                     height: "225px",
                     
@@ -588,7 +589,7 @@ return (
                 sx={{
                     borderRadius: 2,
                     border: "1px solid #8B2635",
-                    backgroundColor: "#fff6f5",
+                    backgroundColor: "#fff",
                     p: 2,
                     height: "225px",
                 }}
@@ -624,7 +625,7 @@ return (
                 sx={{
                   borderRadius: 2,
                   border: "1px solid #8B2635",
-                  backgroundColor: "#fff6f5",
+                  backgroundColor: "#fff",
                   p: 2,
                   height: "225px",
                 }}
@@ -680,15 +681,31 @@ return (
 
                     return (
                       <Grid item xs={12 / 7} key={index}>
-                        <Tooltip title={holidayData ? holidayData.name : ""} arrow>
+                        <Tooltip 
+                        title={holidayData ? holidayData.name : ""}
+                          arrow
+                          componentsProps={{
+                            tooltip: {
+                              sx: {
+                                color: "#6d2323",               // text red
+                                backgroundColor: "#fff", // transparent background
+                                border: "1.5px solid #6d2323",    // burgundy outline
+                                fontWeight: "bold",
+                                fontSize: "0.6rem",
+                                boxShadow: "none",
+                                borderRadius: "20px"
+                              },
+                            },
+                          }}
+                        >
                           <Box
                             sx={{
                               textAlign: "center",
-                              p: 0.3,
+                              p: 0.5,
                               fontSize: "0.7rem",
-                              borderRadius: "4px",
-                              color: holidayData ? "#fff" : day ? "#333" : "transparent", // white text on holiday
-                              backgroundColor: holidayData ? "#6d2323" : "transparent", // burgundy highlight
+                              borderRadius: "20px",
+                              color: holidayData ? "#fff" : day ? "#333" : "transparent",
+                              backgroundColor: holidayData ? "#6d2323" : "transparent",
                               fontWeight: holidayData ? "bold" : "normal",
                               minHeight: "22px",
                               display: "flex",
@@ -697,7 +714,7 @@ return (
                               cursor: holidayData ? "pointer" : "default",
                               "&:hover": holidayData
                                 ? {
-                                    backgroundColor: "#6d2323", // keep burgundy on hover
+                                    backgroundColor: "#6d2323",
                                     transform: "scale(1.05)",
                                     transition: "all 0.2s ease-in-out",
                                   }
@@ -737,256 +754,264 @@ return (
         </Grid>
       </Box>
 
-        {/* Right Sidebar */}
-        <Box
-          sx={{
-            width: 320,
-            backgroundColor: "#ffffff",
-            border: "1px solid #8B2635",
-            borderRadius: 2,
-            p: 1.5,
-            height: "fit-content",
-            position: "sticky",
-            top: 20,
-            "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }
-          }}
-        >
-          {/* Profile + Quick Links inside one border */}
-          <Box sx={{ border: "1px solid #8B2635", borderRadius: 2, overflow: "hidden", mb: '12px', pb: '5px' }}>
-            {/* Profile Section */}
+    {/* Right Sidebar */}
+<Box
+  sx={{
+    width: 320,
+    backgroundColor: "#ffffff",
+    border: "1px solid #8B2635",
+    borderRadius: 2,
+    p: 1.5,
+    height: "fit-content",
+    position: "sticky",
+    top: 20,
+    "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }
+  }}
+>
+  {/* Profile + Quick Links inside one border */}
+  <Box sx={{ border: "1px solid #8B2635", borderRadius: 2, overflow: "hidden" }}>
+    {/* Profile Section */}
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        mb: -2,
+        cursor: "pointer",
+        p: 2
+      }}
+      onClick={() => navigate("/profile")}
+    >
+      <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 0, gap: 1. }}>
+        <Tooltip title="Notifications">
+          <IconButton
+            size="small"
+            sx={{ color: "black" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setNotifModalOpen(true);
+            }}
+          >
+            <Badge badgeContent={3} color="error">
+              <NotificationsIcon fontSize="small" />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="More Options">
+          <IconButton
+            size="small"
+            sx={{ color: "black" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ArrowDropDownIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <Avatar
+        alt={username}
+        src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+        sx={{ width: 80, height: 80, border: "3px solid #8B2635", mb: 1, color: '#fff', backgroundColor: '#6d2323' }}
+      />
+      <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
+        {username || "Admin Name"}
+      </Typography>
+      <Typography variant="body2" sx={{ color: "#6d2323", textAlign: "center" }}>
+        {employeeNumber || "#00000000"}
+      </Typography>
+    </Box>
+
+      {/* Quick Links */}
+      <Box
+        sx={{
+          backgroundColor: "#ffffff",
+          p: 1,
+          textAlign: "center",
+          mt: '-10px'
+        }}
+      >
+        {/* <Box
+            sx={{
+            backgroundColor: "#6d2323",
+            p: 1,
+            textAlign: "center",
+            mb: -1.5
+            }}
+            >
+              <Typography sx={{ color: "#ffffff", fontWeight: "bold", fontSize: "0.9rem" }}>
+                USER PANEL
+              </Typography>
+        </Box> */}
+      </Box>
+
+      {/* Grid of Cards */}
+      <Grid container spacing={0} sx={{ p: 1 }}>
+        {/* DTR */}
+        <Grid item xs={3}>
+          <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
             <Box
               sx={{
+                m: 0.5,
+                p: 1,
+                backgroundColor: "#6d2323",
+                color: "#fff",
+                borderRadius: 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                mb: -2,
-                cursor: "pointer",
-                p: 2
+                justifyContent: "center",
+                minHeight: 50,
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                border: "1px solid transparent", // <-- keep border space
+                "&:hover": {
+                  backgroundColor: "#fff",
+                  color: "#6d2323",
+                  borderColor: "#6d2323", // <-- change color only
+                }
               }}
-              onClick={() => navigate("/profile")}
             >
-              <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 0, gap: 1. }}>
-                <Tooltip title="Notifications">
-                  <IconButton
-                    size="small"
-                    sx={{ color: "black" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setNotifModalOpen(true);
-                    }}
-                  >
-                    <Badge badgeContent={3} color="error">
-                      <NotificationsIcon fontSize="small" />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="More Options">
-                  <IconButton
-                    size="small"
-                    sx={{ color: "black" }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ArrowDropDownIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+              <AccessTime sx={{ fontSize: 30 }} />
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
+            </Box>
 
-              <Avatar
-                alt={username}
-                src={profilePicture ? `http://localhost:5000${profilePicture}` : undefined}
-                sx={{ width: 80, height: 80, border: "3px solid #8B2635", mb: 1 }}
-              />
-              <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
-                {username || "Admin Name"}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#666", textAlign: "center" }}>
-                {employeeNumber || "#00000000"}
+          </Link>
+        </Grid>
+
+        {/* PDS */}
+        <Grid item xs={3}>
+          <Link to="/pds1" style={{ textDecoration: "none" }}>
+            <Box
+            sx={{
+                m: 0.5,
+                p: 1,
+                backgroundColor: "#6d2323",
+                color: "#fff",
+                borderRadius: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 50,
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                border: "1px solid transparent", // <-- keep border space
+                "&:hover": {
+                  backgroundColor: "#fff",
+                  color: "#6d2323",
+                  borderColor: "#6d2323", // <-- change color only
+                }
+              }}
+            >
+              <ContactPage sx={{ fontSize: 30 }} />
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
+            </Box>
+          </Link>
+        </Grid>
+
+        {/* Payslip */}
+        <Grid item xs={3}>
+          <Link to="/payslip" style={{ textDecoration: "none" }}>
+            <Box
+            sx={{
+                m: 0.5,
+                p: 1,
+                backgroundColor: "#6d2323",
+                color: "#fff",
+                borderRadius: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 50,
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                border: "1px solid transparent", // <-- keep border space
+                "&:hover": {
+                  backgroundColor: "#fff",
+                  color: "#6d2323",
+                  borderColor: "#6d2323", // <-- change color only
+                }
+              }}
+            >
+              <Receipt sx={{ fontSize: 30 }} />
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
+            </Box>
+          </Link>
+        </Grid>
+
+        {/* Request Leave */}
+        {/* <Grid item xs={3}>
+          <Link to="/leave-request" style={{ textDecoration: "none" }}>
+            <Box
+              sx={{
+                m: 0.5,
+                p: 1,
+                backgroundColor: "#6d2323",
+                color: "#fff",
+                borderRadius: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 50,
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "#fff",
+                  color: "#6d2323",
+                  border: "1px solid #6d2323"
+                }
+              }}
+            >
+              <Description sx={{ fontSize: 20 }} />
+              <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
+                Leave Request
               </Typography>
             </Box>
-          </Box>
+          </Link>
+        </Grid> */}
 
-         {/* Quick Links */}
-            <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-              <Box
-                sx={{
-                  backgroundColor: '#6d2323',
-                  p: 1,
-                  textAlign: 'center',
-                }}
-              >
-                <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                  USER PANEL
-                </Typography>
-              </Box>
-  
-              {/* Grid of Cards */}
-              <Grid container spacing={0} sx={{ p: 1 }}>
-                 {/* DTR */}
-                 <Grid item xs={3}>
-                   <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
-                     <Box
-                       sx={{
-                         m: 0.5,
-                         p: 1,
-                         backgroundColor: "#6d2323",
-                         color: "#fff",
-                         borderRadius: 1,
-                         display: "flex",
-                         flexDirection: "column",
-                         alignItems: "center",
-                         justifyContent: "center",
-                         minHeight: 50,
-                         textAlign: "center",
-                         transition: "all 0.3s ease",
-                         border: "1px solid transparent", // <-- keep border space
-                         "&:hover": {
-                           backgroundColor: "#fff",
-                           color: "#6d2323",
-                           borderColor: "#6d2323", // <-- change color only
-                         }
-                       }}
-                     >
-                       <AccessTime sx={{ fontSize: 30 }} />
-                       <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
-                     </Box>
-           
-                   </Link>
-                 </Grid>
-           
-                 {/* PDS */}
-                 <Grid item xs={3}>
-                   <Link to="/pds1" style={{ textDecoration: "none" }}>
-                     <Box
-                      sx={{
-                         m: 0.5,
-                         p: 1,
-                         backgroundColor: "#6d2323",
-                         color: "#fff",
-                         borderRadius: 1,
-                         display: "flex",
-                         flexDirection: "column",
-                         alignItems: "center",
-                         justifyContent: "center",
-                         minHeight: 50,
-                         textAlign: "center",
-                         transition: "all 0.3s ease",
-                         border: "1px solid transparent", // <-- keep border space
-                         "&:hover": {
-                           backgroundColor: "#fff",
-                           color: "#6d2323",
-                           borderColor: "#6d2323", // <-- change color only
-                         }
-                       }}
-                     >
-                       <ContactPage sx={{ fontSize: 30 }} />
-                       <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
-                     </Box>
-                   </Link>
-                 </Grid>
-           
-                 {/* Payslip */}
-                 <Grid item xs={3}>
-                   <Link to="/payslip" style={{ textDecoration: "none" }}>
-                     <Box
-                     sx={{
-                         m: 0.5,
-                         p: 1,
-                         backgroundColor: "#6d2323",
-                         color: "#fff",
-                         borderRadius: 1,
-                         display: "flex",
-                         flexDirection: "column",
-                         alignItems: "center",
-                         justifyContent: "center",
-                         minHeight: 50,
-                         textAlign: "center",
-                         transition: "all 0.3s ease",
-                         border: "1px solid transparent", // <-- keep border space
-                         "&:hover": {
-                           backgroundColor: "#fff",
-                           color: "#6d2323",
-                           borderColor: "#6d2323", // <-- change color only
-                         }
-                       }}
-                     >
-                       <Receipt sx={{ fontSize: 30 }} />
-                       <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
-                     </Box>
-                   </Link>
-                 </Grid>
-           
-                 {/* Request Leave */}
-                 {/* <Grid item xs={3}>
-                   <Link to="/leave-request" style={{ textDecoration: "none" }}>
-                     <Box
-                       sx={{
-                         m: 0.5,
-                         p: 1,
-                         backgroundColor: "#6d2323",
-                         color: "#fff",
-                         borderRadius: 1,
-                         display: "flex",
-                         flexDirection: "column",
-                         alignItems: "center",
-                         justifyContent: "center",
-                         minHeight: 50,
-                         textAlign: "center",
-                         transition: "all 0.3s ease",
-                         "&:hover": {
-                           backgroundColor: "#fff",
-                           color: "#6d2323",
-                           border: "1px solid #6d2323"
-                         }
-                       }}
-                     >
-                       <Description sx={{ fontSize: 20 }} />
-                       <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
-                         Leave Request
-                       </Typography>
-                     </Box>
-                   </Link>
-                 </Grid> */}
-           
-                 {/* Attendance */}
-                 <Grid item xs={3}>
-                   <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
-                     <Box
-                      sx={{
-                         m: 0.5,
-                         p: 1,
-                         backgroundColor: "#6d2323",
-                         color: "#fff",
-                         borderRadius: 1,
-                         display: "flex",
-                         flexDirection: "column",
-                         alignItems: "center",
-                         justifyContent: "center",
-                         minHeight: 50,
-                         textAlign: "center",
-                         transition: "all 0.3s ease",
-                         border: "1px solid transparent", // <-- keep border space
-                         "&:hover": {
-                           backgroundColor: "#fff",
-                           color: "#6d2323",
-                           borderColor: "#6d2323", // <-- change color only
-                         }
-                       }}
-                     >
-                       <Person sx={{ fontSize: 30 }} />
-                       <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
-                         Attendance
-                       </Typography>
-                     </Box>
-                   </Link>
-                 </Grid>
-               </Grid>
+        {/* Attendance */}
+        <Grid item xs={3}>
+          <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
+            <Box
+            sx={{
+                m: 0.5,
+                p: 1,
+                backgroundColor: "#6d2323",
+                color: "#fff",
+                borderRadius: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 50,
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                border: "1px solid transparent", // <-- keep border space
+                "&:hover": {
+                  backgroundColor: "#fff",
+                  color: "#6d2323",
+                  borderColor: "#6d2323", // <-- change color only
+                }
+              }}
+            >
+              <Person sx={{ fontSize: 30 }} />
+              <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
+                Attendance
+              </Typography>
             </Box>
+          </Link>
+        </Grid>
+      </Grid>
+  </Box>
 
 
 
 
           {/* Admin Panel */}
-          <Card sx={{ border: "1px solid #6d2323", borderRadius: 2, mt: 2, mb: 0.4 }}>
+          <Card sx={{ border: "1px solid #6d2323", borderRadius: 2, mt: 2, mb: 5.5 }}>
             <Box
               sx={{
                 backgroundColor: "#6d2323",

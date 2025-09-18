@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -31,11 +32,11 @@ const LeaveCredits = ({ personID }) => {
     
     try {
       // Get all leave types from leave_table
-      const leaveTableResponse = await axios.get('http://localhost:5000/leaveRoute/leave_table');
+      const leaveTableResponse = await axios.get(`${API_BASE_URL}/leaveRoute/leave_table`);
       const allLeaveTypes = leaveTableResponse.data;
 
       // Get all leave assignments for this employee
-      const assignmentResponse = await axios.get('http://localhost:5000/leaveRoute/leave_assignment');
+      const assignmentResponse = await axios.get(`${API_BASE_URL}/leaveRoute/leave_assignment`);
       const userAssignments = assignmentResponse.data.filter(
         assignment => assignment.employeeNumber?.toString() === personID?.toString()
       );

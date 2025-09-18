@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const WorkExperience = () => {
   const [data, setData] = useState([]);
@@ -53,7 +54,7 @@ const WorkExperience = () => {
 
   const fetchWorkExperiences = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/WorkExperienceRoute/work-experience-table');
+      const res = await axios.get(`${API_BASE_URL}/WorkExperienceRoute/work-experience-table`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -63,7 +64,7 @@ const WorkExperience = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/WorkExperienceRoute/work-experience-table', newWorkExperience);
+      await axios.post(`${API_BASE_URL}/WorkExperienceRoute/work-experience-table`, newWorkExperience);
       setNewWorkExperience({
         workDateFrom: '',
         workDateTo: '',
@@ -90,7 +91,7 @@ const WorkExperience = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/WorkExperienceRoute/work-experience-table/${editWorkExperience.id}`, editWorkExperience);
+      await axios.put(`${API_BASE_URL}/WorkExperienceRoute/work-experience-table/${editWorkExperience.id}`, editWorkExperience);
       setEditWorkExperience(null);
       setOriginalWorkExperience(null);
       setIsEditing(false);
@@ -105,7 +106,7 @@ const WorkExperience = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/WorkExperienceRoute/work-experience-table/${id}`);
+      await axios.delete(`${API_BASE_URL}/WorkExperienceRoute/work-experience-table/${id}`);
       setEditWorkExperience(null);
       setOriginalWorkExperience(null);
       setIsEditing(false);

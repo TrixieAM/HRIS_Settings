@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const College = () => {
   const [data, setData] = useState([]);
@@ -53,7 +54,7 @@ const College = () => {
 
   const fetchColleges = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/college/college-table');
+      const res = await axios.get(`${API_BASE_URL}/college/college-table`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -63,7 +64,7 @@ const College = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/college/college-table', newCollege);
+      await axios.post(`${API_BASE_URL}/college/college-table`, newCollege);
       setNewCollege({
         collegeNameOfSchool: '',
         collegeDegree: '',
@@ -89,7 +90,7 @@ const College = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/college/college-table/${editCollege.id}`, editCollege);
+      await axios.put(`${API_BASE_URL}/college/college-table/${editCollege.id}`, editCollege);
       setEditCollege(null);
       setOriginalCollege(null);
       setIsEditing(false);
@@ -104,7 +105,7 @@ const College = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/college/college-table/${id}`);
+      await axios.delete(`${API_BASE_URL}/college/college-table/${id}`);
       setEditCollege(null);
       setOriginalCollege(null);
       setIsEditing(false);

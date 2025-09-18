@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -74,7 +75,7 @@ const SalaryGradeTable = () => {
 
 
   const fetchSalaryGrades = async () => {
-    const response = await axios.get("http://localhost:5000/SalaryGradeTable/salary-grade");
+    const response = await axios.get(`${API_BASE_URL}/SalaryGradeTable/salary-grade`);
     setSalaryGrades(response.data);
     setFilteredGrades(response.data);
   };
@@ -84,7 +85,7 @@ const SalaryGradeTable = () => {
     if (Object.values(newSalaryGrade).some((v) => v === "")) return;
 
 
-    await axios.post("http://localhost:5000/SalaryGradeTable/salary-grade", newSalaryGrade);
+    await axios.post(`${API_BASE_URL}/SalaryGradeTable/salary-grade`, newSalaryGrade);
     setNewSalaryGrade({
       effectivityDate: "",
       sg_number: "",
@@ -97,14 +98,14 @@ const SalaryGradeTable = () => {
 
   const updateSalaryGrade = async (id) => {
     const updatedRecord = salaryGrades.find((rec) => rec.id === id);
-    await axios.put(`http://localhost:5000/SalaryGradeTable/salary-grade/${id}`, updatedRecord);
+    await axios.put(`${API_BASE_URL}/SalaryGradeTable/salary-grade/${id}`, updatedRecord);
     setEditSalaryGradeId(null);
     fetchSalaryGrades();
   };
 
 
   const deleteSalaryGrade = async (id) => {
-    await axios.delete(`http://localhost:5000/SalaryGradeTable/salary-grade/${id}`);
+    await axios.delete(`${API_BASE_URL}/SalaryGradeTable/salary-grade/${id}`);
     fetchSalaryGrades();
   };
 

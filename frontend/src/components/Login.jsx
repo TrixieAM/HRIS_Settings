@@ -1,3 +1,4 @@
+import API_BASE_URL from "../apiConfig";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -86,7 +87,7 @@ const Login = () => {
   const send2FACode = async (email, empNumber) => {
     setResendLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/send-2fa-code", {
+      const res = await fetch(`${API_BASE_URL}/send-2fa-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, employeeNumber: empNumber }),
@@ -121,7 +122,7 @@ const Login = () => {
 
     setTwoFactorLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/verify-2fa-code", {
+      const res = await fetch(`${API_BASE_URL}/verify-2fa-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail, code: pin }),
@@ -131,7 +132,7 @@ const Login = () => {
 
       if (res.ok && data.verified) {
         // Complete the login after successful 2FA verification
-        const loginRes = await fetch("http://localhost:5000/complete-2fa-login", {
+        const loginRes = await fetch(`${API_BASE_URL}/complete-2fa-login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: userEmail }),
@@ -201,7 +202,7 @@ const Login = () => {
 
 
     try {
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

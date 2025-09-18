@@ -1,5 +1,5 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useEffect, useState } from 'react';
-// import API_BASE_URL from "../../apiConfig";
 import axios from 'axios';
 import {
   Avatar, IconButton, Typography, Box, CircularProgress, Paper,
@@ -101,7 +101,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPersonData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/personalinfo/person_table');
+        const response = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const match = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
         setPerson(match);
       } catch (err) {
@@ -119,7 +119,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPersonData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/personalinfo/person_table');
+        const response = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const match = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
 
         if (match) {
@@ -141,20 +141,30 @@ const Profile = () => {
   }, [employeeNumber]); // ← do NOT depend on profilePicture to avoid unintended overrides
 
 
-  useEffect(() => {
-    if (person) setFormData(person); // preload form when person is loaded
-  }, [person]);
+useEffect(() => {
+  if (person) {
+    setFormData(prev => {
+      // Only set if formData is empty
+      if (Object.keys(prev).length === 0) {
+        return person;
+      }
+      return prev; // keep existing formData while typing
+    });
+  }
+}, [person]);
 
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
 
   const handleFormChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+};
+
 
   const handleSave = async () => {
     try {
-      await axios.put(`http://localhost:5000/personalinfo/person_table/${employeeNumber}`, formData);
+      await axios.put(`${API_BASE_URL}/personalinfo/person_table/${employeeNumber}`, formData);
       setPerson(formData);
       setEditOpen(false);
     } catch (err) {
@@ -187,7 +197,7 @@ const Profile = () => {
       setUploadStatus({ message: 'Uploading...', type: 'info' });
 
       const res = await axios.post(
-        `http://localhost:5000/upload-profile-picture/${employeeNumber}`,
+        `${API_BASE_URL}/upload-profile-picture/${employeeNumber}`,
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -253,7 +263,7 @@ const Profile = () => {
   if (!person?.id) return; // make sure you have the correct id
 
   try {
-    await axios.delete(`http://localhost:5000/personalinfo/remove-profile-picture/${person.id}`);
+    await axios.delete(`${API_BASE_URL}/personalinfo/remove-profile-picture/${person.id}`);
 
     // Update frontend state
     setProfilePicture(null);
@@ -318,17 +328,17 @@ const disabledFieldStyle = {
           <ProfileAvatar
             src={
               profilePicture
-                ? `http://localhost:5000${profilePicture}?t=${Date.now()}`
+                ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}`
                 : undefined
             }
             alt="Profile Picture"
             key={profilePicture}
-            sx={{ border: "4px solid #6d2323", boxShadow: "0 4px 8px rgba(0,0,0,0.2)" }}
+            sx={{ border: "4px solid #6d2323", boxShadow: "0 4px 8px rgba(0,0,0,0.2)", backgroundColor: 'white' }}
           >
             {!profilePicture &&
               (user?.username
                 ? user.username.charAt(0).toUpperCase()
-                : <PersonIcon sx={{ fontSize: 60, color: "#6d2323" }} />)}
+                : <PersonIcon sx={{ fontSize: 100, color: "#6d2323", backgroundColor: 'white'}} />)}
           </ProfileAvatar>
         </Box>
 
@@ -588,7 +598,7 @@ const disabledFieldStyle = {
                   </Alert>
                 )}
                 <ProfileAvatar
-                  src={profilePicture ? `http://localhost:5000${profilePicture}?t=${Date.now()}` : undefined}
+                  src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
                   sx={{
                     width: 130,
                     height: 130,

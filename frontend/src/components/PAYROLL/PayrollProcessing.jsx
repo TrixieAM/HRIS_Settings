@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
@@ -67,7 +68,7 @@ const PayrollProcess = () => {
   useEffect(() => {
     const fetchFinalizedPayroll = async () => {
       try {
-        const res = await axios.get ("http://localhost:5000/api/finalized-payroll");
+        const res = await axios.get (`${API_BASE_URL}/api/finalized-payroll"`);
         setFinalizedPayroll(res.data);
       } catch (err) {
         console.error("Error fetching finalized payroll data:", err);
@@ -93,7 +94,7 @@ const PayrollProcess = () => {
     const fetchPayrollData = async () => {
   try {
     const res = await axios.get(
-      'http://localhost:5000/api/payroll-with-remittance'
+      `${API_BASE_URL}/api/payroll-with-remittance`
     );
     console.log(res.data);
 
@@ -169,7 +170,7 @@ const PayrollProcess = () => {
     const fetchDepartments = async () => {
       try {
         const response = await axios.get(
-          'http://localhost:5000/api/department-table'
+          `${API_BASE_URL}/api/department-table`
         );
         setDepartments(response.data);
       } catch (err) {
@@ -218,7 +219,7 @@ const PayrollProcess = () => {
 
 
 
-                /// SA MAY DEPARTMENT DROP DOWN AND SEARCH BUTTON
+                /// DEPARTMENT DROP DOWN AND SEARCH BUTTON
                 if (department && department !== '') {
                   filtered = filtered.filter((record) => record.department === department);
                 }
@@ -352,7 +353,7 @@ const PayrollProcess = () => {
           for (const item of rowsToSubmit) {
             try {
               await axios.put(
-                `http://localhost:5000/api/payroll-with-remittance/${item.employeeNumber}`,
+                `${API_BASE_URL}/api/payroll-with-remittance/${item.employeeNumber}`,
                 item
               );
             } catch (error) {
@@ -364,7 +365,7 @@ const PayrollProcess = () => {
 
 
           //  Update finalized payroll database (finalized-payroll)
-          await axios.post('http://localhost:5000/api/finalized-payroll', rowsToSubmit);
+          await axios.post(`${API_BASE_URL}/api/finalized-payroll`, rowsToSubmit);
 
 
 
@@ -387,7 +388,7 @@ const PayrollProcess = () => {
 
 
           // Refresh finalizedPayroll from backend
-          const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+          const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
           setFinalizedPayroll(res.data);
 
 
@@ -404,7 +405,7 @@ const PayrollProcess = () => {
   const handleDelete = async (rowId) => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/payroll-with-remittance/${rowId}`
+        `${API_BASE_URL}/api/payroll-with-remittance/${rowId}`
       );
       const newData = filteredData.filter((item) => item.id !== rowId);
         setFilteredData(newData);
@@ -586,7 +587,7 @@ const handleSave = async () => {
 
 
     const response = await axios.put(
-      `http://localhost:5000/api/payroll-with-remittance/${editRow.employeeNumber}`,
+      `${API_BASE_URL}/api/payroll-with-remittance/${editRow.employeeNumber}`,
       updatedRow
     );
 

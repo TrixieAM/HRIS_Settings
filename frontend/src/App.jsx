@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -18,28 +16,34 @@ import {
 import axios from 'axios';
 import ProtectedRoute from './components/ProtectedRoute';
 import '@fontsource/poppins';
+import earistLogo from './assets/earistLogo.jpg';
+import hrisLogo from './assets/hrisLogo.png';
 
 
 import Login from './components/Login';
 import Register from './components/Register';
 import Unauthorized from './components/Unauthorized';
 import AllIcons from './components/Page';
-import SettingsForm from './SettingsForm';
 import LoadingOverlay from './components/LoadingOverlay';
-
+import SuccessfulOverlay from './components/SuccessfulOverlay';
 
 
 
 import Home from './components/Home';
 import Sidebar from './components/Sidebar';
 import AdminHome from './components/HomeAdmin';
+import ForgotPassword from './components/ForgotPassword';
+import AnnouncementForm from './components/Announcement';
+import Profile from './components/DASHBOARD/Profile';
+import BulkRegister from './components/BulkRegister';
+import Registration from './components/Registration';
 
 
 //DASHBOARD
 import PersonalTable from './components/DASHBOARD/PersonTable';
 import Children from './components/DASHBOARD/Children';
 import College from './components/DASHBOARD/College';
-import OtherSkills from './components/DASHBOARD/OtheSkills';
+import OtherSkills from './components/DASHBOARD/OtheInformation';
 import WorkExperience from './components/DASHBOARD/WorkExperience';
 import Vocational from './components/DASHBOARD/Vocational';
 import LearningAndDevelopment from './components/DASHBOARD/LearningAndDevelopment';
@@ -48,7 +52,7 @@ import Eligibility from './components/DASHBOARD/Eligibility';
 import GraduateTable from './components/DASHBOARD/GraduateStudies';
 
 
-//RECORDS
+//ATTENDANCE RECORDS
 import ViewAttendanceRecord from './components/ATTENDANCE/AttendanceDevice';
 import AttendanceSearch from './components/ATTENDANCE/AttendanceManagement';
 import AttendanceUserState from './components/ATTENDANCE/AttendanceUserState';
@@ -72,8 +76,6 @@ import DepartmentAssignment from './components/PAYROLL/DepartmentAssignment';
 import Holiday from './components/PAYROLL/Holiday';
 import PhilHealthTable from './components/PAYROLL/PhilHealth';
 import PayrollProcessed from './components/PAYROLL/PayrollProcessed';
-import PlantillaTable from './components/PAYROLL/Plantillia';
-import EmployeeSalaryGrade from './components/PAYROLL/EmployeeSalaryGrade';
 
 
 
@@ -98,42 +100,24 @@ import HrmsRequestForms from './components/FORMS/HRMSRequestForms';
 
 
 // PDS
-import PDS1 from './components/PDS1';
-import PDS2 from './components/PDS2';
-import PDS3 from './components/PDS3';
-import PDS4 from './components/PDS4';
+import PDS1 from './components/PDS/PDS1';
+import PDS2 from './components/PDS/PDS2';
+import PDS3 from './components/PDS/PDS3';
+import PDS4 from './components/PDS/PDS4';
 
 
-import { Announcement, PictureAsPdfOutlined } from '@mui/icons-material';
-import ForgotPassword from './components/ForgotPassword';
-import AnnouncementForm from './components/Announcement';
+//PAYSLIP
+import Payslip from './components/PAYROLL/Payslip';
+import PayslipOverall from './components/PAYROLL/PayslipOverall';
+import PayslipDistribution from './components/PAYROLL/PayslipDistribution';
 
-//CAROUSEL
-import Profile from './components/DASHBOARD/Profile';
-import BulkRegister from './components/BulkRegister';
+//LEAVE
+import LeaveRequestUser from './components/LEAVE/LeaveRequestUser';
 import LeaveTable from './components/LEAVE/LeaveTable';
 import LeaveRequest from './components/LEAVE/LeaveRequest';
 import LeaveDatePickerModal from './components/LEAVE/LeaveDatePicker';
 import LeaveAssignment from './components/LEAVE/LeaveAssignment';
 import LeaveCredits from './components/LEAVE/LeaveCredits';
-import Registration from './components/Registration';
-import Payslip from './components/PAYROLL/Payslip';
-import PayslipOverall from './components/PAYROLL/PayslipOverall';
-import PayslipBulk from './components/PAYROLL/PayslipBulk';
-import SuccessfullOverlay from './components/SuccessfullOverlay';
-import LeaveRequestStaff from './components/LEAVE/LeaveRequestStaff';
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -143,7 +127,6 @@ const drawerWidth = 250;
 
 
 function App() {
-  const [settings, setSettings] = useState({});
   const [open, setOpen] = useState(false);
   const [open2, setOpen2] = useState(false);
   const [open3, setOpen3] = useState(false);
@@ -168,26 +151,6 @@ function App() {
 
 
 
-
-  const fetchSettings = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/settings');
-      setSettings(response.data);
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-    }
-  };
-
-
-
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-
-
-
   return (
       <ThemeProvider
         theme={createTheme({
@@ -207,24 +170,64 @@ function App() {
           
         }}
       >
+      {/* Header */}
        <AppBar
           position="fixed"
-          sx={{ zIndex: 1201, bgcolor: '#6d2323', height: '60px' }} // adjust HEADER
+          sx={{ 
+            zIndex: 1201, 
+            bgcolor: '#6d2323', 
+            height: '62px',
+            overflow: 'hidden',
+          }}
         >
-          <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
-            {settings.logo_url && (
-              <img
-                src={`http://localhost:5000${settings.logo_url}`}
-                alt="Logo"
-                style={{
-                  height: '45px',
-                  marginRight: '10px',
-                  // border: '2px solid white',
-                  // borderRadius: '50px'
-                }}
-              />
+          {/* Watermark inside the AppBar */}
+          <Box
+            component="img"
+            src={hrisLogo}
+            alt="Watermark"
+            sx={{
+              position: 'absolute',    
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: 0.05,             
+              width: '100%',             
+              pointerEvents: 'none',     
+              userSelect: 'none',
+            }}
+          />
 
-            )}
+          <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
+      
+              <>
+                {/* EARIST Logo */}
+                <img
+                  src={earistLogo} 
+                  alt="EARIST Logo" 
+                  width="45" 
+                  height="45" 
+                  style={{
+                    marginRight: '10px',
+                    border: '1px solid white',
+                    borderRadius: '50px',
+                    marginLeft: '-15px'
+                  }}
+                />
+
+                {/* HRIS Logo */}
+                {/* <img
+                  src={hrisLogo} 
+                  alt="HRIS Logo" 
+                  width="45" 
+                  height="45" 
+                  style={{
+                    marginRight: '10px',
+                    border: '1px solid black',
+                    borderRadius: '50px',
+                  }}
+                /> */}
+              </>
+            
             <Box>
               <Typography variant="body2" noWrap sx={{ lineHeight: 1.2, color: 'white', marginTop: '8px' }}>
                 Eulogio "Amang" Rodriguez Institute of Science and Technology
@@ -795,25 +798,6 @@ function App() {
             />
 
 
-            <Route
-              path="/plantillia-table"
-              element={
-                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <PlantillaTable />
-                </ProtectedRoute>
-              }
-            />
-
-
-            <Route
-              path="/employee-salary-grade"
-              element={
-                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <EmployeeSalaryGrade />
-                </ProtectedRoute>
-              }
-            />
-
 
             <Route
               path="/profile"
@@ -853,10 +837,10 @@ function App() {
             />
 
             <Route
-              path="/bulk-payslip"
+              path="/distribution-payslip"
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
-                  <PayslipBulk />
+                  <PayslipDistribution />
                 </ProtectedRoute>
               }
             />
@@ -871,10 +855,10 @@ function App() {
             />
 
             <Route
-              path="/successfull-overlay"
+              path="/successful-overlay"
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
-                  <SuccessfullOverlay/>
+                  <SuccessfulOverlay/>
                 </ProtectedRoute>
               }
             />
@@ -907,10 +891,10 @@ function App() {
             />
 
             <Route
-              path="/leave-request-staff"
+              path="/leave-request-user"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin', 'staff']}>
-                  <LeaveRequestStaff />
+                  <LeaveRequestUser />
                 </ProtectedRoute>
               }
             />
@@ -955,7 +939,7 @@ function App() {
 
 
         {/* Footer */}
-        <Box
+       <Box
           component="footer"
           sx={{
             position: 'fixed',
@@ -968,9 +952,29 @@ function App() {
             textAlign: 'center',
             padding: '20px',
             height: '10px',
+            overflow: 'hidden',
           }}
         >
-          <Typography variant="body2">
+          {/* Watermark */}
+          <Box
+            component="img"
+            src={hrisLogo}
+            alt="Watermark"
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: 0.05,        
+              width: '100%',        
+              pointerEvents: 'none', 
+              userSelect: 'none',
+              zIndex: 0,            
+            }}
+          />
+
+          {/* Footer Text */}
+          <Typography variant="body2" sx={{ zIndex: 1, position: 'relative' }}>
             {'© 2025 EARIST Manila - Human Resources Information System. All rights Reserved.'}
           </Typography>
         </Box>

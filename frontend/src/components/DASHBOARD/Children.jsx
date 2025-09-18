@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -29,7 +30,7 @@ import {
 import ChildFriendlyIcon from '@mui/icons-material/ChildFriendly';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const Children = () => {
   const [children, setChildren] = useState([]);
@@ -55,7 +56,7 @@ const Children = () => {
 
   const fetchChildren = async () => {
     try {
-      const result = await axios.get('http://localhost:5000/childrenRoute/children-table');
+      const result = await axios.get(`${API_BASE_URL}/childrenRoute/children-table`);
       setChildren(result.data);
     } catch (error) {
       console.error('Error fetching children:', error);
@@ -65,7 +66,7 @@ const Children = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/childrenRoute/children-table', newChild);
+      await axios.post(`${API_BASE_URL}/childrenRoute/children-table`, newChild);
       setNewChild({
         childrenFirstName: '',
         childrenMiddleName: '',
@@ -89,7 +90,7 @@ const Children = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/childrenRoute/children-table/${editChild.id}`, editChild);
+      await axios.put(`${API_BASE_URL}/childrenRoute/children-table/${editChild.id}`, editChild);
       setEditChild(null);
       setOriginalChild(null);
       setIsEditing(false);
@@ -104,7 +105,7 @@ const Children = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/childrenRoute/children-table/${id}`);
+      await axios.delete(`${API_BASE_URL}/childrenRoute/children-table/${id}`);
       setEditChild(null);
       setOriginalChild(null);
       setIsEditing(false);

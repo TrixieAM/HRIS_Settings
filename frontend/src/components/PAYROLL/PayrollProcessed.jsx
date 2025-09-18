@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -125,7 +126,7 @@ const PayrollProcessed = () => {
         useEffect(() => {
           const fetchDepartments = async () => {
             try {
-              const response = await axios.get('http://localhost:5000/api/department-table');
+              const response = await axios.get(`${API_BASE_URL}/api/department-table`);
               setDepartments(response.data);
             } catch (err) {
               console.error('Error fetching departments:', err);
@@ -140,7 +141,7 @@ const PayrollProcessed = () => {
         useEffect(() => {
           const fetchFinalizedPayroll = async () => {
             try {
-              const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+              const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
               setFinalizedData(res.data);
               setFilteredFinalizedData(res.data);
               setLoading(false);
@@ -227,14 +228,14 @@ const PayrollProcessed = () => {
       setFilteredFinalizedData(prev => prev.filter(item => item.id !== rowId));
      
       // Then make API call
-      await axios.delete(`http://localhost:5000/api/finalized-payroll/${rowId}`);
+      await axios.delete(`${API_BASE_URL}/api/finalized-payroll/${rowId}`);
      
       // Show success message
       alert('Record deleted successfully');
     } catch (error) {
       console.error('Error deleting payroll data:', error);
       // If API call fails, revert the UI changes
-      const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+      const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
       setFinalizedData(res.data);
       setFilteredFinalizedData(prev => {
         // Reapply current filters
@@ -297,7 +298,7 @@ const PayrollProcessed = () => {
       setFilteredFinalizedData(prev => prev.filter(item => !selectedRow.ids.includes(item.id)));
       
       await Promise.all(selectedRow.ids.map(id => 
-        axios.delete(`http://localhost:5000/api/finalized-payroll/${id}`)
+        axios.delete(`${API_BASE_URL}/api/finalized-payroll/${id}`)
       ));
       
       alert(`${selectedRow.ids.length} records deleted successfully`);
@@ -307,7 +308,7 @@ const PayrollProcessed = () => {
       setFinalizedData(prev => prev.filter(item => item.id !== selectedRow.id));
       setFilteredFinalizedData(prev => prev.filter(item => item.id !== selectedRow.id));
       
-      await axios.delete(`http://localhost:5000/api/finalized-payroll/${selectedRow.id}`, {
+      await axios.delete(`${API_BASE_URL}/api/finalized-payroll/${selectedRow.id}`, {
         data: {
           employeeNumber: selectedRow.employeeNumber,
           name: selectedRow.name,
@@ -319,7 +320,7 @@ const PayrollProcessed = () => {
   } catch (error) {
     console.error("Error deleting record:", error);
     // Revert UI changes on error
-    const res = await axios.get("http://localhost:5000/api/finalized-payroll");
+    const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
     setFinalizedData(res.data);
     applyFilters(selectedDepartment, searchTerm, selectedDate);
     alert("Failed to delete record(s). Please try again.");

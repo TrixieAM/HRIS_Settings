@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState } from "react";
 import axios from "axios";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -127,7 +128,7 @@ const OfficialTimeForm = () => {
     setLoading(true);
 
     axios
-      .get(`http://localhost:5000/officialtimetable/${employeeID}`)
+      .get(`${API_BASE_URL}/officialtimetable/${employeeID}`)
       .then((res) => {
         setLoading(false);
         if (res.data.length > 0) {
@@ -158,7 +159,7 @@ const OfficialTimeForm = () => {
       return;
     }
     axios
-      .post("http://localhost:5000/officialtimetable", {
+      .post(`${API_BASE_URL}/officialtimetable`, {
         employeeID: employeeID,
         records,
       })
@@ -178,7 +179,7 @@ const OfficialTimeForm = () => {
     formData.append("file", file);
 
     try {
-      const response = await axios.post("http://localhost:5000/upload-excel-faculty-official-time", formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload-excel-faculty-official-time`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert(response.data.message);

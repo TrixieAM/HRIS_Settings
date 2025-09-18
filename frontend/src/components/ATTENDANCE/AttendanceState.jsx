@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState } from "react";
 import axios from 'axios';
 import {
@@ -26,7 +27,7 @@ const AllAttendanceRecord = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:5000/attendance/api/attendance",
+        `${API_BASE_URL}/attendance/api/attendance`,
         { personID, startDate, endDate }
       );
       setRecords(response.data);

@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -29,7 +30,7 @@ const DepartmentTable = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/department-table");
+      const response = await axios.get(`${API_BASE_URL}/api/department-table`);
       setData(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching data", error);
@@ -39,7 +40,7 @@ const DepartmentTable = () => {
 
   const addEntry = async () => {
     try {
-      await axios.post("http://localhost:5000/api/department-table", newEntry);
+      await axios.post(`${API_BASE_URL}/api/department-table`, newEntry);
       setNewEntry({ code: "", description: "" });
       fetchData();
     } catch (error) {
@@ -65,7 +66,7 @@ const DepartmentTable = () => {
 
   const saveEdit = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/department-table/${id}`, editData);
+      await axios.put(`${API_BASE_URL}/api/department-table/${id}`, editData);
       setEditingId(null);
       fetchData();
     } catch (error) {
@@ -76,7 +77,7 @@ const DepartmentTable = () => {
 
   const deleteEntry = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/department-table/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/department-table/${id}`);
       fetchData();
     } catch (error) {
       console.error("Error deleting entry", error);

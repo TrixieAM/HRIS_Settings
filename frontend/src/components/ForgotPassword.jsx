@@ -1,3 +1,4 @@
+import API_BASE_URL from "../apiConfig";
 import React, { useState } from "react";
 import logo from "../assets/logo.PNG";
 
@@ -43,7 +44,7 @@ const ForgotPassword = () => {
     setErrorMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/forgot-password", {
+      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email }),
@@ -77,7 +78,7 @@ const ForgotPassword = () => {
     setErrorMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/verify-reset-code", {
+      const response = await fetch(`${API_BASE_URL}/verify-reset-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -128,7 +129,7 @@ const ForgotPassword = () => {
     setErrorMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/reset-password", {
+      const response = await fetch(`${API_BASE_URL}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

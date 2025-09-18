@@ -1,4 +1,4 @@
-// Home.jsx
+import API_BASE_URL from '../apiConfig';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -30,7 +30,6 @@ import {
   Receipt
 } from '@mui/icons-material';
 
-const API_BASE = 'http://localhost:5000'; // adjust as needed
 const ACCENT = '#8B2635';
 
 const Home = () => {
@@ -42,6 +41,8 @@ const Home = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [holidays, setHolidays] = useState([]);
 
   // payroll
   const [payrollData, setPayrollData] = useState(null);
@@ -53,10 +54,43 @@ const Home = () => {
 
   // date parts
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  // const year = currentDate.getFullYear();
+  // const month = currentDate.getMonth();
+    const month = calendarDate.getMonth();
+  const year = calendarDate.getFullYear();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+
+  const [attendance, setAttendance] = useState({
+  timeIn: '00:00:00',
+  breakIn: '00:00:00',
+  breakOut: '00:00:00',
+  timeOut: '00:00:00',
+});
+
+// fetch user's attendance
+useEffect(() => {
+  if (!employeeNumber) return;
+  const fetchAttendance = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/attendance/${employeeNumber}`);
+      // assuming your backend returns an object like { TimeIn, BreakIn, BreakOut, TimeOut }
+      if (res.data) {
+        setAttendance({
+          timeIn: res.data.TimeIn || '00:00:00',
+          breakIn: res.data.BreakIn || '00:00:00',
+          breakOut: res.data.BreakOut || '00:00:00',
+          timeOut: res.data.TimeOut || '00:00:00',
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching attendance:', err);
+    }
+  };
+  fetchAttendance();
+}, [employeeNumber]);
+
 
   // update live clock/date (if you want time)
   useEffect(() => {
@@ -199,12 +233,33 @@ const Home = () => {
   };
   const calendarDays = generateCalendar();
 
-  // mock leave data (replace with API data if you have)
-  const leaveData = [
-    { employeeName: 'John Doe', employeeNumber: '#00000000', leaveType: 'Annual Leave', startDate: '14-06-2025', endDate: '15-07-2025', status: 'Pending' },
-    { employeeName: 'Anna Smith', employeeNumber: '#00000000', leaveType: 'Sick Leave', startDate: '21-02-2025', endDate: '22-02-2025', status: 'Approved' },
-    { employeeName: 'Juan Dela Cruz', employeeNumber: '#00000000', leaveType: 'Casual Leave', startDate: '31-12-2024', endDate: '02-01-2025', status: 'Declined' },
-  ];
+  // Fetch holidays from holiday endpoint
+ useEffect(() => {
+  const fetchHolidays = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/holiday`);
+      if (Array.isArray(res.data)) {
+        const transformedHolidays = res.data.map(item => {
+          // Normalize date to YYYY-MM-DD
+          const d = new Date(item.date);
+          const normalizedDate = !isNaN(d)
+            ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+            : item.date; // fallback if parsing fails
+
+          return {
+            date: normalizedDate,
+            name: item.description,
+            status: item.status
+          };
+        });
+        setHolidays(transformedHolidays);
+      }
+    } catch (err) {
+      console.error("Error fetching holidays:", err);
+    }
+  };
+  fetchHolidays();
+}, []);
 
   return (
       <Box sx={{ p: 1, pl: 10, mt: -5 }}>
@@ -219,13 +274,15 @@ const Home = () => {
               border: `1px solid ${ACCENT}`,
               borderRadius: 2,
               p: 2,
+              pt: 3,
+              pb: -10,
               flex: 2,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="h5" sx={{ color: '#000', fontWeight: 'bold' }}>
+                <Typography variant="h5" sx={{ color: '#000', fontWeight: 'bold', pb: -10 }}>
                   Welcome Back, {username || 'Name'}!
                 </Typography>
                 <Typography sx={{ color: ACCENT, fontSize: '.875rem', fontWeight: 500 }}>
@@ -236,29 +293,37 @@ const Home = () => {
               <Link to="/attendance-user-state" style={{ textDecoration: 'none' }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   {[
-                    { label: 'TIME IN', value: '00:00:00 AM', primary: false }, // true = red / false = gray
-                    { label: 'BREAKTIME IN', value: '00:00:00 AM', primary: false },
-                    { label: 'BREAKTIME OUT', value: '00:00:00 AM', primary: false },
-                    { label: 'TIME OUT', value: '00:00:00 AM', primary: false },
+                    { label: 'TIME IN', value: attendance.timeIn },
+                    { label: 'BREAKTIME IN', value: attendance.breakIn },
+                    { label: 'BREAKTIME OUT', value: attendance.breakOut },
+                    { label: 'TIME OUT', value: attendance.timeOut },
                   ].map((item, idx) => (
-                    <Box key={idx} sx={{
-                      backgroundColor: item.primary ? ACCENT : '#EDEDED',
-                      color: item.primary ? '#fff' : '#333',
-                      p: 1.5,
-                      borderRadius: 1,
-                      textAlign: 'center',
-                      flex: 1,
-                      minHeight: 70,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center'
-                    }}>
-                      <Typography fontSize={11} fontWeight="bold" sx={{ mb: 0.5 }}>{item.label}</Typography>
-                      <Typography fontSize={13} fontWeight="bold">{item.value}</Typography>
+                    <Box
+                      key={idx}
+                      sx={{
+                        backgroundColor: '#EDEDED',
+                        color: '#333',
+                        p: 1,
+                        borderRadius: 1,
+                        textAlign: 'center',
+                        flex: 1,
+                        minHeight: 100,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography fontSize={9} fontWeight="bold" sx={{ mb: 0.3 }}>
+                        {item.label}
+                      </Typography>
+                      <Typography fontSize={11} fontWeight="bold">
+                        {item.value}
+                      </Typography>
                     </Box>
                   ))}
                 </Box>
               </Link>
+
             </Box>
 
             {/* Payslip */}
@@ -353,12 +418,12 @@ const Home = () => {
                         e.stopPropagation();
                         handlePrevSlide();
                     }}
-                    sx={{
+                     sx={{
                         position: "absolute",
                         top: "50%",
                         left: 15,
                         transform: "translateY(-50%)",
-                        backgroundColor: "rgba(255,255,255,0.9)",
+                        color: "rgba(255,255,255,0.9)",
                         zIndex: 2,
                     }}
                     >
@@ -370,7 +435,7 @@ const Home = () => {
                     component="img"
                     src={
                         announcements[currentSlide]?.image
-                        ? `http://localhost:5000${announcements[currentSlide].image}`
+                        ? `${API_BASE_URL}${announcements[currentSlide].image}`
                         : "/api/placeholder/800/400"
                     }
                     alt={announcements[currentSlide]?.title || "Announcement"}
@@ -383,12 +448,12 @@ const Home = () => {
 
                     {/* Inner shadow overlay */}
                     <Box
-                    sx={{
+                     sx={{
                         position: "absolute",
                         inset: 0,
                         pointerEvents: "none",
                         background:
-                        "radial-gradient(circle at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%)",
+                        "radial-gradient(circle at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 90%)",
                     }}
                     />
 
@@ -403,7 +468,7 @@ const Home = () => {
                         top: "50%",
                         right: 15,
                         transform: "translateY(-50%)",
-                        backgroundColor: "rgba(255,255,255,0.9)",
+                        color: "rgba(255,255,255,0.9)",
                         zIndex: 2,
                     }}
                     >
@@ -477,7 +542,7 @@ const Home = () => {
                     {selectedAnnouncement.image && (
                         <Box
                         component="img"
-                        src={`http://localhost:5000${selectedAnnouncement.image}`}
+                        src={`${API_BASE_URL}${selectedAnnouncement.image}`}
                         alt={selectedAnnouncement.title}
                         sx={{
                             width: "100%",
@@ -516,31 +581,55 @@ const Home = () => {
 
 
           {/* Right side: Calendar + Announcements */}
-          <Grid item xs={12} md={4}>
-            {/* Calendar */}
-            <Box
-              sx={{
-                border: "1px solid #6d2323",
-                borderRadius: 2,
-                mb: 2,
-                overflow: "hidden",
-              }}
-            >
-              <Box sx={{ backgroundColor: "#6d2323", p: 1.5, textAlign: "center" }}>
-                <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                  May {year}
-                </Typography>
-              </Box>
-              <Box sx={{ p: 1, backgroundColor: "white" }}>
-                <Grid container spacing={0}>
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+            <Grid item xs={12} md={4}>
+              <Box
+                sx={{
+                  borderRadius: 2,
+                  border: "1px solid #8B2635",
+                  backgroundColor: "#fff",
+                  p: 2,
+                }}
+              >
+                {/* Calendar Header with Navigation */}
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                  <IconButton 
+                    size="small" 
+                    // Previous month
+                    onClick={() => {
+                      const prevMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
+                      setCalendarDate(prevMonth);
+                    }}
+                    sx={{ color: "#6d2323" }}
+                  >
+                    <ArrowBackIosNewIcon fontSize="small" />
+                  </IconButton>
+                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "0.9rem" }}>
+                    {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </Typography>
+                  <IconButton 
+                    size="small" 
+                    // Next month
+                    onClick={() => {
+                      const nextMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
+                      setCalendarDate(nextMonth);
+                    }}
+                    sx={{ color: "#6d2323" }}
+                  >
+                    <ArrowForwardIosIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+
+                {/* Days of Week Header */}
+                <Grid container spacing={0} sx={{ mb: 0.5 }}>
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                     <Grid item xs={12 / 7} key={day}>
                       <Typography
                         sx={{
                           textAlign: "center",
-                          fontSize: "0.75rem",
                           fontWeight: "bold",
-                          color: "#8B2635",
+                          fontSize: "0.65rem",
+                          color: "#6d2323",
+                          p: 0.3,
                         }}
                       >
                         {day}
@@ -548,32 +637,90 @@ const Home = () => {
                     </Grid>
                   ))}
                 </Grid>
-                <Grid container spacing={0}>
-                  {calendarDays.map((day, index) => (
-                    <Grid item xs={12 / 7} key={index}>
-                      <Box
-                        sx={{
-                          textAlign: "center",
-                          p: 0.5,
-                          fontSize: "0.8rem",
-                          color: day ? "#333" : "transparent",
-                        }}
-                      >
-                        {day || ""}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </Box>
 
-            {/* Announcements list */}
+                {/* Calendar Days Grid */}
+                <Grid container spacing={0}>
+                  {calendarDays.map((day, index) => {
+                    const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+                    const holidayData = holidays.find(
+                      (h) => h.date === currentDate && h.status === "Active"
+                    );
+
+                    return (
+                      <Grid item xs={12 / 7} key={index}>
+                        <Tooltip
+                          title={holidayData ? holidayData.name : ""}
+                          arrow
+                          componentsProps={{
+                            tooltip: {
+                              sx: {
+                                color: "#6d2323",               // text red
+                                backgroundColor: "#fff", // transparent background
+                                border: "1.5px solid #6d2323",    // burgundy outline
+                                fontWeight: "bold",
+                                fontSize: "0.6rem",
+                                boxShadow: "none",
+                                borderRadius: "20px"
+                              },
+                            },
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              textAlign: "center",
+                             p: 0.34,
+                              fontSize: "0.7rem",
+                              borderRadius: "20px",
+                              color: holidayData ? "#fff" : day ? "#333" : "transparent",
+                              backgroundColor: holidayData ? "#6d2323" : "transparent",
+                              fontWeight: holidayData ? "bold" : "normal",
+                              minHeight: "17px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: holidayData ? "pointer" : "default",
+                              "&:hover": holidayData
+                                ? {
+                                    backgroundColor: "#6d2323", // keep burgundy on hover
+                                    transform: "scale(1.05)",
+                                    transition: "all 0.2s ease-in-out",
+                                  }
+                                : {},
+                            }}
+                          >
+                            {day || ""}
+                          </Box>
+                        </Tooltip>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+
+
+                {/* Legend */}
+                {/* <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Box 
+                      sx={{ 
+                        width: 8, 
+                        height: 8, 
+                        backgroundColor: "red", 
+                        borderRadius: "50%" 
+                      }} 
+                    />
+                    <Typography fontSize="0.6rem" color="#666">Holiday</Typography>
+                  </Box>
+                </Box> */}
+              </Box>
+              {/* Announcements list */}
                <Box
                             sx={{
                                 border: "1px solid #8B2635",
                                 borderRadius: 2,
                                 overflow: "hidden",
                                 height: "153px",
+                                mt: 2
                             }}
                             >
                             <Box sx={{ backgroundColor: "#fff", p: 1.5, textAlign: "center" }}>
@@ -583,12 +730,12 @@ const Home = () => {
                             </Box>
                             <Box sx={{ p: 1.5, backgroundColor: "white", height: "calc(100% - 60px)", overflowY: "auto" }}>
                                 {announcements.map((a, i) => (
-                                <Box 
-                                    key={i} 
-                                    sx={{ 
-                                    mb: 2, 
-                                    p: 1.5, 
-                                    border: "1px solid #8B2635", 
+                                <Box
+                                    key={i}
+                                    sx={{
+                                    mb: 2,
+                                    p: 1.5,
+                                    border: "1px solid #8B2635",
                                     borderRadius: 1,
                                     cursor: "pointer",
                                     "&:hover": { backgroundColor: "#f9f9f9" }
@@ -619,63 +766,60 @@ const Home = () => {
                                 </Typography>
                                 )}
                             </Box>
-                            </Box>
-          </Grid>
-        </Grid>
+                          </Box>
+               </Grid>
+           </Grid>
         </Box>
 
        {/* Right Sidebar */}
-<Box
-  sx={{
-    width: 320,
-    backgroundColor: "#ffffff",
-    border: "1px solid #8B2635",
-    borderRadius: 2,
-    p: 1.5,
-    height: "fit-content",
-    position: "sticky",
-    top: 20,
-    cursor: "pointer", // shows pointer on hover
-    "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } // optional hover effect
-  }}
-  onClick={() => {
-    // action when sidebar is clicked
-    navigate("/profile"); // example: navigate to profile page
-  }}
->
-  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-    <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 2, gap: 1 }}>
-      <Tooltip title="Notifications">
-        <IconButton size="small" sx={{ color: "black" }} onClick={(e) => { e.stopPropagation(); setNotifModalOpen(true); }}>
-          <Badge badgeContent={3} color="error">
-            <NotificationsIcon fontSize="small" />
-          </Badge>
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="More Options">
-        <IconButton size="small" sx={{ color: "black" }} onClick={(e) => e.stopPropagation()}>
-          <ArrowDropDownIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Box>
+        <Box
+          sx={{
+            width: 320,
+            backgroundColor: "#ffffff",
+            border: "1px solid #8B2635",
+            borderRadius: 2,
+            p: 1.5,
+            height: "fit-content",
+            position: "sticky",
+            top: 20,
+            cursor: "pointer", // shows pointer on hover
+            "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } // optional hover effect
+          }}
+        
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 2, gap: 1 }}>
+              <Tooltip title="Notifications">
+                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => { e.stopPropagation(); setNotifModalOpen(true); }}>
+                  <Badge badgeContent={3} color="error">
+                    <NotificationsIcon fontSize="small" />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="More Options">
+                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => e.stopPropagation()}>
+                  <ArrowDropDownIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
 
-    <Avatar
-      alt={username}
-      src={profilePicture ? `http://localhost:5000${profilePicture}` : undefined}
-      sx={{
-        width: 80,
-        height: 80,
-        border: "3px solid #8B2635",
-        mb: 1,
-      }}
-    />
-    <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
-      {username || "Admin Name"}
-    </Typography>
-    <Typography variant="body2" sx={{ color: "#666", textAlign: "center" }}>
-      {employeeNumber || "#00000000"}
-    </Typography>
-  </Box>
+            <Avatar
+              alt={username}
+              src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+              sx={{
+                width: 80,
+                height: 80,
+                border: "3px solid #8B2635",
+                mb: 1,
+              }}
+            />
+            <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
+              {username || "Admin Name"}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#666", textAlign: "center" }}>
+              {employeeNumber || "#00000000"}
+            </Typography>
+          </Box>
 
           {/* Quick Links */}
           <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
@@ -788,8 +932,8 @@ const Home = () => {
                </Grid>
          
                {/* Request Leave */}
-               {/* <Grid item xs={3}>
-                 <Link to="/leave-request" style={{ textDecoration: "none" }}>
+               <Grid item xs={3}>
+                 <Link to="/leave-request-staff" style={{ textDecoration: "none" }}>
                    <Box
                      sx={{
                        m: 0.5,
@@ -817,7 +961,7 @@ const Home = () => {
                      </Typography>
                    </Box>
                  </Link>
-               </Grid> */}
+               </Grid>
          
                {/* Attendance */}
                <Grid item xs={3}>
@@ -861,7 +1005,7 @@ const Home = () => {
               <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>RECENT ACTIVITY</Typography>
             </Box>
 
-            <Box sx={{ p: 1.5, backgroundColor: 'white', maxHeight: 180, overflowY: 'auto' }}>
+            <Box sx={{ p: 1.5, backgroundColor: 'white', maxHeight: 122, overflowY: 'auto' }}>
               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Leave Request Submitted</Typography>
                 <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Annual Leave - June 14-15, 2025</Typography>

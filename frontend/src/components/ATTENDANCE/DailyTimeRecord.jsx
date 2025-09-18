@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useEffect,useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -29,9 +30,10 @@ const DailyTimeRecord = () => {
     }
   }, []);
 
+
   const fetchRecords = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/attendance/api/view-attendance", {
+      const response = await axios.post(`${API_BASE_URL}/attendance/api/view-attendance`, {
         personID,
         startDate,
         endDate,
@@ -46,16 +48,9 @@ const DailyTimeRecord = () => {
         // Extract and set the employee name from the first record
         const { firstName, lastName} = data[0];
         setEmployeeName(`${firstName} ${lastName}`);
-        // Extract and map officialTimeIN and officialTimeOUT by day
-        const officialTimes = data.reduce((acc, record) => {
-          acc[record.Day] = {
-            officialTimeIN: record.officialTimeIN,
-            officialTimeOUT: record.officialTimeOUT,
-          };
-          return acc;
-        }, {});
-
-        setOfficialTimes(officialTimes); // Save the mapping
+        
+        // Fetch official times separately using the personID
+        await fetchOfficialTimes(personID);
       } else {
         setRecords([]);
         setEmployeeName("No records found");
@@ -65,6 +60,38 @@ const DailyTimeRecord = () => {
       console.error(err);
     }
   };
+
+
+  // New function to fetch official times
+  const fetchOfficialTimes = async (employeeID) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/officialtimetable/${employeeID}`);
+      const data = response.data;
+      
+      // Map the official times by day
+      const officialTimesMap = data.reduce((acc, record) => {
+        acc[record.day] = {
+          officialTimeIN: record.officialTimeIN,
+          officialTimeOUT: record.officialTimeOUT,
+          officialBreaktimeIN: record.officialBreaktimeIN,
+          officialBreaktimeOUT: record.officialBreaktimeOUT,
+        };
+        return acc;
+      }, {});
+      
+      setOfficialTimes(officialTimesMap);
+    } catch (error) {
+      console.error("Error fetching official times:", error);
+      setOfficialTimes({});
+    }
+  };
+
+   // Also fetch official times when personID changes (on component mount)
+  useEffect(() => {
+    if (personID) {
+      fetchOfficialTimes(personID);
+    }
+  }, [personID]);
 
   const printPage = () => {
     const elementsToHide = document.querySelectorAll(".no-print");
@@ -158,14 +185,14 @@ const DailyTimeRecord = () => {
               width: 100rem; 
               margin-top: -10rem; 
               padding-top: -5%;
-              margin-left: -47.5rem;
-              transform: scale(0.5);
+              margin-left: -23.5rem;
+              transform: scale(0.7);
               height: 100vh;
               
             }
             
             .table { 
-              width: 40%; 
+              width: 50%; 
               border: 1px solid black; 
               border-collapse: collapse; 
             }
@@ -249,7 +276,7 @@ const DailyTimeRecord = () => {
   {/* Month Buttons */}
                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 5, ml: 30, mt: 0.5 }}>
                           {months.map((month, index) => (
-                            <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
+                            <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#A31d1d" } }}>
                               {month}
                             </Button>
                           ))}
@@ -278,7 +305,7 @@ const DailyTimeRecord = () => {
           }}
           variant="contained"
           color="primary"
-          onClick={fetchRecords}
+          onClick={fetchRecords || fetchOfficialTimes}
           fullWidth
         >
           <SearchOutlined /> &nbsp;
@@ -435,7 +462,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    M - {officialTimes["Monday"]?.officialTimeIN || "N/A"} - {officialTimes["Monday"]?.officialTimeOUT || "N/A"}
+                    M - {officialTimes["Monday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Monday"]?.officialTimeOUT || "00:00:00"}
                   </td>
 
                   <td
@@ -448,7 +475,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    T - {officialTimes["Tuesday"]?.officialTimeIN || "N/A"} - {officialTimes["Tuesday"]?.officialTimeOUT || "N/A"}
+                    T - {officialTimes["Tuesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Tuesday"]?.officialTimeOUT || "00:00:00"}
                   </td>
 
                   <td
@@ -461,7 +488,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    W - {officialTimes["Wednesday"]?.officialTimeIN || "N/A"} - {officialTimes["Wednesday"]?.officialTimeOUT || "N/A"}
+                    W - {officialTimes["Wednesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Wednesday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -473,7 +500,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    TH - {officialTimes["Thursday"]?.officialTimeIN || "N/A"} - {officialTimes["Thursday"]?.officialTimeOUT || "N/A"}
+                    TH - {officialTimes["Thursday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Thursday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -485,7 +512,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    F - {officialTimes["Friday"]?.officialTimeIN || "N/A"} - {officialTimes["Friday"]?.officialTimeOUT || "N/A"}
+                    F - {officialTimes["Friday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Friday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -497,7 +524,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "N/A"} - {officialTimes["Saturday"]?.officialTimeOUT || "N/A"}
+                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Saturday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -509,7 +536,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "N/A"} - {officialTimes["Sunday"]?.officialTimeOUT || "N/A"}
+                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Sunday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                 </tr>
                 <tr>
@@ -1066,7 +1093,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    M - {officialTimes["Monday"]?.officialTimeIN || "N/A"} - {officialTimes["Monday"]?.officialTimeOUT || "N/A"}
+                    M - {officialTimes["Monday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Monday"]?.officialTimeOUT || "00:00:00"}
                   </td>
 
                   <td
@@ -1079,7 +1106,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    T - {officialTimes["Tuesday"]?.officialTimeIN || "N/A"} - {officialTimes["Tuesday"]?.officialTimeOUT || "N/A"}
+                    T - {officialTimes["Tuesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Tuesday"]?.officialTimeOUT || "00:00:00"}
                   </td>
 
                   <td
@@ -1092,7 +1119,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    W - {officialTimes["Wednesday"]?.officialTimeIN || "N/A"} - {officialTimes["Wednesday"]?.officialTimeOUT || "N/A"}
+                    W - {officialTimes["Wednesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Wednesday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -1104,7 +1131,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    TH - {officialTimes["Thursday"]?.officialTimeIN || "N/A"} - {officialTimes["Thursday"]?.officialTimeOUT || "N/A"}
+                    TH - {officialTimes["Thursday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Thursday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -1116,7 +1143,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    F - {officialTimes["Friday"]?.officialTimeIN || "N/A"} - {officialTimes["Friday"]?.officialTimeOUT || "N/A"}
+                    F - {officialTimes["Friday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Friday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -1128,7 +1155,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "N/A"} - {officialTimes["Saturday"]?.officialTimeOUT || "N/A"}
+                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Saturday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                   <td
                     style={{
@@ -1140,7 +1167,7 @@ const DailyTimeRecord = () => {
                       fontSize: '0.8rem'
                     }}
                   >
-                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "N/A"} - {officialTimes["Sunday"]?.officialTimeOUT || "N/A"}
+                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Sunday"]?.officialTimeOUT || "00:00:00"}
                   </td>
                 </tr>
                 <tr>

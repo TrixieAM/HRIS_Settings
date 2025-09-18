@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
@@ -82,7 +83,7 @@ const PDS1 = () => {
   useEffect(() => {
     if (employeeNumber) {
       axios
-        .get(`http://localhost:5000/personalinfo/person_table/${employeeNumber}`)
+        .get(`${API_BASE_URL}/personalinfo/person_table/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched person data:', res.data);
           setPersonalInfo(res.data);
@@ -92,7 +93,7 @@ const PDS1 = () => {
         });
  
       axios
-        .get(`http://localhost:5000/vocational/vocational-table/${employeeNumber}`)
+        .get(`${API_BASE_URL}/vocational/vocational-table/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched vocational data:', res.data);
           setVocationalInfo(res.data);
@@ -105,7 +106,7 @@ const PDS1 = () => {
 
 
         axios
-        .get(`http://localhost:5000/college/college-table/${employeeNumber}`)
+        .get(`${API_BASE_URL}/college/college-table/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched college data:', res.data);
           setcollegeInfo(res.data);
@@ -118,7 +119,7 @@ const PDS1 = () => {
 
 
         axios
-        .get(`http://localhost:5000/childrenRoute/children-table1/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table1/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched college data:', res.data);
           setchildrenInfo1(res.data);
@@ -127,7 +128,7 @@ const PDS1 = () => {
           console.error('Error loading college data:', err);
         });
         axios
-        .get(`http://localhost:5000/childrenRoute/children-table2/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table2/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched college data:', res.data);
           setchildrenInfo2(res.data);
@@ -136,7 +137,7 @@ const PDS1 = () => {
           console.error('Error loading college data:', err);
         });
         axios
-        .get(`http://localhost:5000/childrenRoute/children-table3/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table3/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table3 data:', res.data);
           setchildrenInfo3(res.data);
@@ -149,7 +150,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table4/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table4/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table4 data:', res.data);
           setchildrenInfo4(res.data);
@@ -162,7 +163,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table5/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table5/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table5 data:', res.data);
           setchildrenInfo5(res.data);
@@ -175,7 +176,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table6/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table6/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table6 data:', res.data);
           setchildrenInfo6(res.data);
@@ -188,7 +189,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table7/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table7/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table7 data:', res.data);
           setchildrenInfo7(res.data);
@@ -201,7 +202,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table8/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table8/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table8 data:', res.data);
           setchildrenInfo8(res.data);
@@ -214,7 +215,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table9/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table9/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table9 data:', res.data);
           setchildrenInfo9(res.data);
@@ -227,7 +228,7 @@ const PDS1 = () => {
 
 
       axios
-        .get(`http://localhost:5000/childrenRoute/children-table10/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table10/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table10 data:', res.data);
           setchildrenInfo10(res.data);
@@ -236,7 +237,7 @@ const PDS1 = () => {
           console.error('Error loading children-table10 data:', err);
         });
         axios
-        .get(`http://localhost:5000/childrenRoute/children-table11/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table11/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table11 data:', res.data);
           setchildrenInfo11(res.data);
@@ -245,7 +246,7 @@ const PDS1 = () => {
           console.error('Error loading children-table11 data:', err);
         });
         axios
-        .get(`http://localhost:5000/childrenRoute/children-table12/${employeeNumber}`)
+        .get(`${API_BASE_URL}/childrenRoute/children-table12/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched children-table12 data:', res.data);
           setchildrenInfo12(res.data);
@@ -256,7 +257,7 @@ const PDS1 = () => {
 
 
          axios
-        .get(`http://localhost:5000/GraduateRoute/graduate-table/${employeeNumber}`)
+        .get(`${API_BASE_URL}/GraduateRoute/graduate-table/${employeeNumber}`)
         .then((res) => {
           console.log('Fetched Graduate data:', res.data);
           setGraduateInfo(res.data);

@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const LearningAndDevelopment = () => {
   const [data, setData] = useState([]);
@@ -52,7 +53,7 @@ const LearningAndDevelopment = () => {
 
   const fetchLearning = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/learning_and_development_table');
+      const res = await axios.get(`${API_BASE_URL}/learning_and_development_table`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -62,7 +63,7 @@ const LearningAndDevelopment = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/learning_and_development_table', newLearning);
+      await axios.post(`/learning_and_development_table`, newLearning);
       setNewLearning({
         titleOfProgram: '',
         dateFrom: '',
@@ -87,7 +88,7 @@ const LearningAndDevelopment = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/learning_and_development_table/${editLearning.id}`, editLearning);
+      await axios.put(`${API_BASE_URL}/learning_and_development_table/${editLearning.id}`, editLearning);
       setEditLearning(null);
       setOriginalLearning(null);
       setIsEditing(false);
@@ -102,7 +103,7 @@ const LearningAndDevelopment = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/learning_and_development_table/${id}`);
+      await axios.delete(`${API_BASE_URL}/learning_and_development_table/${id}`);
       setEditLearning(null);
       setOriginalLearning(null);
       setIsEditing(false);

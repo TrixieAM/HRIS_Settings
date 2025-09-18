@@ -1,3 +1,4 @@
+import API_BASE_URL from "../apiConfig";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -5,7 +6,6 @@ import {
   TextField,
   Button,
   Container,
-  Link,
   Paper,
   Typography,
 } from "@mui/material";
@@ -21,30 +21,26 @@ const Registration = () => {
   const [errMessage, setErrorMessage] = useState();
   const [successMessage, setSuccessMessage] = useState("");
 
+  const navigate = useNavigate();
+
   const handleChanges = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const isValidName = (name) => {
-    // Split into words
     const words = name.trim().split(" ");
     if (words.length === 0) return false;
-  
+
     for (let word of words) {
-      // Check length
       if (word.length < 2 || word.length > 20) return false;
-  
-      // Check only letters/apostrophes
       if (!/^[a-zA-Z']+$/.test(word)) return false;
-  
-      // Check at least one vowel in the word
       if (!/[aeiouAEIOU]/.test(word)) return false;
     }
-  
+
     return true;
   };
-  
+
   const handleRegister = async (e) => {
     e.preventDefault();
     const { username, email, employeeNumber, password } = formData;
@@ -54,16 +50,15 @@ const Registration = () => {
       setSuccessMessage("");
       return;
     }
-    
+
     if (!isValidName(username)) {
       setErrorMessage("Please enter a valid name.");
       setSuccessMessage("");
       return;
     }
-    
 
     try {
-      const response = await fetch("http://localhost:5000/register", {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -72,7 +67,7 @@ const Registration = () => {
       if (response.ok) {
         setSuccessMessage("User registered successfully!");
         setErrorMessage("");
-        setFormData({ username: "",  email: "", employeeNumber: "", password: "" });
+        setFormData({ username: "", email: "", employeeNumber: "", password: "" });
       } else {
         setErrorMessage("Registration failed. Try again.");
         setSuccessMessage("");
@@ -83,8 +78,6 @@ const Registration = () => {
       setSuccessMessage("");
     }
   };
-
- 
 
   return (
     <Container
@@ -134,7 +127,6 @@ const Registration = () => {
             value={formData.username}
             onChange={handleChanges}
             InputLabelProps={{ required: false }}
-
           />
           <TextField
             name="email"
@@ -145,7 +137,6 @@ const Registration = () => {
             value={formData.email}
             onChange={handleChanges}
             InputLabelProps={{ required: false }}
-
           />
           <TextField
             name="employeeNumber"
@@ -154,18 +145,17 @@ const Registration = () => {
             fullWidth
             sx={{
               mb: 2,
-              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                WebkitAppearance: 'none',
+              "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                WebkitAppearance: "none",
                 margin: 0,
               },
-              '& input[type=number]': {
-                MozAppearance: 'textfield',
+              "& input[type=number]": {
+                MozAppearance: "textfield",
               },
             }}
             value={formData.employeeNumber}
             onChange={handleChanges}
             InputLabelProps={{ required: false }}
-
           />
           <TextField
             name="password"
@@ -177,7 +167,6 @@ const Registration = () => {
             value={formData.password}
             onChange={handleChanges}
             InputLabelProps={{ required: false }}
-
           />
 
           <Button
@@ -195,16 +184,9 @@ const Registration = () => {
           variant="contained"
           fullWidth
           sx={{ bgcolor: "black", mt: 1 }}
+          onClick={() => navigate("/bulk-register")} // ✅ Programmatic navigation
         >
-          <Link
-            href="/bulk-register"
-            underline="none"
-            sx={{
-              color: "white",
-            }}
-          >
-            ⮞ Bulk Registration
-          </Link>
+          ⮞ Bulk Registration
         </Button>
       </Paper>
     </Container>

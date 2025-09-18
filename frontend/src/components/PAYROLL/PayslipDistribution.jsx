@@ -7,27 +7,32 @@ import {
   Box,
   Button,
   CircularProgress,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
   TextField,
-  InputAdornment,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import Search from '@mui/icons-material/Search';
-
-
 import WorkIcon from '@mui/icons-material/Work';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import axios from 'axios';
 import logo from '../../assets/logo.png';
 import hrisLogo from '../../assets/hrisLogo.png';
+import LoadingOverlay from '../LoadingOverlay';
 import SuccessfulOverlay from '../SuccessfulOverlay';
 
 
-const PayslipOverall = forwardRef(({ employee }, ref) => {
+const PayslipDistribution = forwardRef(({ employee }, ref) => {
   const payslipRef = ref || useRef();
 
 
@@ -36,17 +41,26 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
   const [loading, setLoading] = useState(!employee);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [successOverlay, setSuccessOverlay] = useState({
+    open: false,
+    action: '',
+  });
   const [modal, setModal] = useState({
     open: false,
-    type: '', // "success" or "error"
-    action: '', // "create", "edit", "delete", "send"
+    type: 'error',
+    message: '',
   });
 
 
-  const [search, setSearch] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
+  // Search & Filters
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [filteredPayroll, setFilteredPayroll] = useState([]);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+
+
   const months = [
     'Jan',
     'Feb',
@@ -63,7 +77,12 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
   ];
 
 
-  // Fetch payroll data
+  // Generate year options (current year ± 5 years)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+
+
+  // Fetch payroll
   useEffect(() => {
     if (!employee) {
       const fetchData = async () => {
@@ -85,12 +104,76 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
   }, [employee]);
 
 
-  const downloadPDF = async () => {
-    if (!displayEmployee) return;
+  // Filter payroll by Year, Month, and Search
+  useEffect(() => {
+    let result = [...allPayroll];
 
 
-    // 1. Identify current month/year from displayEmployee
-    const currentStart = new Date(displayEmployee.startDate);
+    if (selectedMonth) {
+      const monthIndex = months.indexOf(selectedMonth);
+      result = result.filter((emp) => {
+        if (!emp.startDate) return false;
+        const date = new Date(emp.startDate);
+        return (
+          date.getMonth() === monthIndex && date.getFullYear() === selectedYear
+        );
+      });
+    }
+
+
+    if (searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (emp) =>
+          emp.name.toLowerCase().includes(q) ||
+          emp.employeeNumber.toString().includes(q)
+      );
+    }
+
+
+    setFilteredPayroll(result);
+    setSelectedEmployees([]); // reset selection when filters change
+  }, [selectedMonth, selectedYear, searchQuery, allPayroll]);
+
+
+  // Month select
+  const handleMonthSelect = (month) => {
+    setSelectedMonth(month);
+    setDisplayEmployee(null);
+  };
+
+
+  // Checkbox logic
+  const allSelected =
+    filteredPayroll.length > 0 &&
+    selectedEmployees.length === filteredPayroll.length;
+  const someSelected =
+    selectedEmployees.length > 0 &&
+    selectedEmployees.length < filteredPayroll.length;
+
+
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedEmployees(filteredPayroll.map((emp) => emp.employeeNumber));
+    } else {
+      setSelectedEmployees([]);
+    }
+  };
+
+
+  const handleSelectOne = (id) => {
+    if (selectedEmployees.includes(id)) {
+      setSelectedEmployees(selectedEmployees.filter((empId) => empId !== id));
+    } else {
+      setSelectedEmployees([...selectedEmployees, id]);
+    }
+  };
+
+
+  // Helper function to generate 3-month PDF for an employee
+  const generate3MonthPDF = async (employee) => {
+    // 1. Identify current month/year from employee
+    const currentStart = new Date(employee.startDate);
     const currentMonth = currentStart.getMonth(); // 0-11
     const currentYear = currentStart.getFullYear();
 
@@ -110,7 +193,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     const records = monthsToGet.map(({ month, year, label }) => {
       const payroll = allPayroll.find(
         (p) =>
-          p.employeeNumber === displayEmployee.employeeNumber &&
+          p.employeeNumber === employee.employeeNumber &&
           new Date(p.startDate).getMonth() === month &&
           new Date(p.startDate).getFullYear() === year
       );
@@ -118,7 +201,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     });
 
 
-    // 4. PDF setup
+    // 4. PDF setup - landscape orientation for 3 payslips
     const pdf = new jsPDF('l', 'in', 'a4');
     const contentWidth = 3.5;
     const contentHeight = 7.1;
@@ -141,22 +224,20 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     // 5. Render each of the 3 slots
     for (let i = 0; i < records.length; i++) {
       const { payroll, label } = records[i];
-
-
       let imgData;
 
 
       if (payroll) {
-        // ✅ Normal payslip
+        // Normal payslip
         setDisplayEmployee(payroll);
-        await new Promise((resolve) => setTimeout(resolve, 300)); // wait DOM update
+        await new Promise((resolve) => setTimeout(resolve, 500)); // wait DOM update
 
 
         const input = payslipRef.current;
         const canvas = await html2canvas(input, { scale: 2, useCORS: true });
         imgData = canvas.toDataURL('image/png');
       } else {
-        // ❌ Missing → create "No Data" placeholder
+        // Missing → create "No Data" placeholder
         const placeholderCanvas = document.createElement('canvas');
         placeholderCanvas.width = 600;
         placeholderCanvas.height = 1200;
@@ -191,222 +272,83 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     }
 
 
-    // 6. Save file
-    pdf.save(`${displayEmployee.name || 'EARIST'}-Payslips-3Months.pdf`);
-
-
-    setModal({
-      open: true,
-      type: 'success',
-      action: 'download',
-    });
-
-
-    // Restore current employee in UI
-    setDisplayEmployee(displayEmployee);
+    return pdf.output('blob');
   };
 
 
-  // Send Payslip via Gmail
-  const sendPayslipViaGmail = async () => {
-    if (!displayEmployee) return;
+  // Bulk send selected payslips with 3-month layout
+  const sendSelectedPayslips = async () => {
+    if (selectedEmployees.length === 0) return;
 
 
     setSending(true);
+    setLoadingMessage('Generating payslips and sending via Gmail...');
+
+
     try {
-      // 1. Identify current month/year
-      const currentStart = new Date(displayEmployee.startDate);
-      const currentMonth = currentStart.getMonth();
-      const currentYear = currentStart.getFullYear();
+      const formData = new FormData();
+      let payslipMeta = [];
 
 
-      // 2. Collect last 3 months (current + 2 previous)
-      const monthsToGet = [0, 1, 2].map((i) => {
-        const d = new Date(currentYear, currentMonth - i, 1);
-        return {
-          month: d.getMonth(),
-          year: d.getFullYear(),
-          label: d.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
-        };
-      });
+      // Update loading message for processing
+      setLoadingMessage(
+        `Processing ${selectedEmployees.length} employee payslips...`
+      );
 
 
-      // 3. Find records
-      const records = monthsToGet.map(({ month, year, label }) => {
-        const payroll = allPayroll.find(
-          (p) =>
-            p.employeeNumber === displayEmployee.employeeNumber &&
-            new Date(p.startDate).getMonth() === month &&
-            new Date(p.startDate).getFullYear() === year
-        );
-        return { payroll, label };
-      });
+      for (const emp of filteredPayroll.filter((e) =>
+        selectedEmployees.includes(e.employeeNumber)
+      )) {
+        // Update loading message for current employee
+        setLoadingMessage(`Generating payslip for ${emp.name}...`);
 
 
-      // 4. PDF setup
-      const pdf = new jsPDF('l', 'in', 'a4');
-      const contentWidth = 3.5;
-      const contentHeight = 7.1;
-      const gap = 0.2;
+        // Generate 3-month PDF for this employee
+        const pdfBlob = await generate3MonthPDF(emp);
+        formData.append('pdfs', pdfBlob, `${emp.name}_3month_payslip.pdf`);
 
 
-      const totalWidth = contentWidth * 3 + gap * 2;
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const yOffset = (pageHeight - contentHeight) / 2;
-
-
-      const positions = [
-        (pageWidth - totalWidth) / 2,
-        (pageWidth - totalWidth) / 2 + contentWidth + gap,
-        (pageWidth - totalWidth) / 2 + (contentWidth + gap) * 2,
-      ];
-
-
-      // 5. Render each slot (same as downloadPDF)
-      for (let i = 0; i < records.length; i++) {
-        const { payroll, label } = records[i];
-        let imgData;
-
-
-        if (payroll) {
-          setDisplayEmployee(payroll);
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          const input = payslipRef.current;
-          const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-          imgData = canvas.toDataURL('image/png');
-        } else {
-          // No Data placeholder
-          const placeholderCanvas = document.createElement('canvas');
-          placeholderCanvas.width = 600;
-          placeholderCanvas.height = 1200;
-          const ctx = placeholderCanvas.getContext('2d');
-          ctx.fillStyle = '#fff';
-          ctx.fillRect(0, 0, placeholderCanvas.width, placeholderCanvas.height);
-          ctx.fillStyle = '#6D2323';
-          ctx.font = 'bold 28px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText('No Data', placeholderCanvas.width / 2, 500);
-          ctx.font = '20px Arial';
-          ctx.fillText(`for ${label}`, placeholderCanvas.width / 2, 550);
-          imgData = placeholderCanvas.toDataURL('image/png');
-        }
-
-
-        pdf.addImage(
-          imgData,
-          'PNG',
-          positions[i],
-          yOffset,
-          contentWidth,
-          contentHeight
-        );
+        payslipMeta.push({
+          name: emp.name,
+          employeeNumber: emp.employeeNumber,
+        });
       }
 
 
-      // 6. Convert PDF to Blob
-      const pdfBlob = pdf.output('blob');
-      const formData = new FormData();
-      formData.append('pdf', pdfBlob, `${displayEmployee.name}_payslip.pdf`);
-      formData.append('name', displayEmployee.name);
-      formData.append('employeeNumber', displayEmployee.employeeNumber);
+      // Update loading message for sending
+      setLoadingMessage('Sending payslips via Gmail...');
 
 
-      // 7. Send to backend
-      const res = await axios.post(
-        `${API_BASE_URL}/SendPayslipRoute/send-payslip`,
+      formData.append('payslips', JSON.stringify(payslipMeta));
+
+
+      await axios.post(
+        `${API_BASE_URL}/SendPayslipRoute/send-bulk`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
 
 
-      if (res.data.success) {
-        setModal({
-          open: true,
-          type: 'success',
-          action: 'gmail',
-        });
-      } else {
-        setModal({
-          open: true,
-          type: 'error',
-          message: res.data.error || 'Failed to send payslip.',
-        });
-      }
+      // Show success overlay
+      setSending(false);
+      setSuccessOverlay({
+        open: true,
+        action: 'gmail',
+      });
     } catch (err) {
-      console.error('Error sending payslip:', err);
+      console.error('Error sending bulk payslips:', err);
+      setSending(false);
       setModal({
         open: true,
         type: 'error',
-        message: 'An error occurred while sending the payslip.',
+        message: 'An error occurred while sending bulk payslips.',
       });
-    } finally {
-      // ✅ restore current employee
-      setDisplayEmployee(displayEmployee);
-      setSending(false);
     }
-  };
-
-
-  // For Search
-  const handleSearch = () => {
-    if (!search.trim()) return;
-
-
-    const result = allPayroll.filter(
-      (emp) =>
-        emp.employeeNumber.toString().includes(search.trim()) ||
-        emp.name.toLowerCase().includes(search.trim().toLowerCase())
-    );
-
-
-    if (result.length > 0) {
-      setFilteredPayroll(result);
-      setDisplayEmployee(null); // ❌ don’t auto-display
-      setSelectedMonth(''); // reset month filter
-      setHasSearched(true);
-    } else {
-      setFilteredPayroll([]);
-      setDisplayEmployee(null);
-      setSelectedMonth('');
-      setHasSearched(true);
-    }
-  };
-
-
-  // For Clear / Reset
-  const clearSearch = () => {
-    setSearch('');
-    setHasSearched(false);
-    setSelectedMonth('');
-    setFilteredPayroll([]);
-    if (employee) {
-      setDisplayEmployee(employee);
-    } else {
-      setDisplayEmployee(null);
-    }
-  };
-
-
-  // 📅 Month filter
-  const handleMonthSelect = (month) => {
-    setSelectedMonth(month);
-    const monthIndex = months.indexOf(month);
-
-
-    const result = filteredPayroll.filter((emp) => {
-      if (!emp.startDate) return false;
-      const empMonth = new Date(emp.startDate).getMonth();
-      return empMonth === monthIndex;
-    });
-
-
-    setDisplayEmployee(result.length > 0 ? result[0] : null);
   };
 
 
   return (
-    <Container maxWidth="10%">
+    <Container maxWidth="lg">
       {/* Header Bar */}
       <Paper
         elevation={6}
@@ -423,16 +365,17 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
           <WorkIcon fontSize="large" />
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              Payslip Records
+              Employee Payslip Distribution
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
-              Generate and manage all employee payslip records
+              Manage and distribute monthly employee payslip records
             </Typography>
           </Box>
         </Box>
       </Paper>
 
 
+      {/* Filters: Search + Year + Month */}
       <Box
         mb={2}
         display="flex"
@@ -447,93 +390,47 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
           p: 3,
         }}
       >
-        {/* Search Bar */}
-        <Box display="flex" alignItems="center" gap={2}>
+        {/* Top Row: Search on Left, Year on Right */}
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          {/* Search Bar */}
           <TextField
-            size="small"
+            label="Search by Name or Employee Number"
             variant="outlined"
-            placeholder="Search by Employee # or Name"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: '#6D2323', marginRight: 1 }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              backgroundColor: 'white',
-              borderRadius: 1,
-              flex: 1,
-            }}
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ maxWidth: 400 }}
           />
-          <Box display="flex" gap={1}>
-            <Button
-              variant="contained"
-              onClick={handleSearch}
-              disabled={!search.trim()}
-              sx={{
-                backgroundColor: '#6D2323',
-                '&:hover': { backgroundColor: '#B22222' },
-                '&:disabled': { backgroundColor: '#ccc' },
-              }}
-            >
-              Search Employee
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={clearSearch}
-              sx={{
-                borderColor: '#6D2323',
-                color: '#6D2323',
-                '&:hover': {
-                  borderColor: '#B22222',
-                  backgroundColor: '#f5f5f5',
-                },
-              }}
-            >
-              Clear
-            </Button>
-          </Box>
+
+
+          {/* Year Dropdown (Far Right) */}
+          <Select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            size="small"
+          >
+            {years.map((year) => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
         </Box>
 
 
-        {/* Month Filter */}
-        <Typography
-          variant="subtitle2"
-          color={hasSearched ? 'textSecondary' : 'textDisabled'}
-        >
-          Filter By Month {!hasSearched && '(Search for an employee first)'}
-        </Typography>
+        {/* Month Buttons below */}
         <Box display="flex" flexWrap="wrap" gap={1}>
           {months.map((m) => (
             <Button
               key={m}
               variant={m === selectedMonth ? 'contained' : 'outlined'}
               size="small"
-              disabled={!hasSearched}
               sx={{
                 backgroundColor: m === selectedMonth ? '#6D2323' : '#fff',
-                color:
-                  m === selectedMonth
-                    ? '#fff'
-                    : hasSearched
-                    ? '#6D2323'
-                    : '#ccc',
-                borderColor: hasSearched ? '#6D2323' : '#ccc',
+                color: m === selectedMonth ? '#fff' : '#6D2323',
+                borderColor: '#6D2323',
                 '&:hover': {
-                  backgroundColor: hasSearched
-                    ? m === selectedMonth
-                      ? '#B22222'
-                      : '#f5f5f5'
-                    : '#fff',
-                },
-                '&:disabled': {
-                  backgroundColor: '#f5f5f5',
-                  color: '#ccc',
-                  borderColor: '#ccc',
+                  backgroundColor: m === selectedMonth ? '#B22222' : '#f5f5f5',
                 },
               }}
               onClick={() => handleMonthSelect(m)}
@@ -545,28 +442,127 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
       </Box>
 
 
-      {/* Payslip Content */}
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={10}>
-          <CircularProgress sx={{ color: '#6D2323' }} />
+      {/* Employee Table */}
+      {selectedMonth && (
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={someSelected}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <b>Name</b>
+                  </TableCell>
+                  <TableCell>
+                    <b>Employee Number</b>
+                  </TableCell>
+                  <TableCell>
+                    <b>Payslip</b>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredPayroll.length > 0 ? (
+                  filteredPayroll.map((emp) => {
+                    const hasPayslip = !!emp.startDate;
+                    return (
+                      <TableRow key={emp.employeeNumber}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedEmployees.includes(
+                              emp.employeeNumber
+                            )}
+                            onChange={() => handleSelectOne(emp.employeeNumber)}
+                          />
+                        </TableCell>
+                        <TableCell>{emp.name}</TableCell>
+                        <TableCell>{emp.employeeNumber}</TableCell>
+                        <TableCell>
+                          {hasPayslip ? (
+                            <Typography color="green">✓ Available</Typography>
+                          ) : (
+                            <Typography color="red">✗ No Data</Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      No employee data available.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+
+
+      {/* Bulk Send Button */}
+      {/* Bulk Send Button */}
+      {selectedMonth && filteredPayroll.length > 0 && (
+        <Box display="flex" justifyContent="flex-end" mt={2}>
+          <Button
+            variant="contained"
+            onClick={sendSelectedPayslips}
+            disabled={sending || selectedEmployees.length === 0}
+            sx={{
+              backgroundColor: '#6d2323',
+              '&:hover': { backgroundColor: '#982f2fff' },
+              px: 4,
+              py: 1.5,
+              fontSize: '1rem',
+            }}
+          >
+            Distribute Monthly Payslips
+          </Button>
         </Box>
-      ) : error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : displayEmployee ? (
+      )}
+
+
+      {sending && (
+        <LoadingOverlay
+          open={sending}
+          message={loadingMessage || 'Processing...'}
+        />
+      )}
+      {successOverlay.open && (
+        <SuccessfulOverlay
+          open={successOverlay.open}
+          action={successOverlay.action}
+          onClose={() => setSuccessOverlay({ open: false, action: '' })}
+        />
+      )}
+
+
+      {/* Hidden Payslip Renderer - Updated with new layout */}
+      {displayEmployee && (
         <Paper
           ref={payslipRef}
           elevation={4}
           sx={{
             p: 3,
+            position: 'absolute',
+            top: '-9999px',
+            left: '-9999px',
             mt: 2,
             border: '2px solid black',
             borderRadius: 1,
             backgroundColor: '#fff',
             fontFamily: 'Arial, sans-serif',
-            position: 'relative', // ✅ important for watermark positioning
             overflow: 'hidden',
           }}
         >
+          {/* Watermark */}
           <Box
             component="img"
             src={hrisLogo}
@@ -576,13 +572,15 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              opacity: 0.07, // ✅ makes it faint like a watermark
-              width: '100%', // adjust size as needed
-              pointerEvents: 'none', // ✅ so it doesn’t block clicks/selections
+              opacity: 0.07,
+              width: '100%',
+              pointerEvents: 'none',
               userSelect: 'none',
             }}
           />
-          {/* Header */}
+
+
+          {/* Header - Updated with gradient background and dual logos */}
           <Box
             display="flex"
             alignItems="center"
@@ -591,6 +589,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
             sx={{
               background: 'linear-gradient(to right, #6d2323, #a31d1d)',
               borderRadius: '2px',
+              p: 1,
             }}
           >
             {/* Left Logo */}
@@ -613,7 +612,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
                 fontWeight="bold"
                 sx={{ ml: '25px' }}
               >
-                EULOGIO “AMANG” RODRIGUEZ INSTITUTE OF SCIENCE AND TECHNOLOGY
+                EULOGIO "AMANG" RODRIGUEZ INSTITUTE OF SCIENCE AND TECHNOLOGY
               </Typography>
               <Typography variant="body2">Nagtahan, Sampaloc Manila</Typography>
             </Box>
@@ -714,8 +713,6 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
                     ).toLocaleString()}`
                   : '',
               },
-
-
               {
                 label: 'HOUSING LOAN:',
                 value: displayEmployee.gsisSalaryLoan
@@ -840,7 +837,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
               },
               {
                 label: '2ND QUINCENA:',
-                value: displayEmployee.pay1st
+                value: displayEmployee.pay2nd
                   ? `₱${parseFloat(displayEmployee.pay2nd).toLocaleString()}`
                   : '',
               },
@@ -849,7 +846,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
                 key={index}
                 sx={{
                   display: 'flex',
-                  borderBottom: '1px solid black', // ✅ always show border
+                  borderBottom: '1px solid black',
                 }}
               >
                 {/* Left column (label) */}
@@ -882,7 +879,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
             sx={{ fontSize: '0.85rem' }}
           >
             <Typography>Certified Correct:</Typography>
-            <Typography>plus PERA – 2,000.00</Typography>
+            <Typography>plus PERA — 2,000.00</Typography>
           </Box>
 
 
@@ -898,96 +895,49 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
           </Box>
           <Typography>Director, Administrative Services</Typography>
         </Paper>
-      ) : selectedMonth ? (
-        <Alert
-          severity="info"
-          sx={{
-            mt: 3,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)', // lighter bg
-            border: '1px solid #6d2323',
-            color: '#6d2323',
-            '& .MuiAlert-icon': { color: '#6D2323' }, // icon same color
-          }}
-        >
-          There's no payslip saved for the month of <b>{selectedMonth}.</b>
-        </Alert>
-      ) : hasSearched ? (
-        <Alert
-          severity="info"
-          sx={{
-            mt: 3,
-            backgroundColor: 'rgba(109, 35, 35, 0.1)', // lighter bg
-            color: '#6D2323',
-            '& .MuiAlert-icon': { color: '#6D2323' }, // icon same color
-          }}
-        >
-          Please select a month to view your payslip.
-        </Alert>
-      ) : null}
-
-
-      {/* Download Button */}
-      {/* Action Buttons */}
-      {displayEmployee && (
-        <Box display="flex" justifyContent="center" mt={2} gap={2} mb={3}>
-          <Button
-            variant="contained"
-            onClick={downloadPDF}
-            sx={{
-              backgroundColor: '#6D2323',
-              '&:hover': { backgroundColor: '#B22222' },
-              px: 4,
-              py: 1.5,
-              fontSize: '1.1rem',
-            }}
-          >
-            Download Payslip | PDF
-          </Button>
-
-
-          <Button
-            variant="contained"
-            onClick={sendPayslipViaGmail}
-            disabled={sending}
-            sx={{
-              backgroundColor: '#000000',
-              '&:hover': { backgroundColor: '#2f2f2f' },
-              px: 4,
-              py: 1.5,
-              fontSize: '1.1rem',
-            }}
-          >
-            {sending ? (
-              <CircularProgress size={24} sx={{ color: 'white' }} />
-            ) : (
-              'Send via Gmail'
-            )}
-          </Button>
-        </Box>
       )}
+
+
+      {/* Modal */}
       <Dialog
         open={modal.open}
         onClose={() => setModal({ ...modal, open: false })}
       >
-        <SuccessfulOverlay
-          open={modal.open && modal.type === 'success'}
-          action={modal.action}
-          onClose={() => setModal({ ...modal, open: false })}
-        />
+        <DialogTitle>
+          {/* ✅ Custom success overlay */}
+          <SuccessfulOverlay
+            open={modal.open && modal.type === 'success'}
+            action={modal.action}
+            onClose={() => setModal({ ...modal, open: false })}
+          />
 
 
-        {modal.type === 'error' && (
-          <div style={{ color: 'red', padding: '20px' }}>
-            {modal.message || 'An error occurred'}
-          </div>
-        )}
+          {/* ❌ Error fallback */}
+          {modal.type === 'error' && (
+            <div style={{ color: 'red', fontWeight: 'bold' }}>❌ Error</div>
+          )}
+        </DialogTitle>
+
+
+        <DialogContent>
+          <Typography>{modal.message}</Typography>
+        </DialogContent>
+
+
+        <DialogActions>
+          <Button onClick={() => setModal({ ...modal, open: false })} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );
 });
 
 
-export default PayslipOverall;
+export default PayslipDistribution;
+
+
 
 
 

@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const PhilHealthTable = () => {
   const [data, setData] = useState([]);
@@ -46,7 +47,7 @@ const PhilHealthTable = () => {
 
   const fetchPhilHealthData = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/philhealth');
+      const res = await axios.get(`${API_BASE_URL}/api/philhealth`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -61,7 +62,7 @@ const PhilHealthTable = () => {
         PhilHealthContribution: parseFloat(newPhilHealth.PhilHealthContribution)
       };
       
-      await axios.post('http://localhost:5000/api/philhealth', contributionData);
+      await axios.post(`${API_BASE_URL}/api/philhealth`, contributionData);
       setNewPhilHealth({
         employeeNumber: '',
         PhilHealthContribution: '',
@@ -86,7 +87,7 @@ const PhilHealthTable = () => {
         PhilHealthContribution: parseFloat(editPhilHealth.PhilHealthContribution)
       };
       
-      await axios.put(`http://localhost:5000/api/philhealth/${editPhilHealth.id}`, contributionData);
+      await axios.put(`/api/philhealth/${editPhilHealth.id}`, contributionData);
       setEditPhilHealth(null);
       setOriginalPhilHealth(null);
       setIsEditing(false);
@@ -101,7 +102,7 @@ const PhilHealthTable = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/philhealth/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/philhealth/${id}`);
       setEditPhilHealth(null);
       setOriginalPhilHealth(null);
       setIsEditing(false);

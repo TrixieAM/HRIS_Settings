@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -26,7 +27,7 @@ import LabelIcon from '@mui/icons-material/Label';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const ItemTable = () => {
   const [data, setData] = useState([]);
@@ -53,7 +54,7 @@ const ItemTable = () => {
 
   const fetchItems = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/item-table");
+      const res = await axios.get(`${API_BASE_URL}/api/item-table`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -63,7 +64,7 @@ const ItemTable = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/item-table", newItem);
+      await axios.post(`${API_BASE_URL}/api/item-table`, newItem);
       setNewItem({
         item_description: "",
         employeeID: "",
@@ -88,7 +89,7 @@ const ItemTable = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/item-table/${editItem.id}`, editItem);
+      await axios.put(`${API_BASE_URL}/api/item-table/${editItem.id}`, editItem);
       setEditItem(null);
       setOriginalItem(null);
       setIsEditing(false);
@@ -103,7 +104,7 @@ const ItemTable = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/item-table/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/item-table/${id}`);
       setEditItem(null);
       setOriginalItem(null);
       setIsEditing(false);

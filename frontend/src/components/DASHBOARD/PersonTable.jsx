@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useEffect, useState, useRef } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -32,7 +33,7 @@ import {
   Reorder,
 } from '@mui/icons-material';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const PersonTable = () => {
   const [data, setData] = useState([]);
@@ -142,7 +143,7 @@ const PersonTable = () => {
 
   const fetchPersons = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/personalinfo/person_table');
+      const response = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
       setData(response.data);
       setFilteredData(response.data);
     } catch (error) {
@@ -153,7 +154,7 @@ const PersonTable = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/personalinfo/person_table', newPerson);
+      await axios.post(`${API_BASE_URL}/personalinfo/person_table`, newPerson);
       setNewPerson(Object.fromEntries(Object.keys(newPerson).map(k => [k, ''])));
       setActiveStep(0); // Reset to first step
       setTimeout(() => {     
@@ -171,7 +172,7 @@ const PersonTable = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/personalinfo/person_table/${editPerson.id}`, editPerson);
+      await axios.put(`${API_BASE_URL}/personalinfo/person_table/${editPerson.id}`, editPerson);
       setEditPerson(null);
       setOriginalPerson(null);
       setIsEditing(false);
@@ -186,7 +187,7 @@ const PersonTable = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/personalinfo/person_table/${id}`);
+      await axios.delete(`${API_BASE_URL}/personalinfo/person_table/${id}`);
       setEditPerson(null);
       setOriginalPerson(null);
       setIsEditing(false);
@@ -248,10 +249,11 @@ const PersonTable = () => {
     },
     {
       label: 'Government ID Information',
-      subtitle: 'Your government identification numbers',
-      fields: [
-        'gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum',
-      ]
+    subtitle: 'Your government identification numbers',
+    fields: [
+      'gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum',
+    ],
+    disabledFields: ['agencyEmployeeNum'] // <-- added here
     },
     {
       label: 'Address Information',
@@ -612,36 +614,49 @@ const PersonTable = () => {
                   </IconButton>
                 </Box>
 
-                {/* Modal Content */}
-                <Box sx={{ p: 3 }}>
-                  {steps.map((step, stepIndex) => (
-                    <Box key={stepIndex} sx={{ mb: 4 }}>
-                      <Typography variant="h6" sx={{ mb: 2, color: "#6D2323", fontWeight: "bold" }}>
-                        {step.label}
-                      </Typography>
-                      <Grid container spacing={3}>
-                        {step.fields.map((field) => (
-                          <Grid item xs={12} sm={6} md={4} key={field}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                              {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                            </Typography>
-                            <TextField
-                              value={editPerson[field] || ''}
-                              onChange={(e) => handleChange(field, e.target.value, true)}
-                              fullWidth
-                              disabled={!isEditing}
-                              sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </Box>
-                  ))}
+            {/* Modal Content */}
+            <Box sx={{ p: 3 }}>
+              {steps.map((step, stepIndex) => (
+                <Box key={stepIndex} sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 2, color: "#6D2323", fontWeight: "bold" }}>
+                    {step.label}
+                  </Typography>
+                  <Grid container spacing={3}>
+                    {step.fields.map((field) => {
+                      const isFieldDisabled = field === 'agencyEmployeeNum';
+
+                      return (
+                        <Grid item xs={12} sm={6} md={4} key={field}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                            {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </Typography>
+                          <TextField
+                            value={editPerson[field] || ''}
+                            onChange={(e) => handleChange(field, e.target.value, true)}
+                            fullWidth
+                            disabled={isFieldDisabled || !isEditing}
+                            sx={{
+                              ...(isFieldDisabled
+                                ? {
+                                    backgroundColor: '#f5f5f5', 
+                                    '& .MuiInputBase-input.Mui-disabled': {
+                                      color: '#9e9e9e',
+                                      WebkitTextFillColor: '#9e9e9e'
+                                    },
+                                    '& .MuiInputLabel-root.Mui-disabled': {
+                                      color: '#757575'
+                                    }
+                                  }
+                                : {})
+                            }}
+                            helperText={isFieldDisabled ? "Cannot be changed unless deleted" : ""}
+                          />
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              ))}
 
                   {/* Action Buttons */}
                   <Box

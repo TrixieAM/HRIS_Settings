@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +39,7 @@ const PDS2 = () => {
       const fetchEligibilityData = async () => {
         try {
           const requests = Array.from({ length: 7 }, (_, i) =>
-            axios.get(`http://localhost:5000/eligibilityRoute/eligibility${i + 1}/${employeeNumber}`)
+            axios.get(`${API_BASE_URL}/eligibilityRoute/eligibility${i + 1}/${employeeNumber}`)
           );
           const responses = await Promise.all(requests);
           setEligibilityInfo(responses.map(res => res.data || null));
@@ -51,7 +52,7 @@ const PDS2 = () => {
       const fetchWorkExperienceData = async () => {
         try {
           const requests = Array.from({ length: 26 }, (_, i) =>
-            axios.get(`http://localhost:5000/WorkExperienceRoute/work-experience-table${i + 1}/${employeeNumber}`)
+            axios.get(`${API_BASE_URL}/WorkExperienceRoute/work-experience-table${i + 1}/${employeeNumber}`)
           );
           const responses = await Promise.all(requests);
           setWorkExperienceInfo(responses.map(res => res.data || null));
@@ -226,22 +227,22 @@ const PDS2 = () => {
 
 
                         <td colSpan="6" style={{height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
-                       {eligibility ? eligibility.eligibilityName: 'N/A'}
+                       {eligibility ? eligibility.eligibilityName: ''}
                         </td>
                         <td colSpan="2" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
-                        {eligibility ? eligibility.eligibilityRating: 'N/A'}                  
+                        {eligibility ? eligibility.eligibilityRating: ''}                  
                         </td>
                         <td colSpan="2" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
-                        {eligibility ? eligibility.eligibilityDateOfExam: 'N/A'}    
+                        {eligibility ? eligibility.eligibilityDateOfExam: ''}    
                         </td>
                         <td colSpan="5" style={{height:'0.25in', fontSize:'62.5%', border: '1px solid black'}}>
-                        {eligibility ? eligibility.eligibilityPlaceOfExam: 'N/A'}
+                        {eligibility ? eligibility.eligibilityPlaceOfExam: ''}
                         </td>
                         <td colSpan="2" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
-                        {eligibility ? eligibility.licenseNumber: 'N/A'}
+                        {eligibility ? eligibility.licenseNumber: ''}
                         </td>
                         <td colSpan="1" style={{height:'0.25in', fontSize:'58%', border: '1px solid black'}}>
-                        {eligibility ? eligibility.DateOfValidity: 'N/A'}
+                        {eligibility ? eligibility.DateOfValidity: ''}
                         </td>
                     </tr>
                   ))}
@@ -328,28 +329,28 @@ const PDS2 = () => {
                     {normalizedWorkExperience.map((workexperience, index) => (
                     <tr key={index}>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workDateFrom: 'N/A'}
+                        {workexperience ? workexperience.workDateFrom: ''}
                         </td>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workDateTo: 'N/A'}
+                        {workexperience ? workexperience.workDateTo: ''}
                         </td>
                         <td colSpan="4" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workPositionTitle: 'N/A'}
+                        {workexperience ? workexperience.workPositionTitle: ''}
                         </td>
                         <td colSpan="4" style={{height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workCompany: 'N/A'}
+                        {workexperience ? workexperience.workCompany: ''}
                         </td>
                         <td colSpan="1" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workMonthlySalary: 'N/A'}
+                        {workexperience ? workexperience.workMonthlySalary: ''}
                         </td>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.SalaryJobOrPayGrade: 'N/A'}
+                        {workexperience ? workexperience.SalaryJobOrPayGrade: ''}
                         </td>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.StatusOfAppointment: 'N/A'}
+                        {workexperience ? workexperience.StatusOfAppointment: ''}
                         </td>
                         <td colSpan="1" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.isGovtService: 'N/A'}
+                        {workexperience ? workexperience.isGovtService: ''}
                         </td>
                     </tr>
                     ))}

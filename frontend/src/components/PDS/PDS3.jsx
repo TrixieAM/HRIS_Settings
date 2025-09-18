@@ -1,5 +1,5 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
-import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PrintIcon from '@mui/icons-material/Print'
@@ -49,7 +49,7 @@ const PDS3 = () => {
       const fetchvoluntaryWorkData = async () => {
         try {
           const requests = Array.from({ length: 7 }, (_, i) =>
-            axios.get(`http://localhost:5000/VoluntaryRoute/voluntary-work${i + 1}/${employeeNumber}`)
+            axios.get(`${API_BASE_URL}/VoluntaryRoute/voluntary-work${i + 1}/${employeeNumber}`)
           );
           const responses = await Promise.all(requests);
           setVoluntaryWorkInfo(responses.map(res => res.data || null));
@@ -64,7 +64,7 @@ const PDS3 = () => {
       const fetchLearningDevelopmentData = async () => {
         try {
           const requests = Array.from({ length: 21 }, (_, i) =>
-            axios.get(`http://localhost:5000/learning_and_development_table${i + 1}/${employeeNumber}`)
+            axios.get(`${API_BASE_URL}/learning_and_development_table${i + 1}/${employeeNumber}`)
           );
           const responses = await Promise.all(requests);
           setLearningDevelopmentInfo(responses.map(res => res.data || null));
@@ -84,7 +84,7 @@ const PDS3 = () => {
 
         try {
           const requests = Array.from({ length: 7 }, (_, i) =>
-            axios.get(`http://localhost:5000/OtherInfo/other-information${i + 1}/${employeeNumber}`)
+            axios.get(`${API_BASE_URL}/OtherInfo/other-information${i + 1}/${employeeNumber}`)
           );
           const responses = await Promise.all(requests);
           const data = responses.map(res => res.data || null);

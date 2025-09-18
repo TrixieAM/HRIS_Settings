@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Box, Button, Container, TextField, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
@@ -33,7 +34,7 @@ const AttendanceModuleNonTeachingStaff = () => {
     localStorage.setItem('startDate', startDate);
     localStorage.setItem('endDate', endDate);
     try {
-      const response = await axios.get("http://localhost:5000/attendance/api/attendance", {
+      const response = await axios.get(`${API_BASE_URL}/attendance/api/attendance`, {
         params: {
           personId: employeeNumber,
           startDate,
@@ -526,7 +527,7 @@ const AttendanceModuleNonTeachingStaff = () => {
     // 🔍 1) check for duplicates first ─────────────────────────────
     try {
       const dup = await axios.get(
-        "http://localhost:5000/attendance/api/overall_attendance_record",
+        `${API_BASE_URL}/attendance/api/overall_attendance_record`,
         { params: { personID: employeeNumber, startDate, endDate } }
       );
       if (dup.data?.data?.length) {
@@ -573,7 +574,7 @@ const AttendanceModuleNonTeachingStaff = () => {
   
     try {
       const response = await axios.post(
-        "http://localhost:5000/attendance/api/overall_attendance",
+        `${API_BASE_URL}/attendance/api/overall_attendance`,
         record
       );
       alert(response.data.message || "Attendance record saved successfully!");

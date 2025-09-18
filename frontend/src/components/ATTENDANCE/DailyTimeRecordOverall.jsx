@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { TextField, Button, Grid, Container, Box, Typography} from "@mui/material";
@@ -13,7 +14,7 @@ const DailyTimeRecordFaculty = () => {
   const fetchRecords = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/attendance/api/view-attendance",
+        `${API_BASE_URL}/attendance/api/view-attendance`,
         {
           personID,
           startDate,

@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import {
 } from "@mui/icons-material";
 
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const LeaveTable = () => {
   const [leaveTypes, setLeaveTypes] = useState([]);
@@ -47,7 +48,7 @@ const LeaveTable = () => {
 
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/leaveRoute/leave_table');
+      const res = await axios.get(`${API_BASE_URL}/leaveRoute/leave_table`);
       setLeaveTypes(res.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -62,7 +63,7 @@ const LeaveTable = () => {
         Object.entries(newLeaveType).filter(([_, value]) => value !== '')
       );
       
-      await axios.post('http://localhost:5000/leaveRoute/leave_table', filteredLeaveType);
+      await axios.post(`${API_BASE_URL}/leaveRoute/leave_table`, filteredLeaveType);
       setNewLeaveType({
         leave_description: '',
         leave_code: '',
@@ -83,7 +84,7 @@ const LeaveTable = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/leaveRoute/leave_table/${editLeaveType.id}`, editLeaveType);
+      await axios.put(`${API_BASE_URL}/leaveRoute/leave_table/${editLeaveType.id}`, editLeaveType);
       setEditLeaveType(null);
       setOriginalLeaveType(null);
       setIsEditing(false);
@@ -98,7 +99,7 @@ const LeaveTable = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/leaveRoute/leave_table/${id}`);
+      await axios.delete(`${API_BASE_URL}/leaveRoute/leave_table/${id}`);
       setEditLeaveType(null);
       setOriginalLeaveType(null);
       setIsEditing(false);

@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -24,7 +25,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 
 const OtherInformation = () => {
   const [data, setData] = useState([]);
@@ -49,7 +50,7 @@ const OtherInformation = () => {
 
   const fetchInformation = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/OtherInfo/other-information');
+      const res = await axios.get(`${API_BASE_URL}/OtherInfo/other-information`);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -59,7 +60,7 @@ const OtherInformation = () => {
   const handleAdd = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/OtherInfo/other-information', newInformation);
+      await axios.post(`${API_BASE_URL}/OtherInfo/other-information`, newInformation);
       setNewInformation({
         specialSkills: '',
         nonAcademicDistinctions: '',
@@ -81,7 +82,7 @@ const OtherInformation = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/OtherInfo/other-information/${editInformation.id}`, editInformation);
+      await axios.put(`${API_BASE_URL}/OtherInfo/other-information/${editInformation.id}`, editInformation);
       setEditInformation(null);
       setOriginalInformation(null);
       setIsEditing(false);
@@ -96,7 +97,7 @@ const OtherInformation = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/OtherInfo/other-information/${id}`);
+      await axios.delete(`${API_BASE_URL}/OtherInfo/other-information/${id}`);
       setEditInformation(null);
       setOriginalInformation(null);
       setIsEditing(false);

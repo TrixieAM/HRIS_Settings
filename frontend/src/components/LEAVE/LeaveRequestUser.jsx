@@ -29,10 +29,10 @@ import {
 } from "@mui/icons-material";
 
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfullOverlay';
+import SuccessfullOverlay from '../SuccessfulOverlay';
 import LeaveDatePickerModal from './LeaveDatePicker';
 
-const LeaveRequestStaff = () => {
+const LeaveRequestUser = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [newLeaveRequest, setNewLeaveRequest] = useState({
@@ -135,7 +135,7 @@ const LeaveRequestStaff = () => {
   const fetchLeaveRequests = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/leaveRoute/leave_request/${personID}`
+        `${API_BASE_URL}/leaveRoute/leave_request/${personID}`
       );
       setLeaveRequests(res.data);
     } catch (error) {
@@ -147,7 +147,7 @@ const LeaveRequestStaff = () => {
   const fetchLeaveTypes = async () => {
     try {
       console.log('Fetching leave types...');
-      const res = await axios.get('http://localhost:5000/leaveRoute/leave_table');
+      const res = await axios.get(`${API_BASE_URL}/leaveRoute/leave_table`);
       console.log('Leave types:', res.data);
       setLeaveTypes(res.data);
     } catch (error) {
@@ -200,7 +200,7 @@ const LeaveRequestStaff = () => {
         status: "0",
       };
 
-      const response = await axios.post("http://localhost:5000/leaveRoute/leave_request", payload);
+      const response = await axios.post(`${API_BASE_URL}/leaveRoute/leave_request`, payload);
       console.log('Server response:', response.data);
 
       // Show success overlay
@@ -339,7 +339,7 @@ const mapStatus = (status) => {
             />
             <Box>
               <Typography variant="h5" sx={{ mb: 0.5 }}>
-                My Leave Request
+                Employee Leave Request
               </Typography>
               <Typography variant="body2">
                 Submit and view your leave requests
@@ -683,4 +683,4 @@ const mapStatus = (status) => {
   );
 };
 
-export default LeaveRequestStaff;
+export default LeaveRequestUser;

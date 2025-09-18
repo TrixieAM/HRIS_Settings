@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../apiConfig";
 import React, { useState } from "react";
 import axios from "axios";
 import { Box, TextField, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Container } from "@mui/material";
@@ -37,7 +38,7 @@ const ViewAttendanceRecord = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5000/attendance/api/all-attendance", {
+      const response = await axios.post(`${API_BASE_URL}/attendance/api/all-attendance`, {
         personID, 
         startDate, 
         endDate
@@ -87,7 +88,7 @@ const ViewAttendanceRecord = () => {
         timeOUT: record.Time4 ? formatTime(record.Time4) : null,
       }));
 
-      const response = await axios.post("http://localhost:5000/attendance/api/save-attendance", {
+      const response = await axios.post(`${API_BASE_URL}/attendance/api/save-attendance`, {
         records: formattedRecords,
       });
 

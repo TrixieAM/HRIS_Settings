@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Drawer,
@@ -131,10 +132,10 @@ const Sidebar = ({
     // Fetch profile picture
     const fetchProfilePicture = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/personalinfo/person_table`);
+        const response = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const person = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
         if (person && person.profile_picture) {
-          setProfilePicture(`http://localhost:5000${person.profile_picture}`);
+          setProfilePicture(`${API_BASE_URL}${person.profile_picture}`);
         }
       } catch (error) {
         console.error('Error fetching profile picture:', error);
@@ -251,17 +252,19 @@ const Sidebar = ({
 
                 }}
               >
-                <Avatar 
-                  alt={username} 
-                  src={profilePicture}
-                  sx={{ 
-                    width: 35, 
-                    height: 35, 
-                    marginLeft: -1, 
-                    color: '#000000', 
-                    bgcolor: '#ffffff' 
-                  }} 
-                />
+               <Avatar 
+                alt={username} 
+                src={profilePicture}
+                sx={{ 
+                  width: 35, 
+                  height: 35, 
+                  marginLeft: -1, 
+                  color: '#000000', 
+                  bgcolor: '#ffffff',
+                  // border: '2px solid #6d2323'
+                }} 
+              />
+
                 <Box>
                   <Typography 
                   variant="body2" 
@@ -1443,10 +1446,10 @@ const Sidebar = ({
                 <ListItem
                   button
                   component={Link}
-                  to='/bulk-payslip'
+                  to='/distribution-payslip'
                   sx={{
-                    color: selectedItem === 'bulk-payslip' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'bulk-payslip' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'distribution-payslip' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'distribution-payslip' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -1456,11 +1459,11 @@ const Sidebar = ({
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'bulk-payslip' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'bulk-payslip' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'distribution-payslip' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'distribution-payslip' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('bulk-payslip')}>
-                  <ReceiptLong sx={{ marginRight: '1rem', color: selectedItem === 'bulk-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                  onClick={() => handleItemClick('distribution-payslip')}>
+                  <ReceiptLong sx={{ marginRight: '1rem', color: selectedItem === 'distribution-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <CalendarToday />
                   </ReceiptLong>
                   <ListItemText primary="Payslip Distribution" sx={{ marginLeft: '-10px' }} />
@@ -1497,7 +1500,7 @@ const Sidebar = ({
                   <ListItemText primary="Remittances" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
-                <ListItem 
+                {/* <ListItem 
                   button 
                   component={Link} 
                   to= '/philhealth-table' 
@@ -1525,38 +1528,8 @@ const Sidebar = ({
                     <LocalHospitalIcon />
                   </ListItemIcon>
                   <ListItemText primary="PhilHealth" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
+                </ListItem> */}
 
-
-                <ListItem
-                  button
-                  component={Link}
-                  to= '/plantillia-table'
-                  sx={{
-                    color: selectedItem === 'plantillia-table' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'plantillia-table' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'plantillia-table' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'plantillia-table' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('plantillia-table')}
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'plantillia-table' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
-                    <TableChartIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Plantillia" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
 
 
                 <ListItem 
@@ -1588,36 +1561,6 @@ const Sidebar = ({
                     <CategoryIcon />
                   </ListItemIcon>
                   <ListItemText primary="Item Table" sx={{ marginLeft: '-10px' }} />
-                </ListItem>
-
-                <ListItem
-                  button
-                  component={Link}
-                  to= '/employee-salary-grade'
-                  sx={{
-                    color: selectedItem === 'employee-salary-grade' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'employee-salary-grade' ? '#A31D1D' : 'inherit',
-                    '&:hover': {
-                      bgcolor: '#f0f0f0',
-                      color: 'black',
-                      borderTopRightRadius: '15px',
-                      borderBottomRightRadius: '15px',
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      }
-                    },
-                    borderTopRightRadius: selectedItem === 'employee-salary-grade' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'employee-salary-grade' ? '15px' : 0,
-                  }}
-                  onClick={() => handleItemClick('employee-salary-grade')}
-                  >
-                  <ListItemIcon sx={{ marginRight: '-1rem',
-                    color: selectedItem === 'employee-salary-grade' ? 'white' : 'inherit',
-                    '&:hover': { color: 'white' }
-                   }}>
-                    <PeopleAltIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Salary Grade | Employee" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 <ListItem 

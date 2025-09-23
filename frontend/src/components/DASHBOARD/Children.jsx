@@ -15,6 +15,7 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  CircularProgress
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -31,6 +32,8 @@ import ChildFriendlyIcon from '@mui/icons-material/ChildFriendly';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
 import SuccessfullOverlay from '../SuccessfulOverlay';
+import AccessDenied from '../AccessDenied';
+import { useNavigate } from "react-router-dom";
 
 const Children = () => {
   const [children, setChildren] = useState([]);
@@ -49,6 +52,44 @@ const Children = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+
+
+  //ACCESSING
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control - Add this useEffect
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    // Change this pageId to match the ID you assign to this page in your page management
+    const pageId = 3; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
 
   useEffect(() => {
     fetchChildren();
@@ -159,6 +200,34 @@ const Children = () => {
   };
 
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
+
+  // ACCESSING 2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
+
 
   return (
     <Container sx={{ mt: 0, }}>

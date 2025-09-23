@@ -30,6 +30,11 @@ import {
   ReceiptLong,
   Receipt,
   ContactPage,
+  GroupAdd,
+  TransferWithinAStation,
+  Group,
+  Pages,
+  UploadFile,
 } from "@mui/icons-material";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -49,6 +54,9 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 
 
 
+
+
+
 import {
   BarChart,
   Bar,
@@ -59,6 +67,7 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
+
 
 const STAT_CARDS = [
   { label: "Employees", valueKey: "employees", defaultValue: 654, icon: <PeopleIcon sx={{ fontSize: 40 }} /> },
@@ -71,8 +80,10 @@ const STAT_CARDS = [
   { label: "Payslip", valueKey: "payslip", defaultValue: 268, icon: <DescriptionIcon sx={{ fontSize: 40 }} /> },
 ];
 
+
 const AdminHome = () => {
   const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
@@ -87,9 +98,11 @@ const AdminHome = () => {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [holidays, setHolidays] = useState([]);
 
+
   const navigate = useNavigate();
   const month = calendarDate.getMonth();
   const year = calendarDate.getFullYear();
+
 
   // slideshow interval
   useEffect(() => {
@@ -99,6 +112,7 @@ const AdminHome = () => {
     }, 5000);
     return () => clearInterval(timer);
   }, [announcements]);
+
 
   // decode token for basic info (if you store token in localStorage)
   const getUserInfo = () => {
@@ -116,6 +130,7 @@ const AdminHome = () => {
     }
   };
 
+
   // Fetch holidays from holiday endpoint
  useEffect(() => {
   const fetchHolidays = async () => {
@@ -128,6 +143,7 @@ const AdminHome = () => {
           const normalizedDate = !isNaN(d)
             ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
             : item.date; // fallback if parsing fails
+
 
           return {
             date: normalizedDate,
@@ -144,11 +160,13 @@ const AdminHome = () => {
   fetchHolidays();
 }, []);
 
+
   useEffect(() => {
     const u = getUserInfo();
     if (u.username) setUsername(u.username);
     if (u.employeeNumber) setEmployeeNumber(u.employeeNumber);
   }, []);
+
 
   // Fetch announcements and other admin data
   useEffect(() => {
@@ -158,12 +176,14 @@ const AdminHome = () => {
         const annRes = await axios.get(`${API_BASE_URL}/api/announcements`);
         setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
 
+
         // Profile picture (personal info)
         const piRes = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const match = Array.isArray(piRes.data)
           ? piRes.data.find((p) => p.agencyEmployeeNum?.toString() === employeeNumber?.toString())
           : null;
         if (match && match.profile_picture) setProfilePicture(match.profile_picture);
+
 
         // Stats (example endpoint - adapt to your backend)
         // fallback to defaults if endpoints are missing
@@ -174,6 +194,7 @@ const AdminHome = () => {
           // leave stats empty and rely on defaults defined in UI
           setStats({});
         }
+
 
         // Attendance summary for chart
         try {
@@ -198,6 +219,7 @@ const AdminHome = () => {
           ]);
         }
 
+
         // Leave tracker
         try {
           const leaveRes = await axios.get(`${API_BASE_URL}/api/admin/leave-tracker`);
@@ -221,6 +243,7 @@ const AdminHome = () => {
             { name: "Emergency", value: 12 },
           ]);
         }
+
 
         // Leave requests table
         try {
@@ -260,8 +283,10 @@ const AdminHome = () => {
       }
     };
 
+
     fetchAll();
   }, [employeeNumber]);
+
 
   const handleOpenModal = (announcement) => {
     setSelectedAnnouncement(announcement);
@@ -272,6 +297,7 @@ const AdminHome = () => {
     setSelectedAnnouncement(null);
   };
 
+
   const handlePrevSlide = () => {
     setCurrentSlide((s) => (s - 1 + announcements.length) % announcements.length);
   };
@@ -279,10 +305,12 @@ const AdminHome = () => {
     setCurrentSlide((s) => (s + 1) % announcements.length);
   };
 
+
   const formatCurrency = (value) => {
     if (value === null || value === undefined || value === 0) return "₱0.00";
     return `₱${parseFloat(value).toLocaleString()}`;
   };
+
 
   // calendar generator (Mon-first)
   const generateCalendar = (month, year) => {
@@ -296,29 +324,31 @@ const AdminHome = () => {
     return days;
   };
 
+
   const calendarDays = generateCalendar(month, year);
 
+
 return (
-  <Container maxWidth={false} sx={{ backgroundColor: "#f5f0e8", minHeight: "100%", p: 2, ml: 4, mt: -5 }}>
-    <Box sx={{ display: "flex", gap: 2 }}>
+  <Container maxWidth={false} sx={{ backgroundColor: "#f5f0e8", height: "90vh", p: 2, ml: 4, mt: -5 }}>
+    <Box sx={{ display: "flex", gap: 5 }}>
       {/* Left/Main Column */}
       <Box sx={{ flex: 1, mr: 1 }}>
         {/* Row 1: Stats + Calendar */}
-        <Grid container spacing={1} sx={{ mb: 5 }}>
+        <Grid container spacing={1} sx={{ mb: 10 }}>
           {/* Stats Cards - Left side */}
         <Grid item xs={12} md={4}>
-            <Grid container spacing={5.5}>
+            <Grid container spacing={8}> {/* bottom */}
                 {STAT_CARDS.map((card) => (
-                <Grid item xs={12} sm={6} md={6} key={card.label}>
+                <Grid item xs={12} sm={6} md={6} mb={5} key={card.label}>
                     <Paper
-                    elevation={0}
+                    elevation={6}
                     sx={{
                         backgroundColor: "#fff", // white background
                         color: "#333",
                         borderRadius: 2,
                         border: "1px solid #6d2323", // burgundy border
-                        p: 1.6,
-                        height: "100%",
+                        p: 0.8,
+                        height: "300%",
                         display: "flex",
                         flexDirection: "row",
                         alignItems: "center",
@@ -340,6 +370,7 @@ return (
                         {React.cloneElement(card.icon, { fontSize: "14px", htmlColor: "#6d2323" })}
                     </Box>
 
+
                     {/* Number and Label */}
                     <Box>
                         <Typography fontSize="18px" fontWeight="bold" color="#333">
@@ -358,6 +389,8 @@ return (
             </Grid>
 
 
+
+
             {/* slideshow */}
           <Grid item xs={12} md={8}>
             <Box
@@ -366,9 +399,9 @@ return (
                 borderRadius: 2,
                 overflow: "hidden",
                 border: "1px solid #8B2635",
-                height: "370px",
+                height: "50vh",
                 ml: 5,
-                mb: -3,
+                mb: -5,
                 cursor: "pointer",
                 }}
                 onClick={() => {
@@ -399,6 +432,7 @@ return (
                     <ArrowBackIosNewIcon />
                     </IconButton>
 
+
                     {/* Slide image */}
                     <Box
                     component="img"
@@ -415,6 +449,7 @@ return (
                     }}
                     />
 
+
                     {/* Inner shadow overlay */}
                     <Box
                     sx={{
@@ -425,6 +460,7 @@ return (
                         "radial-gradient(circle at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 90%)",
                     }}
                     />
+
 
                     {/* Next button */}
                     <IconButton
@@ -443,6 +479,7 @@ return (
                     >
                     <ArrowForwardIosIcon />
                     </IconButton>
+
 
                     {/* Caption box */}
                     <Box
@@ -479,6 +516,7 @@ return (
                 </>
                 )}
             </Box>
+
 
             {/* Modal for full announcement details */}
             <Modal
@@ -549,17 +587,18 @@ return (
             </Grid>
                     </Grid>
 
-                    <Grid container spacing={3} sx={{ mb: 2 }}>
+
+                    <Grid container spacing={4} sx={{ mb: 2, mt: -8, }}>
             {/* Graph 1 - Left side */}
             <Grid item xs={12} md={4}>
                 <Box
                 sx={{
                     borderRadius: 2,
                     border: "1px solid #8B2635",
-                    backgroundColor: "#fff",
+                    backgroundColor: "#fff6f5",
                     p: 2,
-                    height: "225px",
-                    
+                    height: "255px",
+                   
                 }}
                 >
                 <Typography fontWeight="bold" sx={{ mb: 1, color: '#6d2323' }}>
@@ -583,15 +622,16 @@ return (
                 </Box>
             </Grid>
 
+
             {/* Graph 2 - Middle */}
             <Grid item xs={12} md={4}>
                 <Box
                 sx={{
                     borderRadius: 2,
                     border: "1px solid #8B2635",
-                    backgroundColor: "#fff",
+                    backgroundColor: "#fff6f5",
                     p: 2,
-                    height: "225px",
+                    height: "255px",
                 }}
                 >
                 <Typography fontWeight="bold" sx={{ mb: 1, color: "#6d2323" }}>
@@ -619,37 +659,39 @@ return (
                 </Box>
             </Grid>
 
+
             {/* Enhanced Calendar - Right side */}
             <Grid item xs={12} md={4}>
               <Box
                 sx={{
                   borderRadius: 2,
                   border: "1px solid #8B2635",
-                  backgroundColor: "#fff",
-                  p: 2,
-                  height: "225px",
+                  backgroundColor: "#fff6f5",
+                  p: 2.5,
+                 
                 }}
               >
                 {/* Calendar Header with Navigation */}
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                  <IconButton 
-                    size="small" 
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.6 }}>
+                  <IconButton
+                    size="small"
                     onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
                     sx={{ color: "#6d2323" }}
                   >
                     <ArrowBackIosNewIcon fontSize="small" />
                   </IconButton>
-                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "0.9rem" }}>
+                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "1.2rem" }}>
                     {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </Typography>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
                     sx={{ color: "#6d2323" }}
                   >
                     <ArrowForwardIosIcon fontSize="small" />
                   </IconButton>
                 </Box>
+
 
                 {/* Days of Week Header */}
                 <Grid container spacing={0} sx={{ mb: 0.5 }}>
@@ -659,7 +701,7 @@ return (
                         sx={{
                           textAlign: "center",
                           fontWeight: "bold",
-                          fontSize: "0.65rem",
+                          fontSize: "0.90rem",
                           color: "#6d2323",
                           p: 0.3,
                         }}
@@ -670,44 +712,31 @@ return (
                   ))}
                 </Grid>
 
+
                 {/* Calendar Days Grid */}
                 <Grid container spacing={0}>
                   {calendarDays.map((day, index) => {
                     const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+
                     const holidayData = holidays.find(
                       (h) => h.date === currentDate && h.status === "Active"
                     );
 
+
                     return (
                       <Grid item xs={12 / 7} key={index}>
-                        <Tooltip 
-                        title={holidayData ? holidayData.name : ""}
-                          arrow
-                          componentsProps={{
-                            tooltip: {
-                              sx: {
-                                color: "#6d2323",               // text red
-                                backgroundColor: "#fff", // transparent background
-                                border: "1.5px solid #6d2323",    // burgundy outline
-                                fontWeight: "bold",
-                                fontSize: "0.6rem",
-                                boxShadow: "none",
-                                borderRadius: "20px"
-                              },
-                            },
-                          }}
-                        >
+                        <Tooltip title={holidayData ? holidayData.name : ""} arrow>
                           <Box
                             sx={{
                               textAlign: "center",
                               p: 0.5,
-                              fontSize: "0.7rem",
+                              fontSize: "0.9rem",
                               borderRadius: "20px",
                               color: holidayData ? "#fff" : day ? "#333" : "transparent",
                               backgroundColor: holidayData ? "#6d2323" : "transparent",
                               fontWeight: holidayData ? "bold" : "normal",
-                              minHeight: "22px",
+                              minHeight: "20px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -730,16 +759,18 @@ return (
                 </Grid>
 
 
+
+
                 {/* Legend */}
                 {/* <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Box 
-                      sx={{ 
-                        width: 8, 
-                        height: 8, 
-                        backgroundColor: "red", 
-                        borderRadius: "50%" 
-                      }} 
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        backgroundColor: "red",
+                        borderRadius: "50%"
+                      }}
                     />
                     <Typography fontSize="0.6rem" color="#666">Holiday</Typography>
                   </Box>
@@ -748,270 +779,241 @@ return (
             </Grid>
             </Grid>
 
+
         {/* Row 3: Graph 2 + Announcements */}
         <Grid container spacing={2}>
-          
+         
         </Grid>
       </Box>
 
-    {/* Right Sidebar */}
-<Box
-  sx={{
-    width: 320,
-    backgroundColor: "#ffffff",
-    border: "1px solid #8B2635",
-    borderRadius: 2,
-    p: 1.5,
-    height: "fit-content",
-    position: "sticky",
-    top: 20,
-    "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }
-  }}
->
-  {/* Profile + Quick Links inside one border */}
-  <Box sx={{ border: "1px solid #8B2635", borderRadius: 2, overflow: "hidden" }}>
-    {/* Profile Section */}
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        mb: -2,
-        cursor: "pointer",
-        p: 2
-      }}
-      onClick={() => navigate("/profile")}
-    >
-      <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 0, gap: 1. }}>
-        <Tooltip title="Notifications">
-          <IconButton
-            size="small"
-            sx={{ color: "black" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setNotifModalOpen(true);
-            }}
-          >
-            <Badge badgeContent={3} color="error">
-              <NotificationsIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="More Options">
-          <IconButton
-            size="small"
-            sx={{ color: "black" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ArrowDropDownIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
+ {/* Right Sidebar */}
+        <Box
+          sx={{
+            width: 320,
+            backgroundColor: "#ffffff",
+            border: "1px solid #8B2635",
+            borderRadius: 4,
+            p: 2,
+            height: "fit-content",
+            position: "sticky",
+            top: 20,
+            cursor: "pointer", // shows pointer on hover
+            "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } // optional hover effect
+          }}
+        
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 2, border: '1px solid #6d2323', borderRadius: "8px" }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 2, gap: 1, mt: 2 }}>
+              <Tooltip title="Notifications">
+                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => { e.stopPropagation(); setNotifModalOpen(true); }}>
+                  <Badge badgeContent={3} color="error">
+                    <NotificationsIcon fontSize="small" />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="More Options">
+                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => e.stopPropagation()}>
+                  <ArrowDropDownIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
 
-      <Avatar
-        alt={username}
-        src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
-        sx={{ width: 80, height: 80, border: "3px solid #8B2635", mb: 1, color: '#fff', backgroundColor: '#6d2323' }}
-      />
-      <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
-        {username || "Admin Name"}
-      </Typography>
-      <Typography variant="body2" sx={{ color: "#6d2323", textAlign: "center" }}>
-        {employeeNumber || "#00000000"}
-      </Typography>
-    </Box>
+            <Avatar
+              alt={username}
+              src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+              sx={{
+                width: 100,
+                height: 100,
+                border: "2px solid #8B2635",
+                mb: 1,
+              }}
+            />
+            <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
+              {fullName || username || "Admin Name"}
+            </Typography>
+            <Typography variant="body3" sx={{ color: "#666", textAlign: "center", pb: 2 }}>
+              {employeeNumber || "#00000000"}
+            </Typography>
+          </Box>
 
-      {/* Quick Links */}
-      <Box
-        sx={{
-          backgroundColor: "#ffffff",
-          p: 1,
-          textAlign: "center",
-          mt: '-10px'
-        }}
-      >
-        {/* <Box
-            sx={{
-            backgroundColor: "#6d2323",
-            p: 1,
-            textAlign: "center",
-            mb: -1.5
-            }}
+          {/* Quick Links */}
+          <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
+            <Box
+              sx={{
+                backgroundColor: '#6d2323',
+                p: 1,
+                textAlign: 'center',
+              }}
             >
-              <Typography sx={{ color: "#ffffff", fontWeight: "bold", fontSize: "0.9rem" }}>
+              <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
                 USER PANEL
               </Typography>
-        </Box> */}
-      </Box>
-
-      {/* Grid of Cards */}
-      <Grid container spacing={0} sx={{ p: 1 }}>
-        {/* DTR */}
-        <Grid item xs={3}>
-          <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
-            <Box
-              sx={{
-                m: 0.5,
-                p: 1,
-                backgroundColor: "#6d2323",
-                color: "#fff",
-                borderRadius: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 50,
-                textAlign: "center",
-                transition: "all 0.3s ease",
-                border: "1px solid transparent", // <-- keep border space
-                "&:hover": {
-                  backgroundColor: "#fff",
-                  color: "#6d2323",
-                  borderColor: "#6d2323", // <-- change color only
-                }
-              }}
-            >
-              <AccessTime sx={{ fontSize: 30 }} />
-              <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
             </Box>
 
-          </Link>
-        </Grid>
-
-        {/* PDS */}
-        <Grid item xs={3}>
-          <Link to="/pds1" style={{ textDecoration: "none" }}>
-            <Box
-            sx={{
-                m: 0.5,
-                p: 1,
-                backgroundColor: "#6d2323",
-                color: "#fff",
-                borderRadius: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 50,
-                textAlign: "center",
-                transition: "all 0.3s ease",
-                border: "1px solid transparent", // <-- keep border space
-                "&:hover": {
-                  backgroundColor: "#fff",
-                  color: "#6d2323",
-                  borderColor: "#6d2323", // <-- change color only
-                }
-              }}
-            >
-              <ContactPage sx={{ fontSize: 30 }} />
-              <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
-            </Box>
-          </Link>
-        </Grid>
-
-        {/* Payslip */}
-        <Grid item xs={3}>
-          <Link to="/payslip" style={{ textDecoration: "none" }}>
-            <Box
-            sx={{
-                m: 0.5,
-                p: 1,
-                backgroundColor: "#6d2323",
-                color: "#fff",
-                borderRadius: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 50,
-                textAlign: "center",
-                transition: "all 0.3s ease",
-                border: "1px solid transparent", // <-- keep border space
-                "&:hover": {
-                  backgroundColor: "#fff",
-                  color: "#6d2323",
-                  borderColor: "#6d2323", // <-- change color only
-                }
-              }}
-            >
-              <Receipt sx={{ fontSize: 30 }} />
-              <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
-            </Box>
-          </Link>
-        </Grid>
-
-        {/* Request Leave */}
-        {/* <Grid item xs={3}>
-          <Link to="/leave-request" style={{ textDecoration: "none" }}>
-            <Box
-              sx={{
-                m: 0.5,
-                p: 1,
-                backgroundColor: "#6d2323",
-                color: "#fff",
-                borderRadius: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 50,
-                textAlign: "center",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundColor: "#fff",
-                  color: "#6d2323",
-                  border: "1px solid #6d2323"
-                }
-              }}
-            >
-              <Description sx={{ fontSize: 20 }} />
-              <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
-                Leave Request
-              </Typography>
-            </Box>
-          </Link>
-        </Grid> */}
-
-        {/* Attendance */}
-        <Grid item xs={3}>
-          <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
-            <Box
-            sx={{
-                m: 0.5,
-                p: 1,
-                backgroundColor: "#6d2323",
-                color: "#fff",
-                borderRadius: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 50,
-                textAlign: "center",
-                transition: "all 0.3s ease",
-                border: "1px solid transparent", // <-- keep border space
-                "&:hover": {
-                  backgroundColor: "#fff",
-                  color: "#6d2323",
-                  borderColor: "#6d2323", // <-- change color only
-                }
-              }}
-            >
-              <Person sx={{ fontSize: 30 }} />
-              <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
-                Attendance
-              </Typography>
-            </Box>
-          </Link>
-        </Grid>
-      </Grid>
-  </Box>
-
-
-
+            {/* Grid of Cards */}
+            <Grid container spacing={0} sx={{ p: 1 }}>
+               {/* DTR */}
+               <Grid item xs={2.4}>
+                 <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
+                   <Box
+                     sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 40,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <AccessTime sx={{ fontSize: 25 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
+                   </Box>
+         
+                 </Link>
+               </Grid>
+         
+               {/* PDS */}
+               <Grid item xs={2.4}>
+                 <Link to="/pds1" style={{ textDecoration: "none" }}>
+                   <Box
+                    sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 40,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <ContactPage sx={{ fontSize: 25 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
+                   </Box>
+                 </Link>
+               </Grid>
+         
+               {/* Payslip */}
+               <Grid item xs={2.4}>
+                 <Link to="/payslip" style={{ textDecoration: "none" }}>
+                   <Box
+                   sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 40,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent", // <-- keep border space
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323", // <-- change color only
+                       }
+                     }}
+                   >
+                     <Receipt sx={{ fontSize: 25 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
+                   </Box>
+                 </Link>
+               </Grid>
+         
+               {/* Request Leave */}
+             <Grid item xs={2.4}>
+                             <Link to="/leave-request-user" style={{ textDecoration: "none" }}>
+                               <Box
+                               sx={{
+                                   m: 0.5,
+                                   p: 1,
+                                   backgroundColor: "#6d2323",
+                                   color: "#fff",
+                                   borderRadius: 1,
+                                   display: "flex",
+                                   flexDirection: "column",
+                                   alignItems: "center",
+                                   justifyContent: "center",
+                                   minHeight: 43.5,
+                                   textAlign: "center",
+                                   transition: "all 0.3s ease",
+                                   border: "1px solid transparent",
+                                   "&:hover": {
+                                     backgroundColor: "#fff",
+                                     color: "#6d2323",
+                                     borderColor: "#6d2323",
+                                   }
+                                 }}
+                               >
+                                 <UploadFile sx={{ fontSize: 25 }} />
+                                 <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Leave</Typography>
+                               </Box>
+                             </Link>
+                           </Grid>
+         
+               {/* Attendance */}
+               <Grid item xs={2.4}>
+                 <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
+                   <Box
+                    sx={{
+                       m: 0.5,
+                       p: 1,
+                       backgroundColor: "#6d2323",
+                       color: "#fff",
+                       borderRadius: 1,
+                       display: "flex",
+                       flexDirection: "column",
+                       alignItems: "center",
+                       justifyContent: "center",
+                       minHeight: 43,
+                       textAlign: "center",
+                       transition: "all 0.3s ease",
+                       border: "1px solid transparent",
+                       "&:hover": {
+                         backgroundColor: "#fff",
+                         color: "#6d2323",
+                         borderColor: "#6d2323",
+                       }
+                     }}
+                   >
+                     <Person sx={{ fontSize: 25 }} />
+                     <Typography sx={{ fontSize: "0.50rem", fontWeight: "bold" }}>
+                       Attendance
+                     </Typography>
+                   </Box>
+                 </Link>
+               </Grid>
+             </Grid>
+          </Box>
 
           {/* Admin Panel */}
-          <Card sx={{ border: "1px solid #6d2323", borderRadius: 2, mt: 2, mb: 5.5 }}>
+          <Card sx={{ border: "1px solid #6d2323", borderRadius: 2, mt: 1 }}>
             <Box
               sx={{
                 backgroundColor: "#6d2323",
@@ -1026,14 +1028,16 @@ return (
             <CardContent>
               <Grid container spacing={1}>
                 {[
-                  { label: "Registration", link: "/registration", icon: <PersonAddIcon sx={{ fontSize: 22 }} /> },
+                  { label: "Registration", link: "/registration", icon: <GroupAdd sx={{ fontSize: 22 }} /> },
                   { label: "DTRs", link: "/daily_time_record_faculty", icon: <AccessTimeIcon sx={{ fontSize: 22 }} /> },
                   { label: "Announcement", link: "/announcement", icon: <CampaignIcon sx={{ fontSize: 22 }} /> },
                   { label: "Holiday", link: "/holiday", icon: <AcUnitIcon sx={{ fontSize: 22 }} /> },
                   { label: "Payslip", link: "/bulk-payslip", icon: <ReceiptLong sx={{ fontSize: 22 }} /> },
                   { label: "Payroll", link: "/payroll-table", icon: <PaymentsIcon sx={{ fontSize: 22 }} /> },
-                   { label: "Leaves", link: "/leave-request", icon: <BeachAccessIcon sx={{ fontSize: 22 }} /> },
+                  { label: "Leaves", link: "/leave-request", icon: <TransferWithinAStation sx={{ fontSize: 22 }} /> },
                   { label: "Audit", link: "/audit-logs", icon: <AssignmentTurnedInIcon sx={{ fontSize: 22 }} /> },
+                  { label: "Users", link: "/users-list", icon: <Group sx={{ fontSize: 22 }} /> },
+                  { label: "Pages Library", link: "/pages-list", icon: <Pages sx={{ fontSize: 22 }} /> },
                 ].map((item, i) => (
                   <Grid item xs={12} sm={6} key={i}>
                     <Link to={item.link} style={{ textDecoration: "none" }}>
@@ -1041,7 +1045,7 @@ return (
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          p: 1,
+                          p: 1.5,
                           border: "1px solid #6d2323",
                           borderRadius: 2,
                           transition: "0.2s",

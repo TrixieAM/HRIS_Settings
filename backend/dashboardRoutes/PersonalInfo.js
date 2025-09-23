@@ -105,6 +105,61 @@ router.put('/person_table/:id', (req, res) => {
   });
 });
 
+// Add this route for updating by employee number
+router.put('/person_table/by-employee/:employeeNumber', (req, res) => {
+  const { employeeNumber } = req.params;
+  const {
+    firstName, middleName, lastName, nameExtension, birthDate, placeOfBirth, sex, civilStatus, citizenship, heightCm, weightKg, bloodType,
+    gsisNum, pagibigNum, philhealthNum, sssNum, tinNum, agencyEmployeeNum,
+    permanent_houseBlockLotNum, permanent_streetName, permanent_subdivisionOrVillage, permanent_barangayName, permanent_cityOrMunicipality,
+    permanent_provinceName, permanent_zipcode, residential_houseBlockLotNum, residential_streetName, residential_subdivisionOrVillage, residential_barangayName,
+    residential_cityOrMunicipality, residential_provinceName, residential_zipcode, telephone, mobileNum, emailAddress,
+    spouseFirstName, spouseMiddleName, spouseLastName, spouseNameExtension,
+    spouseOccupation, spouseEmployerBusinessName, spouseBusinessAddress, spouseTelephone,
+    fatherFirstName, fatherMiddleName, fatherLastName, fatherNameExtension,
+    motherMaidenFirstName, motherMaidenMiddleName, motherMaidenLastName,
+    elementaryNameOfSchool, elementaryDegree, elementaryPeriodFrom, elementaryPeriodTo,
+    elementaryHighestAttained, elementaryYearGraduated, elementaryScholarshipAcademicHonorsReceived,
+    secondaryNameOfSchool, secondaryDegree, secondaryPeriodFrom, secondaryPeriodTo,
+    secondaryHighestAttained, secondaryYearGraduated, secondaryScholarshipAcademicHonorsReceived
+  } = req.body;
+
+  const query = `UPDATE person_table SET 
+    firstName = ?, middleName = ?, lastName = ?, nameExtension = ?, birthDate = ?, placeOfBirth = ?, sex = ?, civilStatus = ?, citizenship = ?, heightCm = ?, weightKg = ?, bloodType = ?, 
+    gsisNum = ?, pagibigNum = ?, philhealthNum = ?, sssNum = ?, tinNum = ?, agencyEmployeeNum = ?, 
+    permanent_houseBlockLotNum = ?, permanent_streetName = ?, permanent_subdivisionOrVillage = ?, permanent_barangay = ?, permanent_cityOrMunicipality = ?, permanent_provinceName = ?, permanent_zipcode = ?, 
+    residential_houseBlockLotNum = ?, residential_streetName = ?, residential_subdivisionOrVillage = ?, residential_barangayName = ?, residential_cityOrMunicipality = ?, residential_provinceName = ?, residential_zipcode = ?, 
+    telephone = ?, mobileNum = ?, emailAddress = ?, 
+    spouseFirstName = ?, spouseMiddleName = ?, spouseLastName = ?, spouseNameExtension = ?, spouseOccupation = ?, spouseEmployerBusinessName = ?, spouseBusinessAddress = ?, spouseTelephone = ?, 
+    fatherFirstName = ?, fatherMiddleName = ?, fatherLastName = ?, fatherNameExtension = ?, motherMaidenFirstName = ?, motherMaidenMiddleName = ?, motherMaidenLastName = ?, 
+    elementaryNameOfSchool = ?, elementaryDegree = ?, elementaryPeriodFrom = ?, elementaryPeriodTo = ?, elementaryHighestAttained = ?, elementaryYearGraduated = ?, elementaryScholarshipAcademicHonorsReceived = ?, 
+    secondaryNameOfSchool = ?, secondaryDegree = ?, secondaryPeriodFrom = ?, secondaryPeriodTo = ?, secondaryHighestAttained = ?, secondaryYearGraduated = ?, secondaryScholarshipAcademicHonorsReceived = ? 
+    WHERE agencyEmployeeNum = ?`;
+
+  db.query(query, [
+    firstName, middleName, lastName, nameExtension, birthDate, placeOfBirth, sex, civilStatus, citizenship, heightCm, weightKg, bloodType,
+    gsisNum, pagibigNum, philhealthNum, sssNum, tinNum, agencyEmployeeNum,
+    permanent_houseBlockLotNum, permanent_streetName, permanent_subdivisionOrVillage, permanent_barangayName, permanent_cityOrMunicipality, permanent_provinceName, permanent_zipcode,
+    residential_houseBlockLotNum, residential_streetName, residential_subdivisionOrVillage, residential_barangayName, residential_cityOrMunicipality, residential_provinceName, residential_zipcode,
+    telephone, mobileNum, emailAddress,
+    spouseFirstName, spouseMiddleName, spouseLastName, spouseNameExtension, spouseOccupation, spouseEmployerBusinessName, spouseBusinessAddress, spouseTelephone,
+    fatherFirstName, fatherMiddleName, fatherLastName, fatherNameExtension, motherMaidenFirstName, motherMaidenMiddleName, motherMaidenLastName,
+    elementaryNameOfSchool, elementaryDegree, elementaryPeriodFrom, elementaryPeriodTo, elementaryHighestAttained, elementaryYearGraduated, elementaryScholarshipAcademicHonorsReceived,
+    secondaryNameOfSchool, secondaryDegree, secondaryPeriodFrom, secondaryPeriodTo, secondaryHighestAttained, secondaryYearGraduated, secondaryScholarshipAcademicHonorsReceived,
+    employeeNumber
+  ], (err, result) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    
+    res.status(200).json({ message: 'Person record updated successfully' });
+  });
+});
 
 
 

@@ -15,6 +15,13 @@ import {
   Badge,
 } from '@mui/material';
 
+
+
+
+
+
+
+
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -27,14 +34,30 @@ import {
   KeyboardArrowDown,
   Person,
   ContactPage,
-  Receipt
+  Receipt,
+  UploadFile
 } from '@mui/icons-material';
 
+
+
+
+
+
+
+
 const ACCENT = '#8B2635';
+
+
+
+
+
+
+
 
 const Home = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -44,13 +67,34 @@ const Home = () => {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [holidays, setHolidays] = useState([]);
 
+
+
+
+
+
+
+
   // payroll
   const [payrollData, setPayrollData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notifModalOpen, setNotifModalOpen] = useState(false);
 
+
+
+
+
+
+
+
   const navigate = useNavigate();
+
+
+
+
+
+
+
 
   // date parts
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
@@ -62,6 +106,20 @@ const Home = () => {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const [attendance, setAttendance] = useState({
   timeIn: '00:00:00',
   breakIn: '00:00:00',
@@ -69,12 +127,19 @@ const Home = () => {
   timeOut: '00:00:00',
 });
 
+
+
+
+
+
+
+
 // fetch user's attendance
 useEffect(() => {
   if (!employeeNumber) return;
   const fetchAttendance = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/attendance/${employeeNumber}`);
+      const res = await axios.get(`${API_BASE_URL}/attendance/${employeeNumber}`);
       // assuming your backend returns an object like { TimeIn, BreakIn, BreakOut, TimeOut }
       if (res.data) {
         setAttendance({
@@ -92,11 +157,32 @@ useEffect(() => {
 }, [employeeNumber]);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // update live clock/date (if you want time)
   useEffect(() => {
     const interval = setInterval(() => setCurrentDate(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+
+
+
+
+
+
 
   const getUserInfo = () => {
     const token = localStorage.getItem('token');
@@ -114,6 +200,13 @@ useEffect(() => {
     }
   };
 
+
+
+
+
+
+
+
   // read token once on mount
   useEffect(() => {
     const userInfo = getUserInfo();
@@ -121,11 +214,18 @@ useEffect(() => {
     if (userInfo.employeeNumber) setEmployeeNumber(userInfo.employeeNumber);
   }, []);
 
+
+
+
+
+
+
+
   // fetch announcements
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/api/announcements`);
+        const res = await axios.get(`${API_BASE_URL}/api/announcements`);
         setAnnouncements(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Error fetching announcements:', err);
@@ -134,6 +234,13 @@ useEffect(() => {
     };
     fetchAnnouncements();
   }, []);
+
+
+
+
+
+
+
 
   // auto slide when there are announcements
   useEffect(() => {
@@ -144,6 +251,13 @@ useEffect(() => {
     return () => clearInterval(t);
   }, [announcements]);
 
+
+
+
+
+
+
+
   const handlePrevSlide = () => {
     if (announcements.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + announcements.length) % announcements.length);
@@ -153,12 +267,26 @@ useEffect(() => {
     setCurrentSlide((prev) => (prev + 1) % announcements.length);
   };
 
+
+
+
+
+
+
+
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+
+
+
+
+
+
+
 
   const handleOpenModal = (announcement) => {
     setSelectedAnnouncement(announcement);
@@ -169,26 +297,58 @@ useEffect(() => {
     setSelectedAnnouncement(null);
   };
 
+
+
+
+
+
+
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
+
+
+
+
+
+
+
   // fetch profile picture from person_table
   useEffect(() => {
     const fetchProfilePicture = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/personalinfo/person_table`);
+        const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const list = Array.isArray(res.data) ? res.data : [];
         const match = list.find((p) => String(p.agencyEmployeeNum) === String(employeeNumber));
         if (match && match.profile_picture) setProfilePicture(match.profile_picture);
+         const fullNameFromPerson = `${match.firstName || ''} ${match.middleName || ''} ${match.lastName || ''} ${match.nameExtension || ''}`.trim();
+          if (fullNameFromPerson) {
+            setFullName(fullNameFromPerson);
+          }
       } catch (err) {
         console.error('Error loading profile picture:', err);
       }
     };
 
+
+
+
+
+
+
+
     if (employeeNumber) fetchProfilePicture();
   }, [employeeNumber]);
+
+
+
+
+
+
+
 
   // fetch payroll for the user
   useEffect(() => {
@@ -196,7 +356,7 @@ useEffect(() => {
       if (!employeeNumber) return;
       try {
         setLoading(true);
-        const res = await axios.get(`${API_BASE}/api/finalized-payroll`);
+        const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
         const list = Array.isArray(res.data) ? res.data : [];
         const userPayroll = list.find((p) =>
           String(p.employeeNumber) === String(employeeNumber) ||
@@ -213,12 +373,26 @@ useEffect(() => {
     fetchPayrollData();
   }, [employeeNumber]);
 
+
+
+
+
+
+
+
   const formatCurrency = (value) => {
     if (value === undefined || value === null || value === '' || value === '0') return '₱0.00';
     const num = typeof value === 'string' ? parseFloat(value) : value;
     if (isNaN(num)) return '₱0.00';
     return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
+
+
+
+
+
+
+
 
   // calendar generation (Monday start)
   const generateCalendar = () => {
@@ -233,6 +407,13 @@ useEffect(() => {
   };
   const calendarDays = generateCalendar();
 
+
+
+
+
+
+
+
   // Fetch holidays from holiday endpoint
  useEffect(() => {
   const fetchHolidays = async () => {
@@ -245,6 +426,13 @@ useEffect(() => {
           const normalizedDate = !isNaN(d)
             ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
             : item.date; // fallback if parsing fails
+
+
+
+
+
+
+
 
           return {
             date: normalizedDate,
@@ -260,6 +448,13 @@ useEffect(() => {
   };
   fetchHolidays();
 }, []);
+
+
+
+
+
+
+
 
   return (
       <Box sx={{ p: 1, pl: 10, mt: -5 }}>
@@ -289,6 +484,13 @@ useEffect(() => {
                   {formattedDate}
                 </Typography>
               </Box>
+
+
+
+
+
+
+
 
               <Link to="/attendance-user-state" style={{ textDecoration: 'none' }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -324,7 +526,21 @@ useEffect(() => {
                 </Box>
               </Link>
 
+
+
+
+
+
+
+
             </Box>
+
+
+
+
+
+
+
 
             {/* Payslip */}
             <Box sx={{
@@ -343,21 +559,35 @@ useEffect(() => {
                 <Typography sx={{ fontWeight: 'bold', fontSize: '20px', mb: 2 }}>Payslip</Typography>
               </Box>
 
+
+
+
+
+
+
+
               <Link to="/payslip" style={{ textDecoration: 'none' }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
                     <AccountBalance sx={{ fontSize: '2rem', mb: 0.5, color: '#6d2323' }} />
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>1st Pay</Typography>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>1st Quincena</Typography>
                     <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6d2323' }}>{payrollData ? formatCurrency(payrollData.pay1st) : '₱386.00'}</Typography>
                   </Box>
                   <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
                     <AccountBalance sx={{ fontSize: '2rem', mb: 0.5, color: '#6d2323' }} />
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>2nd Pay</Typography>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>2nd Quincena</Typography>
                     <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6d2323' }}>{payrollData ? formatCurrency(payrollData.pay2nd) : '₱268.00'}</Typography>
                   </Box>
                 </Box>
               </Link>
             </Box>
+
+
+
+
+
+
+
 
             {/* Leave Balance */}
             <Box sx={{
@@ -376,6 +606,13 @@ useEffect(() => {
                 <Typography sx={{ fontWeight: 'bold', fontSize: '20px', mb: 2 }}>Leave Balance</Typography>
               </Box>
 
+
+
+
+
+
+
+
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 2, width: '100%', textAlign: 'center' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
@@ -388,6 +625,13 @@ useEffect(() => {
             </Box>
           </Box>
 
+
+
+
+
+
+
+
        {/* Middle Section - Announcement Slideshow */}
         <Grid container spacing={2}>
      {/* slideshow */}
@@ -398,7 +642,7 @@ useEffect(() => {
                 borderRadius: 2,
                 overflow: "hidden",
                 border: "1px solid #8B2635",
-                height: "400px",
+                height: "550px",
                 mb: -3,
                 cursor: "pointer",
                 }}
@@ -430,6 +674,13 @@ useEffect(() => {
                     <ArrowBackIosNewIcon />
                     </IconButton>
 
+
+
+
+
+
+
+
                     {/* Slide image */}
                     <Box
                     component="img"
@@ -446,6 +697,13 @@ useEffect(() => {
                     }}
                     />
 
+
+
+
+
+
+
+
                     {/* Inner shadow overlay */}
                     <Box
                      sx={{
@@ -456,6 +714,13 @@ useEffect(() => {
                         "radial-gradient(circle at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 90%)",
                     }}
                     />
+
+
+
+
+
+
+
 
                     {/* Next button */}
                     <IconButton
@@ -474,6 +739,13 @@ useEffect(() => {
                     >
                     <ArrowForwardIosIcon />
                     </IconButton>
+
+
+
+
+
+
+
 
                     {/* Caption box */}
                     <Box
@@ -510,6 +782,13 @@ useEffect(() => {
                 </>
                 )}
             </Box>
+
+
+
+
+
+
+
 
             {/* Modal for full announcement details */}
             <Modal
@@ -580,6 +859,20 @@ useEffect(() => {
             </Grid>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {/* Right side: Calendar + Announcements */}
             <Grid item xs={12} md={4}>
               <Box
@@ -592,8 +885,8 @@ useEffect(() => {
               >
                 {/* Calendar Header with Navigation */}
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     // Previous month
                     onClick={() => {
                       const prevMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
@@ -601,13 +894,13 @@ useEffect(() => {
                     }}
                     sx={{ color: "#6d2323" }}
                   >
-                    <ArrowBackIosNewIcon fontSize="small" />
+                    <ArrowBackIosNewIcon fontSize="medium" />
                   </IconButton>
-                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "0.9rem" }}>
+                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "1rem" }}>
                     {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </Typography>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     // Next month
                     onClick={() => {
                       const nextMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
@@ -615,21 +908,28 @@ useEffect(() => {
                     }}
                     sx={{ color: "#6d2323" }}
                   >
-                    <ArrowForwardIosIcon fontSize="small" />
+                    <ArrowForwardIosIcon fontSize="medium" />
                   </IconButton>
                 </Box>
 
+
+
+
+
+
+
+
                 {/* Days of Week Header */}
-                <Grid container spacing={0} sx={{ mb: 0.5 }}>
+                <Grid container spacing={0} sx={{ mb: 1 }}>
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                     <Grid item xs={12 / 7} key={day}>
                       <Typography
                         sx={{
                           textAlign: "center",
                           fontWeight: "bold",
-                          fontSize: "0.65rem",
+                          fontSize: "0.80rem",
                           color: "#6d2323",
-                          p: 0.3,
+                          p: 1,
                         }}
                       >
                         {day}
@@ -638,14 +938,35 @@ useEffect(() => {
                   ))}
                 </Grid>
 
+
+
+
+
+
+
+
                 {/* Calendar Days Grid */}
                 <Grid container spacing={0}>
                   {calendarDays.map((day, index) => {
                     const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+
+
+
+
+
+
+
                     const holidayData = holidays.find(
                       (h) => h.date === currentDate && h.status === "Active"
                     );
+
+
+
+
+
+
+
 
                     return (
                       <Grid item xs={12 / 7} key={index}>
@@ -655,11 +976,11 @@ useEffect(() => {
                           componentsProps={{
                             tooltip: {
                               sx: {
-                                color: "#6d2323",               // text red
-                                backgroundColor: "#fff", // transparent background
-                                border: "1.5px solid #6d2323",    // burgundy outline
+                                color: "#6d2323",              
+                                backgroundColor: "#fff",
+                                border: "1.5px solid #6d2323",
                                 fontWeight: "bold",
-                                fontSize: "0.6rem",
+                                fontSize: "1rem",
                                 boxShadow: "none",
                                 borderRadius: "20px"
                               },
@@ -669,20 +990,20 @@ useEffect(() => {
                           <Box
                             sx={{
                               textAlign: "center",
-                             p: 0.34,
-                              fontSize: "0.7rem",
+                              p: 0.34,
+                              fontSize: "0.9rem",
                               borderRadius: "20px",
                               color: holidayData ? "#fff" : day ? "#333" : "transparent",
                               backgroundColor: holidayData ? "#6d2323" : "transparent",
                               fontWeight: holidayData ? "bold" : "normal",
-                              minHeight: "17px",
+                              minHeight: "20px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               cursor: holidayData ? "pointer" : "default",
                               "&:hover": holidayData
                                 ? {
-                                    backgroundColor: "#6d2323", // keep burgundy on hover
+                                    backgroundColor: "#6d2323",
                                     transform: "scale(1.05)",
                                     transition: "all 0.2s ease-in-out",
                                   }
@@ -698,16 +1019,30 @@ useEffect(() => {
                 </Grid>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 {/* Legend */}
                 {/* <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Box 
-                      sx={{ 
-                        width: 8, 
-                        height: 8, 
-                        backgroundColor: "red", 
-                        borderRadius: "50%" 
-                      }} 
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        backgroundColor: "red",
+                        borderRadius: "50%"
+                      }}
                     />
                     <Typography fontSize="0.6rem" color="#666">Holiday</Typography>
                   </Box>
@@ -719,7 +1054,7 @@ useEffect(() => {
                                 border: "1px solid #8B2635",
                                 borderRadius: 2,
                                 overflow: "hidden",
-                                height: "153px",
+                                height: "255px",
                                 mt: 2
                             }}
                             >
@@ -771,7 +1106,9 @@ useEffect(() => {
            </Grid>
         </Box>
 
-       {/* Right Sidebar */}
+
+
+
         <Box
           sx={{
             width: 320,
@@ -814,7 +1151,7 @@ useEffect(() => {
               }}
             />
             <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
-              {username || "Admin Name"}
+              {fullName || username || "Admin Name"}
             </Typography>
             <Typography variant="body2" sx={{ color: "#666", textAlign: "center" }}>
               {employeeNumber || "#00000000"}
@@ -838,7 +1175,7 @@ useEffect(() => {
             {/* Grid of Cards */}
             <Grid container spacing={0} sx={{ p: 1 }}>
                {/* DTR */}
-               <Grid item xs={3}>
+               <Grid item xs={2.4}>
                  <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
                    <Box
                      sx={{
@@ -862,7 +1199,7 @@ useEffect(() => {
                        }
                      }}
                    >
-                     <AccessTime sx={{ fontSize: 30 }} />
+                     <AccessTime sx={{ fontSize: 25 }} />
                      <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
                    </Box>
          
@@ -870,7 +1207,7 @@ useEffect(() => {
                </Grid>
          
                {/* PDS */}
-               <Grid item xs={3}>
+               <Grid item xs={2.4}>
                  <Link to="/pds1" style={{ textDecoration: "none" }}>
                    <Box
                     sx={{
@@ -894,14 +1231,14 @@ useEffect(() => {
                        }
                      }}
                    >
-                     <ContactPage sx={{ fontSize: 30 }} />
+                     <ContactPage sx={{ fontSize: 25 }} />
                      <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
                    </Box>
                  </Link>
                </Grid>
          
                {/* Payslip */}
-               <Grid item xs={3}>
+               <Grid item xs={2.4}>
                  <Link to="/payslip" style={{ textDecoration: "none" }}>
                    <Box
                    sx={{
@@ -925,17 +1262,17 @@ useEffect(() => {
                        }
                      }}
                    >
-                     <Receipt sx={{ fontSize: 30 }} />
+                     <Receipt sx={{ fontSize: 25 }} />
                      <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
                    </Box>
                  </Link>
                </Grid>
          
                {/* Request Leave */}
-               <Grid item xs={3}>
-                 <Link to="/leave-request-staff" style={{ textDecoration: "none" }}>
+                 <Grid item xs={2.4}>
+                 <Link to="/leave-request-user" style={{ textDecoration: "none" }}>
                    <Box
-                     sx={{
+                   sx={{
                        m: 0.5,
                        p: 1,
                        backgroundColor: "#6d2323",
@@ -948,23 +1285,22 @@ useEffect(() => {
                        minHeight: 50,
                        textAlign: "center",
                        transition: "all 0.3s ease",
+                       border: "1px solid transparent",
                        "&:hover": {
                          backgroundColor: "#fff",
                          color: "#6d2323",
-                         border: "1px solid #6d2323"
+                         borderColor: "#6d2323",
                        }
                      }}
                    >
-                     <Description sx={{ fontSize: 20 }} />
-                     <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
-                       Leave Request
-                     </Typography>
+                     <UploadFile sx={{ fontSize: 25 }} />
+                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Leave</Typography>
                    </Box>
                  </Link>
                </Grid>
          
                {/* Attendance */}
-               <Grid item xs={3}>
+               <Grid item xs={2.4}>
                  <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
                    <Box
                     sx={{
@@ -988,8 +1324,8 @@ useEffect(() => {
                        }
                      }}
                    >
-                     <Person sx={{ fontSize: 30 }} />
-                     <Typography sx={{ fontSize: "0.64rem", fontWeight: "bold" }}>
+                     <Person sx={{ fontSize: 25 }} />
+                     <Typography sx={{ fontSize: "0.50rem", fontWeight: "bold" }}>
                        Attendance
                      </Typography>
                    </Box>
@@ -999,31 +1335,86 @@ useEffect(() => {
           </Box>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {/* Recent Activity */}
           <Box sx={{ border: `1px solid ${ACCENT}`, borderRadius: 2, overflow: 'hidden' }}>
             <Box sx={{ backgroundColor: '#6d2323', p: 1.5, textAlign: 'center' }}>
               <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>RECENT ACTIVITY</Typography>
             </Box>
 
-            <Box sx={{ p: 1.5, backgroundColor: 'white', maxHeight: 122, overflowY: 'auto' }}>
+
+
+
+
+
+
+
+            <Box sx={{ p: 1.5, backgroundColor: 'white', maxHeight: 332, overflowY: 'auto' }}>
               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Leave Request Submitted</Typography>
                 <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Annual Leave - June 14-15, 2025</Typography>
               </Box>
+
+
+
+
+
+
+
 
               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Payslip Generated</Typography>
                 <Typography fontSize="0.7rem" sx={{ color: '#666' }}>May 2025 - Available for download</Typography>
               </Box>
 
+
+
+
+
+
+
+
               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Profile Updated</Typography>
                 <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Personal information updated successfully</Typography>
+              </Box>
+
+
+
+
+               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Personal Information Created</Typography>
+                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Personal information created successfully</Typography>
+              </Box>
+
+                <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Account Registered</Typography>
+                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Account registered successfully</Typography>
               </Box>
             </Box>
           </Box>
         </Box>
       </Box>
+
+
+
+
+
+
+
 
       {/* Announcement Modal */}
       <Modal open={openModal} onClose={handleCloseModal} aria-labelledby="announcement-modal" aria-describedby="announcement-details">
@@ -1045,7 +1436,7 @@ useEffect(() => {
             <>
               <Typography variant="h5" component="h2" gutterBottom>{selectedAnnouncement.title}</Typography>
               {selectedAnnouncement.image && (
-                <Box component="img" src={`${API_BASE}${selectedAnnouncement.image}`} alt={selectedAnnouncement.title}
+                <Box component="img" src={`${API_BASE_URL}${selectedAnnouncement.image}`} alt={selectedAnnouncement.title}
                   sx={{ width: '100%', height: 'auto', maxHeight: 300, objectFit: 'cover', borderRadius: 1, mb: 2 }} />
               )}
               <Typography variant="body1" paragraph>{selectedAnnouncement.about || selectedAnnouncement.description}</Typography>
@@ -1057,6 +1448,13 @@ useEffect(() => {
           )}
         </Box>
       </Modal>
+
+
+
+
+
+
+
 
       {/* Notifications Modal */}
       <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)} aria-labelledby="notification-modal" aria-describedby="notifications-list">
@@ -1077,6 +1475,13 @@ useEffect(() => {
         }}>
           <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: ACCENT }}>Notifications</Typography>
 
+
+
+
+
+
+
+
           {announcements.length > 0 ? announcements.slice(0, 10).map((item, idx) => (
             <Box key={idx} sx={{
               mb: 1.5, p: 1.5, borderRadius: 2, backgroundColor: '#f8f8f8', border: `1px solid ${ACCENT}`, cursor: 'pointer',
@@ -1091,5 +1496,12 @@ useEffect(() => {
     </Box>
   );
 };
+
+
+
+
+
+
+
 
 export default Home;

@@ -1,5 +1,5 @@
 import API_BASE_URL from "../apiConfig";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -8,11 +8,30 @@ import {
   Container,
   Paper,
   Typography,
+  Grid,
+  InputAdornment,
+  Box,
+  CircularProgress
 } from "@mui/material";
+import {
+  PersonOutline,
+  EmailOutlined,
+  BadgeOutlined,
+  LockOutlined,
+  PersonAddAlt1,
+  GroupAdd,
+  CheckCircleOutline,
+  ErrorOutline,
+} from "@mui/icons-material";
+import AccessDenied from "./AccessDenied";
+
 
 const Registration = () => {
   const [formData, setFormData] = useState({
-    username: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    nameExtension: "",
     email: "",
     employeeNumber: "",
     password: "",
@@ -23,36 +42,82 @@ const Registration = () => {
 
   const navigate = useNavigate();
 
+  //ACCESSING
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 16; // PAGE ID
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
+
   const handleChanges = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const isValidName = (name) => {
-    const words = name.trim().split(" ");
-    if (words.length === 0) return false;
-
-    for (let word of words) {
-      if (word.length < 2 || word.length > 20) return false;
-      if (!/^[a-zA-Z']+$/.test(word)) return false;
-      if (!/[aeiouAEIOU]/.test(word)) return false;
-    }
-
+    if (!name || name.trim().length === 0) return false;
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 50) return false;
+    if (!/^[a-zA-Z\s'-]+$/.test(trimmedName)) return false;
     return true;
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const { username, email, employeeNumber, password } = formData;
+    const { firstName, lastName, email, employeeNumber, password } = formData;
 
-    if (!username || !employeeNumber || !password || !email) {
-      setErrorMessage("Please fill all required fields.");
+    // Required field validation
+    if (!firstName || !lastName || !employeeNumber || !password || !email) {
+      setErrorMessage("Please fill all required fields (First Name, Last Name, Email, Employee Number, Password).");
       setSuccessMessage("");
       return;
     }
 
-    if (!isValidName(username)) {
-      setErrorMessage("Please enter a valid name.");
+    // Name validation
+    if (!isValidName(firstName)) {
+      setErrorMessage("Please enter a valid first name (2-50 characters, letters only).");
+      setSuccessMessage("");
+      return;
+    }
+
+    if (!isValidName(lastName)) {
+      setErrorMessage("Please enter a valid last name (2-50 characters, letters only).");
+      setSuccessMessage("");
+      return;
+    }
+
+    // Middle name validation (optional)
+    if (formData.middleName && !isValidName(formData.middleName)) {
+      setErrorMessage("Please enter a valid middle name (2-50 characters, letters only).");
       setSuccessMessage("");
       return;
     }
@@ -67,9 +132,18 @@ const Registration = () => {
       if (response.ok) {
         setSuccessMessage("User registered successfully!");
         setErrorMessage("");
-        setFormData({ username: "", email: "", employeeNumber: "", password: "" });
+        setFormData({ 
+          firstName: "", 
+          middleName: "", 
+          lastName: "", 
+          nameExtension: "", 
+          email: "", 
+          employeeNumber: "", 
+          password: "" 
+        });
       } else {
-        setErrorMessage("Registration failed. Try again.");
+        const errorData = await response.json();
+        setErrorMessage(errorData.error || "Registration failed. Try again.");
         setSuccessMessage("");
       }
     } catch (err) {
@@ -79,13 +153,45 @@ const Registration = () => {
     }
   };
 
+
+  // ACCESSING 2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
+
+
+
   return (
     <Container
-      maxWidth="sm"
+      maxWidth="md"
       sx={{
         display: "flex",
-        minHeight: "70vh",
+        minHeight: "90%",
         backgroundColor: "#fff8e1",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       <Paper
@@ -93,89 +199,308 @@ const Registration = () => {
         sx={{
           padding: 4,
           width: "100%",
-          maxWidth: 400,
+          maxWidth: 600,
           borderRadius: 2,
           textAlign: "center",
+          border: "2px solid #f5e6e6",
+          background: "linear-gradient(135deg, #ffffff 0%, #fefefe 100%)",
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ mt: 5 }}>
-          <b>User Registration</b>
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 2 }}>
+          <PersonAddAlt1 sx={{ fontSize: 40, color: "#6d2323", mr: 1 }} />
+          <Typography variant="h4" sx={{ color: "#6d2323", fontWeight: "bold" }}>
+            Single Registration
+          </Typography>
+        </Box>
 
-        <Typography gutterBottom sx={{ mt: 1 }}>
-          <b>Register users one at a time.</b>
+        <Typography gutterBottom sx={{ mt: 1, mb: 3, color: "#8a4747" }}>
+          <b>Register users one at a time</b>
         </Typography>
 
         {errMessage && (
-          <Alert sx={{ mb: 2 }} severity="error">
+          <Alert 
+            icon={<ErrorOutline fontSize="inherit" />}
+            sx={{ 
+              mb: 2,
+              backgroundColor: "#6d2323",
+              color: "white",
+              "& .MuiAlert-icon": {
+                color: "white"
+              }
+            }} 
+            severity="error"
+          >
             {errMessage}
           </Alert>
         )}
         {successMessage && (
-          <Alert sx={{ mb: 2 }} severity="success">
+          <Alert 
+            icon={<CheckCircleOutline fontSize="inherit" />}
+            sx={{ 
+              mb: 2,
+              backgroundColor: "#f5e6e6",
+              color: "#6d2323",
+              border: "1px solid #e0c4c4",
+              "& .MuiAlert-icon": {
+                color: "#6d2323"
+              }
+            }} 
+            severity="success"
+          >
             {successMessage}
           </Alert>
         )}
 
         <form onSubmit={handleRegister}>
-          <TextField
-            name="username"
-            label="Name"
-            type="text"
-            fullWidth
-            sx={{ mb: 2, mt: 4 }}
-            value={formData.username}
-            onChange={handleChanges}
-            InputLabelProps={{ required: false }}
-          />
-          <TextField
-            name="email"
-            label="Email"
-            type="email"
-            fullWidth
-            sx={{ mb: 2 }}
-            value={formData.email}
-            onChange={handleChanges}
-            InputLabelProps={{ required: false }}
-          />
-          <TextField
-            name="employeeNumber"
-            label="Employee Number"
-            type="number"
-            fullWidth
-            sx={{
-              mb: 2,
-              "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                WebkitAppearance: "none",
-                margin: 0,
-              },
-              "& input[type=number]": {
-                MozAppearance: "textfield",
-              },
-            }}
-            value={formData.employeeNumber}
-            onChange={handleChanges}
-            InputLabelProps={{ required: false }}
-          />
-          <TextField
-            name="password"
-            label="Password"
-            type="password"
-            fullWidth
-            sx={{ mb: 1 }}
-            autoComplete="new-password"
-            value={formData.password}
-            onChange={handleChanges}
-            InputLabelProps={{ required: false }}
-          />
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="firstName"
+                label="First Name"
+                type="text"
+                fullWidth
+                value={formData.firstName}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutline sx={{ color: "#6d2323" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="middleName"
+                label="Middle Name"
+                type="text"
+                fullWidth
+                value={formData.middleName}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutline sx={{ color: "#8a4747" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="lastName"
+                label="Last Name"
+                type="text"
+                fullWidth
+                value={formData.lastName}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutline sx={{ color: "#6d2323" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="nameExtension"
+                label="Name Extension (Jr., Sr., III)"
+                type="text"
+                fullWidth
+                value={formData.nameExtension}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                placeholder="Jr., Sr., III, etc."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutline sx={{ color: "#8a4747" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="email"
+                label="Email"
+                type="email"
+                fullWidth
+                value={formData.email}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailOutlined sx={{ color: "#6d2323" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="employeeNumber"
+                label="Employee Number"
+                type="number"
+                fullWidth
+                sx={{
+                  "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                    WebkitAppearance: "none",
+                    margin: 0,
+                  },
+                  "& input[type=number]": {
+                    MozAppearance: "textfield",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+                value={formData.employeeNumber}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <BadgeOutlined sx={{ color: "#6d2323" }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="password"
+                label="Password"
+                type="password"
+                fullWidth
+                autoComplete="new-password"
+                value={formData.password}
+                onChange={handleChanges}
+                InputLabelProps={{ required: false }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockOutlined sx={{ color: "#6d2323" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "#8a4747",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#6d2323",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#6d2323",
+                  },
+                }}
+              />
+            </Grid>
+          </Grid>
 
           <Button
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ bgcolor: "#A31D1D", mt: 2 }}
+            startIcon={<PersonAddAlt1 />}
+            sx={{ 
+              bgcolor: "#6d2323", 
+              mt: 3,
+              py: 1.5,
+              fontSize: "1.1rem",
+              fontWeight: "bold",
+              "&:hover": {
+                bgcolor: "#5a1e1e",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+              },
+              transition: "all 0.3s ease",
+            }}
           >
-            Register
+            Register User
           </Button>
         </form>
 
@@ -183,10 +508,23 @@ const Registration = () => {
           type="button"
           variant="contained"
           fullWidth
-          sx={{ bgcolor: "black", mt: 1 }}
-          onClick={() => navigate("/bulk-register")} // ✅ Programmatic navigation
+          startIcon={<GroupAdd />}
+          sx={{ 
+            bgcolor: "#000", 
+            mt: 2,
+            py: 1.5,
+            fontSize: "1rem",
+            fontWeight: "bold",
+            "&:hover": {
+              bgcolor: "#353434ff",
+              transform: "translateY(-2px)",
+              boxShadow: "0 6px 20px rgba(138, 71, 71, 0.3)",
+            },
+            transition: "all 0.3s ease",
+          }}
+          onClick={() => navigate("/bulk-register")}
         >
-          ⮞ Bulk Registration
+          Bulk Registration
         </Button>
       </Paper>
     </Container>

@@ -450,7 +450,7 @@ const ForgotPassword = () => {
     <div
       style={{
         display: "flex",
-        minHeight: "70vh",
+        minHeight: "90%",
         backgroundColor: "#fff8e1",
       }}
     >

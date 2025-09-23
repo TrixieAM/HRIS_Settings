@@ -3,13 +3,22 @@ const router = express.Router();
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 const multer = require("multer");
+const jwt = require('jsonwebtoken');
 require("dotenv").config();
+
+
+
+
 
 
 
 
 // Configure multer for handling file uploads
 const upload = multer({ storage: multer.memoryStorage() });
+
+
+
+
 
 
 
@@ -26,6 +35,65 @@ const db = mysql.createPool({
 });
 
 
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+
+  console.log('Auth header:', authHeader);
+  console.log('Token:', token ? 'Token exists' : 'No token');
+
+
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
+    if (err) {
+      console.log('JWT verification error:', err.message);
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    console.log('Decoded JWT:', user);
+    req.user = user;
+    next();
+  });
+}
+
+
+// Audit logging function
+function logAudit(
+  user,
+  action,
+  tableName,
+  recordId,
+  targetEmployeeNumber = null
+) {
+  const auditQuery = `
+    INSERT INTO audit_log (employeeNumber, action, table_name, record_id, targetEmployeeNumber, timestamp)
+    VALUES (?, ?, ?, ?, ?, NOW())
+  `;
+
+
+  db.query(
+    auditQuery,
+    [user.employeeNumber, action, tableName, recordId, targetEmployeeNumber],
+    (err) => {
+      if (err) {
+        console.error('Error inserting audit log:', err);
+      }
+    }
+  );
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -33,13 +101,28 @@ const db = mysql.createPool({
 
 
 // ✅ GET all users
-router.get("/users", (req, res) => {
+router.get("/users", authenticateToken, (req, res) => {
   const sql = "SELECT username AS name, email, employeeNumber FROM users";
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err });
+   
+    try {
+      logAudit(req.user, 'View', 'users', null, null);
+    } catch (e) {
+      console.error('Audit log error:', e);
+    }
+   
     res.json(results);
   });
 });
+
+
+
+
+
+
+
+
 
 
 
@@ -60,11 +143,19 @@ router.get("/test", (req, res) => {
 
 
 
+
+
+
+
 // ✅ SEND payslip via Gmail
-router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
+router.post("/send-payslip", authenticateToken, upload.single("pdf"), async (req, res) => {
   try {
     const { name, employeeNumber } = req.body;
     const pdfFile = req.file;
+
+
+
+
 
 
 
@@ -79,6 +170,10 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
 
 
 
+
+
+
+
     // ✅ Lookup only by employeeNumber
     const sql = "SELECT email FROM users WHERE employeeNumber = ?";
     db.query(sql, [employeeNumber], async (err, results) => {
@@ -88,7 +183,15 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
 
 
 
+
+
+
+
       const email = results[0].email;
+
+
+
+
 
 
 
@@ -96,6 +199,10 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
                 if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
             console.error("❌ Gmail credentials are missing in .env file");
             }
+
+
+
+
 
 
 
@@ -114,6 +221,10 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
 
 
 
+
+
+
+
             // ✅ Verify Gmail connection at startup
             transporter.verify((error, success) => {
             if (error) {
@@ -122,6 +233,14 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
                 console.log("✅ Gmail is ready to send emails");
             }
             });
+
+
+
+
+
+
+
+
 
 
 
@@ -146,7 +265,18 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
 
 
 
+
+
+
+
                 await transporter.sendMail(mailOptions);
+               
+                try {
+                  logAudit(req.user, 'Send Payslip', 'payslip_email', null, employeeNumber);
+                } catch (e) {
+                  console.error('Audit log error:', e);
+                }
+               
                 res.json({ success: true, message: "Payslip sent successfully" });
                 });
             } catch (err) {
@@ -155,17 +285,23 @@ router.post("/send-payslip", upload.single("pdf"), async (req, res) => {
             });
 
 
+
+
 // ✅ SEND payslips to selected employees only
-router.post("/send-bulk", upload.array("pdfs"), async (req, res) => {
+router.post("/send-bulk", authenticateToken, upload.array("pdfs"), async (req, res) => {
   try {
     // Parse the selected employees sent from frontend
     const payslips = req.body.payslips ? JSON.parse(req.body.payslips) : [];
     const pdfFiles = req.files;
 
 
+
+
     if (!payslips.length || !pdfFiles.length) {
       return res.status(400).json({ error: "Missing payslips or pdf files" });
     }
+
+
 
 
     const transporter = nodemailer.createTransport({
@@ -178,7 +314,11 @@ router.post("/send-bulk", upload.array("pdfs"), async (req, res) => {
     });
 
 
+
+
     let results = [];
+
+
 
 
     for (let i = 0; i < payslips.length; i++) {
@@ -186,11 +326,15 @@ router.post("/send-bulk", upload.array("pdfs"), async (req, res) => {
       const pdfFile = pdfFiles[i];
 
 
+
+
       // ✅ Fetch Gmail from DB
       const [rows] = await db.promise().query(
         "SELECT email FROM users WHERE employeeNumber = ?",
         [employeeNumber]
       );
+
+
 
 
       if (rows.length === 0) {
@@ -203,7 +347,11 @@ router.post("/send-bulk", upload.array("pdfs"), async (req, res) => {
       }
 
 
+
+
       const email = rows[0].email;
+
+
 
 
       // Updated email options in your SendPayslip.js backend
@@ -214,14 +362,22 @@ const mailOptions = {
   text: `Dear ${name},
 
 
+
+
 Please find your payslip attached. We encourage you to review the details carefully.
+
+
 
 
 If you have any questions, notice mismatches and errors, or require further clarification, kindly reach out to the
 HR team at earisthrmstesting@gmail.com or go to the HR Office. Your concerns will be addressed promptly.
 
 
+
+
 We sincerely appreciate your hard work and contributions to the Institution. Thank you for your continued dedication.
+
+
 
 
 Best regards,
@@ -261,13 +417,34 @@ EARIST HR Testing Team`,
 };
 
 
+
+
       try {
         await transporter.sendMail(mailOptions);
+
+
+        // Audit log after successful send
+        try {
+          const periodLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          logAudit(
+            req.user,
+            'insert',
+            'Send Payslip (bulk)',
+            periodLabel,
+            employeeNumber
+          );
+        } catch (e) {
+          console.error('Audit log error:', e);
+        }
+
+
         results.push({ employeeNumber, success: true });
       } catch (err) {
         results.push({ employeeNumber, success: false, error: err.message });
       }
     }
+
+
 
 
     res.json({ success: true, results });
@@ -282,7 +459,21 @@ EARIST HR Testing Team`,
 
 
 
+
+
+
+
+
+
 module.exports = router;
+
+
+
+
+
+
+
+
 
 
 

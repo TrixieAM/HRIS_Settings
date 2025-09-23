@@ -22,10 +22,9 @@ import hrisLogo from './assets/hrisLogo.png';
 
 import Login from './components/Login';
 import Register from './components/Register';
-import Unauthorized from './components/Unauthorized';
-import AllIcons from './components/Page';
 import LoadingOverlay from './components/LoadingOverlay';
 import SuccessfulOverlay from './components/SuccessfulOverlay';
+import AccessDenied from './components/AccessDenied';
 
 
 
@@ -54,7 +53,7 @@ import GraduateTable from './components/DASHBOARD/GraduateStudies';
 
 //ATTENDANCE RECORDS
 import ViewAttendanceRecord from './components/ATTENDANCE/AttendanceDevice';
-import AttendanceSearch from './components/ATTENDANCE/AttendanceManagement';
+import AttendanceModification from './components/ATTENDANCE/AttendanceModification';
 import AttendanceUserState from './components/ATTENDANCE/AttendanceUserState';
 import DailyTimeRecord from './components/ATTENDANCE/DailyTimeRecord';
 import DailyTimeRecordFaculty from './components/ATTENDANCE/DailyTimeRecordOverall';
@@ -118,6 +117,11 @@ import LeaveRequest from './components/LEAVE/LeaveRequest';
 import LeaveDatePickerModal from './components/LEAVE/LeaveDatePicker';
 import LeaveAssignment from './components/LEAVE/LeaveAssignment';
 import LeaveCredits from './components/LEAVE/LeaveCredits';
+
+
+import UsersList from './components/UsersList';
+import PagesList from './components/PagesList';
+import AuditLogs from './components/AuditLogs';
 
 
 
@@ -287,7 +291,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/allicons" element={<AllIcons />} />
             <Route
               path="/children"
               element={
@@ -381,7 +384,7 @@ function App() {
               path="/search_attendance"
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <AttendanceSearch />
+                  <AttendanceModification />
                 </ProtectedRoute>
               }
             />
@@ -928,10 +931,39 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/users-list"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <UsersList />
+                </ProtectedRoute>
+              }
+            />
+
+             <Route
+              path="/pages-list"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin', 'staff']}>
+                  <PagesList />
+                </ProtectedRoute>
+              }
+            />
+
+
+            
+            <Route
+              path="/audit-logs"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
            
 
 
-            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
           </Routes>
         </Box>
 

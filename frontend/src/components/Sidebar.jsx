@@ -1,4 +1,4 @@
-
+import API_BASE_URL from '../apiConfig';
 import React, { useState, useEffect } from 'react';
 import {
   Drawer,
@@ -113,6 +113,7 @@ const Sidebar = ({
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [userRole, setUserRole] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [employeeNumber, setEmployeeNumber] = useState('');
@@ -124,26 +125,31 @@ const Sidebar = ({
     const storedUser = localStorage.getItem('username');
     const { role: decodedRole, employeeNumber, username } = getUserInfo();
 
-    setUsername(storedUser || '');
+    setUsername(storedUser || username || '');
     setEmployeeNumber(employeeNumber || '');
-    setUsername(username || '');
     setUserRole(decodedRole || '');
 
-    // Fetch profile picture
-    const fetchProfilePicture = async () => {
+    // Fetch profile picture and full name
+    const fetchProfileData = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const person = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
-        if (person && person.profile_picture) {
-          setProfilePicture(`${API_BASE_URL}${person.profile_picture}`);
+        if (person) {
+          if (person.profile_picture) {
+            setProfilePicture(`${API_BASE_URL}${person.profile_picture}`);
+          }
+          const fullNameFromPerson = `${person.firstName || ''} ${person.middleName || ''} ${person.lastName || ''} ${person.nameExtension || ''}`.trim();
+          if (fullNameFromPerson) {
+            setFullName(fullNameFromPerson);
+          }
         }
       } catch (error) {
-        console.error('Error fetching profile picture:', error);
+        console.error('Error fetching profile data:', error);
       }
     };
 
     if (employeeNumber) {
-      fetchProfilePicture();
+      fetchProfileData();
     }
   }, [employeeNumber]);
 
@@ -234,7 +240,7 @@ const Sidebar = ({
   </Toolbar>
 
   <List>
-  {userRole !== 'administrator' && (
+  {userRole !== '' && (
         <>
         <List component="div" disablePadding sx={{ pl: 2.5,}}>
         <Box>
@@ -253,7 +259,7 @@ const Sidebar = ({
                 }}
               >
                <Avatar 
-                alt={username} 
+                alt={fullName || username} 
                 src={profilePicture}
                 sx={{ 
                   width: 35, 
@@ -274,7 +280,7 @@ const Sidebar = ({
                     marginLeft: '9px',
                     color: 'black'
                   }}>
-                    {username}
+                    {fullName || username}
                   </Typography>
 
                   <Typography
@@ -419,8 +425,6 @@ const Sidebar = ({
         />
       </ListItem>
 
-
-
             <ListItem
                   button
                   component={Link}
@@ -447,7 +451,6 @@ const Sidebar = ({
                   </PortraitIcon>
                   <ListItemText primary="Attendance" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-
 
     <ListItem
                   button
@@ -503,7 +506,7 @@ const Sidebar = ({
                 </ListItem>
 
 
-                {userRole !== 'administrator' && (
+                {userRole !== '' && (
           <>
 
         <ListItem
@@ -659,9 +662,6 @@ const Sidebar = ({
         )}
 
                 <Divider sx={{ marginTop: '15px', marginBottom: '10px', borderWidth: '1px', marginLeft: '15px' }} />
-               
-
-                
 
                 {userRole !== 'staff' && (
                     <ListItem 
@@ -698,7 +698,7 @@ const Sidebar = ({
                     </ListItem>
                       )}
 
-
+                {/* Rest of the sidebar items continue... */}
                 {userRole !== 'staff' && (
                   <>
                     <ListItem
@@ -880,7 +880,7 @@ const Sidebar = ({
                    }}>
                     <School />
                   </ListItemIcon>
-                  <ListItemText primary="Vocational" sx={{marginLeft: '-10px'}}/>
+                  <ListItemText primary="Vocational Studies" sx={{marginLeft: '-10px'}}/>
                 </ListItem>
 
 
@@ -1118,7 +1118,7 @@ const Sidebar = ({
                   <ListItemIcon sx={{ marginRight: '-1rem', color: selectedItem === 'attendance_form' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <EventNote />
                   </ListItemIcon>
-                  <ListItemText primary="Record State" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance State" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
                 
@@ -1146,7 +1146,7 @@ const Sidebar = ({
                   <EditCalendar sx={{ marginRight: '1rem', color: selectedItem === 'search_attendance' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
                     <Search />
                   </EditCalendar>
-                  <ListItemText primary="Attendance Management" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Attendance Modification" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
 
 

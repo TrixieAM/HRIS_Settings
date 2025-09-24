@@ -238,11 +238,11 @@ const Registration = () => {
             icon={<CheckCircleOutline fontSize="inherit" />}
             sx={{ 
               mb: 2,
-              backgroundColor: "#f5e6e6",
-              color: "#6d2323",
-              border: "1px solid #e0c4c4",
+              backgroundColor: "#dcf8e3ff",
+              color: "#41644a",
+              border: "1px solid #41644a",
               "& .MuiAlert-icon": {
-                color: "#6d2323"
+                color: "#41644a"
               }
             }} 
             severity="success"

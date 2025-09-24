@@ -60,7 +60,8 @@ import {
   AddBusiness,
   ReceiptLong,
   Receipt,
-  Info
+  Info,
+  TransferWithinAStation
 } from '@mui/icons-material';
 import { 
   AccessAlarm, 
@@ -508,6 +509,36 @@ const Sidebar = ({
 
                 {userRole !== '' && (
           <>
+
+          <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/leave-request-user' 
+                  sx={{
+                    color: selectedItem === 'leave-request-user' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'leave-request-user' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'leave-request-user' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'leave-request-user' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('leave-request-user')} 
+                  >
+                  <ListItemIcon sx={{ marginRight: '-1rem',
+                    color: selectedItem === 'leave-request-user' ? 'white' : 'inherit',
+                    '&:hover': { color: 'white' }
+                   }}>
+                    <TransferWithinAStation />
+                  </ListItemIcon>
+                  <ListItemText primary="Leave Request" sx={{ marginLeft: '5px'}} />
+                </ListItem>
 
         <ListItem
               button
@@ -1743,7 +1774,7 @@ const Sidebar = ({
                    }}>
                     <PersonAddIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Leave Request" sx={{ marginLeft: '-10px' }} />
+                  <ListItemText primary="Leave Management" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
               </List>
             </Collapse>

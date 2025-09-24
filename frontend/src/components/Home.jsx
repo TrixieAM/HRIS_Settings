@@ -22,6 +22,14 @@ import {
 
 
 
+
+
+
+
+
+
+
+
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -45,7 +53,23 @@ import {
 
 
 
+
+
+
+
+
+
+
+
 const ACCENT = '#8B2635';
+
+
+
+
+
+
+
+
 
 
 
@@ -74,6 +98,14 @@ const Home = () => {
 
 
 
+
+
+
+
+
+
+
+
   // payroll
   const [payrollData, setPayrollData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -87,7 +119,23 @@ const Home = () => {
 
 
 
+
+
+
+
+
+
+
+
   const navigate = useNavigate();
+
+
+
+
+
+
+
+
 
 
 
@@ -120,12 +168,36 @@ const Home = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const [attendance, setAttendance] = useState({
   timeIn: '00:00:00',
   breakIn: '00:00:00',
   breakOut: '00:00:00',
   timeOut: '00:00:00',
 });
+
+
+
+
+
+
+
+
 
 
 
@@ -171,11 +243,35 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // update live clock/date (if you want time)
   useEffect(() => {
     const interval = setInterval(() => setCurrentDate(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+
+
+
+
+
+
+
 
 
 
@@ -207,12 +303,28 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
   // read token once on mount
   useEffect(() => {
     const userInfo = getUserInfo();
     if (userInfo.username) setUsername(userInfo.username);
     if (userInfo.employeeNumber) setEmployeeNumber(userInfo.employeeNumber);
   }, []);
+
+
+
+
+
+
+
+
 
 
 
@@ -242,6 +354,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
   // auto slide when there are announcements
   useEffect(() => {
     if (announcements.length === 0) return;
@@ -250,6 +370,14 @@ useEffect(() => {
     }, 5000);
     return () => clearInterval(t);
   }, [announcements]);
+
+
+
+
+
+
+
+
 
 
 
@@ -274,12 +402,28 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+
+
+
+
+
+
+
+
 
 
 
@@ -304,10 +448,26 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
+
+
+
+
+
+
+
+
 
 
 
@@ -340,8 +500,24 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
     if (employeeNumber) fetchProfilePicture();
   }, [employeeNumber]);
+
+
+
+
+
+
+
+
 
 
 
@@ -380,12 +556,28 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
   const formatCurrency = (value) => {
     if (value === undefined || value === null || value === '' || value === '0') return '₱0.00';
     const num = typeof value === 'string' ? parseFloat(value) : value;
     if (isNaN(num)) return '₱0.00';
     return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
+
+
+
+
+
+
+
+
 
 
 
@@ -414,6 +606,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
   // Fetch holidays from holiday endpoint
  useEffect(() => {
   const fetchHolidays = async () => {
@@ -426,6 +626,14 @@ useEffect(() => {
           const normalizedDate = !isNaN(d)
             ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
             : item.date; // fallback if parsing fails
+
+
+
+
+
+
+
+
 
 
 
@@ -448,6 +656,14 @@ useEffect(() => {
   };
   fetchHolidays();
 }, []);
+
+
+
+
+
+
+
+
 
 
 
@@ -484,6 +700,14 @@ useEffect(() => {
                   {formattedDate}
                 </Typography>
               </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -533,7 +757,23 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
             </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -566,6 +806,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
               <Link to="/payslip" style={{ textDecoration: 'none' }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
@@ -581,6 +829,14 @@ useEffect(() => {
                 </Box>
               </Link>
             </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -613,6 +869,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 2, width: '100%', textAlign: 'center' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
@@ -624,6 +888,14 @@ useEffect(() => {
               </Box>
             </Box>
           </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -681,6 +953,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
                     {/* Slide image */}
                     <Box
                     component="img"
@@ -696,6 +976,14 @@ useEffect(() => {
                         objectFit: "cover",
                     }}
                     />
+
+
+
+
+
+
+
+
 
 
 
@@ -722,6 +1010,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
                     {/* Next button */}
                     <IconButton
                     onClick={(e) => {
@@ -739,6 +1035,14 @@ useEffect(() => {
                     >
                     <ArrowForwardIosIcon />
                     </IconButton>
+
+
+
+
+
+
+
+
 
 
 
@@ -782,6 +1086,14 @@ useEffect(() => {
                 </>
                 )}
             </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -873,6 +1185,22 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {/* Right side: Calendar + Announcements */}
             <Grid item xs={12} md={4}>
               <Box
@@ -919,6 +1247,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
                 {/* Days of Week Header */}
                 <Grid container spacing={0} sx={{ mb: 1 }}>
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
@@ -945,6 +1281,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
                 {/* Calendar Days Grid */}
                 <Grid container spacing={0}>
                   {calendarDays.map((day, index) => {
@@ -957,9 +1301,25 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
                     const holidayData = holidays.find(
                       (h) => h.date === currentDate && h.status === "Active"
                     );
+
+
+
+
+
+
+
+
 
 
 
@@ -1017,6 +1377,22 @@ useEffect(() => {
                     );
                   })}
                 </Grid>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1109,6 +1485,10 @@ useEffect(() => {
 
 
 
+
+
+
+
         <Box
           sx={{
             width: 320,
@@ -1140,6 +1520,7 @@ useEffect(() => {
               </Tooltip>
             </Box>
 
+
             <Avatar
               alt={username}
               src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
@@ -1158,6 +1539,7 @@ useEffect(() => {
             </Typography>
           </Box>
 
+
           {/* Quick Links */}
           <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
             <Box
@@ -1171,6 +1553,7 @@ useEffect(() => {
                 USER PANEL
               </Typography>
             </Box>
+
 
             {/* Grid of Cards */}
             <Grid container spacing={0} sx={{ p: 1 }}>
@@ -1349,11 +1732,35 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {/* Recent Activity */}
           <Box sx={{ border: `1px solid ${ACCENT}`, borderRadius: 2, overflow: 'hidden' }}>
             <Box sx={{ backgroundColor: '#6d2323', p: 1.5, textAlign: 'center' }}>
               <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>RECENT ACTIVITY</Typography>
             </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -1375,10 +1782,26 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Payslip Generated</Typography>
                 <Typography fontSize="0.7rem" sx={{ color: '#666' }}>May 2025 - Available for download</Typography>
               </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -1395,10 +1818,15 @@ useEffect(() => {
 
 
 
+
+
+
+
                <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Personal Information Created</Typography>
                 <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Personal information created successfully</Typography>
               </Box>
+
 
                 <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
                 <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Account Registered</Typography>
@@ -1408,6 +1836,14 @@ useEffect(() => {
           </Box>
         </Box>
       </Box>
+
+
+
+
+
+
+
+
 
 
 
@@ -1456,6 +1892,14 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
       {/* Notifications Modal */}
       <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)} aria-labelledby="notification-modal" aria-describedby="notifications-list">
         <Box sx={{
@@ -1474,6 +1918,14 @@ useEffect(() => {
           '@media (max-width: 600px)': { width: '90vw', right: '5%' }
         }}>
           <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: ACCENT }}>Notifications</Typography>
+
+
+
+
+
+
+
+
 
 
 
@@ -1504,4 +1956,17 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
 export default Home;
+
+
+
+
+

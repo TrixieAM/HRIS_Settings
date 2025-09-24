@@ -57,6 +57,12 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 
 
 
+
+
+
+
+
+
 import {
   BarChart,
   Bar,
@@ -69,6 +75,8 @@ import {
 } from "recharts";
 
 
+
+
 const STAT_CARDS = [
   { label: "Employees", valueKey: "employees", defaultValue: 654, icon: <PeopleIcon sx={{ fontSize: 40 }} /> },
   { label: "Today's Attendance", valueKey: "todayAttendance", defaultValue: 548, icon: <EventAvailableIcon sx={{ fontSize: 40}} /> },
@@ -79,6 +87,8 @@ const STAT_CARDS = [
   { label: "Leave Approved", valueKey: "leaveApproved", defaultValue: 38, icon: <CheckCircleIcon sx={{ fontSize: 40 }} /> },
   { label: "Payslip", valueKey: "payslip", defaultValue: 268, icon: <DescriptionIcon sx={{ fontSize: 40 }} /> },
 ];
+
+
 
 
 const AdminHome = () => {
@@ -99,9 +109,13 @@ const AdminHome = () => {
   const [holidays, setHolidays] = useState([]);
 
 
+
+
   const navigate = useNavigate();
   const month = calendarDate.getMonth();
   const year = calendarDate.getFullYear();
+
+
 
 
   // slideshow interval
@@ -112,6 +126,8 @@ const AdminHome = () => {
     }, 5000);
     return () => clearInterval(timer);
   }, [announcements]);
+
+
 
 
   // decode token for basic info (if you store token in localStorage)
@@ -130,6 +146,42 @@ const AdminHome = () => {
     }
   };
 
+  // fetch profile picture from person_table
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
+        const list = Array.isArray(res.data) ? res.data : [];
+        const match = list.find((p) => String(p.agencyEmployeeNum) === String(employeeNumber));
+        if (match && match.profile_picture) setProfilePicture(match.profile_picture);
+         const fullNameFromPerson = `${match.firstName || ''} ${match.middleName || ''} ${match.lastName || ''} ${match.nameExtension || ''}`.trim();
+          if (fullNameFromPerson) {
+            setFullName(fullNameFromPerson);
+          }
+      } catch (err) {
+        console.error('Error loading profile picture:', err);
+      }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (employeeNumber) fetchProfilePicture();
+  }, [employeeNumber]);
+
+
 
   // Fetch holidays from holiday endpoint
  useEffect(() => {
@@ -143,6 +195,8 @@ const AdminHome = () => {
           const normalizedDate = !isNaN(d)
             ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
             : item.date; // fallback if parsing fails
+
+
 
 
           return {
@@ -161,11 +215,15 @@ const AdminHome = () => {
 }, []);
 
 
+
+
   useEffect(() => {
     const u = getUserInfo();
     if (u.username) setUsername(u.username);
     if (u.employeeNumber) setEmployeeNumber(u.employeeNumber);
   }, []);
+
+
 
 
   // Fetch announcements and other admin data
@@ -177,12 +235,16 @@ const AdminHome = () => {
         setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
 
 
+
+
         // Profile picture (personal info)
         const piRes = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const match = Array.isArray(piRes.data)
           ? piRes.data.find((p) => p.agencyEmployeeNum?.toString() === employeeNumber?.toString())
           : null;
         if (match && match.profile_picture) setProfilePicture(match.profile_picture);
+
+
 
 
         // Stats (example endpoint - adapt to your backend)
@@ -194,6 +256,8 @@ const AdminHome = () => {
           // leave stats empty and rely on defaults defined in UI
           setStats({});
         }
+
+
 
 
         // Attendance summary for chart
@@ -220,6 +284,8 @@ const AdminHome = () => {
         }
 
 
+
+
         // Leave tracker
         try {
           const leaveRes = await axios.get(`${API_BASE_URL}/api/admin/leave-tracker`);
@@ -243,6 +309,8 @@ const AdminHome = () => {
             { name: "Emergency", value: 12 },
           ]);
         }
+
+
 
 
         // Leave requests table
@@ -284,8 +352,12 @@ const AdminHome = () => {
     };
 
 
+
+
     fetchAll();
   }, [employeeNumber]);
+
+
 
 
   const handleOpenModal = (announcement) => {
@@ -298,6 +370,8 @@ const AdminHome = () => {
   };
 
 
+
+
   const handlePrevSlide = () => {
     setCurrentSlide((s) => (s - 1 + announcements.length) % announcements.length);
   };
@@ -306,10 +380,14 @@ const AdminHome = () => {
   };
 
 
+
+
   const formatCurrency = (value) => {
     if (value === null || value === undefined || value === 0) return "₱0.00";
     return `₱${parseFloat(value).toLocaleString()}`;
   };
+
+
 
 
   // calendar generator (Mon-first)
@@ -325,7 +403,11 @@ const AdminHome = () => {
   };
 
 
+
+
   const calendarDays = generateCalendar(month, year);
+
+
 
 
 return (
@@ -371,6 +453,8 @@ return (
                     </Box>
 
 
+
+
                     {/* Number and Label */}
                     <Box>
                         <Typography fontSize="18px" fontWeight="bold" color="#333">
@@ -387,6 +471,10 @@ return (
                 ))}
             </Grid>
             </Grid>
+
+
+
+
 
 
 
@@ -433,6 +521,8 @@ return (
                     </IconButton>
 
 
+
+
                     {/* Slide image */}
                     <Box
                     component="img"
@@ -450,6 +540,8 @@ return (
                     />
 
 
+
+
                     {/* Inner shadow overlay */}
                     <Box
                     sx={{
@@ -460,6 +552,8 @@ return (
                         "radial-gradient(circle at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 90%)",
                     }}
                     />
+
+
 
 
                     {/* Next button */}
@@ -479,6 +573,8 @@ return (
                     >
                     <ArrowForwardIosIcon />
                     </IconButton>
+
+
 
 
                     {/* Caption box */}
@@ -516,6 +612,8 @@ return (
                 </>
                 )}
             </Box>
+
+
 
 
             {/* Modal for full announcement details */}
@@ -588,6 +686,8 @@ return (
                     </Grid>
 
 
+
+
                     <Grid container spacing={4} sx={{ mb: 2, mt: -8, }}>
             {/* Graph 1 - Left side */}
             <Grid item xs={12} md={4}>
@@ -621,6 +721,8 @@ return (
                 </Box>
                 </Box>
             </Grid>
+
+
 
 
             {/* Graph 2 - Middle */}
@@ -660,6 +762,8 @@ return (
             </Grid>
 
 
+
+
             {/* Enhanced Calendar - Right side */}
             <Grid item xs={12} md={4}>
               <Box
@@ -693,6 +797,8 @@ return (
                 </Box>
 
 
+
+
                 {/* Days of Week Header */}
                 <Grid container spacing={0} sx={{ mb: 0.5 }}>
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
@@ -713,15 +819,21 @@ return (
                 </Grid>
 
 
+
+
                 {/* Calendar Days Grid */}
                 <Grid container spacing={0}>
                   {calendarDays.map((day, index) => {
                     const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
 
+
+
                     const holidayData = holidays.find(
                       (h) => h.date === currentDate && h.status === "Active"
                     );
+
+
 
 
                     return (
@@ -761,6 +873,10 @@ return (
 
 
 
+
+
+
+
                 {/* Legend */}
                 {/* <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -780,11 +896,14 @@ return (
             </Grid>
 
 
+
+
         {/* Row 3: Graph 2 + Announcements */}
         <Grid container spacing={2}>
          
         </Grid>
       </Box>
+
 
  {/* Right Sidebar */}
         <Box
@@ -818,6 +937,7 @@ return (
               </Tooltip>
             </Box>
 
+
             <Avatar
               alt={username}
               src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
@@ -836,6 +956,7 @@ return (
             </Typography>
           </Box>
 
+
           {/* Quick Links */}
           <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
             <Box
@@ -849,6 +970,7 @@ return (
                 USER PANEL
               </Typography>
             </Box>
+
 
             {/* Grid of Cards */}
             <Grid container spacing={0} sx={{ p: 1 }}>
@@ -1012,6 +1134,7 @@ return (
              </Grid>
           </Box>
 
+
           {/* Admin Panel */}
           <Card sx={{ border: "1px solid #6d2323", borderRadius: 2, mt: 1 }}>
             <Box
@@ -1081,8 +1204,11 @@ return (
           </Card>
 
 
+
+
         </Box>
     </Box>
+
 
     {/* Notifications Modal */}
     <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)}>
@@ -1106,6 +1232,7 @@ return (
         <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#8B2635" }}>
           Notifications
         </Typography>
+
 
         {announcements.slice(0, 6).map((item, idx) => (
           <Box
@@ -1133,6 +1260,7 @@ return (
           </Box>
         ))}
 
+
         {announcements.length === 0 && <Typography fontSize="0.85rem">No notifications at the moment.</Typography>}
       </Box>
     </Modal>
@@ -1140,4 +1268,8 @@ return (
 );
 };
 
+
 export default AdminHome;
+
+
+

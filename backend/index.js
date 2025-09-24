@@ -1259,7 +1259,7 @@ app.post("/complete-2fa-login", (req, res) => {
         nameExtension: user.nameExtension
       },
       process.env.JWT_SECRET || "secret",
-      { expiresIn: "1m" }
+      { expiresIn: "10h" }
     );
 
     res.json({
@@ -2737,38 +2737,41 @@ app.delete('/leave_assignment/:id', (req, res) => {
 });
 
 
-
-
 // HOLIDAY
 
 
 
 
-app.get('/holiday', authenticateToken, (req, res) => {
+app.get('/holiday', (req, res) => {
   const sql = `SELECT * FROM holiday`;
+
+
+
 
   db.query(sql, (err, result) => {
     if (err) {
       console.error('Database Query Error:', err.message);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-    
-    try {
-      logAudit(req.user, 'View', 'holiday', null, null);
-    } catch (e) {
-      console.error('Audit log error:', e);
-    }
-    
     res.json(result);
   });
 });
 
-app.post('/holiday', authenticateToken, (req, res) => {
+
+
+
+app.post('/holiday', (req, res) => {
   const { description, date, status } = req.body;
+
+
+
 
   if (!description) {
     return res.status(400).json({ error: 'Description is required' });
   }
+
+
+
 
   const sql = `INSERT INTO holiday (description, date, status) VALUES (?, ?, ?)`;
   db.query(sql, [description, date, status], (err, result) => {
@@ -2777,11 +2780,8 @@ app.post('/holiday', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-    try {
-      logAudit(req.user, 'Insert', 'holiday', result.insertId, null);
-    } catch (e) {
-      console.error('Audit log error:', e);
-    }
+
+
 
     res.status(201).json({
       message: 'Holiday record added successfully',
@@ -2790,16 +2790,25 @@ app.post('/holiday', authenticateToken, (req, res) => {
   });
 });
 
-app.put('/holiday/:id', authenticateToken, (req, res) => {
+
+
+
+app.put('/holiday/:id', (req, res) => {
   const { id } = req.params;
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
   }
 
+
+
+
   const { description, date, status } = req.body;
   if (!description) {
     return res.status(400).json({ error: 'Description is required' });
   }
+
+
+
 
   const sql = `UPDATE holiday SET description = ?, date = ?, status = ? WHERE id = ?`;
   db.query(sql, [description, date, status, id], (err, result) => {
@@ -2808,26 +2817,37 @@ app.put('/holiday/:id', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
+
+
+
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Hol record not found' });
+      return res
+        .status(404)
+        .json({ error: 'Hol record not found' });
     }
 
-    try {
-      logAudit(req.user, 'Update', 'holiday', id, null);
-    } catch (e) {
-      console.error('Audit log error:', e);
-    }
+
+
 
     res.json({ message: 'Hol record updated successfully' });
   });
 });
 
-app.delete('/holiday/:id', authenticateToken, (req, res) => {
+
+
+
+app.delete('/holiday/:id', (req, res) => {
   const { id } = req.params;
+
+
+
 
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
   }
+
+
+
 
   const sql = `DELETE FROM holiday WHERE id = ?`;
   db.query(sql, [id], (err, result) => {
@@ -2836,15 +2856,17 @@ app.delete('/holiday/:id', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
+
+
+
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Hol record not found' });
+      return res
+        .status(404)
+        .json({ error: 'Hol record not found' });
     }
 
-    try {
-      logAudit(req.user, 'Delete', 'holiday', id, null);
-    } catch (e) {
-      console.error('Audit log error:', e);
-    }
+
+
 
     res.json({ message: 'Hol record deleted successfully' });
   });
@@ -3332,6 +3354,7 @@ app.post('/upload-profile-picture/:employeeNumber', profileUpload.single('profil
   }
 });
 
+ 
   // Announcements endpoints
   app.get('/api/announcements', (req, res) => {
     const query = 'SELECT * FROM announcements ORDER BY date DESC';
@@ -3422,6 +3445,8 @@ app.put('/api/announcements/:id', upload.single('image'), (req, res) => {
       });
     });
   });
+
+
 
 
 app.get('/audit-logs', authenticateToken, (req, res) => {

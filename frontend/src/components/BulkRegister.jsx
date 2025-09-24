@@ -417,11 +417,11 @@ const BulkRegister = () => {
             sx={{ 
               mt: 3, 
               textAlign: "left",
-              backgroundColor: "#f5e6e6",
-              color: "#6d2323",
-              border: "1px solid #e0c4c4",
+              backgroundColor: "#dcf8e3f6",
+              color: "#41644",
+              border: "1px solid #41644",
               "& .MuiAlert-icon": {
-                color: "#6d2323"
+                color: "#41644"
               }
             }}
           >

@@ -11,11 +11,19 @@ import {
   Paper,
   Typography,
   Modal,
+  InputAdornment,
 } from "@mui/material";
+import {
+  BadgeOutlined,
+  LockOutlined,
+  LoginOutlined,
+  EmailOutlined,
+  CheckCircleOutline,
+  ErrorOutline,
+  VerifiedUserOutlined,
+} from "@mui/icons-material";
 import logo from "../assets/logo.PNG";
 import LoadingOverlay from "../components/LoadingOverlay";
-
-
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -23,11 +31,9 @@ const Login = () => {
     password: "",
   });
 
-
   const [errMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
 
   // 2FA states
   const [show2FA, setShow2FA] = useState(false);
@@ -42,7 +48,6 @@ const Login = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
 
-  
   // Lock timer countdown
   useEffect(() => {
     let interval;
@@ -62,7 +67,6 @@ const Login = () => {
     return () => clearInterval(interval);
   }, [isLocked, lockTimer]);
 
-
   // Code expiration timer
   useEffect(() => {
     let interval;
@@ -74,7 +78,6 @@ const Login = () => {
     return () => clearInterval(interval);
   }, [codeTimer]);
 
-
   const handleChanges = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -82,7 +85,6 @@ const Login = () => {
       [name]: value,
     }));
   };
-
 
   const send2FACode = async (email, empNumber) => {
     setResendLoading(true);
@@ -95,7 +97,7 @@ const Login = () => {
       const data = await res.json();
       if (res.ok) {
         setSuccess("Verification code sent to your email.");
-        setCodeTimer(2 * 60); // 15 minutes
+        setCodeTimer(2 * 60); // 2 minutes
         setTimeout(() => setSuccess(""), 3000);
       } else {
         setTwoFactorError(data.error || "Failed to send code.");
@@ -108,7 +110,6 @@ const Login = () => {
     }
   };
 
-
   const verify2FACode = async () => {
     if (!pin.trim()) {
       setTwoFactorError("Please enter the verification code");
@@ -119,7 +120,6 @@ const Login = () => {
       return;
     }
 
-
     setTwoFactorLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/verify-2fa-code`, {
@@ -128,7 +128,6 @@ const Login = () => {
         body: JSON.stringify({ email: userEmail, code: pin }),
       });
       const data = await res.json();
-
 
       if (res.ok && data.verified) {
         // Complete the login after successful 2FA verification
@@ -139,15 +138,12 @@ const Login = () => {
         });
         const loginData = await loginRes.json();
 
-
         if (loginRes.ok) {
           localStorage.setItem("token", loginData.token);
           const decoded = JSON.parse(atob(loginData.token.split(".")[1]));
 
-
           localStorage.setItem("employeeNumber", decoded.employeeNumber || loginData.employeeNumber || "");
           localStorage.setItem("role", decoded.role || loginData.role || "");
-
 
           const role = decoded.role || loginData.role;
           if (role === "superadmin" || role === "administrator") {
@@ -179,27 +175,22 @@ const Login = () => {
     }
   };
 
-
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-
   const handleLogin = async (event) => {
     event.preventDefault();
-
 
     if (!formData.employeeNumber || !formData.password) {
       setErrorMessage("Please fill all asked credentials");
       return;
     }
 
-
     setLoading(true);
     setErrorMessage("");
-
 
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
@@ -208,9 +199,7 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-
       const data = await response.json();
-
 
       if (response.ok) {
         // If login is successful, proceed to 2FA
@@ -228,29 +217,29 @@ const Login = () => {
     }
   };
 
-
   return (
-
-    
     <Container
       maxWidth="sm"
       sx={{
         display: "flex",
         minHeight: "90%",
         backgroundColor: "#fff8e1",
+        alignItems: "center",
+        justifyContent: "center",
       }}
-      
     >
-          <LoadingOverlay open={loading || twoFactorLoading || resendLoading} message="Please wait..." />
+      <LoadingOverlay open={loading || twoFactorLoading || resendLoading} message="Please wait..." />
 
       <Paper
         elevation={4}
         sx={{
           padding: 4,
           width: "100%",
-          maxWidth: 400,
+          maxWidth: 450,
           borderRadius: 2,
           textAlign: "center",
+          border: "2px solid #f5e6e6",
+          background: "linear-gradient(135deg, #ffffff 0%, #fefefe 100%)",
         }}
       >
         {/* Logo */}
@@ -279,20 +268,34 @@ const Login = () => {
           />
         </Box>
 
-
         {/* Header */}
-        <Typography variant="h6" gutterBottom sx={{ mt: 5}}>
-          <b>Login to your Account</b>
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 1, mt: 3 }}>
+          <Typography variant="h5" sx={{ color: "#6d2323", fontWeight: "bold" }}>
+            Login to your Account
+          </Typography>
+        </Box>
 
+        <Typography gutterBottom sx={{ mb: 3, color: "#8a4747" }}>
+          Enter your credentials to continue
+        </Typography>
 
         {/* alert */}
         {errMessage && (
-          <Alert sx={{ mb: 2 }} severity="error">
+          <Alert 
+            icon={<ErrorOutline fontSize="inherit" />}
+            sx={{ 
+              mb: 2,
+              backgroundColor: "#6d2323",
+              color: "white",
+              "& .MuiAlert-icon": {
+                color: "white"
+              }
+            }} 
+            severity="error"
+          >
             {errMessage}
           </Alert>
         )}
-
 
         {/* Fields */}
         <form onSubmit={handleLogin}>
@@ -300,20 +303,59 @@ const Login = () => {
             name="employeeNumber"
             label="Employee Number"
             fullWidth
-            sx={{ mb: 2, mt: 5 }}
+            sx={{ 
+              mb: 2,
+              "& .MuiOutlinedInput-root": {
+                "&:hover fieldset": {
+                  borderColor: "#8a4747",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#6d2323",
+                },
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: "#6d2323",
+              },
+            }}
             autoComplete="employeeNumber"
             onChange={handleChanges}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <BadgeOutlined sx={{ color: "#6d2323" }} />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             name="password"
             label="Password"
             type="password"
             fullWidth
-            sx={{ mb: 1 }}
+            sx={{ 
+              mb: 1,
+              "& .MuiOutlinedInput-root": {
+                "&:hover fieldset": {
+                  borderColor: "#8a4747",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#6d2323",
+                },
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: "#6d2323",
+              },
+            }}
             autoComplete="current-password"
             onChange={handleChanges}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlined sx={{ color: "#6d2323" }} />
+                </InputAdornment>
+              ),
+            }}
           />
-
 
           {/* Forgot password */}
           <Box sx={{ textAlign: "left", mb: 3 }}>
@@ -322,28 +364,43 @@ const Login = () => {
               underline="hover"
               sx={{
                 cursor: "pointer",
-                color: "black",
+                color: "#6d2323",
                 fontSize: "13px",
+                fontWeight: 500,
+                "&:hover": {
+                  color: "#5a1e1e",
+                },
               }}
             >
               Forgot password?
             </Link>
           </Box>
 
-
           {/* Login button */}
           <Button
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ bgcolor: "#A31D1D", mt: 5 }}
+            startIcon={<LoginOutlined />}
+            sx={{ 
+              bgcolor: "#6d2323", 
+              mt: 2,
+              py: 1.5,
+              fontSize: "1.1rem",
+              fontWeight: "bold",
+              "&:hover": {
+                bgcolor: "#5a1e1e",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+              },
+              transition: "all 0.3s ease",
+            }}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
       </Paper>
-
 
       {/* 2FA Modal */}
       <Modal
@@ -357,51 +414,94 @@ const Login = () => {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 400,
+          width: 450,
           bgcolor: 'background.paper',
           borderRadius: 2,
           boxShadow: 24,
           p: 4,
-          textAlign: 'center'
+          textAlign: 'center',
+          border: "2px solid #f5e6e6",
         }}>
-          <Typography id="2fa-modal-title" variant="h6" component="h2" mb={2}>
-            Email Verification
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 2 }}>
+            <VerifiedUserOutlined sx={{ fontSize: 40, color: "#6d2323", mr: 1 }} />
+            <Typography id="2fa-modal-title" variant="h5" component="h2" sx={{ color: "#6d2323", fontWeight: "bold" }}>
+              Email Verification
+            </Typography>
+          </Box>
          
-          <Typography id="2fa-modal-description" mb={2}>
+          <Typography id="2fa-modal-description" mb={3} sx={{ color: "#8a4747" }}>
             Verification code sent to <b>{userEmail}</b>
           </Typography>
 
-
           {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>
+            <Alert 
+              icon={<CheckCircleOutline fontSize="inherit" />}
+              sx={{ 
+                mb: 2,
+                backgroundColor: "#dcf8e3ff",
+                color: "#41644a",
+                border: "1px solid #41644a",
+                "& .MuiAlert-icon": {
+                  color: "#41644a"
+                }
+              }} 
+              severity="success"
+            >
               {success}
             </Alert>
           )}
          
           {twoFactorError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert 
+              icon={<ErrorOutline fontSize="inherit" />}
+              sx={{ 
+                mb: 2,
+                backgroundColor: "#6d2323",
+                color: "white",
+                "& .MuiAlert-icon": {
+                  color: "white"
+                }
+              }} 
+              severity="error"
+            >
               {twoFactorError}
             </Alert>
           )}
 
-
-          <TextField
-            fullWidth
-            placeholder="Enter 6-digit verification code"
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            sx={{ mb: 2 }}
-            inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '18px' } }}
-          />
-
+         <TextField
+  fullWidth
+  placeholder="• • • • • •"
+  value={pin}
+  onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+  sx={{ 
+    mb: 2,
+    "& .MuiOutlinedInput-root": {
+      "&:hover fieldset": {
+        borderColor: "#8a4747",
+        borderWidth: '2px',
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#6d2323",
+        borderWidth: '2px',
+      },
+    },
+  }}
+  inputProps={{ 
+    maxLength: 6, 
+    style: { 
+      textAlign: 'center', 
+      fontSize: '28px', 
+      letterSpacing: '16px',
+      fontWeight: 'bold'
+    } 
+  }}
+/>
 
           {isLocked && (
-            <Typography color="error" textAlign="center" sx={{ mb: 2 }}>
+            <Typography color="error" textAlign="center" sx={{ mb: 2, fontWeight: "bold" }}>
               Account locked. Please wait {formatTime(lockTimer)}
             </Typography>
           )}
-
 
           {codeTimer > 0 && (
             <Typography color="text.secondary" textAlign="center" sx={{ mb: 2 }}>
@@ -409,24 +509,42 @@ const Login = () => {
             </Typography>
           )}
 
-
           <Button
             onClick={verify2FACode}
             disabled={twoFactorLoading || isLocked}
             variant="contained"
             fullWidth
-            sx={{ bgcolor: "#A31D1D", mt: 2, mb: 1 }}
+            startIcon={<VerifiedUserOutlined />}
+            sx={{ 
+              bgcolor: "#6d2323", 
+              mt: 2, 
+              mb: 1,
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: "bold",
+              "&:hover": {
+                bgcolor: "#5a1e1e",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+              },
+              transition: "all 0.3s ease",
+            }}
           >
             {twoFactorLoading ? "Verifying..." : "Verify Code"}
           </Button>
-
 
           <Button
             onClick={() => send2FACode(userEmail, formData.employeeNumber)}
             disabled={resendLoading || codeTimer > 0}
             variant="text"
             fullWidth
-            sx={{ color: "#A31D1D" }}
+            sx={{ 
+              color: "#6d2323",
+              fontWeight: 600,
+              "&:hover": {
+                backgroundColor: "rgba(109, 35, 35, 0.04)",
+              },
+            }}
           >
             {resendLoading ? "Sending..." : "Resend Code"}
           </Button>
@@ -436,8 +554,4 @@ const Login = () => {
   );
 };
 
-
 export default Login;
-
-
-

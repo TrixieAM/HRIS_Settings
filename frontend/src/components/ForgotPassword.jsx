@@ -1,9 +1,40 @@
 import API_BASE_URL from "../apiConfig";
 import React, { useState } from "react";
+import {
+  Alert,
+  TextField,
+  Button,
+  Container,
+  Box,
+  Paper,
+  Typography,
+  Modal,
+  InputAdornment,
+  IconButton,
+  Checkbox,
+  FormControlLabel,
+  Link,
+  Stepper,
+  Step,
+  StepLabel,
+} from "@mui/material";
+import {
+  EmailOutlined,
+  LockOutlined,
+  LockResetOutlined,
+  VerifiedUserOutlined,
+  CheckCircleOutline,
+  ErrorOutline,
+  ArrowBack,
+  Visibility,
+  VisibilityOff,
+  VpnKeyOutlined,
+  MarkEmailReadOutlined,
+} from "@mui/icons-material";
 import logo from "../assets/logo.PNG";
 
 const ForgotPassword = () => {
-  const [currentStep, setCurrentStep] = useState(1); // 1: Email, 2: Code, 3: Password
+  const [currentStep, setCurrentStep] = useState(0); // 0: Email, 1: Code, 2: Password
   const [formData, setFormData] = useState({
     email: "",
     verificationCode: "",
@@ -19,9 +50,9 @@ const ForgotPassword = () => {
   });
   const [passwordConfirmed, setPasswordConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
+  const steps = ['Enter Email', 'Verify Code', 'New Password'];
 
   const handleChanges = (e) => {
     const { name, value } = e.target;
@@ -52,12 +83,12 @@ const ForgotPassword = () => {
 
       const data = await response.json();
 
-     if (response.ok) {
-      setCurrentStep(2);
-      setShowVerificationModal(true);
-    } else {
-      setErrorMessage(data.error || "Failed to send verification code.");
-    }
+      if (response.ok) {
+        setCurrentStep(1);
+        setShowVerificationModal(true);
+      } else {
+        setErrorMessage(data.error || "Failed to send verification code.");
+      }
     } catch (error) {
       console.error("Error sending verification code:", error);
       setErrorMessage("Something went wrong. Please try again.");
@@ -90,7 +121,7 @@ const ForgotPassword = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setCurrentStep(3);
+        setCurrentStep(2);
       } else {
         setErrorMessage(data.error || "Invalid verification code.");
       }
@@ -168,277 +199,300 @@ const ForgotPassword = () => {
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 1:
+      case 0:
         return (
-          <div>
-            <div style={{
-              marginBottom: "24px",
-              color: "#666",
-              fontSize: "14px",
-              lineHeight: "1.5",
-            }}>
+          <Box component="form" onSubmit={handleSubmitEmail}>
+            <Typography sx={{ mb: 3, color: "#666", fontSize: "14px", textAlign: "center" }}>
               Enter your email address and we'll send you a verification code to reset your password.
-            </div>
+            </Typography>
             
-            <input
+            <TextField
               type="email"
               name="email"
-              placeholder="Email Address"
+              label="Email Address"
+              fullWidth
               value={formData.email}
               onChange={handleChanges}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                marginBottom: "24px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                fontSize: "16px",
-                boxSizing: "border-box",
+              sx={{ 
+                mb: 3,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#8a4747",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#6d2323",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#6d2323",
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailOutlined sx={{ color: "#6d2323" }} />
+                  </InputAdornment>
+                ),
               }}
               required
             />
 
-            <button
-              onClick={handleSubmitEmail}
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
               disabled={loading}
-              style={{
-                width: "100%",
-                padding: "12px 24px",
-                backgroundColor: loading ? "#cccccc" : "#A31D1D",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                fontSize: "16px",
-                cursor: loading ? "not-allowed" : "pointer",
+              startIcon={<MarkEmailReadOutlined />}
+              sx={{ 
+                bgcolor: "#6d2323", 
+                py: 1.5,
+                fontSize: "1rem",
                 fontWeight: "bold",
+                "&:hover": {
+                  bgcolor: "#5a1e1e",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+                },
+                transition: "all 0.3s ease",
               }}
             >
               {loading ? "Sending..." : "Send Verification Code"}
-            </button>
-          </div>
+            </Button>
+          </Box>
+        );
+
+      case 1:
+        return (
+          <Box component="form" onSubmit={handleVerifyCode}>
+            <Typography sx={{ mb: 3, color: "#666", fontSize: "14px", textAlign: "center" }}>
+              Enter the 6-digit verification code sent to <strong>{formData.email}</strong>
+            </Typography>
+            
+            <TextField
+              type="text"
+              name="verificationCode"
+              label="Verification Code"
+              fullWidth
+              value={formData.verificationCode}
+              onChange={handleChanges}
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '18px', letterSpacing: '8px' } }}
+              sx={{ 
+                mb: 3,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#8a4747",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#6d2323",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#6d2323",
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <VpnKeyOutlined sx={{ color: "#6d2323" }} />
+                  </InputAdornment>
+                ),
+              }}
+              required
+            />
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                onClick={() => setCurrentStep(0)}
+                variant="outlined"
+                fullWidth
+                startIcon={<ArrowBack />}
+                sx={{
+                  color: "#6d2323",
+                  borderColor: "#6d2323",
+                  py: 1.5,
+                  fontWeight: "bold",
+                  "&:hover": {
+                    borderColor: "#5a1e1e",
+                    backgroundColor: "rgba(109, 35, 35, 0.04)",
+                  },
+                }}
+              >
+                Back
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={loading}
+                startIcon={<VerifiedUserOutlined />}
+                sx={{ 
+                  bgcolor: "#6d2323", 
+                  py: 1.5,
+                  fontWeight: "bold",
+                  "&:hover": {
+                    bgcolor: "#5a1e1e",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+                  },
+                  transition: "all 0.3s ease",
+                }}
+              >
+                {loading ? "Verifying..." : "Verify Code"}
+              </Button>
+            </Box>
+          </Box>
         );
 
       case 2:
         return (
-          <div>
-            <div style={{
-              marginBottom: "24px",
-              color: "#666",
-              fontSize: "14px",
-              lineHeight: "1.5",
-            }}>
-              Enter the 6-digit verification code sent to {formData.email}
-            </div>
+          <Box component="form" onSubmit={handleResetPassword}>
+            <Typography sx={{ mb: 3, color: "#666", fontSize: "14px", textAlign: "center" }}>
+              Create a new password for your account.
+            </Typography>
             
-            <input
-              type="text"
-              name="verificationCode"
-              placeholder="○○○○○○"
-              value={formData.verificationCode}
+            <TextField
+              type={showPasswords.new ? "text" : "password"}
+              name="newPassword"
+              label="New Password"
+              fullWidth
+              value={formData.newPassword}
               onChange={handleChanges}
-              maxLength={6}
-              style={{
-                width: "100%",
-                padding: "16px",
-                marginBottom: "24px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                fontSize: "1.5rem",
-                textAlign: "center",
-                letterSpacing: "0.5em",
-                boxSizing: "border-box",
+              sx={{ 
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#8a4747",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#6d2323",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#6d2323",
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlined sx={{ color: "#6d2323" }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => togglePasswordVisibility('new')}
+                      edge="end"
+                    >
+                      {showPasswords.new ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
               required
             />
 
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}>
-              <button
+            <TextField
+              type={showPasswords.confirm ? "text" : "password"}
+              name="confirmPassword"
+              label="Confirm New Password"
+              fullWidth
+              value={formData.confirmPassword}
+              onChange={handleChanges}
+              sx={{ 
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#8a4747",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#6d2323",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#6d2323",
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlined sx={{ color: "#6d2323" }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => togglePasswordVisibility('confirm')}
+                      edge="end"
+                    >
+                      {showPasswords.confirm ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              required
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={passwordConfirmed}
+                  onChange={(e) => setPasswordConfirmed(e.target.checked)}
+                  sx={{
+                    color: "#6d2323",
+                    '&.Mui-checked': {
+                      color: "#6d2323",
+                    },
+                  }}
+                />
+              }
+              label="I confirm that I want to change my password"
+              sx={{ mb: 3, textAlign: "left" }}
+            />
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
                 onClick={() => setCurrentStep(1)}
-                style={{
-                  width: "100%",
-                  padding: "12px 24px",
-                  backgroundColor: "white",
-                  color: "#A31D1D",
-                  border: "1px solid #A31D1D",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  cursor: "pointer",
+                variant="outlined"
+                fullWidth
+                startIcon={<ArrowBack />}
+                sx={{
+                  color: "#6d2323",
+                  borderColor: "#6d2323",
+                  py: 1.5,
                   fontWeight: "bold",
+                  "&:hover": {
+                    borderColor: "#5a1e1e",
+                    backgroundColor: "rgba(109, 35, 35, 0.04)",
+                  },
                 }}
               >
                 Back
-              </button>
-              <button
-                onClick={handleVerifyCode}
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "12px 24px",
-                  backgroundColor: loading ? "#cccccc" : "#A31D1D",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  fontWeight: "bold",
-                }}
-              >
-                {loading ? "Verifying..." : "Verify Code"}
-              </button>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div>
-            <div style={{
-              marginBottom: "24px",
-              color: "#666",
-              fontSize: "14px",
-              lineHeight: "1.5",
-            }}>
-              Create a new password for your account.
-            </div>
-            
-            <div style={{
-              position: "relative",
-              marginBottom: "24px",
-            }}>
-              <input
-                type={showPasswords.new ? "text" : "password"}
-                name="newPassword"
-                placeholder="New Password"
-                value={formData.newPassword}
-                onChange={handleChanges}
-                style={{
-                  width: "100%",
-                  padding: "12px 25px 12px 16px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  boxSizing: "border-box",
-                }}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility('new')}
-                style={{
-                  position: "absolute",
-                  right: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "18px",
-                  color: "#666",
-                }}
-              >
-              </button>
-            </div>
-
-            <div style={{
-              position: "relative",
-              marginBottom: "24px",
-            }}>
-              <input
-                type={showPasswords.confirm ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="Confirm New Password"
-                value={formData.confirmPassword}
-                onChange={handleChanges}
-                style={{
-                  width: "100%",
-                  padding: "12px 25px 12px 16px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  boxSizing: "border-box",
-                }}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility('confirm')}
-                style={{
-                  position: "absolute",
-                  right: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "18px",
-                  color: "#666",
-                }}
-              >
-              </button>
-            </div>
-
-            <div style={{
-              display: "flex",
-              alignItems: "flex-start",
-              marginBottom: "24px",
-              textAlign: "left",
-              gap: "8px",
-            }}>
-              <input
-                type="checkbox"
-                checked={passwordConfirmed}
-                onChange={(e) => setPasswordConfirmed(e.target.checked)}
-                style={{
-                  marginTop: "2px",
-                }}
-              />
-              <label>I confirm that I want to change my password</label>
-            </div>
-
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}>
-              <button
-                onClick={() => setCurrentStep(2)}
-                style={{
-                  width: "100%",
-                  padding: "12px 24px",
-                  backgroundColor: "white",
-                  color: "#A31D1D",
-                  border: "1px solid #A31D1D",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
-              >
-                Back
-              </button>
-              <button
-                onClick={handleResetPassword}
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
                 disabled={loading || !passwordConfirmed}
-                style={{
-                  width: "100%",
-                  padding: "12px 24px",
-                  backgroundColor: (loading || !passwordConfirmed) ? "#cccccc" : "#A31D1D",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  cursor: (loading || !passwordConfirmed) ? "not-allowed" : "pointer",
+                startIcon={<LockResetOutlined />}
+                sx={{ 
+                  bgcolor: "#6d2323", 
+                  py: 1.5,
                   fontWeight: "bold",
+                  "&:hover": {
+                    bgcolor: "#5a1e1e",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+                  },
+                  transition: "all 0.3s ease",
+                  "&:disabled": {
+                    bgcolor: "#cccccc",
+                  },
                 }}
               >
                 {loading ? "Updating..." : "Update Password"}
-              </button>
-            </div>
-          </div>
+              </Button>
+            </Box>
+          </Box>
         );
 
       default:
@@ -447,247 +501,222 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div
-      style={{
+    <Container
+      maxWidth="sm"
+      sx={{
         display: "flex",
         minHeight: "90%",
         backgroundColor: "#fff8e1",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <div style={{
-        padding: "32px",
-        width: "100%",
-        maxWidth: "400px",
-        borderRadius: "8px",
-        textAlign: "center",
-        backgroundColor: "white",
-        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-      }}>
+      <Paper
+        elevation={4}
+        sx={{
+          padding: 4,
+          width: "100%",
+          maxWidth: 500,
+          borderRadius: 2,
+          textAlign: "center",
+          border: "2px solid #f5e6e6",
+          background: "linear-gradient(135deg, #ffffff 0%, #fefefe 100%)",
+        }}
+      >
         {/* Logo Section */}
-        <div style={{
-          backgroundColor: "#A31D1D",
-          borderTopLeftRadius: "8px",
-          borderTopRightRadius: "8px",
-          padding: "16px",
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "16px",
-          marginLeft: "-32px",
-          marginRight: "-32px",
-          marginTop: "-32px",
-        }}>
+        <Box
+          sx={{
+            backgroundColor: "#A31D1D",
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            py: 2,
+            display: "flex",
+            justifyContent: "center",
+            mb: 2,
+            mx: -4,
+            mt: -4,
+          }}
+        >
           <img
             src={logo}
             alt="E.A.R.I.S.T Logo"
             style={{
-              height: "80px",
+              height: 80,
               borderRadius: "50%",
               backgroundColor: "white",
-              padding: "4px",
+              padding: 4,
             }}
           />
-        </div>
+        </Box>
 
         {/* Header */}
-        <div style={{
-          fontSize: "1.125rem",
-          fontWeight: "bold",
-          marginTop: "40px",
-          marginBottom: "16px",
-        }}>
-          {currentStep === 1 && "Reset Your Password"}
-          {currentStep === 2 && "Enter Verification Code"}
-          {currentStep === 3 && "Create New Password"}
-        </div>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 1, mt: 3 }}>
+          <Typography variant="h5" sx={{ color: "#6d2323", fontWeight: "bold" }}>
+            {currentStep === 0 && "Reset Your Password"}
+            {currentStep === 1 && "Enter Verification Code"}
+            {currentStep === 2 && "Create New Password"}
+          </Typography>
+        </Box>
 
         {/* Step Indicator */}
-        <div style={{
-          marginBottom: "24px",
-          display: "flex",
-          justifyContent: "center",
-          gap: "6px",
-        }}>
-          {[1, 2, 3].map((step) => (
-            <div
-              key={step}
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.875rem",
-                backgroundColor: currentStep >= step ? "#A31D1D" : "#e0e0e0",
-                color: currentStep >= step ? "white" : "#999",
-              }}
-            >
-              {step}
-            </div>
+        <Stepper activeStep={currentStep} sx={{ mb: 3, mt: 2 }}>
+          {steps.map((label) => (
+            <Step key={label}>
+              <StepLabel
+                StepIconProps={{
+                  sx: {
+                    '&.Mui-active': {
+                      color: '#6d2323',
+                    },
+                    '&.Mui-completed': {
+                      color: '#6d2323',
+                    },
+                  },
+                }}
+              >
+                {label}
+              </StepLabel>
+            </Step>
           ))}
-        </div>
+        </Stepper>
 
         {/* Error Message */}
         {errMessage && (
-          <div style={{
-            padding: "12px 16px",
-            marginBottom: "16px",
-            backgroundColor: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "4px",
-            color: "#dc2626",
-            fontSize: "14px",
-          }}>
+          <Alert 
+            icon={<ErrorOutline fontSize="inherit" />}
+            sx={{ 
+              mb: 2,
+              backgroundColor: "#6d2323",
+              color: "white",
+              "& .MuiAlert-icon": {
+                color: "white"
+              }
+            }} 
+            severity="error"
+          >
             {errMessage}
-          </div>
+          </Alert>
         )}
 
         {/* Step Content */}
         {renderStepContent()}
 
         {/* Back to login link */}
-        <div style={{
-          marginTop: "24px",
-          fontSize: "14px",
-        }}>
+        <Box sx={{ mt: 3, fontSize: "14px" }}>
           Remember your password?{" "}
-          <a href="/" style={{
-            color: "black",
-            fontWeight: "bold",
-            fontSize: "13px",
-            textDecoration: "none",
-          }}>
+          <Link
+            href="/"
+            sx={{
+              color: "#6d2323",
+              fontWeight: "bold",
+              textDecoration: "none",
+              "&:hover": {
+                color: "#5a1e1e",
+                textDecoration: "underline",
+              },
+            }}
+          >
             Login
-          </a>
-        </div>
-      </div>
+          </Link>
+        </Box>
+      </Paper>
 
       {/* Success Modal */}
-      {showSuccessModal && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
+      <Modal
+        open={showSuccessModal}
+        onClose={() => {}}
+        aria-labelledby="success-modal-title"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 450,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 4,
+          textAlign: 'center',
+          border: "2px solid #f5e6e6",
         }}>
-          <div style={{
-            backgroundColor: "white",
-            padding: "32px",
-            borderRadius: "8px",
-            textAlign: "center",
-            maxWidth: "400px",
-            width: "90%",
-          }}>
-            <div style={{
-              fontSize: "60px",
-              color: "#4caf50",
-              marginBottom: "16px",
-            }}>✅</div>
-            <div style={{
-              fontSize: "1.5rem",
+          <CheckCircleOutline sx={{ fontSize: 80, color: "#4caf50", mb: 2 }} />
+          <Typography variant="h5" component="h2" sx={{ fontWeight: "bold", mb: 2, color: "#333" }}>
+            Password Updated Successfully!
+          </Typography>
+          <Typography sx={{ color: "#666", mb: 3, lineHeight: 1.5 }}>
+            Your password has been successfully updated. You can now login with your new password.
+          </Typography>
+          <Button
+            onClick={handleSuccessClose}
+            variant="contained"
+            fullWidth
+            startIcon={<LockOutlined />}
+            sx={{ 
+              bgcolor: "#6d2323",
+              py: 1.5,
+              fontSize: "1rem",
               fontWeight: "bold",
-              marginBottom: "16px",
-              color: "#333",
-            }}>
-              Password Updated Successfully!
-            </div>
-            <div style={{
-              color: "#666",
-              marginBottom: "24px",
-              lineHeight: "1.5",
-            }}>
-              Your password has been successfully updated. You can now login with your new password.
-            </div>
-            <button
-              onClick={handleSuccessClose}
-              style={{
-                width: "100%",
-                padding: "12px 24px",
-                backgroundColor: "#A31D1D",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                fontSize: "16px",
-                cursor: "pointer",
-                fontWeight: "bold",
-              }}
-            >
-              Continue to Login
-            </button>
-          </div>
-        </div>
-      )}
+              "&:hover": {
+                bgcolor: "#5a1e1e",
+              },
+            }}
+          >
+            Continue to Login
+          </Button>
+        </Box>
+      </Modal>
 
       {/* Verification Code Sent Modal */}
-{showVerificationModal && (
-  <div style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-  }}>
-    <div style={{
-      backgroundColor: "white",
-      padding: "32px",
-      borderRadius: "8px",
-      textAlign: "center",
-      maxWidth: "400px",
-      width: "90%",
-    }}>
-      <div style={{
-        fontSize: "50px",
-        color: "#6d2323",
-        marginBottom: "16px",
-      }}>✉</div>
-      <div style={{
-        fontSize: "1.25rem",
-        fontWeight: "bold",
-        marginBottom: "16px",
-        color: "#333",
-      }}>
-        Verification Code Sent
-      </div>
-      <div style={{
-        color: "#666",
-        marginBottom: "24px",
-        lineHeight: "1.5",
-      }}>
-        A verification code has been sent to <b>{formData.email}</b>.  
-        Please check your inbox and enter the code to proceed.
-      </div>
-      <button
-        onClick={() => setShowVerificationModal(false)}
-        style={{
-          width: "100%",
-          padding: "12px 24px",
-          backgroundColor: "#A31D1D",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          fontSize: "16px",
-          cursor: "pointer",
-          fontWeight: "bold",
-        }}
+      <Modal
+        open={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        aria-labelledby="verification-modal-title"
       >
-        Okay
-      </button>
-    </div>
-  </div>
-)}
-
-    </div>
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 450,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 4,
+          textAlign: 'center',
+          border: "2px solid #f5e6e6",
+        }}>
+          <MarkEmailReadOutlined sx={{ fontSize: 80, color: "#6d2323", mb: 2 }} />
+          <Typography variant="h5" component="h2" sx={{ fontWeight: "bold", mb: 2, color: "#333" }}>
+            Verification Code Sent
+          </Typography>
+          <Typography sx={{ color: "#666", mb: 3, lineHeight: 1.5 }}>
+            A verification code has been sent to <strong>{formData.email}</strong>.  
+            Please check your inbox and enter the code to proceed.
+          </Typography>
+          <Button
+            onClick={() => setShowVerificationModal(false)}
+            variant="contained"
+            fullWidth
+            startIcon={<CheckCircleOutline />}
+            sx={{ 
+              bgcolor: "#6d2323",
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: "bold",
+              "&:hover": {
+                bgcolor: "#5a1e1e",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
+            Okay
+          </Button>
+        </Box>
+      </Modal>
+    </Container>
   );
 };
 

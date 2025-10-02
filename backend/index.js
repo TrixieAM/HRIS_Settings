@@ -44,6 +44,7 @@ const Remittance = require('./payrollRoutes/Remittance');
 
 const SendPayslip = require('./payrollRoutes/SendPayslip');
 const Payroll = require('./payrollRoutes/Payroll');
+const PayrollReleased = require('./payrollRoutes/PayrollReleased');
 
 
 
@@ -106,11 +107,11 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5137",
   "http://192.168.20.16:5137",       // Local dev
-  "http://192.168.10.14:5137",       // LAN
+  "http://192.168.50.16:5137",       // LAN
   "http://136.239.248.42:5137",      // Public
 ];
 
-// Use CORS middleware
+// CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -197,6 +198,7 @@ app.use('/Remittance', Remittance);
 app.use('/leaveRoute', Leave);
 app.use('/SendPayslipRoute', SendPayslip);
 app.use('/PayrollRoute', Payroll);
+app.use('/PayrollReleasedRoute', PayrollReleased);
 
 
 
@@ -223,8 +225,8 @@ const getDbHost = () => {
 const db = mysql.createPool({
   host: getDbHost(),
   port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  user: process.env.DB_USER || 'HRIST',
+  password: process.env.DB_PASSWORD || '123',
   database: process.env.DB_NAME || 'earist_hris',
   waitForConnections: true,
   connectionLimit: 10,
@@ -1708,7 +1710,6 @@ app.post('/officialtimetable', authenticateToken, (req, res) => {
 
 app.post(
   '/upload-excel-faculty-official-time',
-  authenticateToken,
   upload.single('file'),
   async (req, res) => {
     if (!req.file) {
@@ -1721,6 +1722,7 @@ app.post(
       const sheetName = workbook.SheetNames[0];
       const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
         defval: null,
+        raw: false,
       });
 
 
@@ -1730,37 +1732,114 @@ app.post(
 
 
       const cleanedSheet = sheet.map((row) => {
-        const cleanedRow = {};
+        const normalized = {};
         for (const key in row) {
-          const cleanKey = key.replace(/\u00A0/g, '').trim();
-          cleanedRow[cleanKey] = row[key];
+          const cleanKey = key
+            .replace(/\u00A0/g, '')
+            .trim()
+            .toLowerCase();
+          normalized[cleanKey] = row[key];
         }
-        return cleanedRow;
+        return normalized;
       });
+
+
+      const getField = (r, names) => {
+        for (const n of names) {
+          if (r[n] != null) return r[n];
+        }
+        return null;
+      };
 
 
       let insertedCount = 0;
       let updatedCount = 0;
+      const processedRecords = []; // ADD THIS LINE
 
 
-      for (const row of cleanedSheet) {
-        const {
-          employeeID,
-          day,
-          officialTimeIN,
-          officialBreaktimeIN,
-          officialBreaktimeOUT,
-          officialTimeOUT,
-          officialHonorariumTimeIN,
-          officialHonorariumTimeOUT,
-          officialServiceCreditTimeIN,
-          officialServiceCreditTimeOUT,
-          officialOverTimeIN,
-          officialOverTimeOUT,
-        } = row;
+      for (const r of cleanedSheet) {
+        const employeeID = getField(r, [
+          'employeeid',
+          'employeenumber',
+          'employee number',
+          'employee_id',
+        ]);
+        const day = getField(r, ['day', 'weekday']);
+        const officialTimeIN = getField(r, [
+          'officialtimein',
+          'time in',
+          'timein',
+        ]);
+        const officialBreaktimeIN = getField(r, [
+          'officialbreaktimein',
+          'break in',
+          'breakin',
+        ]);
+        const officialBreaktimeOUT = getField(r, [
+          'officialbreaktimeout',
+          'break out',
+          'breakout',
+        ]);
+        const officialTimeOUT = getField(r, [
+          'officialtimeout',
+          'time out',
+          'timeout',
+        ]);
+        const officialHonorariumTimeIN = getField(r, [
+          'officialhonorariumtimein',
+          'honorarium time in',
+          'honorariumtimein',
+        ]);
+        const officialHonorariumTimeOUT = getField(r, [
+          'officialhonorariumtimeout',
+          'honorarium time out',
+          'honorariumtimeout',
+        ]);
+        const officialServiceCreditTimeIN = getField(r, [
+          'officialservicecredittimein',
+          'service credit time in',
+          'servicecredittimein',
+        ]);
+        const officialServiceCreditTimeOUT = getField(r, [
+          'officialservicecredittimeout',
+          'service credit time out',
+          'servicecredittimeout',
+        ]);
+        const officialOverTimeIN = getField(r, [
+          'officialovertimein',
+          'overtime in',
+          'ot in',
+          'overtimein',
+        ]);
+        const officialOverTimeOUT = getField(r, [
+          'officialovertimeout',
+          'overtime out',
+          'ot out',
+          'overtimeout',
+        ]);
 
 
         if (!employeeID || !day) continue;
+
+
+        // ADD THIS: Store the record for return
+        const recordData = {
+          employeeID,
+          day,
+          officialTimeIN: officialTimeIN || '00:00:00 AM',
+          officialBreaktimeIN: officialBreaktimeIN || '00:00:00 AM',
+          officialBreaktimeOUT: officialBreaktimeOUT || '00:00:00 AM',
+          officialTimeOUT: officialTimeOUT || '00:00:00 AM',
+          officialHonorariumTimeIN: officialHonorariumTimeIN || '00:00:00 AM',
+          officialHonorariumTimeOUT: officialHonorariumTimeOUT || '00:00:00 AM',
+          officialServiceCreditTimeIN:
+            officialServiceCreditTimeIN || '00:00:00 AM',
+          officialServiceCreditTimeOUT:
+            officialServiceCreditTimeOUT || '00:00:00 AM',
+          officialOverTimeIN: officialOverTimeIN || '00:00:00 AM',
+          officialOverTimeOUT: officialOverTimeOUT || '00:00:00 AM',
+        };
+        processedRecords.push(recordData);
 
 
         const checkQuery = `SELECT id FROM officialtime WHERE employeeID = ? AND day = ?`;
@@ -1772,7 +1851,6 @@ app.post(
 
 
           if (rows.length > 0) {
-            // Exists – perform UPDATE
             const updateQuery = `
             UPDATE officialtime SET
               officialTimeIN = ?,
@@ -1810,7 +1888,6 @@ app.post(
               .query(updateQuery, updateValues);
             if (result.affectedRows > 0) updatedCount++;
           } else {
-            // Not found – perform INSERT
             const insertQuery = `
             INSERT INTO officialtime (
               employeeID, day,
@@ -1858,27 +1935,17 @@ app.post(
       }
 
 
-      // Delete the uploaded file after processing
       fs.unlink(req.file.path, (err) => {
         if (err) console.error('Error deleting uploaded file:', err);
       });
 
 
-      try {
-        logAudit(
-          req.user,
-          `Upload official time Excel (inserted: ${insertedCount}, updated: ${updatedCount})`,
-          'Official Time',
-          null,
-          null
-        );
-      } catch (e) {
-        console.error('Audit log error:', e);
-      }
+      // MODIFY THIS: Return the processed records
       res.json({
         message: 'Upload complete.',
         inserted: insertedCount,
         updated: updatedCount,
+        records: processedRecords, // ADD THIS LINE
       });
     } catch (error) {
       console.error('Error processing Excel file:', error);
@@ -1886,6 +1953,8 @@ app.post(
     }
   }
 );
+
+
 
 
 

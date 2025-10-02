@@ -12,8 +12,8 @@ const router = express.Router();
 //MYSQL CONNECTION
 const db = mysql.createPool({
   host: 'localhost',
-  user: 'root',
-  password: '',
+  user: 'HRIST',
+  password: '123',
   database: 'earist_hris',
   waitForConnections: true,
   connectionLimit: 10,

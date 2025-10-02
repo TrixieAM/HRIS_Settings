@@ -5,15 +5,15 @@ const LOCAL_URL = import.meta.env.VITE_API_BASE_URL_LOCAL;
 
 let API_BASE_URL;
 
-// Detect based on current hostname
+// Current hostname
 if (
   window.location.hostname === "localhost" ||
   window.location.hostname.startsWith("192.168.")
 ) {
-  // Device is in LAN / localhost
+  // LAN / localhost
   API_BASE_URL = LOCAL_URL;
 } else {
-  // Device is outside LAN → use public
+  // public
   API_BASE_URL = PUBLIC_URL;
 }
 

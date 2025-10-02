@@ -415,7 +415,7 @@ const PDS2 = () => {
           }}
         >
           <PrintIcon style={{ fontSize: '24px' }} />
-            Save as PDF
+            Save / Print
         </button>
     </div>
    

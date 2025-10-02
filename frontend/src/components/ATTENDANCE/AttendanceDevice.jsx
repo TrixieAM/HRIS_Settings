@@ -74,14 +74,14 @@ const ViewAttendanceRecord = () => {
     }
   };
 
-  const currentYear = 2024;
+  const currentYear = new Date().getFullYear();
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
   const handleMonthClick = (monthIndex) => {
-    const year = 2024;
+    const year = new Date().getFullYear();
     const start = new Date(Date.UTC(year, monthIndex, 1));
     const end = new Date(Date.UTC(year, monthIndex + 1, 0)); 
 

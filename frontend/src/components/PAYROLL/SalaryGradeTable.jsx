@@ -45,21 +45,27 @@ const SalaryGradeTable = () => {
   });
   const navigate = useNavigate();
 
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token'); // or however you store the token
+    return {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+  };
 
   useEffect(() => {
     fetchSalaryGrades();
   }, []);
 
-
   useEffect(() => {
     const { effectivityDate, step } = searchFilters;
-
 
     if (!effectivityDate && !step) {
       setFilteredGrades(salaryGrades);
       return;
     }
-
 
     const filtered = salaryGrades.filter((record) => {
       const matchDate = record.effectivityDate.toLowerCase().includes(effectivityDate.toLowerCase());
@@ -69,46 +75,83 @@ const SalaryGradeTable = () => {
       return matchDate && matchStep;
     });
 
-
     setFilteredGrades(filtered);
   }, [searchFilters, salaryGrades]);
 
-
   const fetchSalaryGrades = async () => {
-    const response = await axios.get(`${API_BASE_URL}/SalaryGradeTable/salary-grade`);
-    setSalaryGrades(response.data);
-    setFilteredGrades(response.data);
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/SalaryGradeTable/salary-grade`,
+        getAuthHeaders()
+      );
+      setSalaryGrades(response.data);
+      setFilteredGrades(response.data);
+    } catch (error) {
+      console.error('Error fetching salary grades:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert('Session expired. Please login again.');
+        // Optionally redirect to login
+        // navigate('/login');
+      }
+    }
   };
-
 
   const addSalaryGrade = async () => {
     if (Object.values(newSalaryGrade).some((v) => v === "")) return;
 
-
-    await axios.post(`${API_BASE_URL}/SalaryGradeTable/salary-grade`, newSalaryGrade);
-    setNewSalaryGrade({
-      effectivityDate: "",
-      sg_number: "",
-      step1: "", step2: "", step3: "", step4: "",
-      step5: "", step6: "", step7: "", step8: ""
-    });
-    fetchSalaryGrades();
+    try {
+      await axios.post(
+        `${API_BASE_URL}/SalaryGradeTable/salary-grade`,
+        newSalaryGrade,
+        getAuthHeaders()
+      );
+      setNewSalaryGrade({
+        effectivityDate: "",
+        sg_number: "",
+        step1: "", step2: "", step3: "", step4: "",
+        step5: "", step6: "", step7: "", step8: ""
+      });
+      fetchSalaryGrades();
+    } catch (error) {
+      console.error('Error adding salary grade:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert('Session expired. Please login again.');
+      }
+    }
   };
-
 
   const updateSalaryGrade = async (id) => {
     const updatedRecord = salaryGrades.find((rec) => rec.id === id);
-    await axios.put(`${API_BASE_URL}/SalaryGradeTable/salary-grade/${id}`, updatedRecord);
-    setEditSalaryGradeId(null);
-    fetchSalaryGrades();
+    try {
+      await axios.put(
+        `${API_BASE_URL}/SalaryGradeTable/salary-grade/${id}`,
+        updatedRecord,
+        getAuthHeaders()
+      );
+      setEditSalaryGradeId(null);
+      fetchSalaryGrades();
+    } catch (error) {
+      console.error('Error updating salary grade:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert('Session expired. Please login again.');
+      }
+    }
   };
-
 
   const deleteSalaryGrade = async (id) => {
-    await axios.delete(`${API_BASE_URL}/SalaryGradeTable/salary-grade/${id}`);
-    fetchSalaryGrades();
+    try {
+      await axios.delete(
+        `${API_BASE_URL}/SalaryGradeTable/salary-grade/${id}`,
+        getAuthHeaders()
+      );
+      fetchSalaryGrades();
+    } catch (error) {
+      console.error('Error deleting salary grade:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert('Session expired. Please login again.');
+      }
+    }
   };
-
 
   const highlightText = (text, query) => {
     if (!query) return text;
@@ -119,7 +162,6 @@ const SalaryGradeTable = () => {
         : part
     );
   };
-
 
   return (
     <Container>
@@ -137,7 +179,6 @@ const SalaryGradeTable = () => {
           </Box>
         </Box>
       </Box>
-
 
       {/* Add Salary Grade Form */}
       <Paper sx={{ p: 3, }}>
@@ -175,7 +216,6 @@ const SalaryGradeTable = () => {
         </Grid>
       </Paper>
 
-
       {/* Search Filters & Shortcut */}
       <Box sx={{ mt: 10, display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 2 }}>
         <TextField
@@ -208,7 +248,6 @@ const SalaryGradeTable = () => {
           Insert into item-table
         </Button>
       </Box>
-
 
       {/* Salary Grade Table */}
       <Box sx={{ mt: 3, overflowX: "auto" }}>
@@ -296,6 +335,5 @@ const SalaryGradeTable = () => {
     </Container>
   );
 };
-
 
 export default SalaryGradeTable;

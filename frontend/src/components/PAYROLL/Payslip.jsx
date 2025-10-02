@@ -98,7 +98,7 @@ const Payslip = forwardRef(({ employee }, ref) => {
         try {
           setLoading(true);
           const res = await axios.get(
-            `${API_BASE_URL}/PayrollRoute/finalized-payroll`,
+            `${API_BASE_URL}/PayrollReleasedRoute/released-payroll-detailed`,
             getAuthHeaders()
           );
           setAllPayroll(res.data); // ✅ just store everything

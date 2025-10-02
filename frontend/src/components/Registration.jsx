@@ -11,7 +11,12 @@ import {
   Grid,
   InputAdornment,
   Box,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from "@mui/material";
 import {
   PersonOutline,
@@ -22,6 +27,9 @@ import {
   GroupAdd,
   CheckCircleOutline,
   ErrorOutline,
+  WarningAmber,
+  Settings,
+  CheckCircle
 } from "@mui/icons-material";
 import AccessDenied from "./AccessDenied";
 
@@ -39,44 +47,52 @@ const Registration = () => {
 
   const [errMessage, setErrorMessage] = useState();
   const [successMessage, setSuccessMessage] = useState("");
+  const [showSetupModal, setShowSetupModal] = useState(false);
 
   const navigate = useNavigate();
 
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
 
-  // Page access control
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    const pageId = 16; // PAGE ID
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 16; // PAGE ID
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
+
+  // Check if setup modal should be shown - shows every time on page visit
+  useEffect(() => {
+    if (hasAccess === true) {
+      setShowSetupModal(true);
+    }
+  }, [hasAccess]);
 
   const handleChanges = (e) => {
     const { name, value } = e.target;
@@ -153,33 +169,43 @@ const Registration = () => {
     }
   };
 
+  const handleSetupLater = () => {
+    setShowSetupModal(false);
+  };
+
+  const handleGoToSetup = () => {
+    setShowSetupModal(false);
+    // Navigate to setup page - adjust the route as needed
+    navigate("/setup-dashboard"); // Change this to your actual setup route
+  };
+
 
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
 
 
@@ -194,6 +220,84 @@ const Registration = () => {
         justifyContent: "center",
       }}
     >
+      {/* Setup Reminder Modal */}
+      <Dialog
+        open={showSetupModal}
+        onClose={() => {}}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            border: "2px solid #f5e6e6",
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 1,
+          color: "#6d2323",
+          fontWeight: "bold",
+          fontSize: "1.5rem"
+        }}>
+          <WarningAmber sx={{ fontSize: 32, color: "#000000" }} />
+          Initial Setup Required
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: "#333", fontSize: "1rem", mb: 2 }}>
+            Before registering users, please ensure the following tables are set up:
+          </DialogContentText>
+          <Box sx={{ pl: 2, mb: 2 }}>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, color: "#555" }}>
+              <CheckCircleOutline sx={{ fontSize: 20, color: "#6d2323" }} />
+              <strong>Remittances</strong> - Configure employee remittance
+            </Typography>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, color: "#555" }}>
+              <CheckCircleOutline sx={{ fontSize: 20, color: "#6d2323" }} />
+              <strong>Department Assignment</strong> - Department designations
+            </Typography>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555" }}>
+              <CheckCircleOutline sx={{ fontSize: 20, color: "#6d2323" }} />
+              <strong>Item Table</strong> - Setting up Plantilla
+            </Typography>
+          </Box>
+          <DialogContentText sx={{ color: "#666", fontSize: "0.95rem", fontStyle: "italic" }}>
+            These tables are essential for Payroll Management Records.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button
+            onClick={handleSetupLater}
+            variant="outlined"
+            startIcon={<CheckCircle />}
+            sx={{
+              color: "#6d2323",
+              borderColor: "#6d2323",
+              "&:hover": {
+                borderColor: "#5a1e1e",
+                backgroundColor: "rgba(109, 35, 35, 0.04)",
+              },
+            }}
+          >
+            Already Updated
+          </Button>
+          <Button
+            onClick={handleGoToSetup}
+            variant="contained"
+            startIcon={<Settings />}
+            sx={{
+              bgcolor: "#6d2323",
+              "&:hover": {
+                bgcolor: "#5a1e1e",
+              },
+            }}
+          >
+            Set Up Now
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Paper
         elevation={4}
         sx={{

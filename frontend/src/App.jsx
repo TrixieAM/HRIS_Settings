@@ -75,6 +75,7 @@ import DepartmentAssignment from './components/PAYROLL/DepartmentAssignment';
 import Holiday from './components/PAYROLL/Holiday';
 import PhilHealthTable from './components/PAYROLL/PhilHealth';
 import PayrollProcessed from './components/PAYROLL/PayrollProcessed';
+import PayrollReleased from './components/PAYROLL/PayrollReleased';
 
 
 
@@ -122,6 +123,7 @@ import LeaveCredits from './components/LEAVE/LeaveCredits';
 import UsersList from './components/UsersList';
 import PagesList from './components/PagesList';
 import AuditLogs from './components/AuditLogs';
+import SetupDashboard from './components/SetupDashboard';
 
 
 
@@ -540,7 +542,14 @@ function App() {
             />
 
 
-
+            <Route
+              path="/payroll-released"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <PayrollReleased />
+                </ProtectedRoute>
+              }
+            />
 
 
 
@@ -946,6 +955,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin', 'staff']}>
                   <PagesList />
+                </ProtectedRoute>
+              }
+            />
+
+             <Route
+              path="/setup-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <SetupDashboard />
                 </ProtectedRoute>
               }
             />

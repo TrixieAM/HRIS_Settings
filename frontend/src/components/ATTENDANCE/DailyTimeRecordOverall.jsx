@@ -101,14 +101,60 @@ const DailyTimeRecordFaculty = () => {
       <style>
         {`
           @media print {
-            .no-print { display: none !important; }
-            .header { display: none !important; }
-            .table-wrapper { display: flex; justify-content: center; width: 100%; margin-top: -10%; margin-left: -24% }
-            .table-side-by-side { display: flex; justify-content: space-between; width: 100%; }
-            .table { width: 45%; margin-right: 2%; border: 1px solid black; border-collapse: collapse; }
+            .no-print { 
+              display: none !important;
+            }
+
+            .header { 
+              display: none !important; 
+            }
+
+            .table-wrapper { 
+              display: flex; 
+              justify-content: center; 
+              width: 100%; 
+              margin-top: -22rem; 
+              transform: scale(0.7);
+              height: 100vh;
+            }
+            
+            .table { 
+              width: 50%;
+              border: 1px solid black; 
+              border-collapse: collapse; 
+            }
+
+            .header, .top-banner, .page-banner, header, footer {
+              display: none !important;
+              visibility: hidden !important;
+              height: 0 !important;
+              overflow: hidden !important;
+            }
+               @media print {
+            .print-visible {
+              display: block !important;
+              page-break-before: avoid;
+              margin-bottom: 0;
+              margin-top: 0;
+
+            }
+              @media print {
+              .header, .top-banner, .page-banner, header, footer {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+              }
+            }
+              body {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }  
           }
         `}
       </style>
+      
       <div 
   style={{
     backgroundColor: '#6D2323',
@@ -120,6 +166,7 @@ const DailyTimeRecordFaculty = () => {
     borderBottomRightRadius: '0px',
    
   }}>
+    <div className="search-container no-print">
         <div  style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
           <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
           <div >
@@ -131,6 +178,7 @@ const DailyTimeRecordFaculty = () => {
             </p>
           </div>
           </div>     
+        </div>
         </div>
       <Container sx={{ bgcolor: 'white', borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '50px', paddingTop:'25px'}}>
       <div className="search-container no-print">
@@ -193,80 +241,111 @@ const DailyTimeRecordFaculty = () => {
         </div>
       </div>
       </Container>
-      <Container sx={{bgcolor: 'white', marginTop: '20px', marginBottom: '20px', borderRadius: '10px', width: '70.6%', }}>
+      <Container sx={{bgcolor: 'white', marginTop: '20px', marginBottom: '20px'}}>
       <br />
       <div className="table-container" style={{marginBottom: '5%'}}>
         <div className="table-wrapper">
-          <div className="table-side-by-side">
+          <div>
             <table
               style={{
                 border: "1px solid black",
                 borderCollapse: "collapse",
-                width: "58%",
+                width: "52rem",
               }}
               className="table side-by-side"
             >
-              <thead style={{ textAlign: "center" }}>
-                <tr>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td></td>
-                </tr>
-                <div className='form-header' style={{width: '100%', display: 'flex', alignItems: 'center', marginBottom: '-30%'}}>
-                  <tr>
-                    <td
-                      colSpan="2"
-                      style={{
-                        padding: "50px",
-                        lineHeight: "0",
-                        height: "200px",
-                      }}
-                    >
-                      <img
-                        src={earistLogo}
-                        alt="EARIST Logo"
-                        width="55"
-                        height="55"
-                      />
-                    </td>
-                  </tr>
-                  <tr style={{
-                    textAlign: 'center',
-                    position: 'relative'
-                  }}>
-                    <td colSpan="9" style={{position: 'absolute', top: '-9.5rem', left: '-1rem', width: '20rem'}}>
-                      <h6>Republic of the Philippines</h6>
-                      <div style={{marginTop: '-0.5rem'}}>
-                        <p style={{ fontSize: "15px", fontWeight: "bold" }}>
-                          EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE &
-                          TECHNOLOGY
-                        </p>
-                      </div>
-                      <p style={{ fontSize: "12px", fontWeight: "bold" }}>
-                        Nagtahan, Sampaloc Manila
-                      </p>
-                      <p style={{ fontSize: "12px", marginTop: "12px" }}>
-                        Civil Service Form No. 48
-                      </p>
-                      <h3>DAILY TIME RECORD</h3>
-                    </td>
-                  </tr>
-                </div>
+             <thead style={{ textAlign: "center", position: 'relative' }}>
+                            <tr>
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  top: "1.5rem",
+                                  left: "50%",
+                                  transform: "translateX(-50%)",
+                                  fontWeight: "bold",
+                                  fontSize: '13px'
+                                }}
+                              >
+                                Republic of the Philippines
+                              </div>
+                          
+                              <td
+                                colSpan="1"
+                                style={{
+                                  position: 'relative',
+                                  padding: "0",
+                                  lineHeight: "0",
+                                  height: "0px",
+                                  textAlign: "right",
+                                  marginRight: "0",
+                                }}
+                              >
+                                <img src={earistLogo} alt="EARIST Logo" width="55" height="55"  style={{position: 'absolute', marginTop: '-14%', left: '60%'}}/>
+                              </td>
+                              <td colSpan="3">
+                                  <p
+                                  style={{
+                                    marginTop: '15%',
+                                    fontSize: "15px",
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                    marginLeft: '5%'
+                                  }}
+                                >
+                                  EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE & TECHNOLOGY
+                                </p>
+                              </td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                            </tr>
+                            <tr>
+                              <td colSpan="9">
+                                <p
+                                  style={{
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    lineHeight: "0",
+                                  }}
+                                >
+                                  Nagtahan, Sampaloc Manila
+                                </p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan="9">
+                                <p
+                                  style={{
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    lineHeight: "0",
+                                  }}
+                                >
+                                  Civil Service Form No. 48
+                                </p>
+                              </td>
+                            </tr>
+            
+                            <tr>
+                              <td colSpan="9" style={{ padding: "2", lineHeight: "0" }}>
+                                <h4>DAILY TIME RECORD</h4>
+                              </td>
+                            </tr>
                 
                   <tr >
                     <td colSpan="9" style={{ padding: "2", lineHeight: "0" }}>
                       <p
                         style={{
                           fontSize: "15px",
-                          fontWeight: "bold",
                           margin: "0",
                           height: "20px",
                           textAlign: "left",
                           padding: '0 1rem',
                         }}
                       >
-                        NAME: {employeeName}
+                        NAME: <b>{employeeName}</b>
                       </p>
                     </td>
                   </tr>
@@ -276,15 +355,14 @@ const DailyTimeRecordFaculty = () => {
                       <p
                         style={{
                           fontSize: "15px",
-                          fontWeight: "bold",
                           margin: "0",
                           height: "10px",
                           textAlign: "left",
-                          padding: '0 1rem',
+                          paddingLeft: '15px'
                         }}
                       >
-                        Covered Dates: {startDate ? formatDate(startDate) : ""} -{" "}
-                        {endDate ? formatDate(endDate) : ""}
+                        Covered Dates: <b> {startDate ? formatDate(startDate) : ""} -{" "}
+                        {endDate ? formatDate(endDate) : ""} </b>
                       </p>
                     </td>
                   </tr>
@@ -297,19 +375,18 @@ const DailyTimeRecordFaculty = () => {
                       <p
                         style={{
                           fontSize: "15px",
-                          fontWeight: "bold",
                           margin: "0",
                         }}
                       >
-                        For the month of:{" "}
-                        {startDate ? formatMonth(startDate) : ""}
+                        For the month of: <b>{" "}
+                        {startDate ? formatMonth(startDate) : ""}</b>
                       </p>
                     </td>
                   </tr>
                 
               </thead>
               <tr>
-                <th
+                 <th
                   rowSpan="2"
                   style={{
                     textAlign: "center",
@@ -322,24 +399,21 @@ const DailyTimeRecordFaculty = () => {
                 <th colSpan="2" style={{ border: "1px solid black" }}>
                   A.M.
                 </th>
-                <th style={{ border: "1px solid black" }}></th>
                 <th colSpan="2" style={{ border: "1px solid black" }}>
                   P.M.
                 </th>
-                <th style={{ border: "1px solid black" }}></th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th style={{ border: "1px solid black" }}>Late</th>
+                <th colSpan="1" style={{ border: "1px solid black" }}>
                   Undertime
                 </th>
               </tr>
               <tr>
-                <td style={{ border: "1px solid black" }}>ARRIVAL</td>
-                <td style={{ border: "1px solid black" }}>DEPARTURE</td>
-                <td style={{ border: "1px solid black" }}></td>
-                <td style={{ border: "1px solid black" }}>ARRIVAL</td>
-                <td style={{ border: "1px solid black" }}>DEPARTURE</td>
-                <td style={{ border: "1px solid black" }}></td>
-                <td style={{ border: "1px solid black" }}>Hours</td>
-                <td style={{ border: "1px solid black" }}>Minutes</td>
+                <td style={{ border: "1px solid black",  textAlign: "center"}}>ARRIVAL</td>
+                <td style={{ border: "1px solid black",  textAlign: "center" }}>DEPARTURE</td>
+                <td style={{ border: "1px solid black",  textAlign: "center" }}>ARRIVAL</td>
+                <td style={{ border: "1px solid black",  textAlign: "center" }}>DEPARTURE</td>
+                <td style={{ border: "1px solid black",  textAlign: "center" }}>Hours</td>
+                <td style={{ border: "1px solid black", textAlign: "center" }}>Minutes</td>
               </tr>
 
               <tbody>
@@ -352,30 +426,51 @@ const DailyTimeRecordFaculty = () => {
                   return (
                     <tr key={i}>
                       <td style={{ border: "1px solid black", textAlign: 'center'}}>{day}</td>
-                      <td style={{ border: "1px solid black" }}>
-                        {record?.timeIN || ""}
-                      </td>
-                      <td style={{ border: "1px solid black"}}>
-                        {record?.timeOUT || ""}
-                      </td>
-                      <td style={{ border: "1px solid black" }}></td>
-                      <td style={{ border: "1px solid black" }}>
-                        {record?.breaktimeIN || ""}
-                      </td>
-                      <td style={{ border: "1px solid black" }}>
-                        {record?.breaktimeOUT || ""}
-                      </td>
-                      <td style={{ border: "1px solid black" }}></td>
-                      <td style={{ border: "1px solid black" }}>
-                        {record?.hours || ""}
-                      </td>
-                      <td style={{ border: "1px solid black" }}>
-                        {record?.minutes || ""}
-                      </td>
+                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.timeIN || ""}</td>
+                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.timeOUT || ""}</td>
+                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.breaktimeIN || ""}</td>
+                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.breaktimeOUT || ""}</td>
+                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.hours || ""}</td>
+                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.minutes || ""}</td>
                     </tr>
                   );
                 })}
+                <tr>
+                  <td colspan="9">
+                    <div className="">
+
+                      <p
+                        style={{
+                          textAlign: "justify",
+                          width: "95%",
+                          margin: "0 auto",
+                          marginTop: "10px",
+                        }}
+                      >
+                        I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival and departure from office.
+                      </p>
+                      <br />
                 
+                      <hr
+                        style={{
+                          borderTop: "1px double black",
+                          width: "94%",
+                          margin: "0 auto",
+                        }}
+                      />
+                      <p style={{ textAlign: "center", marginTop: "12px" }}>Verified as to prescribe office hours.</p>
+                      <br />
+                      <hr
+                        style={{
+                          textAlign: "right",
+                          borderTop: "1px solid black",
+                          width: "94%",
+                          marginBottom: "20px",
+                        }}
+                      />
+                    </div>
+                  </td>
+                </tr>
               </tbody>
               <div>
               
@@ -392,7 +487,8 @@ const DailyTimeRecordFaculty = () => {
           height: "55px",
           marginleft: "10px",
           margintopt: "10px",
-          bgcolor: "#6D2323"
+          marginBottom: "100px",
+          bgcolor: "#6D2323",
         }}
         className="no-print"
         variant="contained"
@@ -407,4 +503,4 @@ const DailyTimeRecordFaculty = () => {
   );
 };
 
-export default DailyTimeRecordFaculty;
+export default DailyTimeRecordFaculty;  

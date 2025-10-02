@@ -61,7 +61,8 @@ import {
   ReceiptLong,
   Receipt,
   Info,
-  TransferWithinAStation
+  TransferWithinAStation,
+  NewReleases
 } from '@mui/icons-material';
 import { 
   AccessAlarm, 
@@ -510,7 +511,7 @@ const Sidebar = ({
                 {userRole !== '' && (
           <>
 
-          <ListItem 
+          {/* <ListItem 
                   button 
                   component={Link} 
                   to= '/leave-request-user' 
@@ -538,7 +539,7 @@ const Sidebar = ({
                     <TransferWithinAStation />
                   </ListItemIcon>
                   <ListItemText primary="Leave Request" sx={{ marginLeft: '5px'}} />
-                </ListItem>
+                </ListItem> */}
 
         <ListItem
               button
@@ -1446,14 +1447,14 @@ const Sidebar = ({
                   </ListItemIcon>
                   <ListItemText primary="Payroll | Processed" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-                
-                <ListItem
-                  button
-                  component={Link}
-                  to='/overall-payslip'
+
+                 <ListItem 
+                  button 
+                  component={Link} 
+                  to= '/payroll-released' 
                   sx={{
-                    color: selectedItem === 'overall-payslip' ? 'white' : 'inherit',
-                    bgcolor: selectedItem === 'overall-payslip' ? '#A31D1D' : 'inherit',
+                    color: selectedItem === 'payroll-released' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'payroll-released' ? '#A31D1D' : 'inherit',
                     '&:hover': {
                       bgcolor: '#f0f0f0',
                       color: 'black',
@@ -1463,17 +1464,20 @@ const Sidebar = ({
                         color: 'black',
                       }
                     },
-                    borderTopRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
-                    borderBottomRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                    borderTopRightRadius: selectedItem === 'payroll-released' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'payroll-released' ? '15px' : 0,
                   }}
-                  onClick={() => handleItemClick('overall-payslip')}>
-                  <RequestQuote sx={{ marginRight: '1rem', color: selectedItem === 'overall-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
-                    <CalendarToday />
-                  </RequestQuote>
-                  <ListItemText primary="Payslip Records" sx={{ marginLeft: '-10px' }} />
+                  onClick={() => handleItemClick('payroll-released')} 
+                  >
+                  <ListItemIcon sx={{ marginRight: '-1rem',
+                     color: selectedItem === 'payroll-released' ? 'white' : 'inherit',
+                     '&:hover': { color: 'white' }
+                   }}>
+                    <NewReleases/>
+                  </ListItemIcon>
+                  <ListItemText primary="Payroll | Release" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
-
-
+                
                 <ListItem
                   button
                   component={Link}
@@ -1498,6 +1502,33 @@ const Sidebar = ({
                     <CalendarToday />
                   </ReceiptLong>
                   <ListItemText primary="Payslip Distribution" sx={{ marginLeft: '-10px' }} />
+                </ListItem>
+
+
+                <ListItem
+                  button
+                  component={Link}
+                  to='/overall-payslip'
+                  sx={{
+                    color: selectedItem === 'overall-payslip' ? 'white' : 'inherit',
+                    bgcolor: selectedItem === 'overall-payslip' ? '#A31D1D' : 'inherit',
+                    '&:hover': {
+                      bgcolor: '#f0f0f0',
+                      color: 'black',
+                      borderTopRightRadius: '15px',
+                      borderBottomRightRadius: '15px',
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      }
+                    },
+                    borderTopRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                    borderBottomRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
+                  }}
+                  onClick={() => handleItemClick('overall-payslip')}>
+                  <RequestQuote sx={{ marginRight: '1rem', color: selectedItem === 'overall-payslip' ? 'white' : 'inherit', '&:hover': { color: 'white' } }}>
+                    <CalendarToday />
+                  </RequestQuote>
+                  <ListItemText primary="Payslip Records" sx={{ marginLeft: '-10px' }} />
                 </ListItem>
                 
 

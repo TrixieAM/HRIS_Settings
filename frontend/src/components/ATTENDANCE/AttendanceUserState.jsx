@@ -65,7 +65,7 @@ const AttendanceUserState = () => {
   ];
 
   const handleMonthClick = (monthIndex) => {
-    const year = 2024; //new Date().getFullYear();
+    const year = new Date().getFullYear(); //new Date().getFullYear();
     const start = new Date(Date.UTC(year, monthIndex, 1));
     const end = new Date(Date.UTC(year, monthIndex + 1, 0));
     setStartDate(start.toISOString().substring(0, 10));

@@ -65,11 +65,11 @@ function logAudit(
 router.get('/api/attendance', authenticateToken, (req, res) => {
   const { personId, startDate, endDate } = req.query;
   const sql = `
-    SELECT attendanceRecord.*, users.employeeNumber, users.username,
+    SELECT DISTINCT attendanceRecord.*, users.employeeNumber, users.username,
     users.employmentCategory, officialtime.*
     FROM attendanceRecord 
     JOIN users ON attendanceRecord.personID = users.employeeNumber 
-    JOIN officialtime ON attendanceRecord.Day = officialtime.day
+    JOIN officialtime ON attendanceRecord.Day = officialtime.day AND attendanceRecord.personID = officialtime.employeeID
     WHERE attendanceRecord.personID = ? 
     AND attendanceRecord.date BETWEEN ? AND ?
   `;
@@ -695,5 +695,32 @@ router.get('/api/audit-log', (req, res) => {
     res.json(results);
   });
 });
+
+
+
+// GET /attendance/monthly?month=2025-09
+router.get('/attendance/monthly', authenticateToken, (req, res) => {
+  // for now, just hardcode September 2025
+  const startDate = '2025-09-01';
+  const endDate = '2025-09-30';
+
+  const sql = `
+    SELECT DATE(Date) as day, COUNT(DISTINCT PersonID) as present
+    FROM AttendanceRecordInfo
+    WHERE AttendanceState = 1 
+      AND Date BETWEEN ? AND ?
+    GROUP BY DATE(Date)
+    ORDER BY day ASC
+  `;
+
+  earistDb.query(sql, [startDate, endDate], (err, results) => {
+    if (err) {
+      console.error('Error fetching monthly attendance:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(results);
+  });
+});
+
 
 module.exports = router;

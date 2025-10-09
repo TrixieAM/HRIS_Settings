@@ -18,7 +18,8 @@ import {
   StepLabel,
   StepContent,
   Paper,
-  CircularProgress
+  CircularProgress,
+  FormHelperText
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -38,8 +39,6 @@ import SuccessfullOverlay from '../SuccessfulOverlay';
 import AccessDenied from '../AccessDenied';
 import { useNavigate } from "react-router-dom";
 
-
-
 const PersonTable = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -47,45 +46,45 @@ const PersonTable = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  const [stepErrors, setStepErrors] = useState({});
   
-  
-
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  const navigate = useNavigate();
-  // Page access control - Add this useEffect
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    // Change this pageId to match the ID you assign to this page in your page management
-    const pageId = 2; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control - Add this useEffect
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    // Change this pageId to match the ID you assign to this page in your page management
+    const pageId = 2; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
 
   
   // Stepper state
@@ -196,22 +195,75 @@ const PersonTable = () => {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['firstName', 'lastName', 'birthDate', 'sex', 'civilStatus', 'citizenship'];
+    
+    requiredFields.forEach(field => {
+      if (!newPerson[field] || newPerson[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateCurrentStep = () => {
+    const currentStepFields = steps[activeStep].fields;
+    const requiredFields = ['firstName', 'lastName', 'birthDate', 'sex', 'civilStatus', 'citizenship', 'agencyEmployeeNum'];
+    const stepRequiredFields = currentStepFields.filter(field => requiredFields.includes(field));
+    
+    const newErrors = {};
+    let hasError = false;
+    
+    stepRequiredFields.forEach(field => {
+      if (!newPerson[field] || newPerson[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+        hasError = true;
+      }
+    });
+    
+    if (hasError) {
+      setErrors(newErrors);
+      setStepErrors({ [activeStep]: true });
+      showSnackbar('Please fill in all required fields before proceeding', 'error');
+      return false;
+    }
+    
+    setStepErrors(prev => {
+      const newStepErrors = { ...prev };
+      delete newStepErrors[activeStep];
+      return newStepErrors;
+    });
+    
+    return true;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/personalinfo/person_table`, newPerson);
       setNewPerson(Object.fromEntries(Object.keys(newPerson).map(k => [k, ''])));
-      setActiveStep(0); // Reset to first step
+      setActiveStep(0); 
+      setErrors({}); 
+      setStepErrors({});
       setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchPersons();
     } catch (error) {
       console.error('Error adding person:', error);
       setLoading(false);
+      showSnackbar('Failed to add Personal Information. Employee Number needs to be setup. Please try again.', 'error');
     }
   };
 
@@ -227,6 +279,7 @@ const PersonTable = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
       console.error('Error updating person:', error);
+      showSnackbar('Failed to update person. Please try again.', 'error');
     }
   };
 
@@ -242,6 +295,7 @@ const PersonTable = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (error) {
       console.error('Error deleting person:', error);
+      showSnackbar('Failed to delete person. Please try again.', 'error');
     }
   };
 
@@ -250,6 +304,20 @@ const PersonTable = () => {
       setEditPerson({ ...editPerson, [field]: value });
     } else {
       setNewPerson({ ...newPerson, [field]: value });
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+      if (stepErrors[activeStep]) {
+        setStepErrors(prev => {
+          const newStepErrors = { ...prev };
+          delete newStepErrors[activeStep];
+          return newStepErrors;
+        });
+      }
     }
   };
 
@@ -275,6 +343,9 @@ const PersonTable = () => {
   };
 
   const handleNext = () => {
+    if (!validateCurrentStep()) {
+      return;
+    }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -294,11 +365,11 @@ const PersonTable = () => {
     },
     {
       label: 'Government ID Information',
-    subtitle: 'Your government identification numbers',
-    fields: [
-      'gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum',
-    ],
-    disabledFields: ['agencyEmployeeNum'] // <-- added here
+      subtitle: 'Your government identification numbers',
+      fields: [
+        'gsisNum', 'pagibigNum', 'philhealthNum', 'sssNum', 'tinNum', 'agencyEmployeeNum',
+      ],
+      disabledFields: ['agencyEmployeeNum']
     },
     {
       label: 'Address Information',
@@ -340,53 +411,71 @@ const PersonTable = () => {
 
   const renderStepContent = (step) => (
     <Grid container spacing={3} sx={{ mt: 1 }}>
-      {step.fields.map((field) => (
-        <Grid item xs={12} sm={6} key={field}>
-          <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-            {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-          </Typography>
-          <TextField
-            value={newPerson[field]}
-            onChange={(e) => handleChange(field, e.target.value)}
-            fullWidth
-          />
-        </Grid>
-      ))}
+      {step.fields.map((field) => {
+        const requiredFields = ['firstName', 'lastName', 'birthDate', 'sex', 'civilStatus', 'citizenship', 'agencyEmployeeNum'];
+        const isRequired = requiredFields.includes(field);
+        const hasError = errors[field];
+        
+        return (
+          <Grid item xs={12} sm={6} key={field}>
+            <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+              {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+              {isRequired && <span style={{ color: 'red' }}> *</span>}
+            </Typography>
+            <TextField
+              value={newPerson[field]}
+              onChange={(e) => handleChange(field, e.target.value)}
+              fullWidth
+              error={!!hasError}
+              helperText={hasError || ''}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: hasError ? 'red' : '#6D2323',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: hasError ? 'red' : '#6D2323',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: hasError ? 'red' : '#6D2323',
+                  },
+                },
+              }}
+            />
+          </Grid>
+        );
+      })}
     </Grid>
   );
 
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
-
-
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
-
-
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
   return (
     <Container sx={{ mt: 0 }}>
@@ -446,7 +535,14 @@ const PersonTable = () => {
             <Stepper activeStep={activeStep} orientation="vertical">
               {steps.map((step, index) => (
                 <Step key={step.label}>
-                  <StepLabel>
+                  <StepLabel 
+                    error={stepErrors[index]}
+                    sx={{
+                      '& .MuiStepLabel-iconContainer': {
+                        color: stepErrors[index] ? 'red' : undefined
+                      }
+                    }}
+                  >
                     <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                       {step.label}
                     </Typography>
@@ -690,49 +786,60 @@ const PersonTable = () => {
                   </IconButton>
                 </Box>
 
-            {/* Modal Content */}
-            <Box sx={{ p: 3 }}>
-              {steps.map((step, stepIndex) => (
-                <Box key={stepIndex} sx={{ mb: 4 }}>
-                  <Typography variant="h6" sx={{ mb: 2, color: "#6D2323", fontWeight: "bold" }}>
-                    {step.label}
-                  </Typography>
-                  <Grid container spacing={3}>
-                    {step.fields.map((field) => {
-                      const isFieldDisabled = field === 'agencyEmployeeNum';
+                {/* Modal Content */}
+                <Box sx={{ p: 3 }}>
+                  {steps.map((step, stepIndex) => (
+                    <Box key={stepIndex} sx={{ mb: 4 }}>
+                      <Typography variant="h6" sx={{ mb: 2, color: "#6D2323", fontWeight: "bold" }}>
+                        {step.label}
+                      </Typography>
+                      <Grid container spacing={3}>
+                        {step.fields.map((field) => {
+                          const isFieldDisabled = field === 'agencyEmployeeNum';
 
-                      return (
-                        <Grid item xs={12} sm={6} md={4} key={field}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                            {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                          </Typography>
-                          <TextField
-                            value={editPerson[field] || ''}
-                            onChange={(e) => handleChange(field, e.target.value, true)}
-                            fullWidth
-                            disabled={isFieldDisabled || !isEditing}
-                            sx={{
-                              ...(isFieldDisabled
-                                ? {
-                                    backgroundColor: '#f5f5f5', 
-                                    '& .MuiInputBase-input.Mui-disabled': {
-                                      color: '#9e9e9e',
-                                      WebkitTextFillColor: '#9e9e9e'
+                          return (
+                            <Grid item xs={12} sm={6} md={4} key={field}>
+                              <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                                {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Typography>
+                              <TextField
+                                value={editPerson[field] || ''}
+                                onChange={(e) => handleChange(field, e.target.value, true)}
+                                fullWidth
+                                disabled={isFieldDisabled || !isEditing}
+                                sx={{
+                                  ...(isFieldDisabled
+                                    ? {
+                                        backgroundColor: '#f5f5f5', 
+                                        '& .MuiInputBase-input.Mui-disabled': {
+                                          color: '#9e9e9e',
+                                          WebkitTextFillColor: '#9e9e9e'
+                                        },
+                                        '& .MuiInputLabel-root.Mui-disabled': {
+                                          color: '#757575'
+                                        }
+                                      }
+                                    : {}),
+                                  '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                      borderColor: "#6D2323",
                                     },
-                                    '& .MuiInputLabel-root.Mui-disabled': {
-                                      color: '#757575'
-                                    }
-                                  }
-                                : {})
-                            }}
-                            helperText={isFieldDisabled ? "Cannot be changed unless deleted" : ""}
-                          />
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                </Box>
-              ))}
+                                    '&:hover fieldset': {
+                                      borderColor: "#6D2323",
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                      borderColor: "#6D2323",
+                                    },
+                                  },
+                                }}
+                                helperText={isFieldDisabled ? "Cannot be changed unless deleted" : ""}
+                              />
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
+                  ))}
 
                   {/* Action Buttons */}
                   <Box

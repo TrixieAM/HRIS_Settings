@@ -11,6 +11,9 @@ import {
   Chip,
   Modal,
   IconButton,
+  CircularProgress,
+  Snackbar,
+  Alert,
   FormControl,
 } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -27,7 +30,9 @@ import LabelIcon from '@mui/icons-material/Label';
 import SearchIcon from '@mui/icons-material/Search';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import LoadingOverlay from '../LoadingOverlay';
-import SuccessfullOverlay from '../SuccessfulOverlay';
+import SuccessfulOverlay from '../SuccessfulOverlay';
+import AccessDenied from '../AccessDenied';
+import { useNavigate } from "react-router-dom";
 
 const ItemTable = () => {
   const [data, setData] = useState([]);
@@ -47,17 +52,21 @@ const ItemTable = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  // Function to get authentication headers
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
-    console.log(
-      'Token from localStorage:',
-      token ? 'Token exists' : 'No token found'
-    );
-    if (token) {
-      console.log('Token length:', token.length);
-      console.log('Token starts with:', token.substring(0, 20) + '...');
-    }
     return {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -65,6 +74,43 @@ const ItemTable = () => {
       },
     };
   };
+
+  //ACCESSING
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 12; // PAGE ID - Changed to a different ID for ItemTable
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
+  
 
   useEffect(() => {
     fetchItems();
@@ -76,10 +122,30 @@ const ItemTable = () => {
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
+      showSnackbar('Failed to fetch item records. Please try again.', 'error');
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['item_description', 'employeeID', 'name', 'item_code', 'salary_grade', 'step', 'effectivityDate'];
+    
+    requiredFields.forEach(field => {
+      if (!newItem[field] || newItem[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/api/item-table`, newItem, getAuthHeaders());
@@ -92,16 +158,18 @@ const ItemTable = () => {
         step: "",
         effectivityDate: "",
       });
+      setErrors({}); // Clear errors
       setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchItems();
     } catch (err) {
       console.error('Error adding data:', err);
       setLoading(false);
+      showSnackbar('Failed to add item record. Please try again.', 'error');
     }
   };
 
@@ -117,6 +185,7 @@ const ItemTable = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
+      showSnackbar('Failed to update item record. Please try again.', 'error');
     }
   };
 
@@ -132,6 +201,7 @@ const ItemTable = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
+      showSnackbar('Failed to delete item record. Please try again.', 'error');
     }
   };
 
@@ -140,6 +210,14 @@ const ItemTable = () => {
       setEditItem({ ...editItem, [field]: value });
     } else {
       setNewItem({ ...newItem, [field]: value });
+      // Clear error for this field when user starts typing
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -170,6 +248,33 @@ const ItemTable = () => {
 
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
+  // ACCESSING 2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access Item Information. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
+
   return (
     <Container sx={{ mt: 0, }}>
 
@@ -177,7 +282,7 @@ const ItemTable = () => {
       <LoadingOverlay open={loading} message="Adding item record..."  />
       
       {/* Success Overlay */}
-      <SuccessfullOverlay open={successOpen} action={successAction} />
+      <SuccessfulOverlay open={successOpen} action={successAction} />
       <Box
         sx={{
           display: "flex",
@@ -229,59 +334,119 @@ const ItemTable = () => {
               {/* Position */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Position
+                  Position <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newItem.item_description}
                   onChange={(e) => handleChange("item_description", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.item_description}
+                  helperText={errors.item_description || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.item_description ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.item_description ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.item_description ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Employee Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Employee Number
+                  Employee Number <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newItem.employeeID}
                   onChange={(e) => handleChange("employeeID", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.employeeID}
+                  helperText={errors.employeeID || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.employeeID ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.employeeID ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.employeeID ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Name */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Name
+                  Name <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newItem.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.name}
+                  helperText={errors.name || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.name ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.name ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.name ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Item Code */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Item Code
+                  Item Code <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newItem.item_code}
                   onChange={(e) => handleChange("item_code", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.item_code}
+                  helperText={errors.item_code || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.item_code ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.item_code ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.item_code ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Salary Grade */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Salary Grade
+                  Salary Grade <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <FormControl fullWidth style={inputStyle}>
                   <Autocomplete
@@ -295,7 +460,24 @@ const ItemTable = () => {
                       handleChange("salary_grade", newInputValue)
                     }
                     renderInput={(params) => (
-                      <TextField {...params} />
+                      <TextField 
+                        {...params} 
+                        error={!!errors.salary_grade}
+                        helperText={errors.salary_grade || ''}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: errors.salary_grade ? 'red' : '#6D2323',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: errors.salary_grade ? 'red' : '#6D2323',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: errors.salary_grade ? 'red' : '#6D2323',
+                            },
+                          },
+                        }}
+                      />
                     )}
                   />
                 </FormControl>
@@ -304,7 +486,7 @@ const ItemTable = () => {
               {/* Step */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Step
+                  Step <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <FormControl fullWidth style={inputStyle}>
                   <Autocomplete
@@ -318,7 +500,24 @@ const ItemTable = () => {
                       handleChange("step", newInputValue)
                     }
                     renderInput={(params) => (
-                      <TextField {...params} />
+                      <TextField 
+                        {...params} 
+                        error={!!errors.step}
+                        helperText={errors.step || ''}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: errors.step ? 'red' : '#6D2323',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: errors.step ? 'red' : '#6D2323',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: errors.step ? 'red' : '#6D2323',
+                            },
+                          },
+                        }}
+                      />
                     )}
                   />
                 </FormControl>
@@ -327,13 +526,28 @@ const ItemTable = () => {
               {/* Effectivity Date */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Effectivity Date
+                  Effectivity Date <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newItem.effectivityDate}
                   onChange={(e) => handleChange("effectivityDate", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.effectivityDate}
+                  helperText={errors.effectivityDate || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.effectivityDate ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.effectivityDate ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.effectivityDate ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
@@ -569,6 +783,17 @@ const ItemTable = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
                           "& .MuiInputBase-input.Mui-disabled": {
                             WebkitTextFillColor: "#000000",
                             color: "#000000"
@@ -590,6 +815,17 @@ const ItemTable = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
                           "& .MuiInputBase-input.Mui-disabled": {
                             WebkitTextFillColor: "#000000",
                             color: "#000000"
@@ -611,6 +847,17 @@ const ItemTable = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
                           "& .MuiInputBase-input.Mui-disabled": {
                             WebkitTextFillColor: "#000000",
                             color: "#000000"
@@ -632,6 +879,17 @@ const ItemTable = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
                           "& .MuiInputBase-input.Mui-disabled": {
                             WebkitTextFillColor: "#000000",
                             color: "#000000"
@@ -657,7 +915,23 @@ const ItemTable = () => {
                             setEditItem({ ...editItem, salary_grade: newInputValue })
                           }
                           renderInput={(params) => (
-                            <TextField {...params} fullWidth />
+                            <TextField 
+                              {...params} 
+                              fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
+                            />
                           )}
                         />
                       ) : (
@@ -666,6 +940,17 @@ const ItemTable = () => {
                           fullWidth
                           disabled
                           sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: "#6D2323",
+                              },
+                              '&:hover fieldset': {
+                                borderColor: "#6D2323",
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: "#6D2323",
+                              },
+                            },
                             "& .MuiInputBase-input.Mui-disabled": {
                               WebkitTextFillColor: "#000000",
                               color: "#000000"
@@ -692,7 +977,23 @@ const ItemTable = () => {
                             setEditItem({ ...editItem, step: newInputValue })
                           }
                           renderInput={(params) => (
-                            <TextField {...params} fullWidth />
+                            <TextField 
+                              {...params} 
+                              fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
+                            />
                           )}
                         />
                       ) : (
@@ -701,6 +1002,17 @@ const ItemTable = () => {
                           fullWidth
                           disabled
                           sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: "#6D2323",
+                              },
+                              '&:hover fieldset': {
+                                borderColor: "#6D2323",
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: "#6D2323",
+                              },
+                            },
                             "& .MuiInputBase-input.Mui-disabled": {
                               WebkitTextFillColor: "#000000",
                               color: "#000000"
@@ -723,6 +1035,17 @@ const ItemTable = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
                           "& .MuiInputBase-input.Mui-disabled": {
                             WebkitTextFillColor: "#000000",
                             color: "#000000"
@@ -795,6 +1118,22 @@ const ItemTable = () => {
           </Box>
         </Modal>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

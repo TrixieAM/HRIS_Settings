@@ -11,7 +11,9 @@ import {
   Chip,
   Modal,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -50,42 +52,53 @@ const WorkExperience = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  const navigate = useNavigate();
-  // Page access control
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    const pageId = 10; // PAGE ID
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 10; // PAGE ID
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
 
   useEffect(() => {
     fetchWorkExperiences();
@@ -97,10 +110,37 @@ const WorkExperience = () => {
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
+      showSnackbar('Failed to fetch work experience records. Please try again.', 'error');
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['workDateFrom', 'workDateTo', 'workPositionTitle', 'workCompany', 'person_id'];
+    
+    requiredFields.forEach(field => {
+      if (!newWorkExperience[field] || newWorkExperience[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    // Validate date logic
+    if (newWorkExperience.workDateFrom && newWorkExperience.workDateTo) {
+      if (new Date(newWorkExperience.workDateFrom) > new Date(newWorkExperience.workDateTo)) {
+        newErrors.workDateTo = 'End date must be after start date';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/WorkExperienceRoute/work-experience-table`, newWorkExperience);
@@ -115,16 +155,18 @@ const WorkExperience = () => {
         isGovtService: '',
         person_id: '',
       });
-     setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+      setErrors({}); // Clear errors
+      setTimeout(() => {     
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchWorkExperiences();
     } catch (err) {
       console.error('Error adding data:', err);
       setLoading(false);
+      showSnackbar('Failed to add work experience record. Please try again.', 'error');
     }
   };
 
@@ -140,6 +182,7 @@ const WorkExperience = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
+      showSnackbar('Failed to update work experience record. Please try again.', 'error');
     }
   };
 
@@ -155,6 +198,7 @@ const WorkExperience = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
+      showSnackbar('Failed to delete work experience record. Please try again.', 'error');
     }
   };
 
@@ -163,6 +207,14 @@ const WorkExperience = () => {
       setEditWorkExperience({ ...editWorkExperience, [field]: value });
     } else {
       setNewWorkExperience({ ...newWorkExperience, [field]: value });
+      // Clear error for this field when user starts typing
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -194,31 +246,31 @@ const WorkExperience = () => {
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access Work Experience Information. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
   return (
     <Container sx={{ mt: 0, }}>
@@ -279,7 +331,7 @@ const WorkExperience = () => {
               {/* Date From */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Date From
+                  Date From <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newWorkExperience.workDateFrom}
@@ -288,13 +340,28 @@ const WorkExperience = () => {
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.workDateFrom}
+                  helperText={errors.workDateFrom || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.workDateFrom ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.workDateFrom ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.workDateFrom ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Date To */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Date To
+                  Date To  <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newWorkExperience.workDateTo}
@@ -303,32 +370,77 @@ const WorkExperience = () => {
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.workDateTo}
+                  helperText={errors.workDateTo || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.workDateTo ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.workDateTo ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.workDateTo ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Position Title */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Position Title
+                  Position Title <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newWorkExperience.workPositionTitle}
                   onChange={(e) => handleChange("workPositionTitle", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.workPositionTitle}
+                  helperText={errors.workPositionTitle || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.workPositionTitle ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.workPositionTitle ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.workPositionTitle ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Company */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Company
+                  Company <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newWorkExperience.workCompany}
                   onChange={(e) => handleChange("workCompany", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.workCompany}
+                  helperText={errors.workCompany || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.workCompany ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.workCompany ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.workCompany ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -342,6 +454,19 @@ const WorkExperience = () => {
                   onChange={(e) => handleChange("workMonthlySalary", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -355,6 +480,19 @@ const WorkExperience = () => {
                   onChange={(e) => handleChange("SalaryJobOrPayGrade", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -368,19 +506,47 @@ const WorkExperience = () => {
                   onChange={(e) => handleChange("StatusOfAppointment", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Employee Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Employee Number
+                  Employee Number <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newWorkExperience.person_id}
                   onChange={(e) => handleChange("person_id", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.person_id}
+                  helperText={errors.person_id || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
@@ -630,11 +796,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -653,11 +830,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -674,11 +862,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -695,11 +894,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -716,11 +926,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -737,11 +958,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -758,11 +990,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -779,11 +1022,22 @@ const WorkExperience = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -807,7 +1061,6 @@ const WorkExperience = () => {
                           sx={{
                             color: "#ffffff",
                             backgroundColor: 'black'
-                            
                           }}
                         >
                           Delete
@@ -852,6 +1105,22 @@ const WorkExperience = () => {
           </Box>
         </Modal>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

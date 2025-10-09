@@ -1,12 +1,20 @@
 import API_BASE_URL from "../../apiConfig";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import {
   Avatar, Typography, Box, CircularProgress, Paper,
-  Grid, Container, Fade, Button, Alert,
-  Modal, TextField
+  Grid, Container, Button,
+  Modal, TextField, Chip, IconButton,
+  Card, CardContent, Tooltip,
+  useTheme, alpha, Backdrop,
+  Tabs, Tab,
+  useMediaQuery,
+  Fab,
+  Snackbar, SnackbarContent, useScrollTrigger,
+  Menu, MenuItem, ListItemIcon,
+  ListItemText,
+  ToggleButton, ToggleButtonGroup
 } from '@mui/material';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { styled } from '@mui/material/styles';
 import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
@@ -14,77 +22,527 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import HomeIcon from '@mui/icons-material/Home';
 import CallIcon from '@mui/icons-material/Call';
 import GroupIcon from '@mui/icons-material/Group';
-import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import SchoolIcon from "@mui/icons-material/School";
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import CakeIcon from '@mui/icons-material/Cake';
+import WorkIcon from '@mui/icons-material/Work';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import DownloadIcon from '@mui/icons-material/Download';
+import ShareIcon from '@mui/icons-material/Share';
+import SettingsIcon from '@mui/icons-material/Settings';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PhotoSizeSelectActualIcon from '@mui/icons-material/PhotoSizeSelectActual';
+import CropOriginalIcon from '@mui/icons-material/CropOriginal';
+import GridViewIcon from '@mui/icons-material/GridView';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import { ExitToApp } from "@mui/icons-material";
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(6),
-  maxWidth: '1300px',
-  width: '90%',
-  borderRadius: 16,
-  marginLeft: 20,
-  backgroundColor: '#ffffff',
-  boxShadow: '0 8px 32px rgba(109, 35, 35, 0.15)',
-  transition: 'transform 0.3s ease-in-out',
+// HR Professional Color Palette
+const colors = {
+  primary: '#6d2323',
+  primaryLight: '#8a2e2e',
+  primaryDark: '#4a1818',
+  secondary: '#f5f5dc',
+  textPrimary: '#000000',
+  textSecondary: '#555555',
+  textLight: '#ffffff',
+  background: '#fafafa',
+  surface: '#ffffff',
+  border: '#e0e0e0',
+  success: '#4caf50',
+  warning: '#ff9800',
+  error: '#f44336',
+  info: '#2196f3',
+  gradientPrimary: 'linear-gradient(135deg, #6d2323 0%, #8a2e2e 100%)',
+};
+
+const shadows = {
+  light: '0 2px 8px rgba(0,0,0,0.08)',
+  medium: '0 4px 16px rgba(0,0,0,0.12)',
+  heavy: '0 8px 24px rgba(0,0,0,0.16)',
+  colored: '0 4px 16px rgba(109, 35, 35, 0.2)'
+};
+
+const ProfileContainer = styled(Container)(({ theme }) => ({
+  maxWidth: '1400px',
+  paddingTop: theme.spacing(4),
+  paddingBottom: theme.spacing(8),
+  minHeight: '100vh',
+  backgroundColor: colors.background,
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '300px',
+    background: colors.gradientPrimary,
+    zIndex: 0,
+    borderBottomLeftRadius: '50% 20%',
+    borderBottomRightRadius: '50% 20%',
+  }
 }));
 
-const SectionTitle = styled(Box)(({ theme }) => ({
-  backgroundColor: '#6d2323',
-  color: '#fef9e1',
-  padding: theme.spacing(2, 3),
-  borderRadius: 12,
-  marginTop: theme.spacing(4),
-  marginBottom: theme.spacing(3),
-  boxShadow: '0 4px 12px rgba(109, 35, 35, 0.1)',
-  transition: 'transform 0.2s ease-in-out',
-  '&:hover': {
-    transform: 'scale(1.02)',
+const ProfileHeader = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(5),
+  marginBottom: theme.spacing(4),
+  borderRadius: theme.spacing(3),
+  boxShadow: shadows.medium,
+  display: 'flex',
+  alignItems: 'center',
+  position: 'relative',
+  overflow: 'hidden',
+  background: colors.surface,
+  zIndex: 1,
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    textAlign: 'center',
+    padding: theme.spacing(4)
   },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '8px',
+    background: colors.gradientPrimary
+  }
+}));
+
+const ProfileAvatarContainer = styled(Box)(({ theme }) => ({
+  marginRight: theme.spacing(4),
+  position: 'relative',
+  [theme.breakpoints.down('md')]: {
+    marginRight: 0,
+    marginBottom: theme.spacing(3)
+  }
 }));
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
-  width: 150,
-  height: 150,
-  margin: '0 auto',
-  border: `4px solid #ffffff`,
-  boxShadow: '0 4px 20px rgba(109, 35, 35, 0.2)',
-  transition: 'transform 0.3s ease-in-out',
+  width: theme.spacing(24),
+  height: theme.spacing(24),
+  border: `4px solid ${colors.surface}`,
+  boxShadow: shadows.medium,
+  cursor: 'pointer',
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   '&:hover': {
     transform: 'scale(1.05)',
-  },
+    boxShadow: shadows.colored
+  }
 }));
 
-const InfoCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderRadius: 12,
-  backgroundColor: '#ffffff',
-  boxShadow: '0 2px 8px rgba(109, 35, 35, 0.08)',
-  transition: 'all 0.2s ease-in-out',
+const ProfileInfo = styled(Box)(({ theme }) => ({
+  flex: 1
+}));
+
+const ProfileName = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  fontSize: '2rem',
+  color: colors.textPrimary,
+  marginBottom: theme.spacing(0.5),
+  transition: 'color 0.3s ease',
   '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 12px rgba(109, 35, 35, 0.12)',
-  },
+    color: colors.primary
+  }
 }));
 
-const ProfileHeader = styled(Box)(({ theme }) => ({
-  textAlign: 'center',
-  marginBottom: theme.spacing(6),
-  position: 'relative',
+const ProfileSubtitle = styled(Typography)(({ theme }) => ({
+  color: colors.textSecondary,
+  marginBottom: theme.spacing(2),
+  fontSize: '1.1rem'
+}));
+
+const ProfileActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: theme.spacing(1.5),
+  [theme.breakpoints.down('md')]: {
+    justifyContent: 'center',
+    marginTop: theme.spacing(2),
+    flexWrap: 'wrap'
+  }
+}));
+
+const SectionPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
-  borderRadius: 24,
-  background: 'linear-gradient(135deg, #6d2323 0%, #fef9e1 50%, #6d2323 100%)',
-  boxShadow: '0 4px 20px rgba(109, 35, 35, 0.15)',
+  marginBottom: theme.spacing(4),
+  borderRadius: theme.spacing(3),
+  boxShadow: shadows.light,
+  transition: 'box-shadow 0.3s ease, transform 0.3s ease',
+  position: 'relative',
+  overflow: 'hidden',
+  '&:hover': {
+    boxShadow: shadows.medium,
+    transform: 'translateY(-4px)'
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '6px',
+    height: '100%',
+    background: colors.gradientPrimary,
+    opacity: 0,
+    transition: 'opacity 0.3s ease'
+  },
+  '&:hover::before': {
+    opacity: 1
+  }
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  fontSize: '1.5rem',
+  color: colors.textPrimary,
+  marginBottom: theme.spacing(3),
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1.5),
+  position: 'relative',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: -theme.spacing(1),
+    left: 0,
+    width: '60px',
+    height: '3px',
+    background: colors.gradientPrimary,
+    borderRadius: theme.spacing(1)
+  }
+}));
+
+const InfoItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  marginBottom: theme.spacing(2.5),
+  alignItems: 'flex-start',
+  padding: theme.spacing(1.5),
+  borderRadius: theme.spacing(2),
+  transition: 'background-color 0.2s ease',
+  '&:hover': {
+    backgroundColor: alpha(colors.primary, 0.05)
+  }
+}));
+
+const InfoLabel = styled(Typography)(({ theme }) => ({
+  fontWeight: 600,
+  color: colors.textSecondary,
+  minWidth: '160px',
+  marginRight: theme.spacing(2),
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1)
+}));
+
+const InfoValue = styled(Typography)(({ theme }) => ({
+  color: colors.textPrimary,
+  flex: 1,
+  fontWeight: 500,
+  fontSize: '1rem'
+}));
+
+const TabContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  position: 'relative'
+}));
+
+const CustomTab = styled(Tab)(({ theme }) => ({
+  textTransform: 'none',
+  fontWeight: 600,
+  fontSize: '1rem',
+  minWidth: 'auto',
+  padding: theme.spacing(1.5, 2),
+  borderRadius: theme.spacing(2),
+  transition: 'all 0.3s ease',
+  '&.Mui-selected': {
+    color: colors.textLight,
+    backgroundColor: colors.primary
+  },
+  '&:not(.Mui-selected)': {
+    color: colors.textSecondary,
+    '&:hover': {
+      backgroundColor: alpha(colors.primary, 0.1),
+      color: colors.primary
+    }
+  }
+}));
+
+const CustomTabs = styled(Tabs)(({ theme }) => ({
+  backgroundColor: alpha(colors.secondary, 0.7),
+  borderRadius: theme.spacing(3),
+  padding: theme.spacing(0.5),
+  '& .MuiTabs-indicator': {
+    display: 'none'
+  },
+  marginBottom: theme.spacing(4)
+}));
+
+const ActionButton = styled(Button)(({ theme, variant = 'contained' }) => ({
+  borderRadius: theme.spacing(2),
+  textTransform: 'none',
+  fontWeight: 600,
+  padding: theme.spacing(1.2, 2.5),
+  transition: 'all 0.3s ease',
+  boxShadow: shadows.light,
+  ...(variant === 'contained' && {
+    background: colors.gradientPrimary,
+    color: colors.textLight,
+    '&:hover': {
+      background: colors.primaryDark,
+      transform: 'translateY(-2px)',
+      boxShadow: shadows.medium
+    }
+  }),
+  ...(variant === 'outlined' && {
+    color: colors.primary,
+    borderColor: colors.primary,
+    borderWidth: '2px',
+    '&:hover': {
+      backgroundColor: alpha(colors.primary, 0.1),
+      borderColor: colors.primaryDark,
+      transform: 'translateY(-2px)'
+    }
+  })
+}));
+
+const ModalContainer = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90%',
+  maxWidth: '900px',
+  backgroundColor: colors.surface,
+  borderRadius: theme.spacing(3),
+  boxShadow: shadows.heavy,
+  padding: 0,
+  maxHeight: '90vh',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column'
+}));
+
+const ModalHeader = styled(Box)(({ theme }) => ({
+  background: colors.gradientPrimary,
+  padding: theme.spacing(3, 4),
+  color: colors.textLight,
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center'
+}));
+
+const ModalTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  fontSize: '1.5rem'
+}));
+
+const ModalBody = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(4),
+  overflowY: 'auto',
+  flex: 1
+}));
+
+const FormField = styled(TextField)(({ theme }) => ({
+  marginBottom: theme.spacing(2.5),
+  '& .MuiOutlinedInput-root': {
+    borderRadius: theme.spacing(2),
+    transition: 'all 0.3s ease',
+    '& fieldset': {
+      borderColor: colors.border,
+    },
+    '&:hover fieldset': {
+      borderColor: colors.primaryLight,
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: colors.primary,
+      borderWidth: '2px'
+    },
+  },
+  '& .MuiInputLabel-root': {
+    fontWeight: 500,
+    '&.Mui-focused': {
+      color: colors.primary
+    }
+  }
+}));
+
+const ViewToggleButton = styled(ToggleButton)(({ theme }) => ({
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(1, 2),
+  textTransform: 'none',
+  fontWeight: 500,
+  '&.Mui-selected': {
+    backgroundColor: colors.primary,
+    color: colors.textLight,
+    '&:hover': {
+      backgroundColor: colors.primaryDark
+    }
+  }
+}));
+
+const ImagePreviewModal = styled(Modal)(({ theme }) => ({
+  '& .MuiModal-backdrop': {
+    backgroundColor: 'rgba(0, 0, 0, 0.9)'
+  }
+}));
+
+const ImagePreviewContainer = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  maxWidth: '90vw',
+  maxHeight: '90vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  outline: 'none'
+}));
+
+const ImagePreviewContent = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  maxWidth: '100%',
+  maxHeight: '80vh'
+}));
+
+const PreviewImage = styled('img')(({ theme }) => ({
+  maxWidth: '100%',
+  maxHeight: '80vh',
+  borderRadius: theme.spacing(2),
+  boxShadow: shadows.heavy,
+  objectFit: 'contain'
+}));
+
+const ImagePreviewActions = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(2),
+  right: theme.spacing(2),
+  display: 'flex',
+  gap: theme.spacing(1),
+  backgroundColor: alpha(colors.surface, 0.9),
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(0.5)
+}));
+
+const ImagePreviewButton = styled(IconButton)(({ theme }) => ({
+  backgroundColor: colors.surface,
+  color: colors.textPrimary,
+  '&:hover': {
+    backgroundColor: colors.primary,
+    color: colors.textLight
+  }
+}));
+
+const EditModalPictureSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(3),
+  padding: theme.spacing(3),
+  backgroundColor: alpha(colors.secondary, 0.3),
+  borderRadius: theme.spacing(2),
+  marginBottom: theme.spacing(3),
+  position: 'relative',
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+    textAlign: 'center'
+  }
+}));
+
+const EditModalAvatar = styled(Avatar)(({ theme }) => ({
+  width: theme.spacing(20),
+  height: theme.spacing(20),
+  border: `3px solid ${colors.surface}`,
+  boxShadow: shadows.medium,
+  cursor: 'pointer',
+  transition: 'transform 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)'
+  }
+}));
+
+const EditModalPictureInfo = styled(Box)(({ theme }) => ({
+  flex: 1
+}));
+
+const EditModalPictureActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1)
+}));
+
+const ContentContainer = styled(Box)(({ theme }) => ({
+  width: '100%',
+  position: 'relative',
+  minHeight: '600px'
+}));
+
+const ViewWrapper = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  opacity: 0,
+  visibility: 'hidden',
+  transition: 'opacity 0.3s ease, visibility 0.3s ease',
+  '&.active': {
+    opacity: 1,
+    visibility: 'visible'
+  }
+}));
+
+const Notification = styled(SnackbarContent)(({ theme, variant }) => ({
+  backgroundColor: variant === 'success' ? colors.success : 
+                  variant === 'error' ? colors.error : 
+                  variant === 'warning' ? colors.warning : colors.info,
+  color: colors.textLight,
+  fontWeight: 500,
+  borderRadius: theme.spacing(2),
+  boxShadow: shadows.medium
+}));
+
+const FloatingButton = styled(Fab)(({ theme }) => ({
+  position: 'fixed',
+  bottom: theme.spacing(4),
+  right: theme.spacing(4),
+  background: colors.gradientPrimary,
+  color: colors.textLight,
+  boxShadow: shadows.medium,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.1)',
+    boxShadow: shadows.colored
+  }
 }));
 
 const Profile = () => {
-  const [user, setUser] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [person, setPerson] = useState(null);
   const [profilePicture, setProfilePicture] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadStatus, setUploadStatus] = useState({ message: '', type: '' });
   const [editOpen, setEditOpen] = useState(false);
   const [formData, setFormData] = useState({});
+  const [tabValue, setTabValue] = useState(0);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [imageZoomOpen, setImageZoomOpen] = useState(false);
+  const [editImageZoomOpen, setEditImageZoomOpen] = useState(false);
+  const [moreMenuAnchorEl, setMoreMenuAnchorEl] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
   const employeeNumber = localStorage.getItem('employeeNumber');
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const fetchPersonData = async () => {
@@ -92,10 +550,9 @@ const Profile = () => {
         const response = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const match = response.data.find(p => p.agencyEmployeeNum === employeeNumber);
         setPerson(match);
-        
+
         if (match) {
           setProfilePicture(match.profile_picture);
-          // Initialize form data
           const formattedData = { ...match };
           if (match.birthDate) {
             const date = new Date(match.birthDate);
@@ -107,6 +564,8 @@ const Profile = () => {
         }
       } catch (err) {
         console.error('Error loading profile:', err);
+        setUploadStatus({ message: 'Failed to load profile data', type: 'error' });
+        setNotificationOpen(true);
       } finally {
         setLoading(false);
       }
@@ -115,7 +574,10 @@ const Profile = () => {
     fetchPersonData();
   }, [employeeNumber]);
 
-  const handleEditOpen = () => setEditOpen(true);
+  const handleEditOpen = () => {
+    setEditOpen(true);
+  };
+  
   const handleEditClose = () => setEditOpen(false);
 
   const handleFormChange = (e) => {
@@ -129,11 +591,11 @@ const Profile = () => {
       setPerson(formData);
       setEditOpen(false);
       setUploadStatus({ message: 'Profile updated successfully!', type: 'success' });
-      setTimeout(() => setUploadStatus({ message: '', type: '' }), 3000);
+      setNotificationOpen(true);
     } catch (err) {
       console.error("Update failed:", err);
       setUploadStatus({ message: 'Failed to update profile', type: 'error' });
-      setTimeout(() => setUploadStatus({ message: '', type: '' }), 3000);
+      setNotificationOpen(true);
     }
   };
 
@@ -144,24 +606,27 @@ const Profile = () => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       setUploadStatus({ message: 'Please upload a valid image file (JPEG, PNG, GIF)', type: 'error' });
+      setNotificationOpen(true);
       return;
     }
 
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setUploadStatus({ message: 'File size must be less than 5MB', type: 'error' });
+      setNotificationOpen(true);
       return;
     }
 
-    const formData = new FormData();
-    formData.append('profile', file);
+    const fd = new FormData();
+    fd.append('profile', file);
 
     try {
       setUploadStatus({ message: 'Uploading...', type: 'info' });
+      setNotificationOpen(true);
 
       const res = await axios.post(
         `${API_BASE_URL}/upload-profile-picture/${employeeNumber}`,
-        formData,
+        fd,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
           timeout: 30000
@@ -176,632 +641,588 @@ const Profile = () => {
       }
 
       setUploadStatus({ message: 'Profile picture updated successfully!', type: 'success' });
-      setTimeout(() => setUploadStatus({ message: '', type: '' }), 3000);
+      setNotificationOpen(true);
 
     } catch (err) {
       console.error('Image upload failed:', err);
       const errorMessage = err.response?.data?.message || 'Failed to upload image. Please try again.';
       setUploadStatus({ message: errorMessage, type: 'error' });
-      setTimeout(() => setUploadStatus({ message: '', type: '' }), 5000);
+      setNotificationOpen(true);
     }
   };
 
-  const handleRemovePicture = async () => {
+  const handleRemovePicture = () => {
     if (!person?.id) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/personalinfo/remove-profile-picture/${person.id}`);
+      axios.delete(`${API_BASE_URL}/personalinfo/remove-profile-picture/${person.id}`);
       setProfilePicture(null);
       setPerson(prev => ({ ...prev, profile_picture: null }));
       setUploadStatus({ message: 'Profile picture removed successfully!', type: 'success' });
-      setTimeout(() => setUploadStatus({ message: '', type: '' }), 3000);
+      setNotificationOpen(true);
     } catch (err) {
       console.error('Remove picture failed:', err);
       setUploadStatus({ message: 'Failed to remove picture.', type: 'error' });
-      setTimeout(() => setUploadStatus({ message: '', type: '' }), 3000);
+      setNotificationOpen(true);
     }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const handleImageZoom = () => {
+    setImageZoomOpen(true);
+  };
+
+  const handleImageZoomClose = () => {
+    setImageZoomOpen(false);
+  };
+
+  const handleEditImageZoom = () => {
+    setEditImageZoomOpen(true);
+  };
+
+  const handleEditImageZoomClose = () => {
+    setEditImageZoomOpen(false);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationOpen(false);
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    window.location.reload();
+  };
+
+
+  const handleMoreMenuOpen = (event) => {
+    setMoreMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleViewModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setViewMode(newMode);
+    }
+  };
+
+  const trigger = useScrollTrigger({
+    threshold: 100,
+    disableHysteresis: true,
+  });
+
+  const scrollToTop = () => {
+    profileRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const tabs = [
+    { key: 0, label: 'Personal', icon: <PersonIcon /> },
+    { key: 1, label: 'Gov. IDs', icon: <BadgeIcon /> },
+    { key: 2, label: 'Addresses', icon: <HomeIcon /> },
+    { key: 3, label: 'Contact', icon: <CallIcon /> },
+    { key: 4, label: 'Family', icon: <GroupIcon /> },
+    { key: 5, label: 'Education', icon: <SchoolIcon /> },
+  ];
+
+  const formFields = {
+    0: [
+      { label: "First Name", name: "firstName", icon: <PersonIcon fontSize="small" /> },
+      { label: "Middle Name", name: "middleName", icon: <PersonIcon fontSize="small" /> },
+      { label: "Last Name", name: "lastName", icon: <PersonIcon fontSize="small" /> },
+      { label: "Name Extension", name: "nameExtension", icon: <PersonIcon fontSize="small" /> },
+      { label: "Date of Birth", name: "birthDate", type: "date", icon: <CakeIcon fontSize="small" /> },
+      { label: "Place of Birth", name: "placeOfBirth", icon: <LocationOnIcon fontSize="small" /> }
+    ],
+    1: [
+      { label: "GSIS Number", name: "gsisNum", disabled: true, icon: <BadgeIcon fontSize="small" /> },
+      { label: "Pag-IBIG Number", name: "pagibigNum", disabled: true, icon: <BadgeIcon fontSize="small" /> },
+      { label: "PhilHealth Number", name: "philhealthNum", disabled: true, icon: <BadgeIcon fontSize="small" /> },
+      { label: "SSS Number", name: "sssNum", disabled: true, icon: <BadgeIcon fontSize="small" /> },
+      { label: "TIN Number", name: "tinNum", disabled: true, icon: <BadgeIcon fontSize="small" /> },
+      { label: "Agency Employee Number", name: "agencyEmployeeNum", disabled: true, icon: <BadgeIcon fontSize="small" /> }
+    ],
+    2: [
+      { label: "House & Lot Number", name: "permanent_houseBlockLotNum", icon: <HomeIcon fontSize="small" /> },
+      { label: "Street", name: "permanent_streetName", icon: <HomeIcon fontSize="small" /> },
+      { label: "Subdivision", name: "permanent_subdivisionOrVillage", icon: <HomeIcon fontSize="small" /> },
+      { label: "Barangay", name: "permanent_barangay", icon: <HomeIcon fontSize="small" /> },
+      { label: "City/Municipality", name: "permanent_cityOrMunicipality", icon: <HomeIcon fontSize="small" /> },
+      { label: "Province", name: "permanent_provinceName", icon: <HomeIcon fontSize="small" /> },
+      { label: "Zip Code", name: "permanent_zipcode", icon: <HomeIcon fontSize="small" /> }
+    ],
+    3: [
+      { label: "Telephone", name: "telephone", icon: <CallIcon fontSize="small" /> },
+      { label: "Mobile", name: "mobileNum", icon: <PhoneIcon fontSize="small" /> },
+      { label: "Email", name: "emailAddress", icon: <EmailIcon fontSize="small" /> }
+    ],
+    4: [
+      { label: "Spouse First Name", name: "spouseFirstName", icon: <GroupIcon fontSize="small" /> },
+      { label: "Spouse Middle Name", name: "spouseMiddleName", icon: <GroupIcon fontSize="small" /> },
+      { label: "Spouse Last Name", name: "spouseLastName", icon: <GroupIcon fontSize="small" /> },
+      { label: "Spouse Occupation", name: "spouseOccupation", icon: <WorkIcon fontSize="small" /> }
+    ],
+    5: [
+      { label: "Elementary School", name: "elementaryNameOfSchool", icon: <SchoolIcon fontSize="small" /> },
+      { label: "Elementary Degree", name: "elementaryDegree", icon: <SchoolIcon fontSize="small" /> },
+      { label: "Secondary School", name: "secondaryNameOfSchool", icon: <SchoolIcon fontSize="small" /> },
+      { label: "Secondary Degree", name: "secondaryDegree", icon: <SchoolIcon fontSize="small" /> }
+    ]
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress size={60} thickness={4} />
-      </Box>
+      <ProfileContainer ref={profileRef}>
+        <Box display="flex" justifyContent="center" alignItems="center" height="70vh">
+          <Box textAlign="center">
+            <CircularProgress size={64} thickness={4} sx={{ color: colors.primary, mb: 3 }} />
+            <Typography variant="h6" color={colors.textPrimary} fontWeight={600}>Loading Profile...</Typography>
+            <Typography variant="body2" color={colors.textSecondary} mt={1}>Fetching data securely — this may take a moment.</Typography>
+          </Box>
+        </Box>
+      </ProfileContainer>
     );
   }
 
-  const renderField = (label, value) => (
-    <Grid item xs={12} sm={6} md={4}>
-      <InfoCard>
-        <Typography variant="subtitle2" sx={{ color: '#6d2323', fontWeight: 600 }} gutterBottom>
-          {label}
-        </Typography>
-        <Typography variant="body1" sx={{ wordBreak: 'break-word', color: '#333' }}>
-          {value || '...'}
-        </Typography>
-      </InfoCard>
-    </Grid>
-  );
-
-  return (
-    <Container sx={{ py: -1, mb: 5 }}>
-      <Fade in={true} timeout={1000}>
-        <StyledPaper>
-          {/* Profile Header */}
-          <ProfileHeader sx={{ mb: -8}}>
-            <Box position="relative" display="inline-block">
-              <ProfileAvatar
-                src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
-                alt="Profile Picture"
-                sx={{ border: "4px solid #6d2323", boxShadow: "0 4px 8px rgba(0,0,0,0.2)", backgroundColor: 'white' }}
-              >
-                {!profilePicture && <PersonIcon sx={{ fontSize: 100, color: "#6d2323", backgroundColor: 'white'}} />}
-              </ProfileAvatar>
-            </Box>
-
-            {person ? (
-              <>
-                <Typography variant="h4" sx={{ mt: 3, fontWeight: 700, color: "#6d2323", textShadow: "0 2px 4px rgba(109, 35, 35, 0.2)" }}>
-                  {person.firstName} {person.middleName} {person.lastName} {person.nameExtension}
-                </Typography>
-                <Typography variant="subtitle1" sx={{ color: "#000", mt: 1, letterSpacing: 1 }}>
-                  Employee No.: <b>{person.agencyEmployeeNum}</b>
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Button variant="contained" onClick={handleEditOpen} sx={{ bgcolor: "#6d2323", "&:hover": { bgcolor: "#a44a4aff" } }}>
-                    Edit Information
-                  </Button>
-                </Box>
-              </>
-            ) : (
-              <Typography variant="h6" sx={{ mt: 3, color: "#666" }}>
-                No profile data found
-              </Typography>
-            )}
-          </ProfileHeader>
-
-          {/* Status Messages */}
-          {uploadStatus.message && (
-            <Alert severity={uploadStatus.type} onClose={() => setUploadStatus({ message: '', type: '' })} sx={{ mb: 3, borderRadius: 3, fontWeight: 500 }}>
-              {uploadStatus.message}
-            </Alert>
-          )}
-
-          {!person ? (
-            <Box textAlign="center" py={6}>
-              <Typography variant="h4" color="text.secondary">No employee data found!</Typography>
-              <Typography variant="subtitle1" color="text.secondary" mt={1}>
-                Contact administrator to set up your profile.
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ mt: 6 }}>
-              {/* Personal Information */}
-              <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1, mt:10 }}>
-                <PersonIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Personal Information</Typography>
-              </SectionTitle>
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                {renderField("First Name", person.firstName)}
-                {renderField("Middle Name", person.middleName)}
-                {renderField("Last Name", person.lastName)}
-                {renderField("Name Extension", person.nameExtension)}
-                {renderField("Date of Birth", person.birthDate)}
-                {renderField("Place of Birth", person.placeOfBirth)}
-                {renderField("Sex", person.sex)}
-                {renderField("Civil Status", person.civilStatus)}
-                {renderField("Citizenship", person.citizenship)}
-                {renderField("Height (cm)", person.heightCm)}
-                {renderField("Weight (kg)", person.weightKg)}
-                {renderField("Blood Type", person.bloodType)}
-              </Grid>
-
-              {/* Government IDs */}
-              <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <BadgeIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Government Identification</Typography>
-              </SectionTitle>
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                {renderField("GSIS Number", person.gsisNum)}
-                {renderField("Pag-IBIG Number", person.pagibigNum)}
-                {renderField("PhilHealth Number", person.philhealthNum)}
-                {renderField("SSS Number", person.sssNum)}
-                {renderField("TIN Number", person.tinNum)}
-                {renderField("Agency Employee Number", person.agencyEmployeeNum)}
-              </Grid>
-
-              {/* Addresses Side by Side */}
-              <Grid container spacing={4} sx={{ mb: 4 }}>
-                <Grid item xs={12} lg={6}>
-                  <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <HomeIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Permanent Address</Typography>
-                  </SectionTitle>
-                  <Grid container spacing={2}>
-                    {renderField("House & Lot Number", person.permanent_houseBlockLotNum)}
-                    {renderField("Street", person.permanent_streetName)}
-                    {renderField("Subdivision", person.permanent_subdivisionOrVillage)}
-                    {renderField("Barangay", person.permanent_barangay)}
-                    {renderField("City/Municipality", person.permanent_cityOrMunicipality)}
-                    {renderField("Province", person.permanent_provinceName)}
-                    {renderField("Zip Code", person.permanent_zipcode)}
-                  </Grid>
-                </Grid>
-
-                <Grid item xs={12} lg={6}>
-                  <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <HomeIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Residential Address</Typography>
-                  </SectionTitle>
-                  <Grid container spacing={2}>
-                    {renderField("House & Lot Number", person.residential_houseBlockLotNum)}
-                    {renderField("Street", person.residential_streetName)}
-                    {renderField("Subdivision", person.residential_subdivisionOrVillage)}
-                    {renderField("Barangay", person.residential_barangayName)}
-                    {renderField("City/Municipality", person.residential_cityOrMunicipality)}
-                    {renderField("Province", person.residential_provinceName)}
-                    {renderField("Zip Code", person.residential_zipcode)}
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              {/* Contact Information */}
-              <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CallIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Contact Information</Typography>
-              </SectionTitle>
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                {renderField("Telephone", person.telephone)}
-                {renderField("Mobile", person.mobileNum)}
-                {renderField("Email", person.emailAddress)}
-              </Grid>
-
-              {/* Family Information Side by Side */}
-              <Grid container spacing={4} sx={{ mb: 4 }}>
-                <Grid item xs={12} lg={6}>
-                  <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <GroupIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Spouse Information</Typography>
-                  </SectionTitle>
-                  <Grid container spacing={2}>
-                    {renderField("Spouse Name", `${person.spouseFirstName || ''} ${person.spouseMiddleName || ''} ${person.spouseLastName || ''} ${person.spouseNameExtension || ''}`.trim() || null)}
-                    {renderField("Occupation", person.spouseOccupation)}
-                    {renderField("Employer/Business Name", person.spouseEmployerBusinessName)}
-                    {renderField("Business Address", person.spouseBusinessAddress)}
-                    {renderField("Telephone", person.spouseTelephone)}
-                  </Grid>
-                </Grid>
-
-                <Grid item xs={12} lg={6}>
-                  <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <FamilyRestroomIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Parents Information</Typography>
-                  </SectionTitle>
-                  <Grid container spacing={2}>
-                    {renderField("Father's Name", `${person.fatherFirstName || ''} ${person.fatherMiddleName || ''} ${person.fatherLastName || ''} ${person.fatherNameExtension || ''}`.trim())}
-                    {renderField("Mother's Name", `${person.motherMaidenFirstName || ''} ${person.motherMaidenMiddleName || ''} ${person.motherMaidenLastName || ''}`.trim())}
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              {/* Education Side by Side */}
-              <Grid container spacing={4}>
-                <Grid item xs={12} lg={6}>
-                  <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <SchoolIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Elementary Education</Typography>
-                  </SectionTitle>
-                  <Grid container spacing={2}>
-                    {renderField("School", person.elementaryNameOfSchool)}
-                    {renderField("Degree", person.elementaryDegree)}
-                    {renderField("Period", `${person.elementaryPeriodFrom || ''} - ${person.elementaryPeriodTo || ''}`)}
-                    {renderField("Highest Attained", person.elementaryHighestAttained)}
-                    {renderField("Year Graduated", person.elementaryYearGraduated)}
-                    {renderField("Honors", person.elementaryScholarshipAcademicHonorsReceived)}
-                  </Grid>
-                </Grid>
-
-                <Grid item xs={12} lg={6}>
-                  <SectionTitle sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <SchoolIcon sx={{ mr: 1, color: "#ffffff", fontSize: 22 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#ffffff' }}>Secondary Education</Typography>
-                  </SectionTitle>
-                  <Grid container spacing={2}>
-                    {renderField("School", person.secondaryNameOfSchool)}
-                    {renderField("Degree", person.secondaryDegree)}
-                    {renderField("Period", `${person.secondaryPeriodFrom || ''} - ${person.secondaryPeriodTo || ''}`)}
-                    {renderField("Highest Attained", person.secondaryHighestAttained)}
-                    {renderField("Year Graduated", person.secondaryYearGraduated)}
-                    {renderField("Honors", person.secondaryScholarshipAcademicHonorsReceived)}
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Box>
-          )}
-
-          {/* Edit Modal - Simplified */}
-          <Modal open={editOpen} onClose={handleEditClose}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "95%",
-                maxWidth: 1000,
-                bgcolor: "#fff8f5",
-                borderRadius: 4,
-                boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
-                p: 4,
-                maxHeight: "90vh",
-                overflowY: "auto",
-                borderTop: "6px solid #6d2323",
+  const renderTabContentGrid = (tabIndex) => {
+    const fields = formFields[tabIndex] || [];
+    
+    return (
+      <Grid container spacing={3}>
+        {fields.map((field, idx) => (
+          <Grid item xs={12} sm={6} md={4} key={idx}>
+            <Card 
+              sx={{ 
+                height: '100%', 
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: shadows.medium
+                }
               }}
             >
-              <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} pb={2} borderBottom="1px solid #e0dcdc">
-                <Typography variant="h5" fontWeight={700} sx={{ color: "#6d2323" }}>
-                  Edit Employee Information
+              <CardContent sx={{ flex: 1 }}>
+                <Box display="flex" alignItems="center" mb={1}>
+                  {field.icon}
+                  <Typography variant="subtitle2" color={colors.textSecondary} ml={1}>
+                    {field.label}
+                  </Typography>
+                </Box>
+                <Typography variant="body1" fontWeight={500}>
+                  {person?.[field.name] || '—'}
                 </Typography>
-                <Button onClick={handleEditClose} sx={{ color: "#6d2323" }}>
-                  <CloseIcon />
-                </Button>
-              </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
 
-              {/* Profile Picture */}
-              <Box textAlign="center" mb={4}>
-                <ProfileAvatar
-                  src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
-                  sx={{ width: 120, height: 120, border: "3px solid #6d2323", mb: 2 }}
+  const renderTabContentList = (tabIndex) => {
+    const fields = formFields[tabIndex] || [];
+    
+    return (
+      <Box>
+        {fields.map((field, idx) => (
+          <InfoItem key={idx}>
+            <InfoLabel variant="body2">
+              {field.icon}
+              {field.label}:
+            </InfoLabel>
+            <InfoValue variant="body1">
+              {person?.[field.name] || '—'}
+            </InfoValue>
+          </InfoItem>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderFormFields = () => {
+    const fields = formFields[tabValue] || [];
+    
+    return (
+      <Grid container spacing={3}>
+        {fields.map((field, idx) => (
+          <Grid item xs={12} sm={6} key={idx}>
+            <FormField
+              fullWidth
+              label={field.label}
+              name={field.name}
+              value={formData[field.name] || ''}
+              onChange={handleFormChange}
+              variant="outlined"
+              disabled={field.disabled}
+              type={field.type || 'text'}
+              InputLabelProps={field.type === 'date' ? { shrink: true } : {}}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
+
+  return (
+    <ProfileContainer ref={profileRef}>
+      <ProfileHeader>
+        <ProfileAvatarContainer>
+          <ProfileAvatar
+            src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
+            alt="Profile Picture"
+            onClick={handleImageZoom}
+          >
+            {!profilePicture && <PersonIcon sx={{ fontSize: 80 }} />}
+          </ProfileAvatar>
+        </ProfileAvatarContainer>
+
+        <ProfileInfo>
+          <ProfileName>
+            {person ? `${person.firstName} ${person.middleName} ${person.lastName} ${person.nameExtension || ''}`.trim() : 'Employee Profile'}
+          </ProfileName>
+          <ProfileSubtitle>
+            Employee No.: <b>{person?.agencyEmployeeNum || '—'}</b>
+          </ProfileSubtitle>
+        </ProfileInfo>
+
+        <ProfileActions>
+          <Tooltip title="Refresh profile">
+            <IconButton 
+              onClick={handleRefresh}
+              sx={{
+                backgroundColor: alpha(colors.primary, 0.1),
+                color: colors.primary,
+                '&:hover': {
+                  backgroundColor: alpha(colors.primary, 0.2)
+                }
+              }}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+
+          <ActionButton
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={handleEditOpen}
+          >
+            Edit Profile
+          </ActionButton>
+        </ProfileActions>
+      </ProfileHeader>
+
+      <SectionPaper>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <SectionTitle>
+            <PersonIcon />
+            Employee Details
+          </SectionTitle>
+          <Box display="flex" alignItems="center">
+            <Typography variant="body2" color={colors.textSecondary} mr={2}>
+              View Mode:
+            </Typography>
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={handleViewModeChange}
+              aria-label="view mode"
+              size="small"
+            >
+              <ViewToggleButton value="grid" aria-label="grid view">
+                <GridViewIcon />
+              </ViewToggleButton>
+              <ViewToggleButton value="list" aria-label="list view">
+                <ViewListIcon />
+              </ViewToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        </Box>
+
+        <TabContainer>
+          <CustomTabs
+            value={tabValue}
+            onChange={handleTabChange}
+            variant={isMobile ? "scrollable" : "standard"}
+            scrollButtons={isMobile ? "auto" : false}
+          >
+            {tabs.map((tab) => (
+              <CustomTab
+                key={tab.key}
+                label={tab.label}
+                icon={tab.icon}
+                iconPosition="start"
+              />
+            ))}
+          </CustomTabs>
+        </TabContainer>
+
+        <ContentContainer>
+          <ViewWrapper className={viewMode === 'grid' ? 'active' : ''}>
+            {renderTabContentGrid(tabValue)}
+          </ViewWrapper>
+          <ViewWrapper className={viewMode === 'list' ? 'active' : ''}>
+            {renderTabContentList(tabValue)}
+          </ViewWrapper>
+        </ContentContainer>
+      </SectionPaper>
+
+      <Modal
+        open={editOpen}
+        onClose={handleEditClose}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500
+        }}
+      >
+        <Backdrop open={editOpen} onClick={handleEditClose}>
+          <ModalContainer onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>Edit Profile</ModalTitle>
+              <IconButton onClick={handleEditClose} sx={{ color: colors.textLight }}>
+                <CloseIcon />
+              </IconButton>
+            </ModalHeader>
+
+            <EditModalPictureSection>
+              <EditModalAvatar
+                src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
+                alt="Profile Picture"
+                onClick={handleEditImageZoom}
+              >
+                {!profilePicture && <PersonIcon sx={{ fontSize: 60 }} />}
+              </EditModalAvatar>
+              <EditModalPictureInfo>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: colors.primary, mb: 1 }}>
+                  Profile Picture
+                </Typography>
+                <Typography variant="body2" color={colors.textSecondary} sx={{ mb: 2 }}>
+                  Click on the image to preview. Upload a professional headshot (max 5MB, JPEG/PNG)
+                </Typography>
+                <Box display="flex" gap={1} flexWrap="wrap">
+                  <Chip 
+                    icon={<PhotoSizeSelectActualIcon fontSize="small" />}
+                    label="High Quality" 
+                    size="small" 
+                    sx={{ 
+                      backgroundColor: alpha(colors.primary, 0.1),
+                      color: colors.primary,
+                      fontWeight: 600
+                    }} 
+                  />
+                  <Chip 
+                    icon={<CropOriginalIcon fontSize="small" />}
+                    label="Recommended: 400x400px" 
+                    size="small" 
+                    sx={{ 
+                      backgroundColor: alpha(colors.secondary, 0.5),
+                      color: colors.textSecondary,
+                      fontWeight: 600
+                    }} 
+                  />
+                </Box>
+              </EditModalPictureInfo>
+              <EditModalPictureActions>
+                <input
+                  accept="image/*"
+                  id="profile-picture-upload-modal"
+                  type="file"
+                  style={{ display: 'none' }}
+                  onChange={handlePictureChange}
+                />
+                <label htmlFor="profile-picture-upload-modal">
+                  <ActionButton
+                    component="span"
+                    variant="contained"
+                    startIcon={<CloudUploadIcon />}
+                    fullWidth
+                  >
+                    Upload Photo
+                  </ActionButton>
+                </label>
+                <ActionButton
+                  variant="outlined"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleRemovePicture}
+                  fullWidth
                 >
-                  {!profilePicture && <PersonIcon sx={{ fontSize: 50, color: "#6d2323" }} />}
-                </ProfileAvatar>
-                <Box>
-                  <Button component="label" startIcon={<PhotoCamera />} variant="contained" sx={{ bgcolor: "#6d2323", mr: 2 }}>
-                    Upload
-                    <input hidden accept="image/*" type="file" onChange={handlePictureChange} />
-                  </Button>
-                  <Button startIcon={<CloseIcon />} onClick={handleRemovePicture} variant="outlined" sx={{ color: "#6d2323", borderColor: "#6d2323" }}>
-                    Remove
-                  </Button>
-                </Box>
+                  Remove Photo
+                </ActionButton>
+              </EditModalPictureActions>
+            </EditModalPictureSection>
+
+            <ModalBody>
+              <Box sx={{ mb: 3 }}>
+                <CustomTabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
+                  {tabs.map((tab) => (
+                    <CustomTab
+                      key={tab.key}
+                      label={tab.label}
+                      icon={tab.icon}
+                      iconPosition="start"
+                    />
+                  ))}
+                </CustomTabs>
               </Box>
 
-              {/* Personal Information Section */}
-              <Box sx={{ mb: 4, p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <PersonIcon sx={{ color: "#6d2323", mr: 1 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                    Personal Information
-                  </Typography>
-                </Box>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="First Name" name="firstName" value={formData.firstName || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Middle Name" name="middleName" value={formData.middleName || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Last Name" name="lastName" value={formData.lastName || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Name Extension" name="nameExtension" value={formData.nameExtension || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Date of Birth" name="birthDate" type="date" value={formData.birthDate || ""} onChange={handleFormChange} fullWidth size="small" InputLabelProps={{ shrink: true }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Place of Birth" name="placeOfBirth" value={formData.placeOfBirth || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Sex" name="sex" value={formData.sex || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Civil Status" name="civilStatus" value={formData.civilStatus || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Citizenship" name="citizenship" value={formData.citizenship || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Height (cm)" name="heightCm" value={formData.heightCm || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Weight (kg)" name="weightKg" value={formData.weightKg || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField label="Blood Type" name="bloodType" value={formData.bloodType || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                </Grid>
-              </Box>
+              {renderFormFields()}
 
-              {/* Government Identification Section */}
-              <Box sx={{ mb: 4, p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <BadgeIcon sx={{ color: "#6d2323", mr: 1 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                    Government Identification <i style={{ fontWeight: 400, fontStyle: "italic", marginLeft: 6 }}>(Please contact administrator for assistance)</i>
-                  </Typography>
-                </Box>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="GSIS Number" name="gsisNum" value={formData.gsisNum || ""} onChange={handleFormChange} fullWidth size="small" disabled />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Pag-IBIG Number" name="pagibigNum" value={formData.pagibigNum || ""} onChange={handleFormChange} fullWidth size="small" disabled />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="PhilHealth Number" name="philhealthNum" value={formData.philhealthNum || ""} onChange={handleFormChange} fullWidth size="small" disabled />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="SSS Number" name="sssNum" value={formData.sssNum || ""} onChange={handleFormChange} fullWidth size="small" disabled />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="TIN Number" name="tinNum" value={formData.tinNum || ""} onChange={handleFormChange} fullWidth size="small" disabled />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Agency Employee Number" name="agencyEmployeeNum" value={formData.agencyEmployeeNum || ""} onChange={handleFormChange} fullWidth size="small" disabled />
-                  </Grid>
-                </Grid>
-              </Box>
-
-              {/* Address Sections */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                {/* Permanent Address */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <HomeIcon sx={{ color: "#6d2323", mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                        Permanent Address
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <TextField label="House & Lot Number" name="permanent_houseBlockLotNum" value={formData.permanent_houseBlockLotNum || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Street" name="permanent_streetName" value={formData.permanent_streetName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Subdivision" name="permanent_subdivisionOrVillage" value={formData.permanent_subdivisionOrVillage || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Barangay" name="permanent_barangay" value={formData.permanent_barangay || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="City/Municipality" name="permanent_cityOrMunicipality" value={formData.permanent_cityOrMunicipality || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Province" name="permanent_provinceName" value={formData.permanent_provinceName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Zip Code" name="permanent_zipcode" value={formData.permanent_zipcode || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-
-                {/* Residential Address */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <HomeIcon sx={{ color: "#6d2323", mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                        Residential Address
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <TextField label="House & Lot Number" name="residential_houseBlockLotNum" value={formData.residential_houseBlockLotNum || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Street" name="residential_streetName" value={formData.residential_streetName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Subdivision" name="residential_subdivisionOrVillage" value={formData.residential_subdivisionOrVillage || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Barangay" name="residential_barangayName" value={formData.residential_barangayName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="City/Municipality" name="residential_cityOrMunicipality" value={formData.residential_cityOrMunicipality || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Province" name="residential_provinceName" value={formData.residential_provinceName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Zip Code" name="residential_zipcode" value={formData.residential_zipcode || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Grid>
-
-              {/* Contact Information */}
-              <Box sx={{ mb: 4, p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <CallIcon sx={{ color: "#6d2323", mr: 1 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                    Contact Information
-                  </Typography>
-                </Box>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Telephone" name="telephone" value={formData.telephone || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Mobile" name="mobileNum" value={formData.mobileNum || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Email" name="emailAddress" value={formData.emailAddress || ""} onChange={handleFormChange} fullWidth size="small" />
-                  </Grid>
-                </Grid>
-              </Box>
-
-              {/* Family Information */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                {/* Spouse Information */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <GroupIcon sx={{ color: "#6d2323", mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                        Spouse Information
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Spouse First Name" name="spouseFirstName" value={formData.spouseFirstName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Spouse Middle Name" name="spouseMiddleName" value={formData.spouseMiddleName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Spouse Last Name" name="spouseLastName" value={formData.spouseLastName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Spouse Name Extension" name="spouseNameExtension" value={formData.spouseNameExtension || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Occupation" name="spouseOccupation" value={formData.spouseOccupation || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Employer/Business Name" name="spouseEmployerBusinessName" value={formData.spouseEmployerBusinessName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Business Address" name="spouseBusinessAddress" value={formData.spouseBusinessAddress || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Telephone" name="spouseTelephone" value={formData.spouseTelephone || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-
-                {/* Parents Information */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <FamilyRestroomIcon sx={{ color: "#6d2323", mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                        Parents Information
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Father First Name" name="fatherFirstName" value={formData.fatherFirstName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Father Middle Name" name="fatherMiddleName" value={formData.fatherMiddleName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Father Last Name" name="fatherLastName" value={formData.fatherLastName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Father Name Extension" name="fatherNameExtension" value={formData.fatherNameExtension || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Mother Maiden First Name" name="motherMaidenFirstName" value={formData.motherMaidenFirstName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Mother Maiden Middle Name" name="motherMaidenMiddleName" value={formData.motherMaidenMiddleName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Mother Maiden Last Name" name="motherMaidenLastName" value={formData.motherMaidenLastName || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Grid>
-
-              {/* Education Information */}
-              <Grid container spacing={3}>
-                {/* Elementary Education */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <SchoolIcon sx={{ color: "#6d2323", mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                        Elementary Education
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <TextField label="School" name="elementaryNameOfSchool" value={formData.elementaryNameOfSchool || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Degree" name="elementaryDegree" value={formData.elementaryDegree || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Period From" name="elementaryPeriodFrom" value={formData.elementaryPeriodFrom || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Period To" name="elementaryPeriodTo" value={formData.elementaryPeriodTo || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Highest Attained" name="elementaryHighestAttained" value={formData.elementaryHighestAttained || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Year Graduated" name="elementaryYearGraduated" value={formData.elementaryYearGraduated || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Honors" name="elementaryScholarshipAcademicHonorsReceived" value={formData.elementaryScholarshipAcademicHonorsReceived || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-
-                {/* Secondary Education */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 3, bgcolor: "white", borderRadius: 3, borderLeft: "6px solid #6d2323" }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <SchoolIcon sx={{ color: "#6d2323", mr: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#6d2323" }}>
-                        Secondary Education
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <TextField label="School" name="secondaryNameOfSchool" value={formData.secondaryNameOfSchool || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Degree" name="secondaryDegree" value={formData.secondaryDegree || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Period From" name="secondaryPeriodFrom" value={formData.secondaryPeriodFrom || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField label="Period To" name="secondaryPeriodTo" value={formData.secondaryPeriodTo || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Highest Attained" name="secondaryHighestAttained" value={formData.secondaryHighestAttained || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Year Graduated" name="secondaryYearGraduated" value={formData.secondaryYearGraduated || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField label="Honors" name="secondaryScholarshipAcademicHonorsReceived" value={formData.secondaryScholarshipAcademicHonorsReceived || ""} onChange={handleFormChange} fullWidth size="small" />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Grid>
-
-              {/* Action Buttons */}
-              <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>
-                <Button onClick={handleEditClose} sx={{ color: "#6d2323" }}>
+              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <ActionButton
+                  variant="outlined"
+                  onClick={handleEditClose}
+                >
                   Cancel
-                </Button>
-                <Button onClick={handleSave} variant="contained" sx={{ bgcolor: "#6d2323" }}>
-                  Save
-                </Button>
+                </ActionButton>
+                <ActionButton
+                  variant="contained"
+                  onClick={handleSave}
+                  startIcon={<SaveIcon />}
+                >
+                  Save Changes
+                </ActionButton>
               </Box>
-            </Box>
-          </Modal>
+            </ModalBody>
+          </ModalContainer>
+        </Backdrop>
+      </Modal>
 
-        </StyledPaper>
-      </Fade>
-    </Container>
+      <ImagePreviewModal
+        open={imageZoomOpen}
+        onClose={handleImageZoomClose}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500
+        }}
+      >
+        <Backdrop open={imageZoomOpen} onClick={handleImageZoomClose}>
+          <ImagePreviewContainer onClick={(e) => e.stopPropagation()}>
+            <ImagePreviewContent>
+              <PreviewImage
+                src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
+                alt="Profile Picture Preview"
+              />
+              <ImagePreviewActions>
+                <ImagePreviewButton
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : '';
+                    link.download = 'profile-picture.jpg';
+                    link.click();
+                  }}
+                  title="Download"
+                >
+                  <DownloadIcon />
+                </ImagePreviewButton>
+                <ImagePreviewButton
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: 'Profile Picture',
+                        url: profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : ''
+                      });
+                    }
+                  }}
+                  title="Share"
+                >
+                  <ShareIcon />
+                </ImagePreviewButton>
+                <ImagePreviewButton
+                  onClick={handleImageZoomClose}
+                  title="Close"
+                >
+                  <CloseIcon />
+                </ImagePreviewButton>
+              </ImagePreviewActions>
+            </ImagePreviewContent>
+          </ImagePreviewContainer>
+        </Backdrop>
+      </ImagePreviewModal>
+
+      <ImagePreviewModal
+        open={editImageZoomOpen}
+        onClose={handleEditImageZoomClose}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500
+        }}
+      >
+        <Backdrop open={editImageZoomOpen} onClick={handleEditImageZoomClose}>
+          <ImagePreviewContainer onClick={(e) => e.stopPropagation()}>
+            <ImagePreviewContent>
+              <PreviewImage
+                src={profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : undefined}
+                alt="Profile Picture Preview"
+              />
+              <ImagePreviewActions>
+                <ImagePreviewButton
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : '';
+                    link.download = 'profile-picture.jpg';
+                    link.click();
+                  }}
+                  title="Download"
+                >
+                  <DownloadIcon />
+                </ImagePreviewButton>
+                <ImagePreviewButton
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: 'Profile Picture',
+                        url: profilePicture ? `${API_BASE_URL}${profilePicture}?t=${Date.now()}` : ''
+                      });
+                    }
+                  }}
+                  title="Share"
+                >
+                  <ShareIcon />
+                </ImagePreviewButton>
+                <ImagePreviewButton
+                  onClick={handleEditImageZoomClose}
+                  title="Close"
+                >
+                  <CloseIcon />
+                </ImagePreviewButton>
+              </ImagePreviewActions>
+            </ImagePreviewContent>
+          </ImagePreviewContainer>
+        </Backdrop>
+      </ImagePreviewModal>
+
+      <Snackbar
+        open={notificationOpen}
+        autoHideDuration={5000}
+        onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Notification
+          variant={uploadStatus.type}
+          message={uploadStatus.message}
+          action={
+            <IconButton size="small" color="inherit" onClick={handleNotificationClose}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
+        />
+      </Snackbar>
+
+      {trigger && (
+        <FloatingButton onClick={scrollToTop} aria-label="scroll back to top">
+          <KeyboardArrowUpIcon />
+        </FloatingButton>
+      )}
+    </ProfileContainer>
   );
 };
 

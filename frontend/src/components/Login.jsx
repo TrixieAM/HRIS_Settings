@@ -1,6 +1,5 @@
 import API_BASE_URL from "../apiConfig";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Alert,
   TextField,
@@ -12,30 +11,38 @@ import {
   Typography,
   Modal,
   InputAdornment,
+  IconButton,
+  Chip,
+  Dialog,
 } from "@mui/material";
 import {
   BadgeOutlined,
   LockOutlined,
   LoginOutlined,
-  EmailOutlined,
   CheckCircleOutline,
   ErrorOutline,
   VerifiedUserOutlined,
+  Visibility,
+  VisibilityOff,
+  KeyboardArrowDown,
+  Announcement as AnnouncementIcon,
+  ArrowBackIosNew as ArrowBackIosNewIcon,
+  ArrowForwardIos as ArrowForwardIosIcon ,
+  Campaign as CampaignIcon,
+  Pause,
+  AccessTime as AccessTimeIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
-import logo from "../assets/logo.PNG";
 import LoadingOverlay from "../components/LoadingOverlay";
+import logo from "../assets/logo.PNG";
+import bg from "../assets/EaristBG.PNG";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    employeeNumber: "",
-    password: "",
-  });
-
+  const [showIntro, setShowIntro] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ employeeNumber: "", password: "" });
   const [errMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  // 2FA states
   const [show2FA, setShow2FA] = useState(false);
   const [pin, setPin] = useState("");
   const [twoFactorError, setTwoFactorError] = useState("");
@@ -47,13 +54,61 @@ const Login = () => {
   const [codeTimer, setCodeTimer] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [autoPlay, setAutoPlay] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [openPolicy, setOpenPolicy] = useState(false);
+  const [openFAQ, setOpenFAQ] = useState(false);
 
-  // Lock timer countdown
+  const primaryGradient = "linear-gradient(135deg, #800020, #A52A2A)";
+  const primaryHoverGradient = "linear-gradient(135deg, #A52A2A, #800020)";
+  const lightText = "#FFF8E7";
+  const darkText = "#4B0000";
+  const mediumText = "#800020";
+
+  useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(new Date());
+  }, 1000);
+
+  return () => clearInterval(timer); // cleanup on unmount
+}, []);
+
+  // Fetch announcements
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/announcements`);
+        const data = await response.json();
+        setAnnouncements(data);
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
+
+  // Slideshow auto-play
+  useEffect(() => {
+    if (announcements.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % announcements.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [announcements.length]);
+
+  // Lock timer
   useEffect(() => {
     let interval;
     if (isLocked && lockTimer > 0) {
       interval = setInterval(() => {
-        setLockTimer((prev) => {
+        setLockTimer(prev => {
           if (prev <= 1) {
             setIsLocked(false);
             setAttempts(0);
@@ -67,25 +122,42 @@ const Login = () => {
     return () => clearInterval(interval);
   }, [isLocked, lockTimer]);
 
-  // Code expiration timer
+  // Code timer
   useEffect(() => {
     let interval;
-    if (codeTimer > 0) {
-      interval = setInterval(() => {
-        setCodeTimer((prev) => prev - 1);
-      }, 1000);
-    }
+    if (codeTimer > 0) interval = setInterval(() => setCodeTimer(prev => prev - 1), 1000);
     return () => clearInterval(interval);
   }, [codeTimer]);
 
-  const handleChanges = (e) => {
+  // Auto-hide login error after 3 seconds
+  useEffect(() => {
+    if (errMessage) {
+      const timer = setTimeout(() => setErrorMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errMessage]);
+
+  // Auto-hide 2FA errors and success after 3 seconds
+  useEffect(() => {
+    if (twoFactorError) {
+      const timer = setTimeout(() => setTwoFactorError(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [twoFactorError]);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  const handleChanges = e => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Send 2FA code
   const send2FACode = async (email, empNumber) => {
     setResendLoading(true);
     try {
@@ -98,18 +170,18 @@ const Login = () => {
       if (res.ok) {
         setSuccess("Verification code sent to your email.");
         setCodeTimer(2 * 60); // 2 minutes
-        setTimeout(() => setSuccess(""), 3000);
-      } else {
-        setTwoFactorError(data.error || "Failed to send code.");
-      }
-    } catch (error) {
-      console.error("Failed to send 2FA code:", error);
+        setAttempts(0);
+        setIsLocked(false);
+        setTwoFactorError("");
+      } else setTwoFactorError(data.error || "Failed to send code.");
+    } catch {
       setTwoFactorError("Failed to send verification code.");
     } finally {
       setResendLoading(false);
     }
   };
 
+  // Verify 2FA code and complete login
   const verify2FACode = async () => {
     if (!pin.trim()) {
       setTwoFactorError("Please enter the verification code");
@@ -130,427 +202,688 @@ const Login = () => {
       const data = await res.json();
 
       if (res.ok && data.verified) {
-        // Complete the login after successful 2FA verification
         const loginRes = await fetch(`${API_BASE_URL}/complete-2fa-login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userEmail }),
+          body: JSON.stringify({ email: userEmail, employeeNumber: formData.employeeNumber }),
         });
         const loginData = await loginRes.json();
 
         if (loginRes.ok) {
+          // Store token and redirect
           localStorage.setItem("token", loginData.token);
           const decoded = JSON.parse(atob(loginData.token.split(".")[1]));
+          localStorage.setItem("employeeNumber", decoded.employeeNumber || "");
+          localStorage.setItem("role", decoded.role || "");
 
-          localStorage.setItem("employeeNumber", decoded.employeeNumber || loginData.employeeNumber || "");
-          localStorage.setItem("role", decoded.role || loginData.role || "");
-
-          const role = decoded.role || loginData.role;
-          if (role === "superadmin" || role === "administrator") {
-            navigate("/admin-home");
-          } else if (role === "staff") {
-            navigate("/home");
+          if (decoded.role === "superadmin" || decoded.role === "administrator") {
+            window.location.href = "/admin-home";
           } else {
-            setTwoFactorError("Unauthorized role");
+            window.location.href = "/home";
           }
         } else {
-          setTwoFactorError("Login completion failed. Please try again.");
+          setTwoFactorError(loginData.error || "Login completion failed.");
         }
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
         if (newAttempts >= 3) {
           setIsLocked(true);
-          setLockTimer(60); // 1 minute lockout
-          setTwoFactorError("Too many failed attempts. Account locked for 1 minute.");
+          setLockTimer(60);
+          setTwoFactorError("Too many failed attempts. Locked for 1 min.");
         } else {
-          setTwoFactorError("Invalid verification code. Please try again.");
+          setTwoFactorError(data.error || "Invalid verification code. Try again.");
         }
       }
-    } catch (error) {
-      console.error("2FA verification failed:", error);
+    } catch (err) {
+      console.error(err);
       setTwoFactorError("Verification failed. Please try again.");
     } finally {
       setTwoFactorLoading(false);
     }
   };
 
-  const formatTime = (seconds) => {
+  const formatTime = seconds => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-
+  const handleLogin = async e => {
+    e.preventDefault();
     if (!formData.employeeNumber || !formData.password) {
-      setErrorMessage("Please fill all asked credentials");
+      setErrorMessage("Please fill all credentials");
       return;
     }
 
     setLoading(true);
     setErrorMessage("");
-
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        // If login is successful, proceed to 2FA
         setUserEmail(data.email);
         await send2FACode(data.email, formData.employeeNumber);
         setShow2FA(true);
-      } else {
-        setErrorMessage(data.error || "Invalid credentials");
-      }
-    } catch (error) {
-      console.error("Login failed:", error);
+      } else setErrorMessage(data.error || "Invalid credentials");
+    } catch {
       setErrorMessage("Connection error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <Container
-      maxWidth="sm"
-      sx={{
-        display: "flex",
-        minHeight: "90%",
-        backgroundColor: "#fff8e1",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <LoadingOverlay open={loading || twoFactorLoading || resendLoading} message="Please wait..." />
+  const blobPositions = React.useMemo(() => {
+  return Array.from({ length: 6 }).map((_, i) => ({
+    size: 60 + i * 20,
+    top: Math.random() * 70,
+    left: Math.random() * 70,
+    delay: i * 0.3,
+    duration: 1 + i * 2, // slow
+  }));
+}, []);
 
-      <Paper
-        elevation={4}
+
+
+  const blobs = blobPositions.map((blob, i) => (
+    <Box
+      key={i}
+      sx={{
+        position: "absolute",
+        width: blob.size,
+        height: blob.size,
+        borderRadius: "50%",
+        background: primaryGradient,
+        opacity: 0.15 + i * 0.1,
+        top: `${blob.top}%`,
+        left: `${blob.left}%`,
+        animation: `float${i} ${blob.duration}s ease-in-out ${blob.delay}s infinite`,
+        [`@keyframes float${i}`]: {
+          "0%,100%": { transform: `translate(0,0)` },
+          "50%": { transform: `translate(15px, -10px) rotate(20deg)` },
+        },
+      }}
+    />
+  ));
+
+
+  return (
+    
+    <><Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        animation: "zoomPulse 20s ease-in-out infinite",
+        "@keyframes zoomPulse": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+        },
+      }} /><Box
         sx={{
-          padding: 4,
-          width: "100%",
-          maxWidth: 450,
-          borderRadius: 2,
-          textAlign: "center",
-          border: "2px solid #f5e6e6",
-          background: "linear-gradient(135deg, #ffffff 0%, #fefefe 100%)",
-        }}
-      >
-        {/* Logo */}
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(0, 0, 0, 0.9)",
+          animation: "subtlePulse 8s ease-in-out infinite",
+          "@keyframes subtlePulse": {
+            "0%, 100%": { opacity: 0.75 },
+            "50%": { opacity: 0.7 },
+          },
+        }} />
+        
+        <Box sx={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", overflow: "hidden", zIndex: 10 }}>
+        <LoadingOverlay open={loading} message="Please wait..." />
+
         <Box
           sx={{
-            backgroundColor: "#A31D1D",
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            py: 2,
+            height: "100vh",
+            width: "100%",
             display: "flex",
+            alignItems: "center",
             justifyContent: "center",
-            mb: 2,
-            mx: -4,
-            mt: -4,
+            overflow: "hidden",
           }}
         >
-          <img
-            src={logo}
-            alt="E.A.R.I.S.T Logo"
-            style={{
-              height: 80,
-              borderRadius: "50%",
-              backgroundColor: "white",
-              padding: 4,
-            }}
-          />
-        </Box>
-
-        {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 1, mt: 3 }}>
-          <Typography variant="h5" sx={{ color: "#6d2323", fontWeight: "bold" }}>
-            Login to your Account
-          </Typography>
-        </Box>
-
-        <Typography gutterBottom sx={{ mb: 3, color: "#8a4747" }}>
-          Enter your credentials to continue
-        </Typography>
-
-        {/* alert */}
-        {errMessage && (
-          <Alert 
-            icon={<ErrorOutline fontSize="inherit" />}
-            sx={{ 
-              mb: 2,
-              backgroundColor: "#6d2323",
-              color: "white",
-              "& .MuiAlert-icon": {
-                color: "white"
-              }
-            }} 
-            severity="error"
-          >
-            {errMessage}
-          </Alert>
-        )}
-
-        {/* Fields */}
-        <form onSubmit={handleLogin}>
-          <TextField
-            name="employeeNumber"
-            label="Employee Number"
-            fullWidth
-            sx={{ 
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                "&:hover fieldset": {
-                  borderColor: "#8a4747",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#6d2323",
-                },
-              },
-              "& .MuiInputLabel-root.Mui-focused": {
-                color: "#6d2323",
-              },
-            }}
-            autoComplete="employeeNumber"
-            onChange={handleChanges}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <BadgeOutlined sx={{ color: "#6d2323" }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            name="password"
-            label="Password"
-            type="password"
-            fullWidth
-            sx={{ 
-              mb: 1,
-              "& .MuiOutlinedInput-root": {
-                "&:hover fieldset": {
-                  borderColor: "#8a4747",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#6d2323",
-                },
-              },
-              "& .MuiInputLabel-root.Mui-focused": {
-                color: "#6d2323",
-              },
-            }}
-            autoComplete="current-password"
-            onChange={handleChanges}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockOutlined sx={{ color: "#6d2323" }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          {/* Forgot password */}
-          <Box sx={{ textAlign: "left", mb: 3 }}>
-            <Link
-              onClick={() => navigate("/forgot-password")}
-              underline="hover"
+        {/* Left Side -  Announcement Slideshow */}
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 800,
+            mx: "auto",
+            py: 2,
+            overflow: "hidden",
+            position: "relative",
+            
+          }}
+        >
+          {announcements.length > 0 ? (
+            <Box
               sx={{
-                cursor: "pointer",
-                color: "#6d2323",
-                fontSize: "13px",
-                fontWeight: 500,
+                display: "flex",
+                gap: 2,
+                width: "max-content",
+                animation: `slide ${announcements.length * 5}s linear infinite`,
+                "&:hover": { animationPlayState: "paused" },
+              }}
+            >
+              {[...announcements, ...announcements].map((ann, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    flex: "0 0 650px",
+                    borderRadius: 3,
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    position: "relative",
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: "0 12px 30px rgba(0,0,0,0.5)",
+                    },
+                  }}
+                >
+                  {/* Image */}
+                  <Box
+                    component="img"
+                    src={ann.image ? `${API_BASE_URL}${ann.image}` : "/api/placeholder/350/300"}
+                    alt={ann.title || "Announcement"}
+                    sx={{
+                      width: "100%",
+                      height: 500,
+                      objectFit: "cover",
+                      borderRadius: 2,
+                      filter: "brightness(0.65)",
+                      transition: "transform 0.3s, filter 0.3s",
+                      "&:hover": { filter: "brightness(0.55)" },
+                    }}
+                  />
+
+                  {/* Overlay Text */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: 0,
+                      width: "100%",
+                      bgcolor: "rgba(0,0,0,0.55)",
+                      color: "#fff",
+                      p: 2,
+                      textAlign: "left",
+                      transition: "bgcolor 0.3s",
+                      "&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ textTransform: "uppercase", opacity: 0.8 }}>
+                      Announcement
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                      {ann.title}
+                    </Typography>
+                    <Typography variant="body2">{new Date(ann.date).toDateString()}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="h6" sx={{ color: "rgba(255,255,255,0.5)", textAlign: "center", py: 4 }}>
+              No announcements available
+            </Typography>
+          )}
+
+          {/* Smooth Infinite Slide Keyframes */}
+          <style>{`
+            @keyframes slide {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-30%); } /* Smooth infinite scroll */
+            }
+          `}</style>
+        </Box>
+
+
+
+
+          {/* Right Side - Login Form */}
+          <Container maxWidth="sm" sx={{ position: "relative" }}>
+            <Paper
+              elevation={24}
+              sx={{
+                padding: { xs: 3, md: 3 },
+                borderRadius: 4,
+                textAlign: "center",
+                background: "rgba(255,248,231,0.85)",
+                backdropFilter: "blur(15px)",
+                boxShadow: "0 15px 40px rgba(128,0,32,0.2)",
+                border: "1px solid rgba(128,0,32,0.15)",
+                transition: "transform 0.6s ease, box-shadow 0.6s ease",
                 "&:hover": {
-                  color: "#5a1e1e",
+                  transform: "scale(1.03)",
+                  boxShadow: "0 25px 50px rgba(128,0,32,0.35)",
+                },
+                "@keyframes floatCard": {
+                  "0%,100%": { transform: "translateY(0px)" },
+                  "50%": { transform: "translateY(-10px)" },
                 },
               }}
             >
-              Forgot password?
-            </Link>
-          </Box>
+              <Box
+                sx={{
+                  width: 100,
+                  height: 100,
+                  margin: "0 auto 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <img
+                  src={logo}
+                  alt="Logo"
+                  style={{ width: "90%", height: "90%", objectFit: "contain" }} />
+              </Box>
 
-          {/* Login button */}
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            startIcon={<LoginOutlined />}
-            sx={{ 
-              bgcolor: "#6d2323", 
-              mt: 2,
-              py: 1.5,
-              fontSize: "1.1rem",
-              fontWeight: "bold",
-              "&:hover": {
-                bgcolor: "#5a1e1e",
-                transform: "translateY(-2px)",
-                boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
-              },
-              transition: "all 0.3s ease",
-            }}
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </Button>
-        </form>
-      </Paper>
+              <Typography variant="h4" sx={{ color: darkText, fontWeight: 800, mb: 1 }}>
+                Human Resources Information System
+              </Typography>
+              <Typography sx={{ mb: 3, color: mediumText }}>Sign in to access your account</Typography>
 
-      {/* 2FA Modal */}
-      <Modal
-        open={show2FA}
-        onClose={() => setShow2FA(false)}
-        aria-labelledby="2fa-modal-title"
-        aria-describedby="2fa-modal-description"
-      >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 450,
-          bgcolor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 4,
-          textAlign: 'center',
-          border: "2px solid #f5e6e6",
-        }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 2 }}>
-            <VerifiedUserOutlined sx={{ fontSize: 40, color: "#6d2323", mr: 1 }} />
-            <Typography id="2fa-modal-title" variant="h5" component="h2" sx={{ color: "#6d2323", fontWeight: "bold" }}>
-              Email Verification
-            </Typography>
-          </Box>
-         
-          <Typography id="2fa-modal-description" mb={3} sx={{ color: "#8a4747" }}>
-            Verification code sent to <b>{userEmail}</b>
-          </Typography>
+              {errMessage && <Alert severity="error" sx={{ mb: 3 }}>{errMessage}</Alert>}
 
-          {success && (
-            <Alert 
-              icon={<CheckCircleOutline fontSize="inherit" />}
-              sx={{ 
-                mb: 2,
-                backgroundColor: "#dcf8e3ff",
-                color: "#41644a",
-                border: "1px solid #41644a",
-                "& .MuiAlert-icon": {
-                  color: "#41644a"
-                }
-              }} 
-              severity="success"
-            >
-              {success}
-            </Alert>
-          )}
-         
-          {twoFactorError && (
-            <Alert 
-              icon={<ErrorOutline fontSize="inherit" />}
-              sx={{ 
-                mb: 2,
-                backgroundColor: "#6d2323",
-                color: "white",
-                "& .MuiAlert-icon": {
-                  color: "white"
-                }
-              }} 
-              severity="error"
-            >
-              {twoFactorError}
-            </Alert>
-          )}
-
-         <TextField
-  fullWidth
-  placeholder="• • • • • •"
-  value={pin}
-  onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-  sx={{ 
-    mb: 2,
-    "& .MuiOutlinedInput-root": {
-      "&:hover fieldset": {
-        borderColor: "#8a4747",
-        borderWidth: '2px',
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "#6d2323",
-        borderWidth: '2px',
-      },
-    },
-  }}
-  inputProps={{ 
-    maxLength: 6, 
-    style: { 
-      textAlign: 'center', 
-      fontSize: '28px', 
-      letterSpacing: '16px',
-      fontWeight: 'bold'
-    } 
-  }}
-/>
-
-          {isLocked && (
-            <Typography color="error" textAlign="center" sx={{ mb: 2, fontWeight: "bold" }}>
-              Account locked. Please wait {formatTime(lockTimer)}
-            </Typography>
-          )}
-
-          {codeTimer > 0 && (
-            <Typography color="text.secondary" textAlign="center" sx={{ mb: 2 }}>
-              Code expires in {formatTime(codeTimer)}
-            </Typography>
-          )}
-
-          <Button
-            onClick={verify2FACode}
-            disabled={twoFactorLoading || isLocked}
-            variant="contained"
-            fullWidth
-            startIcon={<VerifiedUserOutlined />}
-            sx={{ 
-              bgcolor: "#6d2323", 
-              mt: 2, 
-              mb: 1,
-              py: 1.5,
-              fontSize: "1rem",
-              fontWeight: "bold",
-              "&:hover": {
-                bgcolor: "#5a1e1e",
-                transform: "translateY(-2px)",
-                boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
-              },
-              transition: "all 0.3s ease",
-            }}
-          >
-            {twoFactorLoading ? "Verifying..." : "Verify Code"}
-          </Button>
-
-          <Button
-            onClick={() => send2FACode(userEmail, formData.employeeNumber)}
-            disabled={resendLoading || codeTimer > 0}
-            variant="text"
-            fullWidth
-            sx={{ 
-              color: "#6d2323",
-              fontWeight: 600,
-              "&:hover": {
-                backgroundColor: "rgba(109, 35, 35, 0.04)",
-              },
-            }}
-          >
-            {resendLoading ? "Sending..." : "Resend Code"}
-          </Button>
+              <form onSubmit={handleLogin}>
+                <TextField
+                  name="employeeNumber"
+                  placeholder="Employee Number"
+                  fullWidth
+                  sx={{
+                    mb: 3,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      background: "rgba(128,0,32,0.1)",
+                      "& fieldset": { borderColor: mediumText },
+                      "&.Mui-focused fieldset": { borderColor: mediumText },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <BadgeOutlined sx={{ color: mediumText }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  onChange={handleChanges} />
+                <TextField
+                  name="password"
+                  placeholder="Password"
+                  fullWidth
+                  type={showPassword ? "text" : "password"}
+                  sx={{
+                    mb: 2,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      background: "rgba(128,0,32,0.1)",
+                      "& fieldset": { borderColor: mediumText },
+                      "&.Mui-focused fieldset": { borderColor: mediumText },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockOutlined sx={{ color: mediumText }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  onChange={handleChanges} />
+                <Box sx={{ textAlign: "right", mb: 3 }}>
+                  <Link href="/forgot-password" underline="hover" sx={{ color: mediumText }}>
+                    Forgot password?
+                  </Link>
+                </Box>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  startIcon={<LoginOutlined />}
+                  sx={{ py: 1.8, mb: 1, background: primaryGradient, "&:hover": { background: primaryHoverGradient } }}
+                >
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </Paper>
+          </Container>
         </Box>
-      </Modal>
-    </Container>
+
+        {/* Glassy Intro Slide */}
+        {showIntro && (
+          <Box
+            id="introSlide"
+            onClick={() => {
+              document.getElementById("introSlide").style.transform = "translateY(-100%)";
+              setTimeout(() => setShowIntro(false), 800);
+            }}
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              background: "rgba(0, 0, 0, 0.35)",
+              backdropFilter: "blur(15px)",
+              borderRadius: 2,
+              overflow: "hidden",
+              transform: "translateY(0%)",
+              transition: "transform 0.8s ease-in-out",
+              cursor: "pointer",
+              flexDirection: "column",
+            }}
+          >
+            {blobs}
+
+            {/* Main Text */}
+            <Box sx={{ textAlign: "center", px: 3, mb: 2 }} onClick={e => e.stopPropagation()}>
+              <Typography
+                variant="h1"
+                sx={{
+                  fontWeight: 900,
+                  mb: 2,
+                  background: "linear-gradient(90deg, #bd7486ff, #e84a72ff)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  textShadow: "2px 2px 8px rgba(35, 1, 1, 0.7)",
+                }}
+              >
+                H R I S
+              </Typography>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, mb: 2, color: "#FFFFFF", textShadow: "1px 1px 5px rgba(0,0,0,0.5)" }}
+              >
+                Human Resources Information System
+              </Typography>
+            </Box>
+
+            {/* Mission & Vision */}
+            {/* <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "80%",
+                maxWidth: 900,
+                gap: 4,
+                mb: 4,
+                flexWrap: "wrap",
+                color: "#FFFFFF",
+                textShadow: "1px 1px 5px rgba(0,0,0,0.5)",
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <Box sx={{ flex: 1, minWidth: 250, textAlign: "left" }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                  Mission
+                </Typography>
+                <Typography variant="body1">
+                  Our mission is to provide seamless HR solutions and empower employees with transparent, reliable, and accessible information.
+                </Typography>
+              </Box>
+
+              <Box sx={{ flex: 1, minWidth: 250, textAlign: "right" }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                  Vision
+                </Typography>
+                <Typography variant="body1">
+                  Our vision is to create an efficient, paperless HR environment where information is at every employee’s fingertips, fostering growth and collaboration.
+                </Typography>
+              </Box>
+            </Box> */}
+
+            {/* Bottom-right time & date */}
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 80,
+                right: 16,
+                textAlign: "right",
+                color: "#FFF8E7",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Typography sx={{ fontSize: "2.2rem", fontWeight: 500 }}>
+                {currentTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+              </Typography>
+              <Typography sx={{ fontSize: "1rem", fontWeight: 500 }}>
+                {currentTime.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </Typography>
+            </Box>
+
+            {/* Bottom-right Privacy Policy & FAQs */}
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 55,
+                right: 16,
+                display: "flex",
+                justifyContent: "space-between",
+                width: "181px",
+                color: "#FFF8E7",
+                fontSize: "0.9rem",
+              }}
+            >
+              <Link
+                component="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenPolicy(true);
+                }}
+                underline="hover"
+                sx={{ color: "#FFF8E7", fontWeight: 500 }}
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                component="button"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  setOpenFAQ(true);
+                }}
+                underline="hover"
+                sx={{ color: "#FFF8E7", fontWeight: 500 }}
+              >
+                FAQs
+              </Link>
+            </Box>
+
+          {/* Privacy Policy Modal */}
+          <Dialog open={openPolicy} onClose={() =>  setOpenPolicy(false)} fullWidth maxWidth="md">
+            <Box p={3} position="relative">
+              {/* Close button */}
+             <IconButton
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  setOpenPolicy(false); 
+                }}
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  color: "#6d2323",
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+
+
+              <Typography variant="h6" gutterBottom>
+                Privacy Policy
+              </Typography>
+              <Typography variant="body2">
+                {/* Privacy policy content here */}
+                This is the Privacy Policy content.
+              </Typography>
+            </Box>
+          </Dialog>
+
+          {/* FAQs Modal */}
+          <Dialog open={openFAQ} onClose={() => setOpenFAQ(false)} fullWidth maxWidth="md">
+            <Box p={3} position="relative">
+              {/* Close button */}
+              <IconButton
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  setOpenFAQ(false); 
+                }}
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  color: "#6d2323",
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+
+
+              <Typography variant="h6" gutterBottom>
+                FAQs
+              </Typography>
+              <Typography variant="body2">
+                {/* FAQs content here */}
+                This is the FAQs content.
+              </Typography>
+            </Box>
+          </Dialog>
+
+
+
+
+            
+
+            <IconButton
+              onClick={() => {
+                document.getElementById("introSlide").style.transform = "translateY(-100%)";
+                setTimeout(() => setShowIntro(false), 800);
+              }}
+              sx={{
+                color: "#FFF8E7",
+                fontSize: "3rem",
+                animation: "bounce 2s infinite",
+              }}
+            >
+              <KeyboardArrowDown fontSize="inherit" />
+            </IconButton>
+
+            <style>{`
+              @keyframes bounce {
+                0%,100% { transform: translateY(0); }
+                50% { transform: translateY(15px); }
+              }
+            `}</style>
+          </Box>
+        )}
+
+
+
+
+        {/* 2FA Modal */}
+        <Modal open={show2FA} onClose={() => setShow2FA(false)}>
+          <Box sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 480,
+            maxWidth: "90%",
+            bgcolor: "rgba(255,248,231,0.85)",
+            borderRadius: 4,
+            p: 5,
+            textAlign: "center",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 20px 50px rgba(128,0,32,0.3)"
+          }}>
+            <Typography variant="h5" sx={{ color: darkText, fontWeight: "bold", mb: 3 }}>Email Verification</Typography>
+            <Typography sx={{ mb: 3, color: mediumText }}>Verification code sent to <b>{userEmail}</b></Typography>
+            {success && <Alert icon={<CheckCircleOutline />} severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+            {twoFactorError && <Alert icon={<ErrorOutline />} severity="error" sx={{ mb: 2 }}>{twoFactorError}</Alert>}
+            <TextField
+              fullWidth
+              placeholder="• • • • • •"
+              value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
+              inputProps={{ maxLength: 6, style: { letterSpacing: "1rem", fontSize: "2rem", textAlign: "center" } }}
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  "& fieldset": {
+                    borderColor: mediumText, // normal border
+                  },
+                  "&:hover fieldset": {
+                    borderColor: mediumText, // hover border
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: mediumText, // focused border (prevents blue)
+                  },
+                },
+              }} />
+
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                mb: 2,
+                py: 1.8,
+                background: primaryGradient,
+                "&:hover": { background: primaryHoverGradient, transform: "scale(1.05)" },
+                transition: "transform 0.2s ease-in-out"
+              }}
+              onClick={verify2FACode}
+              startIcon={<VerifiedUserOutlined sx={{ fontSize: 28, color: "#FFF8E7" }} />}
+            >
+              {twoFactorLoading ? "Verifying..." : "Verify"}
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{
+                py: 1.8,
+                color: "#000",
+                borderColor: "#000",
+                "&:hover": {
+                  backgroundColor: "rgba(0,0,0,0.05)",
+                  borderColor: "#000",
+                },
+              }}
+              onClick={() => send2FACode(userEmail, formData.employeeNumber)}
+              disabled={resendLoading || codeTimer > 0}
+            >
+              {codeTimer > 0 ? `Resend in ${formatTime(codeTimer)}` : resendLoading ? "Sending..." : "Resend Code"}
+            </Button>
+          </Box>
+        </Modal>
+      </Box></>
   );
 };
 

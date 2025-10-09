@@ -10,9 +10,6 @@ import {
   CircularProgress,
   Alert,
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   InputAdornment,
 } from '@mui/material';
@@ -41,10 +38,10 @@ const Payslip = forwardRef(({ employee }, ref) => {
     message: '',
   });
 
-  const [search, setSearch] = useState(''); // search input
-  const [hasSearched, setHasSearched] = useState(false); // flag if search was done
-  const [selectedMonth, setSelectedMonth] = useState(''); // which month is selected
-  const [filteredPayroll, setFilteredPayroll] = useState([]); // search r
+  const [search, setSearch] = useState('');
+  const [hasSearched, setHasSearched] = useState(false); 
+  const [selectedMonth, setSelectedMonth] = useState(''); 
+  const [filteredPayroll, setFilteredPayroll] = useState([]); 
   const [personID, setPersonID] = useState('');
   const months = [
     'Jan',
@@ -80,12 +77,12 @@ const Payslip = forwardRef(({ employee }, ref) => {
   };
 
   useEffect(() => {
-    // Retrieve and decode the token from local storage
+    // token < local storage
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setPersonID(decoded.employeeNumber); // Set the employeeNumber in state
+        setPersonID(decoded.employeeNumber); 
       } catch (error) {
         console.error('Error decoding token:', error);
       }
@@ -101,8 +98,8 @@ const Payslip = forwardRef(({ employee }, ref) => {
             `${API_BASE_URL}/PayrollReleasedRoute/released-payroll-detailed`,
             getAuthHeaders()
           );
-          setAllPayroll(res.data); // ✅ just store everything
-          setDisplayEmployee(null); // ✅ don't auto-display until month is chosen
+          setAllPayroll(res.data); 
+          setDisplayEmployee(null); 
           setLoading(false);
         } catch (err) {
           console.error('Error fetching payroll:', err);

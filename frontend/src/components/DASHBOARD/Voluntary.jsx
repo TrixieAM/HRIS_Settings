@@ -11,7 +11,9 @@ import {
   Chip,
   Modal,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -30,7 +32,6 @@ import SuccessfullOverlay from '../SuccessfulOverlay';
 import AccessDenied from '../AccessDenied';
 import { useNavigate } from "react-router-dom";
 
-
 const VoluntaryWork = () => {
   const [data, setData] = useState([]);
   const [newVoluntary, setNewVoluntary] = useState({
@@ -48,42 +49,53 @@ const VoluntaryWork = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  const navigate = useNavigate();
-  // Page access control
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    const pageId = 9; // PAGE ID
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 9; // PAGE ID
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
 
   useEffect(() => {
     fetchVoluntaryWork();
@@ -95,10 +107,37 @@ const VoluntaryWork = () => {
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
+      showSnackbar('Failed to fetch voluntary work records. Please try again.', 'error');
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['nameAndAddress', 'dateFrom', 'dateTo', 'person_id'];
+    
+    requiredFields.forEach(field => {
+      if (!newVoluntary[field] || newVoluntary[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    // Validate date logic
+    if (newVoluntary.dateFrom && newVoluntary.dateTo) {
+      if (new Date(newVoluntary.dateFrom) > new Date(newVoluntary.dateTo)) {
+        newErrors.dateTo = 'End date must be after start date';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/VoluntaryRoute/voluntary-work`, newVoluntary);
@@ -110,16 +149,18 @@ const VoluntaryWork = () => {
         natureOfWork: '',
         person_id: '',
       });
-     setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+      setErrors({}); // Clear errors
+      setTimeout(() => {     
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchVoluntaryWork();
     } catch (err) {
       console.error('Error adding data:', err);
       setLoading(false);
+      showSnackbar('Failed to add voluntary work record. Please try again.', 'error');
     }
   };
 
@@ -135,6 +176,7 @@ const VoluntaryWork = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
+      showSnackbar('Failed to update voluntary work record. Please try again.', 'error');
     }
   };
 
@@ -150,6 +192,7 @@ const VoluntaryWork = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
+      showSnackbar('Failed to delete voluntary work record. Please try again.', 'error');
     }
   };
 
@@ -158,6 +201,14 @@ const VoluntaryWork = () => {
       setEditVoluntary({ ...editVoluntary, [field]: value });
     } else {
       setNewVoluntary({ ...newVoluntary, [field]: value });
+      // Clear error for this field when user starts typing
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -189,31 +240,31 @@ const VoluntaryWork = () => {
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access Voluntary Work Information. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
   return (
     <Container sx={{ mt: 0, }}>
@@ -274,20 +325,35 @@ const VoluntaryWork = () => {
               {/* Name and Address */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Name and Address
+                  Work Name and Address <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newVoluntary.nameAndAddress}
                   onChange={(e) => handleChange("nameAndAddress", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.nameAndAddress}
+                  helperText={errors.nameAndAddress || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.nameAndAddress ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.nameAndAddress ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.nameAndAddress ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Date From */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Date From
+                  Date From <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newVoluntary.dateFrom}
@@ -296,13 +362,28 @@ const VoluntaryWork = () => {
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.dateFrom}
+                  helperText={errors.dateFrom || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.dateFrom ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.dateFrom ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.dateFrom ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Date To */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Date To
+                  Date To <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newVoluntary.dateTo}
@@ -311,6 +392,21 @@ const VoluntaryWork = () => {
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.dateTo}
+                  helperText={errors.dateTo || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.dateTo ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.dateTo ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.dateTo ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -324,6 +420,19 @@ const VoluntaryWork = () => {
                   onChange={(e) => handleChange("numberOfHours", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -337,19 +446,47 @@ const VoluntaryWork = () => {
                   onChange={(e) => handleChange("natureOfWork", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Employee Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Employee Number
+                  Employee Number <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newVoluntary.person_id}
                   onChange={(e) => handleChange("person_id", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.person_id}
+                  helperText={errors.person_id || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
@@ -585,11 +722,22 @@ const VoluntaryWork = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -608,11 +756,22 @@ const VoluntaryWork = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -631,11 +790,22 @@ const VoluntaryWork = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -652,11 +822,22 @@ const VoluntaryWork = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -673,11 +854,22 @@ const VoluntaryWork = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -694,11 +886,22 @@ const VoluntaryWork = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -722,7 +925,6 @@ const VoluntaryWork = () => {
                           sx={{
                             color: "#ffffff",
                             backgroundColor: 'black'
-                            
                           }}
                         >
                           Delete
@@ -767,6 +969,22 @@ const VoluntaryWork = () => {
           </Box>
         </Modal>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

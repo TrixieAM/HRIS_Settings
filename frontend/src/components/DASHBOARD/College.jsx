@@ -11,7 +11,9 @@ import {
   Chip,
   Modal,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -49,43 +51,54 @@ const College = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  const navigate = useNavigate();
-  // Page access control - Add this useEffect
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    // Change this pageId to match the ID you assign to this page in your page management
-    const pageId = 4; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control - Add this useEffect
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    // Change this pageId to match the ID you assign to this page in your page management
+    const pageId = 4; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
   
 
   useEffect(() => {
@@ -98,10 +111,30 @@ const College = () => {
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
+      showSnackbar('Failed to fetch college records. Please try again.', 'error');
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['collegeNameOfSchool', 'collegeDegree', 'person_id'];
+    
+    requiredFields.forEach(field => {
+      if (!newCollege[field] || newCollege[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/college/college-table`, newCollege);
@@ -115,16 +148,18 @@ const College = () => {
         collegeScholarshipAcademicHonorsReceived: '',
         person_id: '',
       });
-     setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+      setErrors({}); // Clear errors
+      setTimeout(() => {     
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchColleges();
     } catch (err) {
       console.error('Error adding data:', err);
       setLoading(false);
+      showSnackbar('Failed to add college record. Please try again.', 'error');
     }
   };
 
@@ -140,6 +175,7 @@ const College = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
+      showSnackbar('Failed to update college record. Please try again.', 'error');
     }
   };
 
@@ -155,6 +191,7 @@ const College = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
+      showSnackbar('Failed to delete college record. Please try again.', 'error');
     }
   };
 
@@ -163,6 +200,14 @@ const College = () => {
       setEditCollege({ ...editCollege, [field]: value });
     } else {
       setNewCollege({ ...newCollege, [field]: value });
+      // Clear error for this field when user starts typing
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -194,31 +239,31 @@ const College = () => {
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access College Information. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
   return (
     <Container sx={{ mt: 0, }}>
@@ -279,26 +324,56 @@ const College = () => {
               {/* College Name */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  College Name
+                  College Name <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newCollege.collegeNameOfSchool}
                   onChange={(e) => handleChange("collegeNameOfSchool", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.collegeNameOfSchool}
+                  helperText={errors.collegeNameOfSchool || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.collegeNameOfSchool ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.collegeNameOfSchool ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.collegeNameOfSchool ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Degree */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Degree
+                  Degree <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newCollege.collegeDegree}
                   onChange={(e) => handleChange("collegeDegree", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.collegeDegree}
+                  helperText={errors.collegeDegree || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.collegeDegree ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.collegeDegree ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.collegeDegree ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -312,6 +387,19 @@ const College = () => {
                   onChange={(e) => handleChange("collegePeriodFrom", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -325,6 +413,19 @@ const College = () => {
                   onChange={(e) => handleChange("collegePeriodTo", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -338,6 +439,19 @@ const College = () => {
                   onChange={(e) => handleChange("collegeHighestAttained", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -351,6 +465,19 @@ const College = () => {
                   onChange={(e) => handleChange("collegeYearGraduated", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -366,19 +493,47 @@ const College = () => {
                   }
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Employee Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Employee Number
+                  Employee Number <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newCollege.person_id}
                   onChange={(e) => handleChange("person_id", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.person_id}
+                  helperText={errors.person_id || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
@@ -614,11 +769,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -635,11 +801,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -656,11 +833,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -677,11 +865,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -698,11 +897,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -719,11 +929,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -743,11 +964,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -764,11 +996,22 @@ const College = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -792,7 +1035,6 @@ const College = () => {
                           sx={{
                             color: "#ffffff",
                             backgroundColor: 'black'
-                            
                           }}
                         >
                           Delete
@@ -837,6 +1079,22 @@ const College = () => {
           </Box>
         </Modal>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

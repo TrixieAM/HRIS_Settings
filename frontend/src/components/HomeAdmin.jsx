@@ -1,40 +1,13 @@
 import API_BASE_URL from "../apiConfig";
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
-  Container,
-  Box,
-  Grid,
-  Typography,
-  Avatar,
-  Button,
-  IconButton,
-  Tooltip,
-  Modal,
-  Badge,
-  Paper,
-  Card,
-  CardContent,
+  Container, Box, Grid, Dialog, Typography, Avatar, Button, IconButton, Tooltip, Modal, Badge, Paper, Card, CardContent, LinearProgress, Chip, Fade, Grow, Skeleton, Menu, MenuItem, Divider, List, ListItem, ListItemText, ListItemIcon, Checkbox, Tab, Tabs, TextField, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
 import {
-  Notifications as NotificationsIcon,
-  ArrowDropDown as ArrowDropDownIcon,
-  AccountBalance,
-  Description,
-  Download,
-  Person,
-  AccessTime,
-  KeyboardArrowDown,
-  ArrowForwardIos,
-  ReceiptLong,
-  Receipt,
-  ContactPage,
-  GroupAdd,
-  TransferWithinAStation,
-  Group,
-  Pages,
-  UploadFile,
+  Notifications as NotificationsIcon, ArrowDropDown as ArrowDropDownIcon, AccessTime, Receipt, ContactPage, UploadFile, Person, GroupAdd, TransferWithinAStation, Group, Pages, ReceiptLong, AcUnit, TrendingUp, TrendingDown, ArrowForward, PlayArrow, Pause, MoreVert,
+  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Event, Schedule, Lock, Star, Upgrade, Add, Close, Money, Work, Assessment, Timeline, Delete, Edit
 } from "@mui/icons-material";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -45,1231 +18,2301 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import AcUnitIcon from '@mui/icons-material/AcUnit';
-
-
-
-
-
-
-
-
-
-
-
-
+import CloseIcon from "@mui/icons-material/Close";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { 
+  WorkHistory as WorkHistoryIcon,
+  ReceiptLong as ReceiptLongIcon,
+  HourglassBottom as HourglassBottomIcon,  
+} from "@mui/icons-material";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip as RechartTooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Cell,
+  BarChart, Bar, XAxis, YAxis, Tooltip as RechartTooltip, ResponsiveContainer, CartesianGrid, Cell, PieChart, Pie, Legend, LineChart, Line, Area, AreaChart, RadialBarChart, RadialBar,
 } from "recharts";
+import logo from "../assets/logo.PNG";
+import SuccessfulOverlay from "./SuccessfulOverlay";
 
 
+// Color palette from Settings component
+const primaryGradient = "linear-gradient(135deg, #800020, #A52A2A)";
+const primaryHoverGradient = "linear-gradient(135deg, #A52A2A, #800020)";
+const darkText = "#4B0000";
+const mediumText = "#800020";
+const cardBackground = "rgba(255,248,231,0.85)";
+const cardBorder = "rgba(128,0,32,0.15)";
+const cardShadow = "0 15px 40px rgba(128,0,32,0.2)";
 
-
+// Configuration
 const STAT_CARDS = [
-  { label: "Employees", valueKey: "employees", defaultValue: 654, icon: <PeopleIcon sx={{ fontSize: 40 }} /> },
-  { label: "Today's Attendance", valueKey: "todayAttendance", defaultValue: 548, icon: <EventAvailableIcon sx={{ fontSize: 40}} /> },
-  { label: "Leave Requests", valueKey: "leaveRequests", defaultValue: 93, icon: <BeachAccessIcon sx={{ fontSize: 40 }} /> },
-  { label: "Pending Payroll", valueKey: "pendingPayroll", defaultValue: 386, icon: <PendingActionsIcon sx={{ fontSize: 40}} /> },
-  { label: "Leave Pending", valueKey: "leavePending", defaultValue: 55, icon: <PendingActionsIcon sx={{ fontSize: 40}} /> },
-  { label: "Processed Payroll", valueKey: "processedPayroll", defaultValue: 268, icon: <PaymentIcon sx={{ fontSize: 40}} /> },
-  { label: "Leave Approved", valueKey: "leaveApproved", defaultValue: 38, icon: <CheckCircleIcon sx={{ fontSize: 40 }} /> },
-  { label: "Payslip", valueKey: "payslip", defaultValue: 268, icon: <DescriptionIcon sx={{ fontSize: 40 }} /> },
+  {
+    label: "Total Employees",
+    valueKey: "employees",
+    defaultValue: 0,
+    textValue: "Active workforce",
+    icon: <PeopleIcon />,
+    gradient: primaryGradient,
+    shadow: cardShadow,
+    trend: "+5%",
+    trendUp: true,
+    subtitle: "Currently registered",
+  },
+  {
+    label: "Present Today",
+    valueKey: "todayAttendance",
+    defaultValue: 0,
+    textValue: "On time",
+    icon: <EventAvailableIcon />,
+    gradient: primaryHoverGradient,
+    shadow: cardShadow,
+    trend: "+12%",
+    trendUp: true,
+    subtitle: "Currently present",
+  },
+  {
+    label: "Pending Payroll",
+    valueKey: "pendingPayroll",
+    defaultValue: 0,
+    textValue: "Awaiting approval",
+    icon: <PendingActionsIcon />,
+    gradient: "linear-gradient(135deg, #800020, #A52A2A)",
+    shadow: cardShadow,
+    trend: "-8%",
+    trendUp: false,
+    subtitle: "To be processed",
+  },
+  {
+    label: "Processed Payroll",
+    valueKey: "processedPayroll",
+    defaultValue: 0,
+    textValue: "Completed this month",
+    icon: <WorkHistoryIcon />,
+    gradient: "linear-gradient(135deg, #6A0DAD, #8A2BE2)",
+    shadow: cardShadow,
+    trend: "+6%",
+    trendUp: true,
+    subtitle: "Successfully processed",
+  },
+  {
+    label: "Released Payslips",
+    valueKey: "payslipCount",
+    defaultValue: 0,
+    textValue: "Distributed",
+    icon: <ReceiptLongIcon />,
+    gradient: "linear-gradient(135deg, #FF7F50, #FF6347)",
+    shadow: cardShadow,
+    trend: "+2%",
+    trendUp: true,
+    subtitle: "Payslips sent",
+  },
+  {
+    label: "Leave Requests",
+    valueKey: "leaveRequests",
+    defaultValue: 0,
+    textValue: "Pending review",
+    icon: <BeachAccessIcon />,
+    gradient: "linear-gradient(135deg, #A52A2A, #800020)",
+    shadow: cardShadow,
+    trend: "+3%",
+    trendUp: true,
+    subtitle: "Awaiting action",
+  },
+  {
+    label: "Leave Pending",
+    valueKey: "leavePending",
+    defaultValue: 0,
+    textValue: "In queue",
+    icon: <HourglassBottomIcon />,
+    gradient: "linear-gradient(135deg, #FF4500, #FF6347)",
+    shadow: cardShadow,
+    trend: "-4%",
+    trendUp: false,
+    subtitle: "Awaiting decision",
+  },
+  {
+    label: "Leave Approved",
+    valueKey: "leaveApproved",
+    defaultValue: 0,
+    textValue: "Confirmed",
+    icon: <CheckCircleIcon />,
+    gradient: "linear-gradient(135deg, #228B22, #32CD32)",
+    shadow: cardShadow,
+    trend: "+9%",
+    trendUp: true,
+    subtitle: "Approved leaves",
+  },
+];
+
+const QUICK_ACTIONS = [
+  { label: "Users", link: "/users-list", icon: <Group />, gradient: primaryGradient },
+  { label: "Payroll", link: "/payroll-table", icon: <PaymentsIcon />, gradient: primaryHoverGradient },
+  { label: "Leaves", link: "/leave-request", icon: <TransferWithinAStation />, gradient: "linear-gradient(135deg, #800020, #A52A2A)" },
+  { label: "DTRs", link: "/daily_time_record_faculty", icon: <AccessTimeIcon />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
+  { label: "Announcements", link: "/announcement", icon: <CampaignIcon />, gradient: "linear-gradient(135deg, #800020, #A52A2A)" },
+  { label: "Holidays", link: "/holiday", icon: <AcUnit />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
 ];
 
 
+const TASKS = [
+  { id: 1, title: "Process June Payroll", completed: false, priority: "high" },
+  { id: 2, title: "Review Attendance Reports", completed: false, priority: "medium" },
+  { id: 3, title: "Update Employee Records", completed: true, priority: "low" },
+  { id: 4, title: "Generate Monthly Reports", completed: false, priority: "medium" },
+];
 
+const COLORS = ['#800020', '#A52A2A', '#8B0000', '#660000', '#4B0000'];
 
-const AdminHome = () => {
+// Custom hooks
+const useAuth = () => {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
-  const [announcements, setAnnouncements] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [notifModalOpen, setNotifModalOpen] = useState(false);
-  const [stats, setStats] = useState({});
-  const [attendanceChartData, setAttendanceChartData] = useState([]);
-  const [leaveTrackerData, setLeaveTrackerData] = useState([]);
-  const [leaveRequests, setLeaveRequests] = useState([]);
-  const [calendarDate, setCalendarDate] = useState(new Date());
-  const [holidays, setHolidays] = useState([]);
 
-
-
-
-  const navigate = useNavigate();
-  const month = calendarDate.getMonth();
-  const year = calendarDate.getFullYear();
-
-
-
-
-  // slideshow interval
-  useEffect(() => {
-    if (announcements.length === 0) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((s) => (s + 1) % announcements.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [announcements]);
-
-
-
-
-  // decode token for basic info (if you store token in localStorage)
-  const getUserInfo = () => {
+  const getUserInfo = useCallback(() => {
     const token = localStorage.getItem("token");
     if (!token) return {};
     try {
       const decoded = JSON.parse(atob(token.split(".")[1]));
-      return {
-        role: decoded.role,
-        employeeNumber: decoded.employeeNumber,
-        username: decoded.username,
-      };
+      return { role: decoded.role, employeeNumber: decoded.employeeNumber, username: decoded.username };
     } catch (err) {
       return {};
     }
-  };
+  }, []);
 
-  // fetch profile picture from person_table
+  useEffect(() => {
+    const u = getUserInfo();
+    if (u.username) setUsername(u.username);
+    if (u.employeeNumber) setEmployeeNumber(u.employeeNumber);
+  }, [getUserInfo]);
+
   useEffect(() => {
     const fetchProfilePicture = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const list = Array.isArray(res.data) ? res.data : [];
         const match = list.find((p) => String(p.agencyEmployeeNum) === String(employeeNumber));
-        if (match && match.profile_picture) setProfilePicture(match.profile_picture);
-         const fullNameFromPerson = `${match.firstName || ''} ${match.middleName || ''} ${match.lastName || ''} ${match.nameExtension || ''}`.trim();
-          if (fullNameFromPerson) {
-            setFullName(fullNameFromPerson);
-          }
+        if (match) {
+          if (match.profile_picture) setProfilePicture(match.profile_picture);
+          const fullNameFromPerson = `${match.firstName || ''} ${match.middleName || ''} ${match.lastName || ''} ${match.nameExtension || ''}`.trim();
+          if (fullNameFromPerson) setFullName(fullNameFromPerson);
+        }
       } catch (err) {
         console.error('Error loading profile picture:', err);
       }
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     if (employeeNumber) fetchProfilePicture();
   }, [employeeNumber]);
 
+  return { username, fullName, employeeNumber, profilePicture };
+};
 
-
-  // Fetch holidays from holiday endpoint
- useEffect(() => {
-  const fetchHolidays = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/holiday`);
-      if (Array.isArray(res.data)) {
-        const transformedHolidays = res.data.map(item => {
-          // Normalize date to YYYY-MM-DD
-          const d = new Date(item.date);
-          const normalizedDate = !isNaN(d)
-            ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-            : item.date; // fallback if parsing fails
-
-
-
-
-          return {
-            date: normalizedDate,
-            name: item.description,
-            status: item.status
-          };
-        });
-        setHolidays(transformedHolidays);
-      }
-    } catch (err) {
-      console.error("Error fetching holidays:", err);
-    }
-  };
-  fetchHolidays();
-}, []);
-
-
-
+const useDashboardData = () => {
+  const [stats, setStats] = useState({
+    employees: 1242,
+    turnoverRate: 32,
+    happinessRate: 78,
+    teamKPI: 84.45,
+    todayAttendance: 0,
+    leaveRequests: 0,
+    leavePending: 0,
+    leaveApproved: 0,
+    pendingPayroll: 0,
+    processedPayroll: 0,
+    payslip: 0
+  });
+  
+  // Overview Tab Data
+  const [weeklyAttendanceData, setWeeklyAttendanceData] = useState([
+    { day: "Mon", present: 1150, absent: 92, late: 45 },
+    { day: "Tue", present: 1120, absent: 122, late: 45 },
+    { day: "Wed", present: 1140, absent: 102, late: 45 },
+    { day: "Thu", present: 1130, absent: 112, late: 45 },
+    { day: "Fri", present: 1089, absent: 153, late: 45 },
+  ]);
+  
+  const [departmentAttendanceData, setDepartmentAttendanceData] = useState([
+    { department: "IT", present: 245, absent: 15, rate: 94.2 },
+    { department: "HR", present: 89, absent: 6, rate: 93.7 },
+    { department: "Finance", present: 156, absent: 12, rate: 92.9 },
+    { department: "Sales", present: 387, absent: 43, rate: 90.0 },
+    { department: "Operations", present: 212, absent: 27, rate: 88.7 },
+  ]);
+  
+  const [payrollStatusData, setPayrollStatusData] = useState([
+    { status: "Processed", value: 1197, fill: '#800020' },
+    { status: "Pending", value: 45, fill: '#A52A2A' },
+    { status: "Failed", value: 0, fill: '#f44336' },
+  ]);
+  
+  // Analytics Tab Data
+  const [monthlyAttendanceTrend, setMonthlyAttendanceTrend] = useState([
+    { month: "Jan", attendance: 94.2, leaves: 8.5, overtime: 12.3 },
+    { month: "Feb", attendance: 93.8, leaves: 9.2, overtime: 11.8 },
+    { month: "Mar", attendance: 95.1, leaves: 7.8, overtime: 13.5 },
+    { month: "Apr", attendance: 94.7, leaves: 8.9, overtime: 12.1 },
+    { month: "May", attendance: 93.5, leaves: 10.2, overtime: 10.8 },
+    { month: "Jun", attendance: 94.0, leaves: 9.1, overtime: 11.5 },
+  ]);
+  
+  const [payrollTrendData, setPayrollTrendData] = useState([
+    { month: "Jan", grossPay: 2450000, netPay: 1980000, deductions: 470000 },
+    { month: "Feb", grossPay: 2480000, netPay: 2005000, deductions: 475000 },
+    { month: "Mar", grossPay: 2520000, netPay: 2030000, deductions: 490000 },
+    { month: "Apr", grossPay: 2490000, netPay: 2010000, deductions: 480000 },
+    { month: "May", grossPay: 2550000, netPay: 2050000, deductions: 500000 },
+    { month: "Jun", grossPay: 2580000, netPay: 2075000, deductions: 505000 },
+  ]);
+  
+  const [leaveDistributionData, setLeaveDistributionData] = useState([
+    { type: "Sick Leave", count: 145, percentage: 35.4 },
+    { type: "Vacation", count: 128, percentage: 31.2 },
+    { type: "Personal", count: 87, percentage: 21.2 },
+    { type: "Maternity", count: 28, percentage: 6.8 },
+    { type: "Paternity", count: 22, percentage: 5.4 },
+  ]);
+  
+  const [overtimeData, setOvertimeData] = useState([
+    { department: "IT", hours: 245, employees: 45 },
+    { department: "Sales", hours: 189, employees: 67 },
+    { department: "Operations", hours: 156, employees: 38 },
+    { department: "Finance", hours: 98, employees: 22 },
+    { department: "HR", hours: 67, employees: 15 },
+  ]);
+  
+  const [attendanceChartData, setAttendanceChartData] = useState([
+    { name: "Present", value: 950, fill: '#800020' },
+    { name: "Absent", value: 200, fill: '#A52A2A' },
+    { name: "Late", value: 92, fill: '#8B0000' },
+  ]);
+  const [leaveTrackerData, setLeaveTrackerData] = useState([
+    { name: "Sick Leave", value: 45 },
+    { name: "Vacation", value: 30 },
+    { name: "Personal", value: 15 },
+    { name: "Maternity", value: 10 },
+  ]);
+  const [employmentStatusData, setEmploymentStatusData] = useState([
+    { name: "Permanent", value: 47, fill: '#800020' },
+    { name: "Contract", value: 25, fill: '#A52A2A' },
+    { name: "Probation", value: 15, fill: '#8B0000' },
+    { name: "Intern", value: 13, fill: '#660000' },
+  ]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const u = getUserInfo();
-    if (u.username) setUsername(u.username);
-    if (u.employeeNumber) setEmployeeNumber(u.employeeNumber);
-  }, []);
+    const fetchAllData = async () => {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-
-
-
-  // Fetch announcements and other admin data
-  useEffect(() => {
-    const fetchAll = async () => {
       try {
-        // Announcements
-        const annRes = await axios.get(`${API_BASE_URL}/api/announcements`);
-        setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
-
-
-
-
-        // Profile picture (personal info)
-        const piRes = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
-        const match = Array.isArray(piRes.data)
-          ? piRes.data.find((p) => p.agencyEmployeeNum?.toString() === employeeNumber?.toString())
-          : null;
-        if (match && match.profile_picture) setProfilePicture(match.profile_picture);
-
-
-
-
-        // Stats (example endpoint - adapt to your backend)
-        // fallback to defaults if endpoints are missing
+        // Fetch announcements
         try {
-          const statsRes = await axios.get(`${API_BASE_URL}/api/admin/stats`);
-          setStats(statsRes.data || {});
-        } catch {
-          // leave stats empty and rely on defaults defined in UI
-          setStats({});
+          const annRes = await axios.get(`${API_BASE_URL}/api/announcements`, { headers });
+          setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
+        } catch (err) {
+          console.warn("Failed to fetch announcements:", err?.message);
+          setAnnouncements([]);
         }
 
-
-
-
-        // Attendance summary for chart
+        // Fetch holidays
         try {
-          const attRes = await axios.get(`${API_BASE_URL}/api/admin/attendance-summary`);
-          // expected shape: [{ name: 'Present', value: 500 }, ...] or adapt below if different
-          if (Array.isArray(attRes.data) && attRes.data.length > 0) {
-            setAttendanceChartData(
-              attRes.data.map((r) => ({ name: r.name, value: r.value }))
-            );
-          } else {
-            setAttendanceChartData([
-              { name: "Present", value: 480 },
-              { name: "Absent", value: 220 },
-              { name: "Late", value: 95 },
-            ]);
+          const res = await axios.get(`${API_BASE_URL}/holiday`);
+          if (Array.isArray(res.data)) {
+            const transformedHolidays = res.data.map(item => {
+              const d = new Date(item.date);
+              const normalizedDate = !isNaN(d) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` : item.date;
+              return { date: normalizedDate, name: item.description, status: item.status };
+            });
+            setHolidays(transformedHolidays);
           }
-        } catch {
-          setAttendanceChartData([
-            { name: "Present", value: 480 },
-            { name: "Absent", value: 220 },
-            { name: "Late", value: 95 },
-          ]);
+        } catch (err) {
+          console.error("Error fetching holidays:", err);
         }
 
-
-
-
-        // Leave tracker
+        // Fetch employees count
+        let employeesCount = 0;
         try {
-          const leaveRes = await axios.get(`${API_BASE_URL}/api/admin/leave-tracker`);
-          if (Array.isArray(leaveRes.data) && leaveRes.data.length > 0) {
-            setLeaveTrackerData(leaveRes.data.map((r) => ({ name: r.name, value: r.value })));
-          } else {
-            setLeaveTrackerData([
-              { name: "Sick", value: 8 },
-              { name: "Vacation", value: 12 },
-              { name: "Bereavement", value: 16 },
-              { name: "Maternity", value: 20 },
-              { name: "Emergency", value: 12 },
-            ]);
+          const usersRes = await axios.get(`${API_BASE_URL}/users`, { headers });
+          const usersData = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.users || []);
+          employeesCount = usersData.length;
+        } catch (err) {
+          console.warn("Failed to fetch users:", err?.message);
+          try {
+            const ptRes = await axios.get(`${API_BASE_URL}/personalinfo/person_table`, { headers });
+            employeesCount = Array.isArray(ptRes.data) ? ptRes.data.length : 0;
+          } catch (err2) {
+            console.warn("Fallback person_table failed:", err2?.message);
           }
-        } catch {
-          setLeaveTrackerData([
-            { name: "Sick", value: 8 },
-            { name: "Vacation", value: 12 },
-            { name: "Bereavement", value: 16 },
-            { name: "Maternity", value: 20 },
-            { name: "Emergency", value: 12 },
-          ]);
         }
 
-
-
-
-        // Leave requests table
+        // Fetch today's attendance
+        let todayAttendanceCount = 0;
         try {
-          const lrRes = await axios.get(`${API_BASE_URL}/api/admin/leave-requests`);
-          setLeaveRequests(Array.isArray(lrRes.data) ? lrRes.data : []);
-        } catch {
-          // sample fallback
-          setLeaveRequests([
-            {
-              employeeNumber: "#00000000",
-              employeeName: "John Doe",
-              leaveType: "Annual Leave",
-              startDate: "14-06-2025",
-              endDate: "15-07-2025",
-              status: "Pending",
-            },
-            {
-              employeeNumber: "#00000000",
-              employeeName: "Anna Smith",
-              leaveType: "Sick Leave",
-              startDate: "21-02-2025",
-              endDate: "22-02-2025",
-              status: "Approved",
-            },
-            {
-              employeeNumber: "#00000000",
-              employeeName: "Juan Dela Cruz",
-              leaveType: "Casual Leave",
-              startDate: "31-12-2024",
-              endDate: "02-01-2025",
-              status: "Declined",
-            },
-          ]);
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayEnd = new Date();
+          todayEnd.setHours(23, 59, 59, 999);
+          const startTimestamp = todayStart.getTime();
+          const endTimestamp = todayEnd.getTime();
+          const attendanceRes = await axios.post(`${API_BASE_URL}/api/attendance`, { personID: '', startDate: startTimestamp, endDate: endTimestamp }, { headers });
+          if (attendanceRes?.data) {
+            const records = Array.isArray(attendanceRes.data) ? attendanceRes.data : [];
+            const uniqueEmployees = new Set(records.filter(r => r.AttendanceState === 1).map(r => r.PersonID));
+            todayAttendanceCount = uniqueEmployees.size;
+          }
+        } catch (err) {
+          console.warn("Failed to fetch today's attendance:", err?.message);
         }
+
+        // Fetch leave requests
+        let leaveReqs = [];
+        const leaveEndpoints = [`${API_BASE_URL}/api/admin/leave-requests`, `${API_BASE_URL}/api/leave-requests`, `${API_BASE_URL}/leave-requests`];
+        for (const ep of leaveEndpoints) {
+          try {
+            const res = await axios.get(ep, { headers });
+            if (res?.data) {
+              leaveReqs = Array.isArray(res.data) ? res.data : (res.data.data || []);
+              if (leaveReqs.length > 0) break;
+            }
+          } catch (err) {}
+        }
+
+        // Fetch payroll data
+        let payrollList = [];
+        try {
+          const payrollRes = await axios.get(`${API_BASE_URL}/payroll`, { headers });
+          payrollList = Array.isArray(payrollRes.data) ? payrollRes.data : (payrollRes.data?.data || []);
+        } catch (err) {
+          console.warn("Failed to fetch payroll:", err?.message);
+        }
+
+        // Fetch payslip count
+        let payslipCount = 0;
+        try {
+          const payslipRes = await axios.get(`${API_BASE_URL}/payslip`, { headers });
+          payslipCount = Array.isArray(payslipRes.data) ? payslipRes.data.length : (payslipRes.data?.data?.length || 0);
+        } catch (err) {
+          console.warn("Failed to fetch payslip:", err?.message);
+        }
+
+        const pendingPayroll = payrollList.filter(
+          p => String(p.status).toLowerCase() === "unprocess"
+        ).length;
+
+        const processedPayroll = payrollList.filter(
+          p => String(p.status).toLowerCase() === "processed"
+        ).length;
+
+        const leavePending = leaveReqs.filter(l => String(l.status).toLowerCase() === "pending").length;
+        const leaveApproved = leaveReqs.filter(l => String(l.status).toLowerCase() === "approved").length;
+
+        setStats({ 
+          employees: employeesCount, 
+          turnoverRate: 32,
+          happinessRate: 78,
+          teamKPI: 84.45,
+          todayAttendance: todayAttendanceCount, 
+          leaveRequests: leaveReqs.length, 
+          leavePending, 
+          leaveApproved, 
+          pendingPayroll, 
+          processedPayroll, 
+          payslip: payslipCount 
+        });
       } catch (err) {
         console.error("Error fetching admin data:", err);
+      } finally {
+        setLoading(false);
       }
     };
+    fetchAllData();
+  }, []);
 
-
-
-
-    fetchAll();
-  }, [employeeNumber]);
-
-
-
-
-  const handleOpenModal = (announcement) => {
-    setSelectedAnnouncement(announcement);
-    setOpenModal(true);
+  return { 
+    stats, 
+    weeklyAttendanceData, 
+    departmentAttendanceData, 
+    payrollStatusData,
+    monthlyAttendanceTrend,
+    payrollTrendData,
+    leaveDistributionData,
+    overtimeData,
+    attendanceChartData, 
+    leaveTrackerData, 
+    employmentStatusData,
+    announcements, 
+    holidays, 
+    loading 
   };
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setSelectedAnnouncement(null);
+};
+
+const useCarousel = (items, autoPlay = true, interval = 5000) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+
+  useEffect(() => {
+    if (items.length === 0 || !isPlaying) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((s) => (s + 1) % items.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [items, isPlaying, interval]);
+
+  const handlePrevSlide = useCallback(() => {
+    setCurrentSlide((s) => (s - 1 + items.length) % items.length);
+  }, [items.length]);
+
+  const handleNextSlide = useCallback(() => {
+    setCurrentSlide((s) => (s + 1) % items.length);
+  }, [items.length]);
+
+  const handleSlideSelect = useCallback((index) => {
+    setCurrentSlide(index);
+  }, []);
+
+  const togglePlayPause = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
+
+  return {
+    currentSlide,
+    isPlaying,
+    handlePrevSlide,
+    handleNextSlide,
+    handleSlideSelect,
+    togglePlayPause
   };
+};
 
+const useTime = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
+  return currentTime;
+};
 
-  const handlePrevSlide = () => {
-    setCurrentSlide((s) => (s - 1 + announcements.length) % announcements.length);
-  };
-  const handleNextSlide = () => {
-    setCurrentSlide((s) => (s + 1) % announcements.length);
-  };
+// Components
+const StatCard = ({ card, index, stats, loading, hoveredCard, setHoveredCard }) => (
+  <Grow in timeout={500 + index * 100}>
+    <Card 
+      onMouseEnter={() => setHoveredCard(index)} 
+      onMouseLeave={() => setHoveredCard(null)} 
+      sx={{ 
+        background: hoveredCard === index ? card.gradient : cardBackground, 
+        backdropFilter: 'blur(15px)', 
+        border: hoveredCard === index ? 'none' : `1px solid ${cardBorder}`, 
+        borderRadius: 4, 
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)', 
+        transform: hoveredCard === index ? 'translateY(-12px) scale(1.02)' : 'translateY(0)', 
+        boxShadow: hoveredCard === index ? card.shadow : '0 4px 12px rgba(0,0,0,0.1)', 
+        position: 'relative', 
+        overflow: 'hidden', 
+        '&::before': { 
+          content: '""', 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          background: hoveredCard === index ? 'none' : card.gradient, 
+          opacity: 0.1, 
+          transition: 'opacity 0.5s'
+        }, 
+        '&::after': { 
+          content: '""', 
+          position: 'absolute', 
+          top: -50, 
+          right: -50, 
+          width: 150, 
+          height: 150, 
+          background: 'radial-gradient(circle, rgba(254,249,225,0.2) 0%, transparent 70%)', 
+          borderRadius: '50%', 
+          transform: hoveredCard === index ? 'scale(2)' : 'scale(0)', 
+          transition: 'transform 0.6s ease-out' 
+        } 
+      }}
+    >
+      <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Box sx={{ 
+            width: 64, 
+            height: 64, 
+            borderRadius: 3, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            background: hoveredCard === index ? 'rgba(254, 249, 225, 0.2)' : 'rgba(128, 0, 32, 0.1)', 
+            backdropFilter: 'blur(10px)', 
+            color: hoveredCard === index ? '#ffffff' : mediumText, 
+            transition: 'all 0.5s', 
+            transform: hoveredCard === index ? 'rotate(360deg) scale(1.1)' : 'rotate(0) scale(1)', 
+            boxShadow: hoveredCard === index ? '0 8px 24px rgba(0,0,0,0.2)' : 'none' 
+          }}>
+            {React.cloneElement(card.icon, { sx: { fontSize: 36 } })}
+          </Box>
+          <Chip 
+            icon={card.trendUp ? <TrendingUp /> : <TrendingDown />} 
+            label={card.trend} 
+            size="small" 
+            sx={{ 
+              bgcolor: hoveredCard === index ? 'rgba(254,249,225,0.15)' : 'rgba(128, 0, 32, 0.1)', 
+              backdropFilter: 'blur(10px)', 
+              color: hoveredCard === index ? '#ffffff' : mediumText, 
+              fontWeight: 700, 
+              border: hoveredCard === index ? '1px solid rgba(254,249,225,0.2)' : `1px solid ${cardBorder}`, 
+              '& .MuiChip-icon': { color: hoveredCard === index ? '#ffffff' : mediumText } 
+            }} 
+          />
+        </Box>
+        <Typography 
+          variant="h2" 
+          sx={{ 
+            fontWeight: 800, 
+            mb: 0.5, 
+            color: hoveredCard === index ? '#ffffff' : darkText, 
+            textShadow: hoveredCard === index ? '0 2px 10px rgba(0,0,0,0.3)' : 'none' 
+          }}
+        >
+          {loading ? <Skeleton variant="text" width={80} sx={{ bgcolor: 'rgba(128, 0, 32, 0.1)' }} /> : 
+           (stats[card.valueKey] !== undefined ? stats[card.valueKey] : card.defaultValue)}
+        </Typography>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600, 
+            mb: 0.5, 
+            color: hoveredCard === index ? 'rgba(254,249,225,0.9)' : mediumText, 
+            textShadow: hoveredCard === index ? '0 1px 5px rgba(0,0,0,0.3)' : 'none' 
+          }}
+        >
+          {card.textValue}
+        </Typography>
+        <Typography sx={{ color: hoveredCard === index ? 'rgba(254,249,225,0.9)' : '#666666', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>
+          {card.label}
+        </Typography>
+        <Typography sx={{ color: hoveredCard === index ? 'rgba(254,249,225,0.6)' : '#999999', fontSize: '0.85rem' }}>
+          {card.subtitle}
+        </Typography>
+        {loading && <LinearProgress sx={{ mt: 2, borderRadius: 1, height: 4, bgcolor: 'rgba(128, 0, 32, 0.1)', '& .MuiLinearProgress-bar': { bgcolor: hoveredCard === index ? '#ffffff' : mediumText, borderRadius: 1 } }} />}
+      </CardContent>
+    </Card>
+  </Grow>
+);
 
+// Compact version of stat cards
+const CompactStatCard = ({ card, index, stats, loading, hoveredCard, setHoveredCard }) => (
+  <Grow in timeout={300 + index * 50}>
+    <Card 
+      onMouseEnter={() => setHoveredCard(index)} 
+      onMouseLeave={() => setHoveredCard(null)} 
+      sx={{ 
+        height: 120,
+        background: cardBackground, 
+        border: `2px solid ${hoveredCard === index ? mediumText : cardBorder}`, 
+        borderRadius: 4, 
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+        transform: hoveredCard === index ? 'translateY(-4px) scale(1.02)' : 'translateY(0)', 
+        boxShadow: hoveredCard === index ? cardShadow : '0 2px 8px rgba(0,0,0,0.08)', 
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <CardContent sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box sx={{ 
+            width: 40, 
+            height: 30, 
+            borderRadius: 1, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            background: `${mediumText}10`, 
+            color: mediumText, 
+            transition: 'all 0.3s', 
+            transform: hoveredCard === index ? 'rotate(360deg) scale(1.1)' : 'rotate(0) scale(1)', 
+          }}>
+            {React.cloneElement(card.icon, { sx: { fontSize: 24 } })}
+          </Box>
+          <Chip 
+            icon={card.trendUp ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingDown sx={{ fontSize: 14 }} />} 
+            label={card.trend} 
+            size="small" 
+            sx={{ 
+              bgcolor: card.trendUp ? `${mediumText}10` : '#f4433610',
+              color: card.trendUp ? mediumText : '#f44336',
+              fontWeight: 600, 
+              fontSize: '0.7rem',
+              height: 24,
+              '& .MuiChip-icon': { color: 'inherit' } 
+            }} 
+          />
+        </Box>
+        <Box>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 700, 
+              color: darkText, 
+              lineHeight: 1
+            }}
+          >
+            {loading ? <Skeleton variant="text" width={60} height={32} /> : 
+             (stats[card.valueKey] !== undefined ? stats[card.valueKey] : card.defaultValue)}
+          </Typography>
+          <Typography sx={{ color: mediumText, fontSize: '0.75rem', fontWeight: 500 }}>
+            {card.textValue}
+          </Typography>
+          <Typography sx={{ color: '#666666', fontSize: '0.7rem', fontWeight: 500 }}>
+            {card.label}
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
+  </Grow>
+);
 
+const AnnouncementCarousel = ({ announcements, currentSlide, isPlaying, handlePrevSlide, handleNextSlide, handleSlideSelect, togglePlayPause, handleOpenModal }) => (
+  <Fade in timeout={600}>
+    <Card sx={{ 
+      background: cardBackground, 
+      backdropFilter: 'blur(15px)', 
+      border: `1px solid ${cardBorder}`, 
+      borderRadius: 4, 
+      mb: 3, 
+      overflow: 'hidden', 
+      boxShadow: cardShadow, 
+      position: 'relative' 
+    }}>
+      <Box sx={{ position: 'relative', height: 550 }}>
+        {announcements.length > 0 ? (
+          <>
+            <Box 
+              component="img" 
+              src={announcements[currentSlide]?.image ? `${API_BASE_URL}${announcements[currentSlide].image}` : "/api/placeholder/800/400"} 
+              alt={announcements[currentSlide]?.title || "Announcement"} 
+              sx={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover', 
+                transition: 'transform 0.7s ease', 
+                transform: 'scale(1)' 
+              }} 
+            />
+            <Box sx={{ 
+              position: 'absolute', 
+              inset: 0, 
+              background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 70%)' 
+            }} />
+            <IconButton 
+              onClick={(e) => { e.stopPropagation(); handlePrevSlide(); }} 
+              sx={{ 
+                position: 'absolute', 
+                left: 24, 
+                top: '50%', 
+                transform: 'translateY(-50%)', 
+                bgcolor: 'rgba(128, 0, 32, 0.3)', 
+                backdropFilter: 'blur(10px)', 
+                border: `1px solid ${cardBorder}`, 
+                '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'translateY(-50%) scale(1.1)' }, 
+                color: '#ffffff', 
+                boxShadow: '0 4px 24px rgba(0,0,0,0.2)', 
+                transition: 'all 0.3s' 
+              }}
+            >
+              <ArrowBackIosNewIcon />
+            </IconButton>
+            <IconButton 
+              onClick={(e) => { e.stopPropagation(); handleNextSlide(); }} 
+              sx={{ 
+                position: 'absolute', 
+                right: 24, 
+                top: '50%', 
+                transform: 'translateY(-50%)', 
+                bgcolor: 'rgba(128, 0, 32, 0.3)', 
+                backdropFilter: 'blur(10px)', 
+                border: `1px solid ${cardBorder}`, 
+                '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'translateY(-50%) scale(1.1)' }, 
+                color: '#ffffff', 
+                boxShadow: '0 4px 24px rgba(0,0,0,0.2)', 
+                transition: 'all 0.3s' 
+              }}
+            >
+              <ArrowForwardIosIcon />
+            </IconButton>
+            <IconButton 
+              onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} 
+              sx={{ 
+                position: 'absolute', 
+                top: 24, 
+                right: 24, 
+                bgcolor: 'rgba(128, 0, 32, 0.3)', 
+                backdropFilter: 'blur(10px)', 
+                border: `1px solid ${cardBorder}`, 
+                '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'scale(1.1)' }, 
+                color: '#ffffff', 
+                boxShadow: '0 4px 24px rgba(0,0,0,0.2)', 
+                transition: 'all 0.3s' 
+              }}
+            >
+              {isPlaying ? <Pause /> : <PlayArrow />}
+            </IconButton>
+            <Box 
+              onClick={() => handleOpenModal(announcements[currentSlide])} 
+              sx={{ 
+                position: 'absolute', 
+                bottom: 0, 
+                left: 0, 
+                right: 0, 
+                p: 4, 
+                color: '#ffffff', 
+                cursor: 'pointer', 
+                transition: 'transform 0.3s', 
+                '&:hover': { transform: 'translateY(-4px)' } 
+              }}
+            >
+              <Chip 
+                label="ANNOUNCEMENT" 
+                size="small" 
+                sx={{ 
+                  mb: 2, 
+                  bgcolor: 'rgba(128, 0, 32, 0.5)', 
+                  backdropFilter: 'blur(10px)', 
+                  color: '#ffffff', 
+                  fontWeight: 700, 
+                  fontSize: '0.7rem', 
+                  border: '1px solid rgba(254, 249, 225, 0.3)' 
+                }} 
+              />
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontWeight: 800, 
+                  mb: 1, 
+                  textShadow: '0 4px 12px rgba(0,0,0,0.5)', 
+                  lineHeight: 1.2 
+                }}
+              >
+                {announcements[currentSlide]?.title}
+              </Typography>
+              <Typography 
+                sx={{ 
+                  opacity: 0.95, 
+                  fontSize: '1rem', 
+                  textShadow: '0 2px 8px rgba(0,0,0,0.5)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1 
+                }}
+              >
+                <AccessTimeIcon sx={{ fontSize: 18 }} />
+                {new Date(announcements[currentSlide]?.date).toDateString()}
+              </Typography>
+            </Box>
+            <Box sx={{ 
+              position: 'absolute', 
+              bottom: 24, 
+              right: 24, 
+              display: 'flex', 
+              gap: 1.5, 
+              alignItems: 'center' 
+            }}>
+              {announcements.map((_, idx) => (
+                <Box 
+                  key={idx} 
+                  sx={{ 
+                    width: currentSlide === idx ? 32 : 10, 
+                    height: 10, 
+                    borderRadius: 5, 
+                    bgcolor: currentSlide === idx ? '#ffffff' : 'rgba(254,249,225,0.4)', 
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+                    cursor: 'pointer', 
+                    border: '1px solid rgba(254,249,225,0.3)', 
+                    '&:hover': { 
+                      bgcolor: 'rgba(254,249,225,0.7)', 
+                      transform: 'scale(1.2)' 
+                    } 
+                  }} 
+                  onClick={(e) => { e.stopPropagation(); handleSlideSelect(idx); }} 
+                />
+              ))}
+            </Box>
+          </>
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            height: '100%', 
+            flexDirection: 'column', 
+            gap: 2 
+          }}>
+            <CampaignIcon sx={{ fontSize: 80, color: 'rgba(128, 0, 32, 0.3)' }} />
+            <Typography variant="h5" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>
+              No announcements available
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </Card>
+  </Fade>
+);
 
+const CompactChart = ({ title, children, height = 200 }) => (
+  <Card sx={{ 
+    background: cardBackground, 
+    backdropFilter: 'blur(15px)', 
+    border: `1px solid ${cardBorder}`, 
+    borderRadius: 4, 
+    height: height + 80, 
+    boxShadow: cardShadow, 
+    transition: 'all 0.3s', 
+    '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 20px 50px rgba(128,0,32,0.3)' } 
+  }}>
+    <CardContent sx={{ p: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: darkText, fontSize: '0.95rem' }}>
+        {title}
+      </Typography>
+      <Box sx={{ height }}>
+        {children}
+      </Box>
+    </CardContent>
+  </Card>
+);
 
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined || value === 0) return "₱0.00";
-    return `₱${parseFloat(value).toLocaleString()}`;
-  };
+const CompactCalendar = ({ calendarDate, setCalendarDate, holidays }) => {
+  const month = calendarDate.getMonth();
+  const year = calendarDate.getFullYear();
 
-
-
-
-  // calendar generator (Mon-first)
   const generateCalendar = (month, year) => {
-    const firstDay = new Date(year, month, 1).getDay(); // 0 Sun
-    const adjustedFirst = firstDay === 0 ? 6 : firstDay - 1; // shift to Mon-first
+    const firstDay = new Date(year, month, 1).getDay();
+    const adjustedFirst = firstDay === 0 ? 6 : firstDay - 1;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days = [];
     for (let i = 0; i < adjustedFirst; i++) days.push(null);
     for (let d = 1; d <= daysInMonth; d++) days.push(d);
-    while (days.length < 42) days.push(null);
+    while (days.length < 35) days.push(null);
     return days;
   };
 
+  const calendarDays = useMemo(() => generateCalendar(month, year), [month, year]);
 
-
-
-  const calendarDays = generateCalendar(month, year);
-
-
-
-
-return (
-  <Container maxWidth={false} sx={{ backgroundColor: "#f5f0e8", height: "90vh", p: 2, ml: 4, mt: -5 }}>
-    <Box sx={{ display: "flex", gap: 5 }}>
-      {/* Left/Main Column */}
-      <Box sx={{ flex: 1, mr: 1 }}>
-        {/* Row 1: Stats + Calendar */}
-        <Grid container spacing={1} sx={{ mb: 10 }}>
-          {/* Stats Cards - Left side */}
-        <Grid item xs={12} md={4}>
-            <Grid container spacing={8}> {/* bottom */}
-                {STAT_CARDS.map((card) => (
-                <Grid item xs={12} sm={6} md={6} mb={5} key={card.label}>
-                    <Paper
-                    elevation={6}
-                    sx={{
-                        backgroundColor: "#fff", // white background
-                        color: "#333",
-                        borderRadius: 2,
-                        border: "1px solid #6d2323", // burgundy border
-                        p: 0.8,
-                        height: "300%",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 1.5,
-                        mr: "-15px",
-                        mb: "-38px",
-                    }}
-                    >
-                    {/* Small Icon on the left with white color */}
-                    <Box
-                        sx={{
-                        borderRadius: "50%",
-                        p: 0.5,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        }}
-                    >
-                        {React.cloneElement(card.icon, { fontSize: "14px", htmlColor: "#6d2323" })}
-                    </Box>
-
-
-
-
-                    {/* Number and Label */}
-                    <Box>
-                        <Typography fontSize="18px" fontWeight="bold" color="#333">
-                        {stats[card.valueKey] !== undefined
-                            ? stats[card.valueKey]
-                            : card.defaultValue}
-                        </Typography>
-                        <Typography fontSize="12px" sx={{ opacity: 0.7 }}>
-                        {card.label}
-                        </Typography>
-                    </Box>
-                    </Paper>
-                </Grid>
-                ))}
+  return (
+    <Card sx={{ 
+      background: cardBackground, 
+      backdropFilter: 'blur(15px)', 
+      border: `1px solid ${cardBorder}`, 
+      borderRadius: 4, 
+      boxShadow: cardShadow,
+      height: 260
+    }}>
+      <CardContent sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <IconButton 
+            size="small" 
+            onClick={() => setCalendarDate(new Date(year, month - 1, 1))} 
+            sx={{ color: mediumText, p: 0.5 }}
+          >
+            <ArrowBackIosNewIcon fontSize="small" />
+          </IconButton>
+          <Typography sx={{ 
+            fontWeight: 600, 
+            fontSize: '0.8rem', 
+            color: darkText 
+          }}>
+            {new Date(year, month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+          </Typography>
+          <IconButton 
+            size="small" 
+            onClick={() => setCalendarDate(new Date(year, month + 1, 1))} 
+            sx={{ color: mediumText, p: 0.5 }}
+          >
+            <ArrowForwardIosIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <Grid container spacing={0.3} sx={{ mb: 0.3 }}>
+          {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
+            <Grid item xs={12 / 7} key={day}>
+              <Typography sx={{ 
+                textAlign: 'center', 
+                fontWeight: 600, 
+                fontSize: '0.55rem', 
+                color: '#666666' 
+              }}>
+                {day}
+              </Typography>
             </Grid>
-            </Grid>
+          ))}
+        </Grid>
+        <Grid container spacing={0.3} sx={{ flex: 1 }}>
+          {calendarDays.map((day, index) => {
+            const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            const holidayData = holidays.find(h => h.date === currentDate && h.status === "Active");
+            const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+            return (
+              <Grid item xs={12 / 7} key={index}>
+                <Box sx={{ 
+                  textAlign: 'center', 
+                  py: 0.3, 
+                  fontSize: '0.65rem', 
+                  borderRadius: 0.5, 
+                  color: holidayData ? '#ffffff' : day ? darkText : 'transparent', 
+                  background: holidayData ? primaryGradient : isToday ? '#f5f5f5' : 'transparent', 
+                  fontWeight: holidayData || isToday ? 600 : 400, 
+                  cursor: 'pointer', 
+                  transition: 'all 0.2s', 
+                  '&:hover': { 
+                    background: holidayData ? primaryHoverGradient : '#e0e0e0', 
+                    transform: 'scale(1.1)' 
+                  } 
+                }}>
+                  {day || ""}
+                </Box>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+};
 
+const RecentActivity = () => {
+  const activities = [
+    {
+      id: 1,
+      user: "John Doe",
+      action: "Processed payroll for June 2024",
+      time: "2 minutes ago",
+      icon: <PaymentsIcon />,
+      color: mediumText
+    },
+    {
+      id: 2,
+      user: "Jane Smith",
+      action: "Approved leave request for Michael Brown",
+      time: "15 minutes ago",
+      icon: <CheckCircleIcon />,
+      color: "#4caf50"
+    },
+    {
+      id: 3,
+      user: "Robert Johnson",
+      action: "Updated employee records",
+      time: "1 hour ago",
+      icon: <Person />,
+      color: "#2196f3"
+    },
+    {
+      id: 4,
+      user: "Emily Davis",
+      action: "Generated monthly attendance report",
+      time: "2 hours ago",
+      icon: <Assessment />,
+      color: "#ff9800"
+    },
+    {
+      id: 5,
+      user: "System",
+      action: "New announcement posted: Company Holiday Schedule",
+      time: "3 hours ago",
+      icon: <CampaignIcon />,
+      color: "#9c27b0"
+    }
+  ];
 
-
-
-
-
-
-
-            {/* slideshow */}
-          <Grid item xs={12} md={8}>
-            <Box
-                sx={{
-                position: "relative",
-                borderRadius: 2,
-                overflow: "hidden",
-                border: "1px solid #8B2635",
-                height: "50vh",
-                ml: 5,
-                mb: -5,
-                cursor: "pointer",
-                }}
-                onClick={() => {
-                const announcement = announcements[currentSlide];
-                if (announcement) {
-                    setSelectedAnnouncement(announcement);
-                    setOpenModal(true);
+  return (
+    <Card sx={{ 
+      background: cardBackground, 
+      backdropFilter: 'blur(15px)', 
+      border: `1px solid ${cardBorder}`, 
+      borderRadius: 4, 
+      boxShadow: cardShadow,
+      height: 320
+    }}>
+      <CardContent sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5, color: darkText, fontSize: '0.85rem' }}>
+          Recent Activity
+        </Typography>
+        <Box sx={{ flex: 1, overflowY: 'auto' }}>
+          {activities.map((activity, index) => (
+            <Grow in timeout={300 + index * 50} key={activity.id}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: 1, 
+                mb: 1.5,
+                p: 0.5,
+                borderRadius: 1,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  background: 'rgba(128, 0, 32, 0.05)',
+                  transform: 'translateX(2px)'
                 }
-                }}
+              }}>
+                <Box sx={{ 
+                  width: 28, 
+                  height: 28, 
+                  borderRadius: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  background: `${activity.color}10`, 
+                  color: activity.color,
+                  flexShrink: 0
+                }}>
+                  {React.cloneElement(activity.icon, { sx: { fontSize: 16 } })}
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ 
+                    fontSize: '0.7rem', 
+                    fontWeight: 600, 
+                    color: darkText,
+                    lineHeight: 1.3,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical'
+                  }}>
+                    {activity.action}
+                  </Typography>
+                  <Typography sx={{ 
+                    fontSize: '0.6rem', 
+                    color: '#666666',
+                    mt: 0.25
+                  }}>
+                    {activity.user} • {activity.time}
+                  </Typography>
+                </Box>
+              </Box>
+            </Grow>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+const TaskList = () => {
+  const [tasks, setTasks] = useState([]);
+  const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [newTask, setNewTask] = useState({ title: "", priority: "medium" });
+  const [showSuccess, setShowSuccess] = useState(false);
+
+
+  // Fetch tasks on load
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/tasks`).then((res) => setTasks(res.data));
+  }, []);
+
+  const handleToggle = async (id) => {
+    await axios.put(`${API_BASE_URL}/tasks/${id}/toggle`);
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const handleAddTask = async () => {
+  if (!newTask.title.trim()) return;
+  const res = await axios.post(`${API_BASE_URL}/tasks`, newTask);
+  setTasks([res.data, ...tasks]);
+  setNewTask({ title: "", priority: "medium" });
+  setAddTaskOpen(false);
+  setShowSuccess(true); 
+  setTimeout(() => setShowSuccess(false), 2000);
+};
+
+
+  const handleDelete = async (id) => {
+    await axios.delete(`${API_BASE_URL}/tasks/${id}`);
+    setTasks(tasks.filter(task => task.id !== id));
+  };
+
+  return (
+    <>
+      <Card
+        sx={{
+          background: cardBackground,
+          backdropFilter: "blur(15px)",
+          border: `1px solid ${cardBorder}`,
+          borderRadius: 4,
+          mb: 2,
+          boxShadow: cardShadow,
+        }}
+      >
+        {showSuccess && <SuccessfulOverlay message="Task added successfully!" />}
+        <CardContent sx={{ p: 2 }}>
+          {/* Header */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: darkText, fontSize: "0.95rem" }}>
+              Tasks
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setAddTaskOpen(true)}
+              sx={{
+                bgcolor: mediumText,
+                color: "#ffffff",
+                "&:hover": { bgcolor: primaryHoverGradient },
+                width: 28,
+                height: 28,
+              }}
             >
-                {announcements.length > 0 && (
-                <>
-                    {/* Previous button */}
-                    <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handlePrevSlide();
-                    }}
-                    sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: 15,
-                        transform: "translateY(-50%)",
-                        color: "rgba(255,255,255,0.9)",
-                        zIndex: 2,
-                    }}
-                    >
-                    <ArrowBackIosNewIcon />
-                    </IconButton>
+              <Add fontSize="small" />
+            </IconButton>
+          </Box>
 
-
-
-
-                    {/* Slide image */}
-                    <Box
-                    component="img"
-                    src={
-                        announcements[currentSlide]?.image
-                        ? `${API_BASE_URL}${announcements[currentSlide].image}`
-                        : "/api/placeholder/800/400"
-                    }
-                    alt={announcements[currentSlide]?.title || "Announcement"}
-                    sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                    }}
-                    />
-
-
-
-
-                    {/* Inner shadow overlay */}
-                    <Box
-                    sx={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                        background:
-                        "radial-gradient(circle at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 90%)",
-                    }}
-                    />
-
-
-
-
-                    {/* Next button */}
-                    <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleNextSlide();
-                    }}
-                    sx={{
-                        position: "absolute",
-                        top: "50%",
-                        right: 15,
-                        transform: "translateY(-50%)",
-                        color: "rgba(255,255,255,0.9)",
-                        zIndex: 2,
-                    }}
-                    >
-                    <ArrowForwardIosIcon />
-                    </IconButton>
-
-
-
-
-                    {/* Caption box */}
-                    <Box
-                    sx={{
-                        position: "absolute",
-                        bottom: 20,
-                        left: 20,
-                        p: 2,
-                        borderRadius: 2,
-                        backgroundColor: "rgba(0,0,0,0.4)",
-                        backdropFilter: "blur(4px)",
-                    }}
-                    >
-                    <Typography
-                        variant="h6"
-                        fontWeight="bold"
-                        sx={{
-                        color: "white",
-                        textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                        }}
-                    >
-                        {announcements[currentSlide]?.title}
-                    </Typography>
-                    <Typography
-                        fontSize="small"
-                        sx={{
-                        color: "white",
-                        textShadow: "1px 1px 3px rgba(0,0,0,0.7)",
-                        }}
-                    >
-                        {new Date(announcements[currentSlide]?.date).toDateString()}
-                    </Typography>
-                    </Box>
-                </>
-                )}
-            </Box>
-
-
-
-
-            {/* Modal for full announcement details */}
-            <Modal
-                open={openModal}
-                onClose={handleCloseModal}
-                aria-labelledby="announcement-modal"
-                aria-describedby="announcement-details"
-            >
-                <Box
-                sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "80%",
-                    maxWidth: 600,
-                    bgcolor: "background.paper",
-                    boxShadow: 24,
-                    p: 4,
-                    borderRadius: 2,
-                    maxHeight: "90vh",
-                    overflow: "auto",
-                }}
+          {/* Task list */}
+          <List dense sx={{ p: 0 }}>
+            {tasks.slice(0, 6).map((task) => (
+              <ListItem
+                key={task.id}
+                sx={{ p: 0, mb: 1, display: "flex", alignItems: "center" }}
+              >
+                <Checkbox
+                  checked={task.completed}
+                  onChange={() => handleToggle(task.id)}
+                  size="small"
+                  sx={{
+                    color: mediumText,
+                    "&.Mui-checked": { color: mediumText },
+                  }}
+                />
+                <ListItemText
+                  primary={task.title}
+                  primaryTypographyProps={{
+                    sx: {
+                      fontSize: "0.85rem",
+                      color: task.completed ? "#999999" : darkText,
+                      textDecoration: task.completed ? "line-through" : "none",
+                    },
+                  }}
+                />
+                <Chip
+                  label={task.priority}
+                  size="small"
+                  sx={{
+                    fontSize: "0.65rem",
+                    height: 20,
+                    bgcolor:
+                      task.priority === "high"
+                        ? "#f4433610"
+                        : task.priority === "medium"
+                        ? "#ff980010"
+                        : "#4caf5010",
+                    color:
+                      task.priority === "high"
+                        ? "#f44336"
+                        : task.priority === "medium"
+                        ? "#ff9800"
+                        : "#4caf50",
+                    mr: 1,
+                  }}
+                />
+                {/* Delete Button */}
+                <IconButton
+                  size="small"
+                  onClick={() => handleDelete(task.id)}
+                  sx={{ color: "#6d2323" }}
                 >
-                {selectedAnnouncement && (
-                    <>
-                    <Typography variant="h5" component="h2" gutterBottom>
-                        {selectedAnnouncement.title}
-                    </Typography>
-                    {selectedAnnouncement.image && (
-                        <Box
-                        component="img"
-                        src={`${API_BASE_URL}${selectedAnnouncement.image}`}
-                        alt={selectedAnnouncement.title}
-                        sx={{
-                            width: "100%",
-                            height: "auto",
-                            maxHeight: 300,
-                            objectFit: "cover",
-                            borderRadius: 1,
-                            mb: 2,
-                        }}
-                        />
-                    )}
-                    <Typography variant="body1" paragraph>
-                        {selectedAnnouncement.about}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Posted on: {new Date(selectedAnnouncement.date).toLocaleDateString()}
-                    </Typography>
-                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Button
-                        variant="contained"
-                        onClick={handleCloseModal}
-                        sx={{
-                            mt: 2,
-                            backgroundColor: "#700000",
-                            "&:hover": { backgroundColor: "#500000" },
-                        }}
-                        >
-                        Close
-                        </Button>
-                    </Box>
-                    </>
-                )}
-                </Box>
-            </Modal>
-            </Grid>
-                    </Grid>
+                  <Delete fontSize="small" />
+                </IconButton>
+              </ListItem>
+            ))}
+          </List>
+        </CardContent>
+      </Card>
 
-
-
-
-                    <Grid container spacing={4} sx={{ mb: 2, mt: -8, }}>
-            {/* Graph 1 - Left side */}
-            <Grid item xs={12} md={4}>
-                <Box
+      {/* Add Task Dialog */}
+      <Dialog
+        open={addTaskOpen}
+        onClose={() => setAddTaskOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 2,
+            bgcolor: cardBackground,
+            backdropFilter: "blur(12px)",
+            border: `1px solid ${cardBorder}`,
+            boxShadow: cardShadow,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            pb: 1,
+            fontSize: "1rem",
+            fontWeight: 600,
+            color: darkText,
+          }}
+        >
+          Add New Task
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Task Title"
+            fullWidth
+            variant="outlined"
+            value={newTask.title}
+            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+            sx={{
+              mb: 2,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+          />
+          <Typography variant="body2" sx={{ mb: 1, color: "#666666", fontWeight: 500 }}>
+            Priority
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {["low", "medium", "high"].map((priority) => (
+              <Button
+                key={priority}
+                variant={newTask.priority === priority ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setNewTask({ ...newTask, priority })}
                 sx={{
-                    borderRadius: 2,
-                    border: "1px solid #8B2635",
-                    backgroundColor: "#fff6f5",
-                    p: 2,
-                    height: "255px",
-                   
-                }}
-                >
-                <Typography fontWeight="bold" sx={{ mb: 1, color: '#6d2323' }}>
-                    Employee Attendance
-                </Typography>
-                <Box sx={{ width: "100%", height: 200 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={attendanceChartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <RechartTooltip />
-                        <Bar dataKey="value">
-                        {attendanceChartData.map((entry, idx) => (
-                            <Cell key={`cell-${idx}`} fill={["#6D1E29", "#8B2635", "#B23A3A"][idx % 3]} />
-                        ))}
-                        </Bar>
-                    </BarChart>
-                    </ResponsiveContainer>
-                </Box>
-                </Box>
-            </Grid>
-
-
-
-
-            {/* Graph 2 - Middle */}
-            <Grid item xs={12} md={4}>
-                <Box
-                sx={{
-                    borderRadius: 2,
-                    border: "1px solid #8B2635",
-                    backgroundColor: "#fff6f5",
-                    p: 2,
-                    height: "255px",
-                }}
-                >
-                <Typography fontWeight="bold" sx={{ mb: 1, color: "#6d2323" }}>
-                    Employee Leave Tracker
-                </Typography>
-                <Box sx={{ width: "100%", height: 200 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                        data={leaveTrackerData}
-                        layout="vertical"
-                        margin={{ top: 5, right: 20, left: 60, bottom: 5 }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis dataKey="name" type="category" />
-                        <RechartTooltip />
-                        <Bar dataKey="value" barSize={16}>
-                        {leaveTrackerData.map((entry, idx) => (
-                            <Cell key={`cellL-${idx}`} fill={["#6D1E29", "#8B2635", "#B23A3A", "#9C2C2C", "#4D1B1B"][idx % 5]} />
-                        ))}
-                        </Bar>
-                    </BarChart>
-                    </ResponsiveContainer>
-                </Box>
-                </Box>
-            </Grid>
-
-
-
-
-            {/* Enhanced Calendar - Right side */}
-            <Grid item xs={12} md={4}>
-              <Box
-                sx={{
+                  textTransform: "capitalize",
                   borderRadius: 2,
-                  border: "1px solid #8B2635",
-                  backgroundColor: "#fff6f5",
-                  p: 2.5,
-                 
+                  borderColor:
+                    priority === "high"
+                      ? "#f44336"
+                      : priority === "medium"
+                      ? "#ff9800"
+                      : "#4caf50",
+                  color:
+                    priority === "high"
+                      ? "#f44336"
+                      : priority === "medium"
+                      ? "#ff9800"
+                      : "#4caf50",
+                  ...(newTask.priority === priority && {
+                    bgcolor:
+                      priority === "high"
+                        ? "#f44336"
+                        : priority === "medium"
+                        ? "#ff9800"
+                        : "#4caf50",
+                    color: "#ffffff",
+                    "&:hover": {
+                      opacity: 0.9,
+                    },
+                  }),
                 }}
               >
-                {/* Calendar Header with Navigation */}
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.6 }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
-                    sx={{ color: "#6d2323" }}
-                  >
-                    <ArrowBackIosNewIcon fontSize="small" />
-                  </IconButton>
-                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "1.2rem" }}>
-                    {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
-                    sx={{ color: "#6d2323" }}
-                  >
-                    <ArrowForwardIosIcon fontSize="small" />
-                  </IconButton>
-                </Box>
+                {priority}
+              </Button>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setAddTaskOpen(false)}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 500,
+              color: darkText,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddTask}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              fontWeight: 600,
+              bgcolor: mediumText,
+              textTransform: "none",
+              "&:hover": { bgcolor: primaryHoverGradient },
+            }}
+          >
+            Add Task
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+    </>
+  );
+};
 
 
 
 
-                {/* Days of Week Header */}
-                <Grid container spacing={0} sx={{ mb: 0.5 }}>
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                    <Grid item xs={12 / 7} key={day}>
-                      <Typography
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          fontSize: "0.90rem",
-                          color: "#6d2323",
-                          p: 0.3,
-                        }}
-                      >
-                        {day}
-                      </Typography>
-                    </Grid>
-                  ))}
-                </Grid>
-
-
-
-
-                {/* Calendar Days Grid */}
-                <Grid container spacing={0}>
-                  {calendarDays.map((day, index) => {
-                    const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-
-
-
-                    const holidayData = holidays.find(
-                      (h) => h.date === currentDate && h.status === "Active"
-                    );
-
-
-
-
-                    return (
-                      <Grid item xs={12 / 7} key={index}>
-                        <Tooltip title={holidayData ? holidayData.name : ""} arrow>
-                          <Box
-                            sx={{
-                              textAlign: "center",
-                              p: 0.5,
-                              fontSize: "0.9rem",
-                              borderRadius: "20px",
-                              color: holidayData ? "#fff" : day ? "#333" : "transparent",
-                              backgroundColor: holidayData ? "#6d2323" : "transparent",
-                              fontWeight: holidayData ? "bold" : "normal",
-                              minHeight: "20px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: holidayData ? "pointer" : "default",
-                              "&:hover": holidayData
-                                ? {
-                                    backgroundColor: "#6d2323",
-                                    transform: "scale(1.05)",
-                                    transition: "all 0.2s ease-in-out",
-                                  }
-                                : {},
-                            }}
-                          >
-                            {day || ""}
-                          </Box>
-                        </Tooltip>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
-
-
-
-
-
-
-
-
-                {/* Legend */}
-                {/* <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        backgroundColor: "red",
-                        borderRadius: "50%"
-                      }}
-                    />
-                    <Typography fontSize="0.6rem" color="#666">Holiday</Typography>
+const QuickActions = () => (
+  <Card sx={{ 
+    background: cardBackground, 
+    backdropFilter: 'blur(15px)', 
+    border: `1px solid ${cardBorder}`, 
+    borderRadius: 4, 
+    boxShadow: cardShadow,
+    height: 260
+  }}>
+    <CardContent sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5, color: darkText, fontSize: '0.85rem' }}>
+       Admin Panel
+      </Typography>
+      <Grid container spacing={1}>
+        {QUICK_ACTIONS.map((item, i) => (
+          <Grid item xs={4} key={i}>
+            <Grow in timeout={400 + i * 50}>
+              <Link to={item.link} style={{ textDecoration: "none" }}>
+                <Box sx={{ 
+                  p: 1, 
+                  borderRadius: 1.5, 
+                  background: `${mediumText}05`, 
+                  border: `1px solid ${cardBorder}`, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  gap: 0.5, 
+                  transition: 'all 0.3s', 
+                  cursor: 'pointer',
+                  height: 60,
+                  '&:hover': { 
+                    background: `${mediumText}10`, 
+                    transform: 'translateY(-2px)', 
+                    boxShadow: `0 4px 12px ${mediumText}20` 
+                  } 
+                }}>
+                  <Box sx={{ color: mediumText }}>
+                    {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                   </Box>
-                </Box> */}
-              </Box>
-            </Grid>
-            </Grid>
+                  <Typography sx={{ 
+                    fontSize: '0.6rem', 
+                    fontWeight: 600, 
+                    color: darkText, 
+                    textAlign: 'center' 
+                  }}>
+                    {item.label}
+                  </Typography>
+                </Box>
+              </Link>
+            </Grow>
+          </Grid>
+        ))}
+      </Grid>
+    </CardContent>
+  </Card>
+);
 
+const UpgradeCard = () => (
+  <Card sx={{ 
+    background: primaryGradient, 
+    borderRadius: 4, 
+    p: 2, 
+    mt: 2, 
+    color: '#ffffff',
+    position: 'relative',
+    overflow: 'hidden'
+  }}>
+    <Box sx={{ position: 'absolute', top: -20, right: -20, opacity: 0.1 }}>
+      <Lock sx={{ fontSize: 120 }} />
+    </Box>
+    <Box sx={{ position: 'relative', zIndex: 1 }}>
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, fontSize: '0.95rem' }}>
+        HR Analytics Pro
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 2, fontSize: '0.75rem', opacity: 0.9 }}>
+        Unlock advanced payroll analytics and reporting
+      </Typography>
+      <Button 
+        variant="contained" 
+        size="small"
+        endIcon={<Upgrade />}
+        sx={{ 
+          background: '#ffffff', 
+          color: mediumText, 
+          fontWeight: 600,
+          fontSize: '0.75rem',
+          px: 2,
+          py: 0.5,
+          '&:hover': { 
+            background: '#f5f5f5', 
+            transform: 'translateY(-1px)' 
+          } 
+        }}
+      >
+        Upgrade Now
+      </Button>
+    </Box>
+  </Card>
+);
 
+const LogoutDialog = ({ open }) => (
+  <Dialog
+    open={open}
+    fullScreen
+    PaperProps={{
+      sx: { backgroundColor: "transparent", boxShadow: "none" },
+    }}
+    BackdropProps={{
+      sx: {
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        backdropFilter: "blur(4px)",
+      },
+    }}
+  >
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <Box
+          key={i}
+          sx={{
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: i % 2 === 0 ? "rgba(128,0,32,0.8)" : "rgba(255,248,225,0.8)",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transformOrigin: "-60px 0px",
+            animation: `orbit${i} ${3 + i}s linear infinite`,
+            boxShadow: "0 0 15px rgba(128,0,32,0.5), 0 0 8px rgba(255,248,225,0.5)",
+          }}
+        />
+      ))}
 
-
-        {/* Row 3: Graph 2 + Announcements */}
-        <Grid container spacing={2}>
-         
-        </Grid>
-      </Box>
-
-
- {/* Right Sidebar */}
+      <Box sx={{ position: "relative", width: 120, height: 120 }}>
         <Box
           sx={{
-            width: 320,
-            backgroundColor: "#ffffff",
-            border: "1px solid #8B2635",
-            borderRadius: 4,
-            p: 2,
-            height: "fit-content",
-            position: "sticky",
-            top: 20,
-            cursor: "pointer", // shows pointer on hover
-            "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } // optional hover effect
+            width: 120,
+            height: 120,
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 30% 30%, #A52A2A, #800020)",
+            boxShadow: "0 0 40px rgba(128,0,32,0.7), 0 0 80px rgba(128,0,32,0.5)",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            animation: "floatSphere 2s ease-in-out infinite alternate",
           }}
-        
         >
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 2, border: '1px solid #6d2323', borderRadius: "8px" }}>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 2, gap: 1, mt: 2 }}>
+          <Box
+            component="img"
+            src={logo}
+            alt="Logo"
+            sx={{
+              width: 60,
+              height: 60,
+              borderRadius: "50%",
+              boxShadow: "0 0 20px rgba(128,0,32,0.7), 0 0 10px #FFF8E1",
+              animation: "heartbeat 1s infinite",
+            }}
+          />
+        </Box>
+      </Box>
+
+      <Typography
+        variant="h6"
+        sx={{
+          mt: 3,
+          fontWeight: "bold",
+          color: "#FFF8E1",
+          textShadow: "0 0 10px #800020",
+          animation: "pulse 1.5s infinite",
+        }}
+      >
+        Signing out...
+      </Typography>
+
+      <Box component="style" children={`
+        @keyframes heartbeat {
+          0%,100% { transform: scale(1); }
+          25%,75% { transform: scale(1.15); }
+          50% { transform: scale(1.05); }
+        }
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.6; }
+          100% { opacity: 1; }
+        }
+        @keyframes floatSphere {
+          0% { transform: translate(-50%, -50%) translateY(0); }
+          50% { transform: translate(-50%, -50%) translateY(-15px); }
+          100% { transform: translate(-50%, -50%) translateY(0); }
+        }
+        @keyframes orbit0 { 0% { transform: rotate(0deg) translateX(60px); } 100% { transform: rotate(360deg) translateX(60px); } }
+        @keyframes orbit1 { 0% { transform: rotate(90deg) translateX(60px); } 100% { transform: rotate(450deg) translateX(60px); } }
+        @keyframes orbit2 { 0% { transform: rotate(180deg) translateX(60px); } 100% { transform: rotate(540deg) translateX(60px); } }
+        @keyframes orbit3 { 0% { transform: rotate(270deg) translateX(60px); } 100% { transform: rotate(630deg) translateX(60px); } }
+      `}/>
+    </Box>
+  </Dialog>
+);
+
+// Main component
+const AdminHome = () => {
+  const { username, fullName, employeeNumber, profilePicture } = useAuth();
+  const { 
+    stats, 
+    weeklyAttendanceData, 
+    departmentAttendanceData, 
+    payrollStatusData,
+    monthlyAttendanceTrend,
+    payrollTrendData,
+    leaveDistributionData,
+    overtimeData,
+    attendanceChartData, 
+    leaveTrackerData, 
+    employmentStatusData,
+    announcements, 
+    holidays, 
+    loading 
+  } = useDashboardData();
+  const { currentSlide, isPlaying, handlePrevSlide, handleNextSlide, handleSlideSelect, togglePlayPause } = useCarousel(announcements);
+  const currentTime = useTime();
+  
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [notifModalOpen, setNotifModalOpen] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [chartView, setChartView] = useState('pie');
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  
+  const openMenu = Boolean(anchorEl);
+  const navigate = useNavigate();
+
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+  
+  const handleOpenModal = (announcement) => { 
+    setSelectedAnnouncement(announcement); 
+    setOpenModal(true); 
+  };
+  
+  const handleCloseModal = () => { 
+    setOpenModal(false); 
+    setSelectedAnnouncement(null); 
+  };
+
+  const handleLogout = () => {
+    setLogoutOpen(true);
+    setTimeout(() => {
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    }, 500); 
+  };
+
+  const radialAttendanceData = attendanceChartData.map((item, idx) => ({ 
+    ...item, 
+    fill: COLORS[idx % COLORS.length] 
+  }));
+
+  return (
+    <Box sx={{ 
+      background: '#6d2323', 
+      minHeight: '100vh', 
+      py: 2, 
+      borderRadius: '14px',
+      mt: -2
+    }}>
+      <Container maxWidth="xl" sx={{ px: 2, pt: 2 }}>
+        {/* Header */}
+        <Grow in timeout={300}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
+              background: cardBackground,
+              backdropFilter: 'blur(15px)',
+              borderRadius: 4,
+              p: 2,
+              border: `1px solid ${cardBorder}`,
+              boxShadow: cardShadow,
+            }}
+          >
+            <Box>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: darkText,
+                  fontWeight: 700,
+                }}
+              >
+                Hello, {fullName || username}!
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#666666',
+                  mt: 0.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5
+                }}
+              >
+                <AccessTimeIcon sx={{ fontSize: 14 }} />
+                {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                <span style={{ marginLeft: '8px' }}>
+                  {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              <Tooltip title="Refresh">
+                <IconButton
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(128, 0, 32, 0.1)',
+                    '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.2)' },
+                    color: mediumText,
+                  }}
+                  onClick={() => window.location.reload()}
+                >
+                  <AutorenewIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+
               <Tooltip title="Notifications">
-                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => { e.stopPropagation(); setNotifModalOpen(true); }}>
-                  <Badge badgeContent={3} color="error">
+                <IconButton
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(128, 0, 32, 0.1)',
+                    '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.2)' },
+                    color: mediumText,
+                  }}
+                  onClick={() => setNotifModalOpen(true)}
+                >
+                  <Badge badgeContent={announcements.length} color="error" max={9}>
                     <NotificationsIcon fontSize="small" />
                   </Badge>
                 </IconButton>
               </Tooltip>
-              <Tooltip title="More Options">
-                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => e.stopPropagation()}>
-                  <ArrowDropDownIcon fontSize="small" />
+
+              <Box
+                sx={{
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: -2,
+                    borderRadius: '50%',
+                    padding: '2px',
+                    background: primaryGradient,
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude',
+                  },
+                }}
+              >
+                <IconButton onClick={handleMenuOpen} sx={{ p: 0.5 }}>
+                  <Avatar
+                    alt={username}
+                    src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+                    sx={{ width: 36, height: 36 }}
+                  />
                 </IconButton>
-              </Tooltip>
+              </Box>
+              
+              <Menu 
+                anchorEl={anchorEl} 
+                open={openMenu} 
+                onClose={handleMenuClose} 
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} 
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }} 
+                PaperProps={{ 
+                  sx: { 
+                    borderRadius: 2, 
+                    minWidth: 180, 
+                    backgroundColor: '#FEF9E1',
+                    border: `1px solid ${cardBorder}`,
+                    boxShadow: cardShadow,
+                    '& .MuiMenuItem-root': { 
+                      fontSize: '0.875rem',
+                      '&:hover': { 
+                        background: 'rgba(128, 0, 32, 0.1)' 
+                      }, 
+                    }, 
+                  }, 
+                }} 
+              > 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/profile"); }}>
+                  <AccountCircle sx={{ mr: 1, fontSize: 20 }} /> Profile
+                </MenuItem> 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/settings"); }}>
+                  <Settings sx={{ mr: 1, fontSize: 20 }} /> Settings
+                </MenuItem> 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/faqs"); }}>
+                  <HelpOutline sx={{ mr: 1, fontSize: 20 }} /> FAQs
+                </MenuItem> 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/privacy-policy"); }}>
+                  <PrivacyTip sx={{ mr: 1, fontSize: 20 }} /> Privacy Policy
+                </MenuItem> 
+                <Divider sx={{ borderColor: cardBorder }} /> 
+                <MenuItem onClick={() => { handleMenuClose(); handleLogout(); }}>
+                  <Logout sx={{ mr: 1, fontSize: 20 }} /> Sign Out
+                </MenuItem>
+              </Menu>
             </Box>
+          </Box>
+        </Grow>
 
-
-            <Avatar
-              alt={username}
-              src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+        {/* Stats Cards */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "nowrap",
+            gap: 1,
+            pb: 3
+          }}
+        >
+          {STAT_CARDS.map((card, index) => (
+            <Box
+              key={card.label}
               sx={{
-                width: 100,
-                height: 100,
-                border: "2px solid #8B2635",
-                mb: 1,
+                flex: "1 1 0",
+                maxWidth: "12%",
+                minWidth: "120px",
               }}
+            >
+              <CompactStatCard
+                card={card}
+                index={index}
+                stats={stats}
+                loading={loading}
+                hoveredCard={hoveredCard}
+                setHoveredCard={setHoveredCard}
+              />
+            </Box>
+          ))}
+        </Box>
+
+        {/* Slideshow, Calendar, Quick Actions */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={7}>
+            <AnnouncementCarousel 
+              announcements={announcements}
+              currentSlide={currentSlide}
+              isPlaying={isPlaying}
+              handlePrevSlide={handlePrevSlide}
+              handleNextSlide={handleNextSlide}
+              handleSlideSelect={handleSlideSelect}
+              togglePlayPause={togglePlayPause}
+              handleOpenModal={handleOpenModal}
             />
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
-              {fullName || username || "Admin Name"}
-            </Typography>
-            <Typography variant="body3" sx={{ color: "#666", textAlign: "center", pb: 2 }}>
-              {employeeNumber || "#00000000"}
-            </Typography>
-          </Box>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            {/* Calendar and Quick Actions*/}
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={6}>
+                <CompactCalendar 
+                  calendarDate={calendarDate} 
+                  setCalendarDate={setCalendarDate} 
+                  holidays={holidays} 
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <QuickActions />
+              </Grid>
+            </Grid>
+            <TaskList />
+          </Grid>
+        </Grid>
 
 
-          {/* Quick Links */}
-          <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-            <Box
-              sx={{
-                backgroundColor: '#6d2323',
-                p: 1,
-                textAlign: 'center',
+        {/* Main Content Area */}
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Tabs 
+              value={tabValue} 
+              onChange={(e, v) => setTabValue(v)} 
+              sx={{ 
+                mb: 2,
+                '& .MuiTab-root': {
+                  color: 'rgba(255, 255, 255, 0.7)', // Unselected tabs color
+                  '&.Mui-selected': {
+                    color: '#FFFFFF', // Selected tab text color
+                  }
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#FFFFFF', // Indicator color
+                }
               }}
             >
-              <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                USER PANEL
-              </Typography>
-            </Box>
+              <Tab label="Overview" sx={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'none' }} />
+              <Tab label="Analytics" sx={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'none' }} />
+            </Tabs>
 
+            
+            {tabValue === 0 && (
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <CompactChart title="Weekly Attendance" height={200}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={weeklyAttendanceData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="day" stroke="#666" fontSize={12} />
+                        <YAxis stroke="#666" fontSize={12} />
+                        <RechartTooltip />
+                        <Bar dataKey="present" fill={mediumText} />
+                        <Bar dataKey="absent" fill={COLORS[1]} />
+                        <Bar dataKey="late" fill={COLORS[2]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CompactChart>
+                </Grid>
 
-            {/* Grid of Cards */}
-            <Grid container spacing={0} sx={{ p: 1 }}>
-               {/* DTR */}
-               <Grid item xs={2.4}>
-                 <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
-                   <Box
-                     sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 40,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <AccessTime sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
-                   </Box>
-         
-                 </Link>
-               </Grid>
-         
-               {/* PDS */}
-               <Grid item xs={2.4}>
-                 <Link to="/pds1" style={{ textDecoration: "none" }}>
-                   <Box
-                    sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 40,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <ContactPage sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-         
-               {/* Payslip */}
-               <Grid item xs={2.4}>
-                 <Link to="/payslip" style={{ textDecoration: "none" }}>
-                   <Box
-                   sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 40,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <Receipt sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-         
-               {/* Request Leave */}
-             <Grid item xs={2.4}>
-                             <Link to="/leave-request-user" style={{ textDecoration: "none" }}>
-                               <Box
-                               sx={{
-                                   m: 0.5,
-                                   p: 1,
-                                   backgroundColor: "#6d2323",
-                                   color: "#fff",
-                                   borderRadius: 1,
-                                   display: "flex",
-                                   flexDirection: "column",
-                                   alignItems: "center",
-                                   justifyContent: "center",
-                                   minHeight: 43.5,
-                                   textAlign: "center",
-                                   transition: "all 0.3s ease",
-                                   border: "1px solid transparent",
-                                   "&:hover": {
-                                     backgroundColor: "#fff",
-                                     color: "#6d2323",
-                                     borderColor: "#6d2323",
-                                   }
-                                 }}
-                               >
-                                 <UploadFile sx={{ fontSize: 25 }} />
-                                 <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Leave</Typography>
-                               </Box>
-                             </Link>
-                           </Grid>
-         
-               {/* Attendance */}
-               <Grid item xs={2.4}>
-                 <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
-                   <Box
-                    sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 43,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent",
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323",
-                       }
-                     }}
-                   >
-                     <Person sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.50rem", fontWeight: "bold" }}>
-                       Attendance
-                     </Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-             </Grid>
+                <Grid item xs={12} md={6}>
+                  <CompactChart title="Department Attendance Rate" height={200}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={departmentAttendanceData} layout="horizontal">
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis type="number" stroke="#666" fontSize={12} />
+                        <YAxis dataKey="department" type="category" stroke="#666" fontSize={12} width={60} />
+                        <RechartTooltip />
+                        <Bar dataKey="rate" fill={mediumText} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CompactChart>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <CompactChart title="Payroll Status" height={200}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={payrollStatusData} 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius={40}
+                          outerRadius={70}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {payrollStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <RechartTooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CompactChart>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <CompactChart title="Today's Attendance Summary" height={200}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                      <Box sx={{ position: 'relative', width: 140, height: 140 }}>
+                        <svg width="140" height="140" viewBox="0 0 140 140">
+                          <circle
+                            cx="70"
+                            cy="70"
+                            r="60"
+                            fill="none"
+                            stroke="#f0f0f0"
+                            strokeWidth="12"
+                          />
+                          <circle
+                            cx="70"
+                            cy="70"
+                            r="60"
+                            fill="none"
+                            stroke={mediumText}
+                            strokeWidth="12"
+                            strokeDasharray={`${2 * Math.PI * 60 * 0.877} ${2 * Math.PI * 60}`}
+                            strokeDashoffset="0"
+                            strokeLinecap="round"
+                            transform="rotate(-90 70 70)"
+                          />
+                        </svg>
+                        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                          <Typography variant="h3" sx={{ fontWeight: 700, color: mediumText, lineHeight: 1 }}>
+                            87.7
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#666666' }}>
+                            % Present
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </CompactChart>
+                </Grid>
+              </Grid>
+            )}
+
+            {tabValue === 1 && (
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <CompactChart title="Monthly Attendance Trend" height={250}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyAttendanceTrend}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="month" stroke="#666" fontSize={12} />
+                        <YAxis stroke="#666" fontSize={12} />
+                        <RechartTooltip />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="attendance" 
+                          stroke={mediumText} 
+                          strokeWidth={2}
+                          dot={{ fill: mediumText, r: 4 }}
+                          name="Attendance %"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="leaves" 
+                          stroke={COLORS[1]} 
+                          strokeWidth={2}
+                          dot={{ fill: COLORS[1], r: 4 }}
+                          name="Leaves %"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="overtime" 
+                          stroke={COLORS[2]} 
+                          strokeWidth={2}
+                          dot={{ fill: COLORS[2], r: 4 }}
+                          name="Overtime %"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CompactChart>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <CompactChart title="Payroll Trend (₱)" height={200}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={payrollTrendData}>
+                        <defs>
+                          <linearGradient id="colorGross" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={mediumText} stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor={mediumText} stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#4caf50" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#4caf50" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="month" stroke="#666" fontSize={12} />
+                        <YAxis stroke="#666" fontSize={12} />
+                        <RechartTooltip formatter={(value) => [`₱${value.toLocaleString()}`, '']} />
+                        <Legend />
+                        <Area 
+                          type="monotone" 
+                          dataKey="grossPay" 
+                          stroke={mediumText} 
+                          strokeWidth={2} 
+                          fillOpacity={1} 
+                          fill="url(#colorGross)"
+                          name="Gross Pay"
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="netPay" 
+                          stroke="#4caf50" 
+                          strokeWidth={2} 
+                          fillOpacity={1} 
+                          fill="url(#colorNet)"
+                          name="Net Pay"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CompactChart>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <CompactChart title="Leave Distribution" height={200}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={leaveDistributionData} 
+                          cx="50%" 
+                          cy="50%" 
+                          outerRadius={70}
+                          dataKey="count"
+                          label={({ type, percentage }) => `${type}: ${percentage}%`}
+                        >
+                          {leaveDistributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartTooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CompactChart>
+                </Grid>
+              </Grid>
+            )}
+          </Grid>
+        </Grid>
+      </Container>
+
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Fade in={openModal}>
+          <Box sx={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)', 
+            width: '90%', 
+            maxWidth: 800, 
+            bgcolor: cardBackground, 
+            backdropFilter: 'blur(40px)', 
+            border: `1px solid ${cardBorder}`, 
+            boxShadow: '0 24px 64px rgba(128,0,32,0.5)', 
+            borderRadius: 4, 
+            overflow: 'hidden', 
+            maxHeight: '90vh', 
+            display: 'flex', 
+            flexDirection: 'column' 
+          }}>
+            {selectedAnnouncement && (
+              <>
+                <Box sx={{ position: 'relative' }}>
+                  {selectedAnnouncement.image && (
+                    <Box 
+                      component="img" 
+                      src={`${API_BASE_URL}${selectedAnnouncement.image}`} 
+                      alt={selectedAnnouncement.title} 
+                      sx={{ width: '100%', height: 350, objectFit: 'cover' }} 
+                    />
+                  )}
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    inset: 0, 
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(128,0,32,0.7) 100%)' 
+                  }} />
+                  <IconButton 
+                    onClick={handleCloseModal} 
+                    sx={{ 
+                      position: 'absolute', 
+                      top: 20, 
+                      right: 20, 
+                      bgcolor: 'rgba(128, 0, 32, 0.3)', 
+                      backdropFilter: 'blur(10px)', 
+                      border: `1px solid ${cardBorder}`, 
+                      color: '#ffffff', 
+                      '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'rotate(90deg)' }, 
+                      transition: 'all 0.3s' 
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </Box>
+                <Box sx={{ p: 4, overflowY: 'auto' }}>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      fontWeight: 800, 
+                      mb: 2, 
+                      color: darkText, 
+                      textShadow: '0 2px 10px rgba(128,0,32,0.3)' 
+                    }}
+                  >
+                    {selectedAnnouncement.title}
+                  </Typography>
+                  <Chip 
+                    icon={<AccessTimeIcon style={{color: mediumText}}/>} 
+                    label={new Date(selectedAnnouncement.date).toLocaleDateString()} 
+                    sx={{ 
+                      mb: 3, 
+                      bgcolor: 'rgba(128, 0, 32, 0.3)', 
+                      backdropFilter: 'blur(10px)', 
+                      color: mediumText, 
+                      border: `1px solid ${cardBorder}` 
+                    }} 
+                  />
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      color: mediumText, 
+                      lineHeight: 1.8, 
+                      fontSize: '1.05rem' 
+                    }}
+                  >
+                    {selectedAnnouncement.about}
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Box>
+        </Fade>
+      </Modal>
 
-
-          {/* Admin Panel */}
-          <Card sx={{ border: "1px solid #6d2323", borderRadius: 2, mt: 1 }}>
-            <Box
-              sx={{
-                backgroundColor: "#6d2323",
-                p: 1,
-                textAlign: "center",
-              }}
-            >
-              <Typography sx={{ color: "#ffffff", fontWeight: "bold", fontSize: "0.9rem" }}>
-                ADMIN PANEL
+      <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)}>
+        <Fade in={notifModalOpen}>
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 100, 
+            right: 24, 
+            width: 420, 
+            maxWidth: '90vw', 
+            bgcolor: cardBackground, 
+            backdropFilter: 'blur(40px)', 
+            border: `1px solid ${cardBorder}`, 
+            boxShadow: '0 24px 64px rgba(128,0,32,0.5)', 
+            borderRadius: 4, 
+            overflow: 'hidden', 
+            maxHeight: 'calc(100vh - 140px)' 
+          }}>
+            <Box sx={{ 
+              p: 3, 
+              borderBottom: `1px solid ${cardBorder}`, 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              background: 'linear-gradient(135deg, rgba(128, 0, 32, 0.1) 0%, rgba(165, 42, 42, 0.05) 100%)' 
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: darkText }}>
+                Notifications
               </Typography>
+              <IconButton 
+                size="small" 
+                onClick={() => setNotifModalOpen(false)} 
+                sx={{ 
+                  color: mediumText,
+                  '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.1)', transform: 'rotate(90deg)' }, 
+                  transition: 'all 0.3s' 
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
             </Box>
-            <CardContent>
-              <Grid container spacing={1}>
-                {[
-                  { label: "Registration", link: "/registration", icon: <GroupAdd sx={{ fontSize: 22 }} /> },
-                  { label: "DTRs", link: "/daily_time_record_faculty", icon: <AccessTimeIcon sx={{ fontSize: 22 }} /> },
-                  { label: "Announcement", link: "/announcement", icon: <CampaignIcon sx={{ fontSize: 22 }} /> },
-                  { label: "Holiday", link: "/holiday", icon: <AcUnitIcon sx={{ fontSize: 22 }} /> },
-                  { label: "Payslip", link: "/bulk-payslip", icon: <ReceiptLong sx={{ fontSize: 22 }} /> },
-                  { label: "Payroll", link: "/payroll-table", icon: <PaymentsIcon sx={{ fontSize: 22 }} /> },
-                  { label: "Leaves", link: "/leave-request", icon: <TransferWithinAStation sx={{ fontSize: 22 }} /> },
-                  { label: "Audit", link: "/audit-logs", icon: <AssignmentTurnedInIcon sx={{ fontSize: 22 }} /> },
-                  { label: "Users", link: "/users-list", icon: <Group sx={{ fontSize: 22 }} /> },
-                  { label: "Pages Library", link: "/pages-list", icon: <Pages sx={{ fontSize: 22 }} /> },
-                ].map((item, i) => (
-                  <Grid item xs={12} sm={6} key={i}>
-                    <Link to={item.link} style={{ textDecoration: "none" }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          p: 1.5,
-                          border: "1px solid #6d2323",
-                          borderRadius: 2,
-                          transition: "0.2s",
-                          color: "#6d2323",
-                          fontWeight: "bold",
-                          fontSize: "0.8rem",
-                          bgcolor: "#fff",
-                          "&:hover": {
-                            bgcolor: "#6d2323",
-                            color: "#fff",
-                            transform: "scale(1.02)",
-                            boxShadow: 2,
-                          },
-                          "& svg": {
-                            color: "#6d2323",
-                            transition: "0.2s",
-                          },
-                          "&:hover svg": {
-                            color: "#fff",
-                          },
-                        }}
-                      >
-                        {item.icon}
-                        <Typography sx={{ ml: 1, fontSize: "0.75rem", fontWeight: "bold" }}>
-                          {item.label}
+            <Box sx={{ maxHeight: 'calc(100vh - 250px)', overflowY: 'auto', p: 2 }}>
+              {announcements.slice(0, 8).map((item, idx) => (
+                <Grow in timeout={300 + idx * 50} key={idx}>
+                  <Box 
+                    sx={{ 
+                      mb: 2, 
+                      p: 2.5, 
+                      borderRadius: 3, 
+                      background: 'rgba(128, 0, 32, 0.05)', 
+                      border: `1px solid ${cardBorder}`, 
+                      cursor: 'pointer', 
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      position: 'relative', 
+                      overflow: 'hidden', 
+                      '&::before': { 
+                        content: '""', 
+                        position: 'absolute', 
+                        left: 0, 
+                        top: 0, 
+                        bottom: 0, 
+                        width: 4, 
+                        background: primaryGradient, 
+                        transform: 'scaleY(0)', 
+                        transition: 'transform 0.3s' 
+                      }, 
+                      '&:hover': { 
+                        background: 'rgba(128, 0, 32, 0.1)', 
+                        transform: 'translateX(8px)', 
+                        boxShadow: '0 8px 24px rgba(128,0,32,0.2)' 
+                      }, 
+                      '&:hover::before': { transform: 'scaleY(1)' } 
+                    }} 
+                    onClick={() => { 
+                      setSelectedAnnouncement(item); 
+                      setNotifModalOpen(false); 
+                      setOpenModal(true); 
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                      <Box sx={{ 
+                        width: 12, 
+                        height: 12, 
+                        borderRadius: '50%', 
+                        background: primaryGradient, 
+                        mt: 0.5, 
+                        flexShrink: 0, 
+                        boxShadow: '0 0 12px rgba(128,0,32,0.6)', 
+                        animation: 'pulse 2s infinite', 
+                        '@keyframes pulse': { 
+                          '0%, 100%': { opacity: 1 }, 
+                          '50%': { opacity: 0.5 } 
+                        } 
+                      }} />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography sx={{ 
+                          fontWeight: 700, 
+                          fontSize: '1rem', 
+                          color: darkText, 
+                          mb: 0.5, 
+                          lineHeight: 1.4 
+                        }}>
+                          {item.title}
+                        </Typography>
+                        <Typography sx={{ 
+                          fontSize: '0.8rem', 
+                          color: '#666666', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 0.5 
+                        }}>
+                          <AccessTimeIcon sx={{ fontSize: 14 }} />
+                          {item.date ? new Date(item.date).toLocaleDateString() : ""}
                         </Typography>
                       </Box>
-                    </Link>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-
-
-
-
-        </Box>
-    </Box>
-
-
-    {/* Notifications Modal */}
-    <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "120px",
-          right: "20px",
-          width: 320,
-          bgcolor: "#fff",
-          boxShadow: 24,
-          borderRadius: 2,
-          p: 2,
-          maxHeight: "80vh",
-          overflowY: "auto",
-          zIndex: 1500,
-          border: "1px solid #8B2635",
-          "@media (max-width: 600px)": { width: "90vw", right: "5%" },
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#8B2635" }}>
-          Notifications
-        </Typography>
-
-
-        {announcements.slice(0, 6).map((item, idx) => (
-          <Box
-            key={idx}
-            sx={{
-              mb: 1.5,
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: "#f8f8f8",
-              border: "1px solid #8B2635",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              setSelectedAnnouncement(item);
-              setNotifModalOpen(false);
-              setOpenModal(true);
-            }}
-          >
-            <Typography fontWeight="bold" fontSize="0.9rem" sx={{ color: "#8B2635" }}>
-              {item.title}
-            </Typography>
-            <Typography fontSize="0.75rem" sx={{ color: "#666" }}>
-              {item.date ? new Date(item.date).toLocaleDateString() : ""}
-            </Typography>
+                      <ArrowForward sx={{ 
+                        color: '#999999', 
+                        fontSize: 20, 
+                        transition: 'transform 0.3s' 
+                      }} />
+                    </Box>
+                  </Box>
+                </Grow>
+              ))}
+              {announcements.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <NotificationsIcon sx={{ fontSize: 80, color: 'rgba(128, 0, 32, 0.2)', mb: 2 }} />
+                  <Typography sx={{ color: '#666666', fontSize: '1rem' }}>
+                    No notifications at the moment
+                  </Typography>
+                  <Typography sx={{ color: '#999999', fontSize: '0.85rem', mt: 1 }}>
+                    You're all caught up!
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           </Box>
-        ))}
+        </Fade>
+      </Modal>
 
-
-        {announcements.length === 0 && <Typography fontSize="0.85rem">No notifications at the moment.</Typography>}
-      </Box>
-    </Modal>
-  </Container>
-);
+      <LogoutDialog open={logoutOpen} />
+    </Box>
+  );
 };
 
-
 export default AdminHome;
-
-
-

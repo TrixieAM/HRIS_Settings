@@ -15,7 +15,10 @@ import {
   TableBody,
   TableCell,
   TableRow,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert,
+  FormHelperText
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -52,44 +55,54 @@ const Children = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  const navigate = useNavigate();
-  // Page access control - Add this useEffect
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    // Change this pageId to match the ID you assign to this page in your page management
-    const pageId = 3; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control - Add this useEffect
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    // Change this pageId to match the ID you assign to this page in your page management
+    const pageId = 3; // You'll need to set this to the appropriate page ID for ViewAttendanceRecord
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
 
   useEffect(() => {
     fetchChildren();
@@ -101,10 +114,30 @@ const Children = () => {
       setChildren(result.data);
     } catch (error) {
       console.error('Error fetching children:', error);
+      showSnackbar('Failed to fetch children records. Please try again.', 'error');
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['childrenFirstName', 'childrenLastName', 'dateOfBirth', 'person_id'];
+    
+    requiredFields.forEach(field => {
+      if (!newChild[field] || newChild[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/childrenRoute/children-table`, newChild);
@@ -116,16 +149,18 @@ const Children = () => {
         dateOfBirth: '',
         person_id: ''
       });
+      setErrors({}); // Clear errors
       setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchChildren();
     } catch (err) {
       console.error('Error adding data:', err);
       setLoading(false);
+      showSnackbar('Failed to add child record. Please try again.', 'error');
     }
   };
 
@@ -141,6 +176,7 @@ const Children = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
+      showSnackbar('Failed to update child record. Please try again.', 'error');
     }
   };
 
@@ -156,6 +192,7 @@ const Children = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
+      showSnackbar('Failed to delete child record. Please try again.', 'error');
     }
   };
 
@@ -164,6 +201,14 @@ const Children = () => {
       setEditChild({ ...editChild, [field]: value });
     } else {
       setNewChild({ ...newChild, [field]: value });
+      // Clear error for this field when user starts typing
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -202,41 +247,40 @@ const Children = () => {
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
-
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access Children Information. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
   return (
     <Container sx={{ mt: 0, }}>
-
       {/* Loading Overlay */}
-      <LoadingOverlay open={loading} message="Adding child record..."  />
+      <LoadingOverlay open={loading} message="Adding child record..." />
       
       {/* Success Overlay */}
       <SuccessfullOverlay open={successOpen} action={successAction} />
+      
       <Box
         sx={{
           display: "flex",
@@ -288,13 +332,28 @@ const Children = () => {
               {/* First Name */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  First Name
+                  First Name <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newChild.childrenFirstName}
                   onChange={(e) => handleChange("childrenFirstName", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.childrenFirstName}
+                  helperText={errors.childrenFirstName || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.childrenFirstName ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.childrenFirstName ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.childrenFirstName ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -308,19 +367,47 @@ const Children = () => {
                   onChange={(e) => handleChange("childrenMiddleName", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Last Name */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Last Name
+                  Last Name <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newChild.childrenLastName}
                   onChange={(e) => handleChange("childrenLastName", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.childrenLastName}
+                  helperText={errors.childrenLastName || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.childrenLastName ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.childrenLastName ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.childrenLastName ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -334,13 +421,26 @@ const Children = () => {
                   onChange={(e) => handleChange("childrenNameExtension", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Date of Birth */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Date of Birth
+                  Date of Birth <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   type="date"
@@ -349,19 +449,49 @@ const Children = () => {
                   fullWidth
                   style={inputStyle}
                   InputLabelProps={{ shrink: true }}
+                  error={!!errors.dateOfBirth}
+                  helperText={errors.dateOfBirth || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.dateOfBirth ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.dateOfBirth ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.dateOfBirth ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Employee Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Employee Number
+                  Employee Number <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newChild.person_id}
                   onChange={(e) => handleChange("person_id", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.person_id}
+                  helperText={errors.person_id || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
@@ -590,7 +720,6 @@ const Children = () => {
                 >
                   <Typography variant="h6">
                     {isEditing ? "Edit Child Information" : "Child Information"}
-                    
                   </Typography>
                   <IconButton onClick={handleCloseModal} sx={{ color: "#fff" }}>
                     <Close />
@@ -611,9 +740,20 @@ const Children = () => {
                               onChange={(e) => handleChange("childrenFirstName", e.target.value, true)}
                               size="small"
                               fullWidth
-                              
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
                             />
-                            
                           ) : (
                             editChild.childrenFirstName
                           )}
@@ -628,6 +768,19 @@ const Children = () => {
                               onChange={(e) => handleChange("childrenMiddleName", e.target.value, true)}
                               size="small"
                               fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
                             />
                           ) : (
                             editChild.childrenMiddleName
@@ -643,6 +796,19 @@ const Children = () => {
                               onChange={(e) => handleChange("childrenLastName", e.target.value, true)}
                               size="small"
                               fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
                             />
                           ) : (
                             editChild.childrenLastName
@@ -658,6 +824,19 @@ const Children = () => {
                               onChange={(e) => handleChange("childrenNameExtension", e.target.value, true)}
                               size="small"
                               fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
                             />
                           ) : (
                             editChild.childrenNameExtension
@@ -674,6 +853,19 @@ const Children = () => {
                               onChange={(e) => handleChange("dateOfBirth", e.target.value, true)}
                               size="small"
                               fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
                             />
                           ) : (
                             editChild.dateOfBirth?.split('T')[0]
@@ -689,6 +881,19 @@ const Children = () => {
                               onChange={(e) => handleChange("person_id", e.target.value, true)}
                               size="small"
                               fullWidth
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: "#6D2323",
+                                  },
+                                },
+                              }}
                             />
                           ) : (
                             editChild.person_id
@@ -733,7 +938,7 @@ const Children = () => {
                             startIcon={<CancelIcon />}
                             sx={{
                               color: "#ffffff",
-                            backgroundColor: 'black'
+                              backgroundColor: 'black'
                             }}
                           >
                             Cancel
@@ -756,6 +961,22 @@ const Children = () => {
           </Box>
         </Modal>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

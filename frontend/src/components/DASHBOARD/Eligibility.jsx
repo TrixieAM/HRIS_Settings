@@ -11,7 +11,9 @@ import {
   Chip,
   Modal,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -29,7 +31,6 @@ import LoadingOverlay from '../LoadingOverlay';
 import SuccessfullOverlay from '../SuccessfulOverlay';
 import AccessDenied from '../AccessDenied';
 import { useNavigate } from "react-router-dom";
-
 
 const Eligibility = () => {
   const [data, setData] = useState([]);
@@ -49,43 +50,53 @@ const Eligibility = () => {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState("");
+  const [errors, setErrors] = useState({});
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  const navigate = useNavigate();
-  // Page access control
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    const pageId = 8; // PAGE ID
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+  const navigate = useNavigate();
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 8; // PAGE ID
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+  // ACCESSING END
   
 
   useEffect(() => {
@@ -98,10 +109,37 @@ const Eligibility = () => {
       setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
+      showSnackbar('Failed to fetch eligibility records. Please try again.', 'error');
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = ['eligibilityName', 'person_id', 'DateOfValidity' ];
+    
+    requiredFields.forEach(field => {
+      if (!newEligibility[field] || newEligibility[field].trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+    
+
+    if (newEligibility.eligibilityDateOfExam && newEligibility.DateOfValidity) {
+      if (new Date(newEligibility.eligibilityDateOfExam) > new Date(newEligibility.DateOfValidity)) {
+        newErrors.DateOfValidity = 'Validity date must be after exam date';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAdd = async () => {
+    if (!validateForm()) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/eligibilityRoute/eligibility`, newEligibility);
@@ -114,16 +152,18 @@ const Eligibility = () => {
         DateOfValidity: '',
         person_id: '',
       });
-     setTimeout(() => {     
-      setLoading(false);  
-      setSuccessAction("adding");
-      setSuccessOpen(true);
-      setTimeout(() => setSuccessOpen(false), 2000);
-    }, 300);  
+      setErrors({}); // Clear errors
+      setTimeout(() => {     
+        setLoading(false);  
+        setSuccessAction("adding");
+        setSuccessOpen(true);
+        setTimeout(() => setSuccessOpen(false), 2000);
+      }, 300);  
       fetchEligibility();
     } catch (err) {
       console.error('Error adding data:', err);
       setLoading(false);
+      showSnackbar('Failed to add eligibility record. Please try again.', 'error');
     }
   };
 
@@ -139,6 +179,7 @@ const Eligibility = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error updating data:', err);
+      showSnackbar('Failed to update eligibility record. Please try again.', 'error');
     }
   };
 
@@ -154,6 +195,7 @@ const Eligibility = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     } catch (err) {
       console.error('Error deleting data:', err);
+      showSnackbar('Failed to delete eligibility record. Please try again.', 'error');
     }
   };
 
@@ -162,6 +204,14 @@ const Eligibility = () => {
       setEditEligibility({ ...editEligibility, [field]: value });
     } else {
       setNewEligibility({ ...newEligibility, [field]: value });
+      // Clear error for this field when user starts typing
+      if (errors[field]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -193,31 +243,31 @@ const Eligibility = () => {
   const inputStyle = { marginRight: 10, marginBottom: 10, width: 300.25 };
 
   // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#6d2323" }}>
+            Loading access information...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+  // Access denied state - Now using the reusable component
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access Eligibility Information. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+  //ACCESSING END2
 
   return (
     <Container sx={{ mt: 0, }}>
@@ -278,13 +328,28 @@ const Eligibility = () => {
               {/* Eligibility Name */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Eligibility Name
+                  Eligibility Name <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newEligibility.eligibilityName}
                   onChange={(e) => handleChange("eligibilityName", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.eligibilityName}
+                  helperText={errors.eligibilityName || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.eligibilityName ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.eligibilityName ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.eligibilityName ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -298,6 +363,19 @@ const Eligibility = () => {
                   onChange={(e) => handleChange("eligibilityRating", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -313,6 +391,21 @@ const Eligibility = () => {
                   fullWidth
                   style={inputStyle}
                   InputLabelProps={{ shrink: true }}
+                  error={!!errors.eligibilityDateOfExam}
+                  helperText={errors.eligibilityDateOfExam || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.eligibilityDateOfExam ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.eligibilityDateOfExam ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.eligibilityDateOfExam ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -326,6 +419,19 @@ const Eligibility = () => {
                   onChange={(e) => handleChange("eligibilityPlaceOfExam", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
@@ -339,13 +445,26 @@ const Eligibility = () => {
                   onChange={(e) => handleChange("licenseNumber", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Date of Validity */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Date of Validity
+                  Date of Validity <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   type="date"
@@ -354,19 +473,49 @@ const Eligibility = () => {
                   fullWidth
                   style={inputStyle}
                   InputLabelProps={{ shrink: true }}
+                  error={!!errors.DateOfValidity}
+                  helperText={errors.DateOfValidity || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.DateOfValidity ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.DateOfValidity ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.DateOfValidity ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Employee Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                  Employee Number
+                  Employee Number <span style={{ color: 'red' }}>*</span>
                 </Typography>
                 <TextField
                   value={newEligibility.person_id}
                   onChange={(e) => handleChange("person_id", e.target.value)}
                   fullWidth
                   style={inputStyle}
+                  error={!!errors.person_id}
+                  helperText={errors.person_id || ''}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: errors.person_id ? 'red' : '#6D2323',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
@@ -602,11 +751,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -623,11 +783,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -645,11 +816,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
@@ -667,11 +849,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -688,11 +881,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
 
@@ -710,11 +914,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
@@ -732,11 +947,22 @@ const Eligibility = () => {
                         fullWidth
                         disabled={!isEditing}
                         sx={{
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#000000",
-                                  color: "#000000"
-                                }
-                              }}
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&:hover fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: "#6D2323",
+                            },
+                          },
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "#000000",
+                            color: "#000000"
+                          }
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -760,7 +986,6 @@ const Eligibility = () => {
                           sx={{
                             color: "#ffffff",
                             backgroundColor: 'black'
-                            
                           }}
                         >
                           Delete
@@ -805,6 +1030,22 @@ const Eligibility = () => {
           </Box>
         </Modal>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

@@ -3,83 +3,31 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  IconButton,
-  Modal,
-  Tooltip,
-  Container,
-  Box,
-  Grid,
-  Typography,
-  Avatar,
-  Button,
-  Badge,
+  IconButton, Modal, Tooltip, Container, Box, Grid, Menu, MenuItem, Divider, Dialog, Typography, Avatar, Button, Badge, Chip, Fade, Grow, Card, CardContent, Skeleton, LinearProgress
 } from '@mui/material';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {
-  AccessTime,
-  AccountBalance,
-  Description,
-  Download,
-  KeyboardArrowDown,
-  Person,
-  ContactPage,
-  Receipt,
-  UploadFile
+  ArrowBackIosNew as ArrowBackIosNewIcon,
+  ArrowForwardIos as ArrowForwardIosIcon,
+  Notifications as NotificationsIcon,
+  ArrowDropDown as ArrowDropDownIcon,
+  AccessTime, AccountBalance, Description, Download, KeyboardArrowDown, Person, ContactPage, Receipt, UploadFile,
+  PlayArrow, Pause, Close as CloseIcon, TrendingUp, TrendingDown,
+  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Autorenew as AutorenewIcon
 } from '@mui/icons-material';
+import logo from "../assets/logo.PNG";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const ACCENT = '#8B2635';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Color palette from AdminHome
+const primaryGradient = "linear-gradient(135deg, #800020, #A52A2A)";
+const primaryHoverGradient = "linear-gradient(135deg, #A52A2A, #800020)";
+const darkText = "#4B0000";
+const mediumText = "#800020";
+const cardBackground = "rgba(255,248,231,0.85)";
+const cardBorder = "rgba(128,0,32,0.15)";
+const cardShadow = "0 15px 40px rgba(128,0,32,0.2)";
 
 const Home = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState('');
@@ -90,195 +38,47 @@ const Home = () => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [holidays, setHolidays] = useState([]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // payroll
   const [payrollData, setPayrollData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [notifModalOpen, setNotifModalOpen] = useState(false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  const [autoPlay, setAutoPlay] = useState(true);
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  
   const navigate = useNavigate();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // date parts
-  const monthName = currentDate.toLocaleString('default', { month: 'long' });
-  // const year = currentDate.getFullYear();
-  // const month = currentDate.getMonth();
-    const month = calendarDate.getMonth();
+  const month = calendarDate.getMonth();
   const year = calendarDate.getFullYear();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const [attendance, setAttendance] = useState({
-  timeIn: '00:00:00',
-  breakIn: '00:00:00',
-  breakOut: '00:00:00',
-  timeOut: '00:00:00',
-});
+    timeIn: '00:00:00',
+    breakIn: '00:00:00',
+    breakOut: '00:00:00',
+    timeOut: '00:00:00',
+  });
 
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// fetch user's attendance
-useEffect(() => {
-  if (!employeeNumber) return;
-  const fetchAttendance = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/attendance/${employeeNumber}`);
-      // assuming your backend returns an object like { TimeIn, BreakIn, BreakOut, TimeOut }
-      if (res.data) {
-        setAttendance({
-          timeIn: res.data.TimeIn || '00:00:00',
-          breakIn: res.data.BreakIn || '00:00:00',
-          breakOut: res.data.BreakOut || '00:00:00',
-          timeOut: res.data.TimeOut || '00:00:00',
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching attendance:', err);
-    }
+  const handleLogout = () => {
+    setLogoutOpen(true);
+    setTimeout(() => {
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    }, 500); 
   };
-  fetchAttendance();
-}, [employeeNumber]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // update live clock/date (if you want time)
+  // Update time every second
   useEffect(() => {
-    const interval = setInterval(() => setCurrentDate(new Date()), 1000);
+    const interval = setInterval(() => {
+      setCurrentDate(new Date());
+      setCurrentTime(new Date());
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   const getUserInfo = () => {
     const token = localStorage.getItem('token');
@@ -296,48 +96,86 @@ useEffect(() => {
     }
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // read token once on mount
   useEffect(() => {
     const userInfo = getUserInfo();
     if (userInfo.username) setUsername(userInfo.username);
     if (userInfo.employeeNumber) setEmployeeNumber(userInfo.employeeNumber);
   }, []);
 
+  // Fetch today's attendance with correct endpoint and authentication
+  useEffect(() => {
+    if (!employeeNumber) return;
+    
+    const fetchAttendance = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        console.log('Fetching attendance for employee:', employeeNumber, 'on date:', formattedDate);
+        
+        // Use the correct endpoint from your backend
+        const res = await axios.get(`${API_BASE_URL}/api/attendance`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          params: {
+            personId: employeeNumber,
+            startDate: formattedDate,
+            endDate: formattedDate
+          }
+        });
+        
+        console.log('Attendance response:', res.data);
+        
+        if (res.data && res.data.length > 0) {
+          // Get the first record (should be today's record)
+          const attendanceData = res.data[0];
+          
+          console.log('Processed attendance data:', attendanceData);
+          
+          // Use the exact field names from your API
+          setAttendance({
+            timeIn: attendanceData.timeIN || '00:00:00',
+            breakIn: attendanceData.breaktimeIN || '00:00:00',
+            breakOut: attendanceData.breaktimeOUT || '00:00:00',
+            timeOut: attendanceData.timeOUT || '00:00:00',
+          });
+        } else {
+          console.log('No attendance data found for today');
+          // Set default values
+          setAttendance({
+            timeIn: '00:00:00',
+            breakIn: '00:00:00',
+            breakOut: '00:00:00',
+            timeOut: '00:00:00',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching attendance:', err);
+        // Set default values on error
+        setAttendance({
+          timeIn: '00:00:00',
+          breakIn: '00:00:00',
+          breakOut: '00:00:00',
+          timeOut: '00:00:00',
+        });
+      }
+    };
+    
+    fetchAttendance();
+  }, [employeeNumber]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // fetch announcements
+  // Fetch announcements
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/announcements`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE_URL}/api/announcements`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         setAnnouncements(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Error fetching announcements:', err);
@@ -347,192 +185,71 @@ useEffect(() => {
     fetchAnnouncements();
   }, []);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // auto slide when there are announcements
+  // Auto slide
   useEffect(() => {
-    if (announcements.length === 0) return;
+    if (announcements.length === 0 || !autoPlay) return;
     const t = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % announcements.length);
     }, 5000);
     return () => clearInterval(t);
-  }, [announcements]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  }, [announcements, autoPlay]);
 
   const handlePrevSlide = () => {
     if (announcements.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + announcements.length) % announcements.length);
   };
+  
   const handleNextSlide = () => {
     if (announcements.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % announcements.length);
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleOpenModal = (announcement) => {
     setSelectedAnnouncement(announcement);
     setOpenModal(true);
   };
+  
   const handleCloseModal = () => {
     setOpenModal(false);
     setSelectedAnnouncement(null);
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // fetch profile picture from person_table
+  // Fetch profile picture
   useEffect(() => {
     const fetchProfilePicture = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const list = Array.isArray(res.data) ? res.data : [];
         const match = list.find((p) => String(p.agencyEmployeeNum) === String(employeeNumber));
         if (match && match.profile_picture) setProfilePicture(match.profile_picture);
-         const fullNameFromPerson = `${match.firstName || ''} ${match.middleName || ''} ${match.lastName || ''} ${match.nameExtension || ''}`.trim();
-          if (fullNameFromPerson) {
-            setFullName(fullNameFromPerson);
-          }
+        const fullNameFromPerson = `${match.firstName || ''} ${match.middleName || ''} ${match.lastName || ''} ${match.nameExtension || ''}`.trim();
+        if (fullNameFromPerson) {
+          setFullName(fullNameFromPerson);
+        }
       } catch (err) {
         console.error('Error loading profile picture:', err);
       }
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     if (employeeNumber) fetchProfilePicture();
   }, [employeeNumber]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // fetch payroll for the user
+  // Fetch payroll
   useEffect(() => {
     const fetchPayrollData = async () => {
       if (!employeeNumber) return;
       try {
         setLoading(true);
-        const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const list = Array.isArray(res.data) ? res.data : [];
         const userPayroll = list.find((p) =>
           String(p.employeeNumber) === String(employeeNumber) ||
@@ -542,27 +259,11 @@ useEffect(() => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching payroll:', err);
-        setError('Failed to fetch payroll data');
         setLoading(false);
       }
     };
     fetchPayrollData();
   }, [employeeNumber]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   const formatCurrency = (value) => {
     if (value === undefined || value === null || value === '' || value === '0') return '₱0.00';
@@ -571,22 +272,38 @@ useEffect(() => {
     return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  // Fetch holidays
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE_URL}/holiday`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (Array.isArray(res.data)) {
+          const transformedHolidays = res.data.map(item => {
+            const d = new Date(item.date);
+            const normalizedDate = !isNaN(d)
+              ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+              : item.date;
+            return {
+              date: normalizedDate,
+              name: item.description,
+              status: item.status
+            };
+          });
+          setHolidays(transformedHolidays);
+        }
+      } catch (err) {
+        console.error("Error fetching holidays:", err);
+      }
+    };
+    fetchHolidays();
+  }, []);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // calendar generation (Monday start)
+  // Calendar generation
   const generateCalendar = () => {
     const days = [];
     const totalCells = 42;
@@ -597,779 +314,371 @@ useEffect(() => {
     for (let i = 0; i < remaining; i++) days.push(null);
     return days;
   };
+  
   const calendarDays = generateCalendar();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Fetch holidays from holiday endpoint
- useEffect(() => {
-  const fetchHolidays = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/holiday`);
-      if (Array.isArray(res.data)) {
-        const transformedHolidays = res.data.map(item => {
-          // Normalize date to YYYY-MM-DD
-          const d = new Date(item.date);
-          const normalizedDate = !isNaN(d)
-            ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-            : item.date; // fallback if parsing fails
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          return {
-            date: normalizedDate,
-            name: item.description,
-            status: item.status
-          };
-        });
-        setHolidays(transformedHolidays);
-      }
-    } catch (err) {
-      console.error("Error fetching holidays:", err);
-    }
-  };
-  fetchHolidays();
-}, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return (
-      <Box sx={{ p: 1, pl: 10, mt: -5 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-        {/* Main Content */}
-        <Box sx={{ flex: 1, mr: 2 }}>
-          {/* Top Row: Welcome / Payslip / Leave Balance */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            {/* Welcome Card */}
-            <Box sx={{
-              backgroundColor: '#fff',
-              border: `1px solid ${ACCENT}`,
-              borderRadius: 2,
-              p: 2,
-              pt: 3,
-              pb: -10,
-              flex: 2,
+    <Box sx={{ 
+      background: '#6d2323', 
+      minHeight: '85%', 
+      py: 1.5, 
+      borderRadius: '14px',
+      mt: -2,
+    }}>
+      <Container maxWidth="xl" sx={{ px: 2, pt: 2 }}>
+        {/* Header */}
+        <Grow in timeout={300}>
+          <Box
+            sx={{
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="h5" sx={{ color: '#000', fontWeight: 'bold', pb: -10 }}>
-                  Welcome Back, {username || 'Name'}!
-                </Typography>
-                <Typography sx={{ color: ACCENT, fontSize: '.875rem', fontWeight: 500 }}>
-                  {formattedDate}
-                </Typography>
-              </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              <Link to="/attendance-user-state" style={{ textDecoration: 'none' }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  {[
-                    { label: 'TIME IN', value: attendance.timeIn },
-                    { label: 'BREAKTIME IN', value: attendance.breakIn },
-                    { label: 'BREAKTIME OUT', value: attendance.breakOut },
-                    { label: 'TIME OUT', value: attendance.timeOut },
-                  ].map((item, idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        backgroundColor: '#EDEDED',
-                        color: '#333',
-                        p: 1,
-                        borderRadius: 1,
-                        textAlign: 'center',
-                        flex: 1,
-                        minHeight: 100,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Typography fontSize={9} fontWeight="bold" sx={{ mb: 0.3 }}>
-                        {item.label}
-                      </Typography>
-                      <Typography fontSize={11} fontWeight="bold">
-                        {item.value}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Link>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* Payslip */}
-            <Box sx={{
-              backgroundColor: '#fff',
-              color: '#6d2323',
-              border: `1px solid ${ACCENT}`,
-              borderRadius: 2,
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
+              background: cardBackground,
+              backdropFilter: 'blur(15px)',
+              borderRadius: 4,
               p: 2,
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
-              <Box>
-                <Typography sx={{ fontSize: '12px', opacity: 0.9, mb: 0.5 }}>Pay Period: May 15-31, 2025</Typography>
-                <Typography sx={{ fontWeight: 'bold', fontSize: '20px', mb: 2 }}>Payslip</Typography>
-              </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              <Link to="/payslip" style={{ textDecoration: 'none' }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
-                    <AccountBalance sx={{ fontSize: '2rem', mb: 0.5, color: '#6d2323' }} />
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>1st Quincena</Typography>
-                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6d2323' }}>{payrollData ? formatCurrency(payrollData.pay1st) : '₱386.00'}</Typography>
-                  </Box>
-                  <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 1.5, flex: 1, textAlign: 'center' }}>
-                    <AccountBalance sx={{ fontSize: '2rem', mb: 0.5, color: '#6d2323' }} />
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6d2323', mb: 0.5 }}>2nd Quincena</Typography>
-                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6d2323' }}>{payrollData ? formatCurrency(payrollData.pay2nd) : '₱268.00'}</Typography>
-                  </Box>
-                </Box>
-              </Link>
-            </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* Leave Balance */}
-            <Box sx={{
-              backgroundColor: '#fff',
-              color: '#6d2323',
-              border: `1px solid ${ACCENT}`,
-              borderRadius: 2,
-              p: 2,
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
-              <Box>
-                <Typography sx={{ fontSize: '12px', opacity: 0.9, mb: 0.5 }}>As of May 15, 2025</Typography>
-                <Typography sx={{ fontWeight: 'bold', fontSize: '20px', mb: 2 }}>Leave Balance</Typography>
-              </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <Box sx={{ backgroundColor: 'rgba(213, 158, 158, 0.34)', borderRadius: 1, p: 2, width: '100%', textAlign: 'center' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                    <Typography sx={{ fontSize: '14px', fontWeight: 'bold', color: '#6d2323', mr: 1 }}>All Leaves</Typography>
-                    <KeyboardArrowDown sx={{ fontSize: '1.5rem', color: '#6d2323' }} />
-                  </Box>
-                  <Typography sx={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#6d2323' }}>386</Typography>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       {/* Middle Section - Announcement Slideshow */}
-        <Grid container spacing={2}>
-     {/* slideshow */}
-          <Grid item xs={12} md={8}>
-            <Box
+              border: `1px solid ${cardBorder}`,
+              boxShadow: cardShadow,
+            }}
+          >
+            <Box>
+              <Typography
+                variant="h5"
                 sx={{
-                position: "relative",
-                borderRadius: 2,
-                overflow: "hidden",
-                border: "1px solid #8B2635",
-                height: "550px",
-                mb: -3,
-                cursor: "pointer",
-                }}
-                onClick={() => {
-                const announcement = announcements[currentSlide];
-                if (announcement) {
-                    setSelectedAnnouncement(announcement);
-                    setOpenModal(true);
-                }
-                }}
-            >
-                {announcements.length > 0 && (
-                <>
-                    {/* Previous button */}
-                    <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handlePrevSlide();
-                    }}
-                     sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: 15,
-                        transform: "translateY(-50%)",
-                        color: "rgba(255,255,255,0.9)",
-                        zIndex: 2,
-                    }}
-                    >
-                    <ArrowBackIosNewIcon />
-                    </IconButton>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    {/* Slide image */}
-                    <Box
-                    component="img"
-                    src={
-                        announcements[currentSlide]?.image
-                        ? `${API_BASE_URL}${announcements[currentSlide].image}`
-                        : "/api/placeholder/800/400"
-                    }
-                    alt={announcements[currentSlide]?.title || "Announcement"}
-                    sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                    }}
-                    />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    {/* Inner shadow overlay */}
-                    <Box
-                     sx={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                        background:
-                        "radial-gradient(circle at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 90%)",
-                    }}
-                    />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    {/* Next button */}
-                    <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleNextSlide();
-                    }}
-                    sx={{
-                        position: "absolute",
-                        top: "50%",
-                        right: 15,
-                        transform: "translateY(-50%)",
-                        color: "rgba(255,255,255,0.9)",
-                        zIndex: 2,
-                    }}
-                    >
-                    <ArrowForwardIosIcon />
-                    </IconButton>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    {/* Caption box */}
-                    <Box
-                    sx={{
-                        position: "absolute",
-                        bottom: 20,
-                        left: 20,
-                        p: 2,
-                        borderRadius: 2,
-                        backgroundColor: "rgba(0,0,0,0.4)",
-                        backdropFilter: "blur(4px)",
-                    }}
-                    >
-                    <Typography
-                        variant="h6"
-                        fontWeight="bold"
-                        sx={{
-                        color: "white",
-                        textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                        }}
-                    >
-                        {announcements[currentSlide]?.title}
-                    </Typography>
-                    <Typography
-                        fontSize="small"
-                        sx={{
-                        color: "white",
-                        textShadow: "1px 1px 3px rgba(0,0,0,0.7)",
-                        }}
-                    >
-                        {new Date(announcements[currentSlide]?.date).toDateString()}
-                    </Typography>
-                    </Box>
-                </>
-                )}
-            </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* Modal for full announcement details */}
-            <Modal
-                open={openModal}
-                onClose={handleCloseModal}
-                aria-labelledby="announcement-modal"
-                aria-describedby="announcement-details"
-            >
-                <Box
-                sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "80%",
-                    maxWidth: 600,
-                    bgcolor: "background.paper",
-                    boxShadow: 24,
-                    p: 4,
-                    borderRadius: 2,
-                    maxHeight: "90vh",
-                    overflow: "auto",
-                }}
-                >
-                {selectedAnnouncement && (
-                    <>
-                    <Typography variant="h5" component="h2" gutterBottom>
-                        {selectedAnnouncement.title}
-                    </Typography>
-                    {selectedAnnouncement.image && (
-                        <Box
-                        component="img"
-                        src={`${API_BASE_URL}${selectedAnnouncement.image}`}
-                        alt={selectedAnnouncement.title}
-                        sx={{
-                            width: "100%",
-                            height: "auto",
-                            maxHeight: 300,
-                            objectFit: "cover",
-                            borderRadius: 1,
-                            mb: 2,
-                        }}
-                        />
-                    )}
-                    <Typography variant="body1" paragraph>
-                        {selectedAnnouncement.about}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Posted on: {new Date(selectedAnnouncement.date).toLocaleDateString()}
-                    </Typography>
-                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Button
-                        variant="contained"
-                        onClick={handleCloseModal}
-                        sx={{
-                            mt: 2,
-                            backgroundColor: "#700000",
-                            "&:hover": { backgroundColor: "#500000" },
-                        }}
-                        >
-                        Close
-                        </Button>
-                    </Box>
-                    </>
-                )}
-                </Box>
-            </Modal>
-            </Grid>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          {/* Right side: Calendar + Announcements */}
-            <Grid item xs={12} md={4}>
-              <Box
-                sx={{
-                  borderRadius: 2,
-                  border: "1px solid #8B2635",
-                  backgroundColor: "#fff",
-                  p: 2,
+                  color: darkText,
+                  fontWeight: 700,
                 }}
               >
-                {/* Calendar Header with Navigation */}
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                  <IconButton
-                    size="small"
-                    // Previous month
-                    onClick={() => {
-                      const prevMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
-                      setCalendarDate(prevMonth);
-                    }}
-                    sx={{ color: "#6d2323" }}
-                  >
-                    <ArrowBackIosNewIcon fontSize="medium" />
+                Hello, {fullName || username}!
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#666666',
+                  mt: 0.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5
+                }}
+              >
+                <AccessTime sx={{ fontSize: 14 }} />
+                {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                <span style={{ marginLeft: '8px' }}>
+                  {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              <Tooltip title="Refresh">
+                <IconButton
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(128, 0, 32, 0.1)',
+                    '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.2)' },
+                    color: mediumText,
+                  }}
+                  onClick={() => window.location.reload()}
+                >
+                  <AutorenewIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Notifications">
+                <IconButton
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(128, 0, 32, 0.1)',
+                    '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.2)' },
+                    color: mediumText,
+                  }}
+                  onClick={() => setNotifModalOpen(true)}
+                >
+                  <Badge badgeContent={announcements.length} color="error" max={9}>
+                    <NotificationsIcon fontSize="small" />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+
+              <Box
+                sx={{
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: -2,
+                    borderRadius: '50%',
+                    padding: '2px',
+                    background: primaryGradient,
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude',
+                  },
+                }}
+              >
+                <IconButton onClick={handleMenuOpen} sx={{ p: 0.5 }}>
+                  <Avatar
+                    alt={username}
+                    src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+                    sx={{ width: 36, height: 36 }}
+                  />
+                </IconButton>
+              </Box>
+              
+              <Menu 
+                anchorEl={anchorEl} 
+                open={openMenu} 
+                onClose={handleMenuClose} 
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} 
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }} 
+                PaperProps={{ 
+                  sx: { 
+                    borderRadius: 2, 
+                    minWidth: 180, 
+                    backgroundColor: '#FEF9E1',
+                    border: `1px solid ${cardBorder}`,
+                    boxShadow: cardShadow,
+                    '& .MuiMenuItem-root': { 
+                      fontSize: '0.875rem',
+                      '&:hover': { 
+                        background: 'rgba(128, 0, 32, 0.1)' 
+                      }, 
+                    }, 
+                  }, 
+                }} 
+              > 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/profile"); }}>
+                  <AccountCircle sx={{ mr: 1, fontSize: 20 }} /> Profile
+                </MenuItem> 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/settings"); }}>
+                  <Settings sx={{ mr: 1, fontSize: 20 }} /> Settings
+                </MenuItem> 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/faqs"); }}>
+                  <HelpOutline sx={{ mr: 1, fontSize: 20 }} /> FAQs
+                </MenuItem> 
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/privacy-policy"); }}>
+                  <PrivacyTip sx={{ mr: 1, fontSize: 20 }} /> Privacy Policy
+                </MenuItem> 
+                <Divider sx={{ borderColor: cardBorder }} /> 
+                <MenuItem onClick={() => { handleMenuClose(); handleLogout(); }}>
+                  <Logout sx={{ mr: 1, fontSize: 20 }} /> Sign Out
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Box>
+        </Grow>
+
+        {/* Main Content Area */}
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={5}>
+            <Grow in timeout={400}>
+              <Card sx={{
+                background: cardBackground,
+                backdropFilter: 'blur(15px)',
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 4,
+                boxShadow: cardShadow,
+                height: '80%',
+                transition: 'all 0.3s',
+                '&:hover': { 
+                  transform: 'translateY(-4px)', 
+                  boxShadow: '0 20px 50px rgba(128,0,32,0.3)' 
+                }
+              }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="h6" sx={{ color: darkText, fontWeight: 700, mb: 2 }}>
+                    Today's Attendance
+                  </Typography>
+                  <Link to="/attendance-user-state" style={{ textDecoration: 'none' }}>
+                    <Grid container spacing={1}>
+                      {[
+                        { label: 'TIME IN', value: attendance.timeIn },
+                        { label: 'BREAKTIME IN', value: attendance.breakIn },
+                        { label: 'BREAKTIME OUT', value: attendance.breakOut },
+                        { label: 'TIME OUT', value: attendance.timeOut },
+                      ].map((item, idx) => (
+                        <Grid item xs={6} key={idx}>
+                          <Box sx={{
+                            background: `${mediumText}10`,
+                            backdropFilter: 'blur(10px)',
+                            border: `1px solid ${cardBorder}`,
+                            borderRadius: 2,
+                            p: 1.5,
+                            textAlign: 'center',
+                            transition: 'all 0.3s',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              background: `${mediumText}20`,
+                            }
+                          }}>
+                            <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: mediumText, mb: 0.5 }}>
+                              {item.label}
+                            </Typography>
+                            <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: darkText }}>
+                              {item.value}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Link>
+                </CardContent>
+              </Card>
+            </Grow>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <Grow in timeout={500}>
+              <Card sx={{
+                background: cardBackground,
+                backdropFilter: 'blur(15px)',
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 4,
+                boxShadow: cardShadow,
+                height: '80%',
+                transition: 'all 0.3s',
+                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 50px rgba(128,0,32,0.3)' }
+              }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="h6" sx={{ color: darkText, fontWeight: 600}}>
+                    Payslip
+                  </Typography>
+                  
+                  {/* Payslip Section */}
+                  <Box sx={{ mb: 1 }}>
+                    <Link to="/payslip" style={{ textDecoration: 'none' }}>
+                      <Grid container spacing={1}>
+                        <Grid item xs={6}>
+                          <Box sx={{
+                            background: `${mediumText}10`,
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: 2,
+                            p: 1,
+                            textAlign: 'center',
+                            transition: 'all 0.3s',
+                            '&:hover': { transform: 'scale(1.05)' }
+                          }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: mediumText, mb: 0.5 }}>
+                              1st Pay
+                            </Typography>
+                            <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: darkText }}>
+                              {payrollData ? formatCurrency(payrollData.pay1st) : '₱00.00'}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Box sx={{
+                            background: `${mediumText}10`,
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: 2,
+                            p: 1,
+                            textAlign: 'center',
+                            transition: 'all 0.3s',
+                            '&:hover': { transform: 'scale(1.05)' }
+                          }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: mediumText, mb: 0.5 }}>
+                              2nd Pay
+                            </Typography>
+                            <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: darkText }}>
+                              {payrollData ? formatCurrency(payrollData.pay2nd) : '₱00.00'}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Link>
+                  </Box>
+
+                  {/* Leave Balance Section */}
+                  <Box>
+                    <Typography variant="h6" sx={{ color: darkText, fontWeight: 600 }}>
+                    Leave Balance
+                    </Typography>
+                    <Box sx={{
+                      background: `${mediumText}10`,
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: 2,
+                      p: 1,
+                      textAlign: 'center'
+                    }}>
+                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: mediumText, mb: 0.5 }}>
+                        All Leaves
+                      </Typography>
+                      <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: darkText }}>
+                        386
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grow>
+          </Grid>
+
+          {/* Calendar - Now aligned with top row */}
+          <Grid item xs={12} md={4}>
+            <Grow in timeout={600}>
+              <Card sx={{
+                background: cardBackground,
+                backdropFilter: 'blur(15px)',
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 4,
+                p: 2,
+                boxShadow: cardShadow,
+                height: '90%',
+                transition: 'all 0.3s',
+                '&:hover': { boxShadow: '0 20px 50px rgba(128,0,32,0.3)' }
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <IconButton size="small"
+                    onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
+                    sx={{ bgcolor: `${mediumText}10`, '&:hover': { bgcolor: `${mediumText}20` }, color: mediumText }}>
+                    <ArrowBackIosNewIcon fontSize="small" />
                   </IconButton>
-                  <Typography fontWeight="bold" sx={{ color: "#6d2323", fontSize: "1rem" }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: darkText }}>
                     {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </Typography>
-                  <IconButton
-                    size="small"
-                    // Next month
-                    onClick={() => {
-                      const nextMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
-                      setCalendarDate(nextMonth);
-                    }}
-                    sx={{ color: "#6d2323" }}
-                  >
-                    <ArrowForwardIosIcon fontSize="medium" />
+                  <IconButton size="small"
+                    onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
+                    sx={{ bgcolor: `${mediumText}10`, '&:hover': { bgcolor: `${mediumText}20` }, color: mediumText }}>
+                    <ArrowForwardIosIcon fontSize="small" />
                   </IconButton>
                 </Box>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                {/* Days of Week Header */}
-                <Grid container spacing={0} sx={{ mb: 1 }}>
+                <Grid container spacing={0.5} sx={{ mb: 1 }}>
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                     <Grid item xs={12 / 7} key={day}>
-                      <Typography
-                        sx={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          fontSize: "0.80rem",
-                          color: "#6d2323",
-                          p: 1,
-                        }}
-                      >
+                      <Typography sx={{ textAlign: 'center', fontWeight: 700, fontSize: '0.7rem', color: '#666666', py: 0.5 }}>
                         {day}
                       </Typography>
                     </Grid>
                   ))}
                 </Grid>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                {/* Calendar Days Grid */}
-                <Grid container spacing={0}>
+                <Grid container spacing={0.5}>
                   {calendarDays.map((day, index) => {
                     const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    const holidayData = holidays.find(
-                      (h) => h.date === currentDate && h.status === "Active"
-                    );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    const holidayData = holidays.find(h => h.date === currentDate && h.status === "Active");
+                    const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
                     return (
                       <Grid item xs={12 / 7} key={index}>
-                        <Tooltip
-                          title={holidayData ? holidayData.name : ""}
-                          arrow
-                          componentsProps={{
-                            tooltip: {
-                              sx: {
-                                color: "#6d2323",              
-                                backgroundColor: "#fff",
-                                border: "1.5px solid #6d2323",
-                                fontWeight: "bold",
-                                fontSize: "1rem",
-                                boxShadow: "none",
-                                borderRadius: "20px"
-                              },
-                            },
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              textAlign: "center",
-                              p: 0.34,
-                              fontSize: "0.9rem",
-                              borderRadius: "20px",
-                              color: holidayData ? "#fff" : day ? "#333" : "transparent",
-                              backgroundColor: holidayData ? "#6d2323" : "transparent",
-                              fontWeight: holidayData ? "bold" : "normal",
-                              minHeight: "20px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: holidayData ? "pointer" : "default",
-                              "&:hover": holidayData
-                                ? {
-                                    backgroundColor: "#6d2323",
-                                    transform: "scale(1.05)",
-                                    transition: "all 0.2s ease-in-out",
-                                  }
-                                : {},
-                            }}
-                          >
+                        <Tooltip title={holidayData ? holidayData.name : isToday ? "Today" : ""} arrow>
+                          <Box sx={{
+                            textAlign: 'center',
+                            py: 0.8,
+                            fontSize: '0.8rem',
+                            borderRadius: 1,
+                            color: holidayData ? '#ffffff' : day ? darkText : 'transparent',
+                            background: holidayData ? primaryGradient : isToday ? `${mediumText}20` : 'transparent',
+                            fontWeight: holidayData || isToday ? 700 : 400,
+                            cursor: holidayData ? 'pointer' : 'default',
+                            transition: 'all 0.3s',
+                            border: isToday && !holidayData ? `1px solid ${mediumText}` : 'none',
+                            '&:hover': holidayData || isToday ? {
+                              transform: 'scale(1.15)',
+                              boxShadow: holidayData ? '0 4px 12px rgba(128,0,32,0.3)' : '0 4px 12px rgba(128,0,32,0.2)',
+                              zIndex: 10
+                            } : {}
+                          }}>
                             {day || ""}
                           </Box>
                         </Tooltip>
@@ -1377,596 +686,402 @@ useEffect(() => {
                     );
                   })}
                 </Grid>
+              </Card>
+            </Grow>
+          </Grid>
 
+          {/* Bottom Row - Slideshow and Quick Actions */}
+          <Grid item xs={12} md={8}>
+            <Fade in timeout={800}>
+              <Card sx={{
+                background: cardBackground,
+                backdropFilter: 'blur(15px)',
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 4,
+                overflow: 'hidden',
+                boxShadow: cardShadow,
+                position: 'relative',
+                mt: -7
+              }}>
+                <Box sx={{ position: 'relative', height: 450, cursor: 'pointer' }} onClick={() => {
+                  const announcement = announcements[currentSlide];
+                  if (announcement) handleOpenModal(announcement);
+                }}>
+                  {announcements.length > 0 ? (
+                    <>
+                      <Box component="img"
+                        src={announcements[currentSlide]?.image ? `${API_BASE_URL}${announcements[currentSlide].image}` : "/api/placeholder/800/400"}
+                        alt={announcements[currentSlide]?.title || "Announcement"}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.7s ease' }}
+                      />
+                      <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 70%)' }} />
+                      
+                      <IconButton onClick={(e) => { e.stopPropagation(); handlePrevSlide(); }}
+                        sx={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'translateY(-50%) scale(1.1)' }, color: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', transition: 'all 0.3s' }}>
+                        <ArrowBackIosNewIcon />
+                      </IconButton>
+                      
+                      <IconButton onClick={(e) => { e.stopPropagation(); handleNextSlide(); }}
+                        sx={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'translateY(-50%) scale(1.1)' }, color: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', transition: 'all 0.3s' }}>
+                        <ArrowForwardIosIcon />
+                      </IconButton>
+                      
+                      <IconButton onClick={(e) => { e.stopPropagation(); setAutoPlay(!autoPlay); }}
+                        sx={{ position: 'absolute', top: 24, right: 24, bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'scale(1.1)' }, color: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', transition: 'all 0.3s' }}>
+                        {autoPlay ? <Pause /> : <PlayArrow />}
+                      </IconButton>
 
+                      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 4, color: '#ffffff' }}>
+                        <Chip label="ANNOUNCEMENT" size="small" sx={{ mb: 2, bgcolor: 'rgba(128, 0, 32, 0.5)', backdropFilter: 'blur(10px)', color: '#ffffff', fontWeight: 700, fontSize: '0.7rem', border: '1px solid rgba(254, 249, 225, 0.3)' }} />
+                        <Typography variant="h3" sx={{ fontWeight: 800, mb: 1, textShadow: '0 4px 12px rgba(0,0,0,0.5)', lineHeight: 1.2 }}>
+                          {announcements[currentSlide]?.title}
+                        </Typography>
+                        <Typography sx={{ opacity: 0.95, fontSize: '1rem', textShadow: '0 2px 8px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AccessTime sx={{ fontSize: 18 }} />
+                          {new Date(announcements[currentSlide]?.date).toDateString()}
+                        </Typography>
+                      </Box>
 
+                      <Box sx={{ position: 'absolute', bottom: 24, right: 24, display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                        {announcements.map((_, idx) => (
+                          <Box key={idx}
+                            sx={{ width: currentSlide === idx ? 32 : 10, height: 10, borderRadius: 5, bgcolor: currentSlide === idx ? '#ffffff' : 'rgba(254,249,225,0.4)', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', border: '1px solid rgba(254,249,225,0.3)', '&:hover': { bgcolor: 'rgba(254,249,225,0.7)', transform: 'scale(1.2)' } }}
+                            onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }}
+                          />
+                        ))}
+                      </Box>
+                    </>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 2 }}>
+                      <NotificationsIcon sx={{ fontSize: 80, color: 'rgba(128, 0, 32, 0.3)' }} />
+                      <Typography variant="h5" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>No announcements available</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Card>
+            </Fade>
+          </Grid>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                {/* Legend */}
-                {/* <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        backgroundColor: "red",
-                        borderRadius: "50%"
-                      }}
-                    />
-                    <Typography fontSize="0.6rem" color="#666">Holiday</Typography>
-                  </Box>
-                </Box> */}
-              </Box>
-              {/* Announcements list */}
-               <Box
-                            sx={{
-                                border: "1px solid #8B2635",
-                                borderRadius: 2,
-                                overflow: "hidden",
-                                height: "255px",
-                                mt: 2
-                            }}
-                            >
-                            <Box sx={{ backgroundColor: "#fff", p: 1.5, textAlign: "center" }}>
-                                <Typography sx={{ color: "#8B2635", fontWeight: "bolder", fontSize: "16px" }}>
-                                Announcements
-                                </Typography>
+          {/* Quick Actions - Now below the calendar */}
+          <Grid item xs={12} md={4}>
+            <Grow in timeout={700}>
+              <Card sx={{
+                background: cardBackground,
+                backdropFilter: 'blur(15px)',
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 4,
+                p: 2,
+                boxShadow: cardShadow,
+                height: '91%'
+              }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: darkText }}>
+                  Quick Actions
+                </Typography>
+                <Grid container spacing={1}>
+                  {[
+                    { label: "DTR", link: "/daily_time_record", icon: <AccessTime /> },
+                    { label: "PDS", link: "/pds1", icon: <ContactPage /> },
+                    { label: "Payslip", link: "/payslip", icon: <Receipt /> },
+                    { label: "Leave", link: "/leave-request-user", icon: <UploadFile /> },
+                    { label: "Attendance", link: "/attendance-user-state", icon: <Person /> },
+                  ].map((item, i) => (
+                    <Grid item xs={6} key={i}>
+                      <Grow in timeout={800 + i * 100}>
+                        <Link to={item.link} style={{ textDecoration: "none" }}>
+                          <Box sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            background: `${mediumText}10`,
+                            border: `1px solid ${cardBorder}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1,
+                            transition: 'all 0.3s',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              background: `${mediumText}20`,
+                              boxShadow: '0 8px 24px rgba(128,0,32,0.2)'
+                            }
+                          }}>
+                            <Box sx={{
+                              color: mediumText,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'transform 0.3s',
+                              '&:hover': { transform: 'rotate(360deg)' }
+                            }}>
+                              {React.cloneElement(item.icon, { sx: { fontSize: 24 } })}
                             </Box>
-                            <Box sx={{ p: 1.5, backgroundColor: "white", height: "calc(100% - 60px)", overflowY: "auto" }}>
-                                {announcements.map((a, i) => (
-                                <Box
-                                    key={i}
-                                    sx={{
-                                    mb: 2,
-                                    p: 1.5,
-                                    border: "1px solid #8B2635",
-                                    borderRadius: 1,
-                                    cursor: "pointer",
-                                    "&:hover": { backgroundColor: "#f9f9f9" }
-                                    }}
-                                    onClick={() => {
-                                    setSelectedAnnouncement(a);
-                                    setOpenModal(true);
-                                    }}
-                                >
-                                    <Typography
-                                    fontSize="0.85rem"
-                                    fontWeight="bold"
-                                    sx={{ color: "#8B2635", mb: 0.5 }}
-                                    >
-                                    📢 {a.title}
-                                    </Typography>
-                                    <Typography fontSize="0.75rem" sx={{ color: "#666", mb: 0.5 }}>
-                                    {new Date(a.date).toDateString()}
-                                    </Typography>
-                                    <Typography fontSize="0.7rem" sx={{ color: "#888" }}>
-                                    {a.about && a.about.length > 80 ? `${a.about.substring(0, 80)}...` : a.about}
-                                    </Typography>
-                                </Box>
-                                ))}
-                                {announcements.length === 0 && (
-                                <Typography sx={{ textAlign: "center", color: "#666", mt: 4 }}>
-                                    No announcements available
-                                </Typography>
-                                )}
-                            </Box>
+                            <Typography sx={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              color: darkText,
+                              textAlign: 'center'
+                            }}>
+                              {item.label}
+                            </Typography>
                           </Box>
-               </Grid>
-           </Grid>
-        </Box>
-
-
-
-
-
-
-
-
-        <Box
-          sx={{
-            width: 320,
-            backgroundColor: "#ffffff",
-            border: "1px solid #8B2635",
-            borderRadius: 2,
-            p: 1.5,
-            height: "fit-content",
-            position: "sticky",
-            top: 20,
-            cursor: "pointer", // shows pointer on hover
-            "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } // optional hover effect
-          }}
-        
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mb: 2, gap: 1 }}>
-              <Tooltip title="Notifications">
-                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => { e.stopPropagation(); setNotifModalOpen(true); }}>
-                  <Badge badgeContent={3} color="error">
-                    <NotificationsIcon fontSize="small" />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="More Options">
-                <IconButton size="small" sx={{ color: "black" }} onClick={(e) => e.stopPropagation()}>
-                  <ArrowDropDownIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-
-
-            <Avatar
-              alt={username}
-              src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
-              sx={{
-                width: 80,
-                height: 80,
-                border: "3px solid #8B2635",
-                mb: 1,
-              }}
-            />
-            <Typography variant="h6" fontWeight="bold" sx={{ color: "black", textAlign: "center" }}>
-              {fullName || username || "Admin Name"}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#666", textAlign: "center" }}>
-              {employeeNumber || "#00000000"}
-            </Typography>
-          </Box>
-
-
-          {/* Quick Links */}
-          <Box sx={{ border: '1px solid #8B2635', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-            <Box
-              sx={{
-                backgroundColor: '#6d2323',
-                p: 1,
-                textAlign: 'center',
-              }}
-            >
-              <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                USER PANEL
-              </Typography>
-            </Box>
-
-
-            {/* Grid of Cards */}
-            <Grid container spacing={0} sx={{ p: 1 }}>
-               {/* DTR */}
-               <Grid item xs={2.4}>
-                 <Link to="/daily_time_record" style={{ textDecoration: "none" }}>
-                   <Box
-                     sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 50,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <AccessTime sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>DTR</Typography>
-                   </Box>
-         
-                 </Link>
-               </Grid>
-         
-               {/* PDS */}
-               <Grid item xs={2.4}>
-                 <Link to="/pds1" style={{ textDecoration: "none" }}>
-                   <Box
-                    sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 50,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <ContactPage sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>PDS</Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-         
-               {/* Payslip */}
-               <Grid item xs={2.4}>
-                 <Link to="/payslip" style={{ textDecoration: "none" }}>
-                   <Box
-                   sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 50,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <Receipt sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Payslip</Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-         
-               {/* Request Leave */}
-                 <Grid item xs={2.4}>
-                 <Link to="/leave-request-user" style={{ textDecoration: "none" }}>
-                   <Box
-                   sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 50,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent",
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323",
-                       }
-                     }}
-                   >
-                     <UploadFile sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.75rem", fontWeight: "bold" }}>Leave</Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-         
-               {/* Attendance */}
-               <Grid item xs={2.4}>
-                 <Link to="/attendance-user-state" style={{ textDecoration: "none" }}>
-                   <Box
-                    sx={{
-                       m: 0.5,
-                       p: 1,
-                       backgroundColor: "#6d2323",
-                       color: "#fff",
-                       borderRadius: 1,
-                       display: "flex",
-                       flexDirection: "column",
-                       alignItems: "center",
-                       justifyContent: "center",
-                       minHeight: 50,
-                       textAlign: "center",
-                       transition: "all 0.3s ease",
-                       border: "1px solid transparent", // <-- keep border space
-                       "&:hover": {
-                         backgroundColor: "#fff",
-                         color: "#6d2323",
-                         borderColor: "#6d2323", // <-- change color only
-                       }
-                     }}
-                   >
-                     <Person sx={{ fontSize: 25 }} />
-                     <Typography sx={{ fontSize: "0.50rem", fontWeight: "bold" }}>
-                       Attendance
-                     </Typography>
-                   </Box>
-                 </Link>
-               </Grid>
-             </Grid>
-          </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          {/* Recent Activity */}
-          <Box sx={{ border: `1px solid ${ACCENT}`, borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ backgroundColor: '#6d2323', p: 1.5, textAlign: 'center' }}>
-              <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>RECENT ACTIVITY</Typography>
-            </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            <Box sx={{ p: 1.5, backgroundColor: 'white', maxHeight: 332, overflowY: 'auto' }}>
-              <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Leave Request Submitted</Typography>
-                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Annual Leave - June 14-15, 2025</Typography>
-              </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Payslip Generated</Typography>
-                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>May 2025 - Available for download</Typography>
-              </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Profile Updated</Typography>
-                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Personal information updated successfully</Typography>
-              </Box>
-
-
-
-
-
-
-
-
-               <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Personal Information Created</Typography>
-                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Personal information created successfully</Typography>
-              </Box>
-
-
-                <Box sx={{ mb: 1.5, p: 1.5, backgroundColor: '#f8f8f8', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-                <Typography fontSize="0.8rem" fontWeight="bold" sx={{ color: ACCENT }}>Account Registered</Typography>
-                <Typography fontSize="0.7rem" sx={{ color: '#666' }}>Account registered successfully</Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                        </Link>
+                      </Grow>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Card>
+            </Grow>
+          </Grid>
+        </Grid>
+      </Container>
 
       {/* Announcement Modal */}
-      <Modal open={openModal} onClose={handleCloseModal} aria-labelledby="announcement-modal" aria-describedby="announcement-details">
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%,-50%)',
-          width: '80%',
-          maxWidth: 600,
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
-          maxHeight: '90vh',
-          overflow: 'auto'
-        }}>
-          {selectedAnnouncement && (
-            <>
-              <Typography variant="h5" component="h2" gutterBottom>{selectedAnnouncement.title}</Typography>
-              {selectedAnnouncement.image && (
-                <Box component="img" src={`${API_BASE_URL}${selectedAnnouncement.image}`} alt={selectedAnnouncement.title}
-                  sx={{ width: '100%', height: 'auto', maxHeight: 300, objectFit: 'cover', borderRadius: 1, mb: 2 }} />
-              )}
-              <Typography variant="body1" paragraph>{selectedAnnouncement.about || selectedAnnouncement.description}</Typography>
-              <Typography variant="caption" color="text.secondary">Posted on: {selectedAnnouncement.date ? new Date(selectedAnnouncement.date).toLocaleDateString() : ''}</Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button variant="contained" onClick={handleCloseModal} sx={{ mt: 2, backgroundColor: ACCENT, '&:hover': { backgroundColor: '#6d1e29' } }}>Close</Button>
-              </Box>
-            </>
-          )}
-        </Box>
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Fade in={openModal}>
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '90%',
+            maxWidth: 800,
+            bgcolor: cardBackground,
+            backdropFilter: 'blur(40px)',
+            border: `1px solid ${cardBorder}`,
+            boxShadow: '0 24px 64px rgba(128,0,32,0.5)',
+            borderRadius: 4,
+            overflow: 'hidden',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {selectedAnnouncement && (
+              <>
+                <Box sx={{ position: 'relative' }}>
+                  {selectedAnnouncement.image && (
+                    <Box component="img"
+                      src={`${API_BASE_URL}${selectedAnnouncement.image}`}
+                      alt={selectedAnnouncement.title}
+                      sx={{ width: '100%', height: 350, objectFit: 'cover' }}
+                    />
+                  )}
+                  <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(128,0,32,0.7) 100%)' }} />
+                  <IconButton onClick={handleCloseModal}
+                    sx={{ position: 'absolute', top: 20, right: 20, bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, color: '#ffffff', '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'rotate(90deg)' }, transition: 'all 0.3s' }}>
+                    <CloseIcon />
+                  </IconButton>
+                </Box>
+                <Box sx={{ p: 4, overflowY: 'auto' }}>
+                  <Typography variant="h3" sx={{ fontWeight: 800, mb: 2, color: darkText, textShadow: '0 2px 10px rgba(128,0,32,0.3)' }}>
+                    {selectedAnnouncement.title}
+                  </Typography>
+                  <Chip icon={<AccessTime style={{ color: mediumText }} />}
+                    label={new Date(selectedAnnouncement.date).toLocaleDateString()}
+                    sx={{ mb: 3, bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', color: mediumText, border: `1px solid ${cardBorder}` }}
+                  />
+                  <Typography variant="body1" sx={{ color: mediumText, lineHeight: 1.8, fontSize: '1.05rem' }}>
+                    {selectedAnnouncement.about}
+                  </Typography>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Fade>
       </Modal>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       {/* Notifications Modal */}
-      <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)} aria-labelledby="notification-modal" aria-describedby="notifications-list">
-        <Box sx={{
-          position: 'absolute',
-          top: '120px',
-          right: '20px',
-          width: '320px',
-          bgcolor: '#fff',
-          boxShadow: 24,
-          borderRadius: 2,
-          p: 2,
-          maxHeight: '80vh',
-          overflowY: 'auto',
-          zIndex: 1500,
-          border: `2px solid ${ACCENT}`,
-          '@media (max-width: 600px)': { width: '90vw', right: '5%' }
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: ACCENT }}>Notifications</Typography>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          {announcements.length > 0 ? announcements.slice(0, 10).map((item, idx) => (
-            <Box key={idx} sx={{
-              mb: 1.5, p: 1.5, borderRadius: 2, backgroundColor: '#f8f8f8', border: `1px solid ${ACCENT}`, cursor: 'pointer',
-              transition: '0.15s', '&:hover': { backgroundColor: '#f0f0f0' }
-            }} onClick={() => { setSelectedAnnouncement(item); setNotifModalOpen(false); setOpenModal(true); }}>
-              <Typography fontWeight="bold" fontSize="0.9rem" sx={{ color: ACCENT }}>{item.title}</Typography>
-              <Typography fontSize="0.75rem" sx={{ color: '#666' }}>{item.date ? new Date(item.date).toLocaleDateString() : ''}</Typography>
+      <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)}>
+        <Fade in={notifModalOpen}>
+          <Box sx={{
+            position: 'absolute',
+            top: 100,
+            right: 24,
+            width: 420,
+            maxWidth: '90vw',
+            bgcolor: cardBackground,
+            backdropFilter: 'blur(40px)',
+            border: `1px solid ${cardBorder}`,
+            boxShadow: '0 24px 64px rgba(128,0,32,0.5)',
+            borderRadius: 4,
+            overflow: 'hidden',
+            maxHeight: 'calc(100vh - 140px)'
+          }}>
+            <Box sx={{
+              p: 3,
+              borderBottom: `1px solid ${cardBorder}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'linear-gradient(135deg, rgba(128, 0, 32, 0.1) 0%, rgba(165, 42, 42, 0.05) 100%)'
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: darkText }}>
+                Notifications
+              </Typography>
+              <IconButton size="small" onClick={() => setNotifModalOpen(false)}
+                sx={{ color: mediumText, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.1)', transform: 'rotate(90deg)' }, transition: 'all 0.3s' }}>
+                <CloseIcon />
+              </IconButton>
             </Box>
-          )) : (<Typography fontSize="0.85rem">No notifications at the moment.</Typography>)}
-        </Box>
+            <Box sx={{ maxHeight: 'calc(100vh - 250px)', overflowY: 'auto', p: 2 }}>
+              {announcements.slice(0, 8).map((item, idx) => (
+                <Grow in timeout={300 + idx * 50} key={idx}>
+                  <Box sx={{
+                    mb: 2,
+                    p: 2.5,
+                    borderRadius: 3,
+                    background: 'rgba(128, 0, 32, 0.05)',
+                    border: `1px solid ${cardBorder}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      background: 'rgba(128, 0, 32, 0.1)',
+                      transform: 'translateX(8px)',
+                      boxShadow: '0 8px 24px rgba(128,0,32,0.2)'
+                    }
+                  }}
+                    onClick={() => {
+                      setSelectedAnnouncement(item);
+                      setNotifModalOpen(false);
+                      setOpenModal(true);
+                    }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: darkText, mb: 0.5, lineHeight: 1.4 }}>
+                      {item.title}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.8rem', color: '#666666', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <AccessTime sx={{ fontSize: 14 }} />
+                      {item.date ? new Date(item.date).toLocaleDateString() : ""}
+                    </Typography>
+                  </Box>
+                </Grow>
+              ))}
+              {announcements.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <NotificationsIcon sx={{ fontSize: 80, color: 'rgba(128, 0, 32, 0.2)', mb: 2 }} />
+                  <Typography sx={{ color: '#666666', fontSize: '1rem' }}>
+                    No notifications at the moment
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Fade>
       </Modal>
+
+      {/* Logout Dialog */}
+      <Dialog
+        open={logoutOpen}
+        fullScreen
+        PaperProps={{
+          sx: { backgroundColor: "transparent", boxShadow: "none" },
+        }}
+        BackdropProps={{
+          sx: {
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: i % 2 === 0 ? "rgba(128,0,32,0.8)" : "rgba(255,248,225,0.8)",
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transformOrigin: "-60px 0px",
+                animation: `orbit${i} ${3 + i}s linear infinite`,
+                boxShadow: "0 0 15px rgba(128,0,32,0.5), 0 0 8px rgba(255,248,225,0.5)",
+              }}
+            />
+          ))}
+
+          <Box sx={{ position: "relative", width: 120, height: 120 }}>
+            <Box
+              sx={{
+                width: 120,
+                height: 120,
+                borderRadius: "50%",
+                background: "radial-gradient(circle at 30% 30%, #A52A2A, #800020)",
+                boxShadow: "0 0 40px rgba(128,0,32,0.7), 0 0 80px rgba(128,0,32,0.5)",
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                animation: "floatSphere 2s ease-in-out infinite alternate",
+              }}
+            >
+              <Box
+                component="img"
+                src={logo}
+                alt="Logo"
+                sx={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: "50%",
+                  boxShadow: "0 0 20px rgba(128,0,32,0.7), 0 0 10px #FFF8E1",
+                  animation: "heartbeat 1s infinite",
+                }}
+              />
+            </Box>
+          </Box>
+
+          <Typography
+            variant="h6"
+            sx={{
+              mt: 3,
+              fontWeight: "bold",
+              color: "#FFF8E1",
+              textShadow: "0 0 10px #800020",
+              animation: "pulse 1.5s infinite",
+            }}
+          >
+            Signing out...
+          </Typography>
+
+          <Box component="style" children={`
+            @keyframes heartbeat {
+              0%,100% { transform: scale(1); }
+              25%,75% { transform: scale(1.15); }
+              50% { transform: scale(1.05); }
+            }
+            @keyframes pulse {
+              0% { opacity: 1; }
+              50% { opacity: 0.6; }
+              100% { opacity: 1; }
+            }
+            @keyframes floatSphere {
+              0% { transform: translate(-50%, -50%) translateY(0); }
+              50% { transform: translate(-50%, -50%) translateY(-15px); }
+              100% { transform: translate(-50%, -50%) translateY(0); }
+            }
+            @keyframes orbit0 { 0% { transform: rotate(0deg) translateX(60px); } 100% { transform: rotate(360deg) translateX(60px); } }
+            @keyframes orbit1 { 0% { transform: rotate(90deg) translateX(60px); } 100% { transform: rotate(450deg) translateX(60px); } }
+            @keyframes orbit2 { 0% { transform: rotate(180deg) translateX(60px); } 100% { transform: rotate(540deg) translateX(60px); } }
+            @keyframes orbit3 { 0% { transform: rotate(270deg) translateX(60px); } 100% { transform: rotate(630deg) translateX(60px); } }
+          `}/>
+        </Box>
+      </Dialog>
     </Box>
   );
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export default Home;
-
-
-
-
-

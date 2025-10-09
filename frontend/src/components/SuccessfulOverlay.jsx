@@ -22,7 +22,7 @@ const SuccessfulOverlay = ({ open, action, onClose }) => {
       case 'send': return 'Successfully Sent!';
       case 'download': return 'Successfully Downloaded!';
       case 'gmail': return 'Successfully Sent to Gmail!';
-      default: return 'Action Successful!';
+      default: return 'Successful!';
     }
   };
 

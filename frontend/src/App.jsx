@@ -28,6 +28,7 @@ import AccessDenied from './components/AccessDenied';
 
 
 
+
 import Home from './components/Home';
 import Sidebar from './components/Sidebar';
 import AdminHome from './components/HomeAdmin';
@@ -123,11 +124,7 @@ import LeaveCredits from './components/LEAVE/LeaveCredits';
 import UsersList from './components/UsersList';
 import PagesList from './components/PagesList';
 import AuditLogs from './components/AuditLogs';
-import SetupDashboard from './components/SetupDashboard';
-
-
-
-const drawerWidth = 250;
+import Settings from './components/Settings';
 
 
 
@@ -141,10 +138,9 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const location = useLocation();
   const [open6, setOpen6] = useState(false);
-
-
-
-
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  
 
   const handleClick = () => setOpen(!open);
   const handleClickAttendance = () => setOpen2(!open2);
@@ -152,9 +148,23 @@ function App() {
   const handleClickForms = () => setOpen4(!open4);
   const handleClickPDSFiles = () => setOpen5(!open5);
 
+ 
+   const handleDrawerStateChange = (isOpen) => {
+    setDrawerOpen(isOpen);
+  };
+
+  const handleMainContentClick = (e) => {
+    if (isLocked && drawerOpen) {
+      setDrawerOpen(false);
+      setIsLocked(false);
+    }
+  };
 
   const handleItemClick = (item) => {setSelectedItem(item);};
 
+
+  const drawerWidth = 270; // Width when open
+  const collapsedWidth = 60; // Width when collapsed
 
 
   return (
@@ -162,7 +172,7 @@ function App() {
         theme={createTheme({
           typography: {
             fontFamily: 'Poppins, sans-serif',
-            body1: { fontSize: '13px' }, // adjust sidebar fontsize
+            body1: { fontSize: '13px' },
           },
         })}
       >
@@ -261,21 +271,24 @@ function App() {
             handleClickForms={handleClickForms}
             open5={open5}
             handleClickPDSFiles={handleClickPDSFiles}
+            onDrawerStateChange={handleDrawerStateChange} // NEW PROP
           />
         )}
 
 
 
-
         {/* Main Content */}
-       <Box
+        <Box
           component="main"
+          onClick={handleMainContentClick} // NEW: Close sidebar on click
           sx={{
             flexGrow: 1,
             bgcolor: 'transparent',
             p: 5,
-            marginLeft: (theme) => (open6 ? `${drawerWidth}px` : `0px`), // shift when open
+            marginLeft: drawerOpen ? `${drawerWidth}px` : `${collapsedWidth}px`, // UPDATED
+            transition: 'margin-left 0.3s ease', // NEW: Smooth transition
             fontFamily: 'Poppins, sans-serif',
+            minHeight: '100vh', // NEW: Ensure full height for click detection
           }}
         >
           <Toolbar />
@@ -285,6 +298,8 @@ function App() {
             <Route path="/registration" element={<Registration />} />
             <Route path="/" element={<Login />} />
             <Route path='/forgot-password' element={<ForgotPassword />}/>
+            <Route path='/settings' element={<Settings/>}/>
+
             <Route
               path="/home"
               element={
@@ -959,17 +974,7 @@ function App() {
               }
             />
 
-             <Route
-              path="/setup-dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
-                  <SetupDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-
-            
+             
             <Route
               path="/audit-logs"
               element={

@@ -527,69 +527,64 @@ const AttendanceModuleFaculty = () => {
     }
   };
 
-  const saveOverallAttendance = async () => {
-    /* duplicate guard */
-    try {
-      const dup = await axios.get(
-        `${API_BASE_URL}/attendance/api/overall_attendance_record`,
-        { params: { personID: employeeNumber, startDate, endDate }, ...getAuthHeaders() }
+   const saveOverallAttendance = async () => {
+  // 🔍 1) check for duplicates first ─────────────────────────────
+  try {
+    const dup = await axios.get(
+      `${API_BASE_URL}/attendance/api/overall_attendance_record`,
+      { params: { personID: employeeNumber, startDate, endDate }, ...getAuthHeaders() }
+    );
+    if (dup.data?.data?.length) {
+      alert(
+        `Record for Employee Number ${employeeNumber} covering ${startDate}–${endDate} already exists. Please check Overall Attendance to manage.`
       );
-      if (dup.data?.data?.length) {
-        alert(
-          `Record for PERSON ID ${employeeNumber} covering ` +
-          `${startDate}–${endDate} already exists.`
-        );
-        return;           // abort duplicate save
-      }
-
+      // Still navigate even if duplicate exists
       navigate('/attendance_summary');
-
-
-    } catch (e) {
-      console.error("Duplicate‑check failed:", e);
-      alert("Could not verify duplicates. Saving aborted.");
       return;
     }
-    /* end duplicate guard */
-  
-    console.log("Employee Number:", employeeNumber);
-    const record = {
-      personID: employeeNumber,
-      startDate,
-      endDate,
-  
-      totalRenderedTimeMorning: calculateTotalRenderedTimeAM(),
-      totalRenderedTimeMorningTardiness: calculateTotalRenderedTimeTardinessAM(),
-  
-      totalRenderedTimeAfternoon: calculateTotalRenderedTimePM(),
-      totalRenderedTimeAfternoonTardiness: calculateTotalRenderedTimeTardinessPM(),
-  
-      totalRenderedHonorarium: calculateTotalRenderedTimeHN(),
-      totalRenderedHonorariumTardiness: calculateTotalRenderedTimeTardinessHN(),
-  
-      totalRenderedServiceCredit: calculateTotalRenderedTimeSC(),
-      totalRenderedServiceCreditTardiness: calculateTotalRenderedTimeTardinessSC(),
-  
-      totalRenderedOvertime: calculateTotalRenderedTimeOT(),
-      totalRenderedOvertimeTardiness: calculateTotalRenderedTimeTardinessOT(),
-  
-      overallRenderedOfficialTime: totalRenderedDay,
-      overallRenderedOfficialTimeTardiness: totalTardinessDay,
-    };
-  
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/attendance/api/overall_attendance`,
-        record,
-        getAuthHeaders()
-      );
-      alert(response.data.message || "Attendance record saved successfully!");
-      
-    } catch (error) {
-      console.error("Error saving overall attendance:", error);
-      alert("Failed to save attendance record.");
-    }
+  } catch (e) {
+    console.error("Duplicate‑check failed:", e);
+    alert("Could not verify duplicates. Saving aborted.");
+    return;
+  }
+   console.log("Employee Number:", employeeNumber);
+  const record = {
+    personID: employeeNumber,
+    startDate,
+    endDate,
+
+    totalRenderedTimeMorning: calculateTotalRenderedTimeAM(),
+    totalRenderedTimeMorningTardiness: calculateTotalRenderedTimeTardinessAM(),
+
+    totalRenderedTimeAfternoon: calculateTotalRenderedTimePM(),
+    totalRenderedTimeAfternoonTardiness: calculateTotalRenderedTimeTardinessPM(),
+
+    totalRenderedHonorarium: calculateTotalRenderedTimeHN(),
+    totalRenderedHonorariumTardiness: calculateTotalRenderedTimeTardinessHN(),
+
+    totalRenderedServiceCredit: calculateTotalRenderedTimeSC(),
+    totalRenderedServiceCreditTardiness: calculateTotalRenderedTimeTardinessSC(),
+
+    totalRenderedOvertime: calculateTotalRenderedTimeOT(),
+    totalRenderedOvertimeTardiness: calculateTotalRenderedTimeTardinessOT(),
+
+    overallRenderedOfficialTime: totalRenderedDay,
+    overallRenderedOfficialTimeTardiness: totalTardinessDay,
   };
+
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/attendance/api/overall_attendance`,
+      record,
+      getAuthHeaders()
+    );
+    alert(response.data.message || "Attendance record saved successfully!");
+    navigate('/attendance_summary');
+  } catch (error) {
+    console.error("Error saving overall attendance:", error);
+    alert("Failed to save attendance record.");
+  }
+};
   
 
   // // TIME IN AND TIME OUT AM

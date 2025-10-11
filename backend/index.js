@@ -251,13 +251,13 @@ db.query(ensureAuditLogTableSQL, (err) => {
   if (err) {
     console.error('Failed to ensure audit_log table exists:', err);
   } else {
-    console.log('audit_log table is ready.');
+    console.log('');
   }
 });
 
 const PORT = process.env.WEB_PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running...`);
 });
 
 module.exports = db;

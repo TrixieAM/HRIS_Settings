@@ -101,8 +101,8 @@ const ViewAttendanceRecord = () => {
         date: record.Date,
         Day: getDayOfWeek(record.Date),
         timeIN: record.Time1 ? formatTime(record.Time1) : null,
-        breaktimeIN: record.Time2 ? formatTime(record.Time2) : null,
-        breaktimeOUT: record.Time3 ? formatTime(record.Time3) : null,
+        breaktimeIN: record.Time3 ? formatTime(record.Time3) : null,
+        breaktimeOUT: record.Time2 ? formatTime(record.Time2) : null,
         timeOUT: record.Time4 ? formatTime(record.Time4) : null,
       }));
 
@@ -215,8 +215,8 @@ const ViewAttendanceRecord = () => {
                       <TableCell>{record.Date}</TableCell>
                       <TableCell>{getDayOfWeek(record.Date)}</TableCell>
                       <TableCell>{formatTime(record.Time1)}</TableCell>
-                      <TableCell>{formatTime(record.Time2)}</TableCell>
                       <TableCell>{formatTime(record.Time3)}</TableCell>
+                      <TableCell>{formatTime(record.Time2)}</TableCell>
                       <TableCell>{formatTime(record.Time4)}</TableCell>
                     </TableRow>
                   ))}

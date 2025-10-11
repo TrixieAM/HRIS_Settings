@@ -58,7 +58,11 @@ import {
 const AttendanceUserState = () => {
   const loggedInEmployeeNumber = localStorage.getItem('employeeNumber') || '';
   const today = new Date();
-  const formattedToday = today.toISOString().substring(0, 10);
+  // Use local date instead of UTC
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const formattedToday = `${year}-${month}-${day}`;
 
   const [personID, setPersonID] = useState(loggedInEmployeeNumber);
   const [startDate, setStartDate] = useState(formattedToday);
@@ -131,28 +135,88 @@ const AttendanceUserState = () => {
     setEndDate(formattedToday);
   };
 
-  const fetchRecords = async () => {
+  const fetchRecords = async (showLoading = true) => {
     if (!personID || !startDate || !endDate) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
+      console.log('=== FETCH RECORDS DEBUG ===');
+      console.log('Selected startDate:', startDate);
+      console.log('Selected endDate:', endDate);
+      
+      const adjustedStartDate = new Date(startDate);
+      adjustedStartDate.setDate(adjustedStartDate.getDate() - 1);
+      const adjustedStart = adjustedStartDate.toISOString().substring(0, 10);
+      
+      const adjustedEndDate = new Date(endDate);
+      adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
+      const adjustedEnd = adjustedEndDate.toISOString().substring(0, 10);
+      
+      console.log('Adjusted startDate sent to API:', adjustedStart);
+      console.log('Adjusted endDate sent to API:', adjustedEnd);
+      
       const response = await axios.post(
         `${API_BASE_URL}/attendance/api/attendance`,
-        { personID, startDate, endDate },
+        { personID, startDate: adjustedStart, endDate: adjustedEnd },
         getAuthHeaders()
       );
-      setRecords(response.data);
+      
+      console.log('Raw API response:', response.data);
+      
+      const filteredData = response.data.filter(record => {
+        const dateParts = record.Date.split('/');
+        if (dateParts.length === 3) {
+          const recordMonth = dateParts[0].padStart(2, '0');
+          const recordDay = dateParts[1].padStart(2, '0');
+          const recordYear = dateParts[2];
+          const recordDate = `${recordYear}-${recordMonth}-${recordDay}`;
+          
+          console.log(`Checking record: ${recordDate} >= ${startDate} && ${recordDate} <= ${endDate}`);
+          
+          const isInRange = recordDate >= startDate && recordDate <= endDate;
+          console.log(`Record ${recordDate} is in range:`, isInRange);
+          
+          return isInRange;
+        }
+        return false;
+      });
+      
+      console.log('Filtered data:', filteredData);
+      console.log('=== END DEBUG ===');
+      
+      setRecords(filteredData);
       setSubmittedID(personID);
       setError('');
     } catch (err) {
       console.error(err);
       setError('Failed to fetch attendance records');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchRecords();
+
+    // Smart refresh: only when tab is active, every 30 seconds
+    const intervalId = setInterval(() => {
+      if (!document.hidden) {
+        fetchRecords(false); // Don't show loading for auto-refresh
+      }
+    }, 30000); // 30 seconds
+
+    // Refresh when user returns to the tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchRecords(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [personID, startDate, endDate]);
 
   useEffect(() => {
@@ -186,8 +250,8 @@ const AttendanceUserState = () => {
   const getAttendanceLabel = (state) => {
     switch(state) {
       case 1: return 'Time IN';
-      case 2: return 'Break IN';
-      case 3: return 'Break OUT';
+      case 2: return 'Break OUT';
+      case 3: return 'Break IN';
       case 4: return 'Time OUT';
       default: return 'Uncategorized';
     }

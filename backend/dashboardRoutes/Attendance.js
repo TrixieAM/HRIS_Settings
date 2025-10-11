@@ -723,4 +723,48 @@ router.get('/attendance/monthly', authenticateToken, (req, res) => {
 });
 
 
+router.post('/api/attendance-records', authenticateToken, (req, res) => {
+  const { personID, startDate, endDate } = req.body;
+
+
+  if (!personID || !startDate || !endDate) {
+    return res.status(400).json({
+      error: 'personID, startDate, and endDate are required',
+    });
+  }
+
+
+  const sql = `
+    SELECT
+      id,
+      personID,
+      date,
+      Day,
+      timeIN,
+      breaktimeIN,
+      breaktimeOUT,
+      timeOUT
+    FROM attendancerecord
+    WHERE personID = ?
+      AND date >= ?
+      AND date <= ?
+    ORDER BY date ASC
+  `;
+
+
+  db.query(sql, [personID, startDate, endDate], (err, result) => {
+    if (err) {
+      console.error('Error fetching attendance records:', err);
+      return res.status(500).json({
+        message: 'Error fetching attendance records',
+      });
+    }
+
+
+    res.json(result);
+  });
+});
+
+
+
 module.exports = router;

@@ -358,6 +358,7 @@ const EmployeeRemittance = () => {
     emergencyLoan: '',
     nbc594: '',
     increment: '',
+    sss: '',
     pagibig: '',
     pagibigFundCont: '',
     pagibig2: '',
@@ -409,6 +410,7 @@ const EmployeeRemittance = () => {
       emergencyLoan: '',
       nbc594: '',
       increment: '',
+      sss: '',
       pagibig: '',
       pagibigFundCont: '',
       pagibig2: '',
@@ -635,6 +637,7 @@ const EmployeeRemittance = () => {
     emergencyLoan: 'Emergency Loan',
     nbc594: 'NBC 594',
     increment: 'Increment',
+    sss: 'SSS',
     pagibig: 'Pag-IBIG',
     pagibigFundCont: 'Pag-IBIG Fund Cont.',
     pagibig2: 'Pag-IBIG 2',
@@ -1113,7 +1116,6 @@ const EmployeeRemittance = () => {
                             display: 'block',
                             mt: 0.5,
                           }}
-                          
                         >
                           Contact administrator for assistance.
                         </Typography>

@@ -3,14 +3,18 @@ const mysql = require('mysql2');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+
   console.log('Auth header:', authHeader);
   console.log('Token:', token ? 'Token exists' : 'No token');
 
+
   if (!token) return res.status(401).json({ error: 'No token provided' });
+
 
   jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
     if (err) {
@@ -22,6 +26,7 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
 
 function logAudit(
   user,
@@ -35,12 +40,15 @@ function logAudit(
     return;
   }
 
+
   const auditQuery = `
     INSERT INTO audit_log (employeeNumber, action, table_name, record_id, targetEmployeeNumber, timestamp)
     VALUES (?, ?, ?, ?, ?, NOW())
   `;
 
+
   console.log(`Audit Log: ${action} on ${tableName} by ${user.employeeNumber}`);
+
 
   db.query(
     auditQuery,
@@ -65,6 +73,7 @@ function logAudit(
   );
 }
 
+
 //MYSQL CONNECTION
 const db = mysql.createPool({
   host: 'localhost',
@@ -76,15 +85,18 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
+
 // GET all released payroll records
 router.get('/released-payroll', authenticateToken, (req, res) => {
   const query = 'SELECT * FROM payroll_released ORDER BY dateReleased DESC';
+
 
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error fetching released payroll:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
+
 
     // Audit log: viewing released payroll
     logAudit(
@@ -94,9 +106,11 @@ router.get('/released-payroll', authenticateToken, (req, res) => {
       results.length > 0 ? results[0].id : null
     );
 
+
     res.json(results);
   });
 });
+
 
 // GET released payroll with detailed joins (for payslip components)
 router.get('/released-payroll-detailed', authenticateToken, (req, res) => {
@@ -148,17 +162,21 @@ router.get('/released-payroll-detailed', authenticateToken, (req, res) => {
       pr.feu,
       pr.PhilHealthContribution,
       pr.department,
+      pr.rh,
+      pr.sss,
       pr.dateReleased,
       pr.releasedBy
     FROM payroll_released pr
     ORDER BY pr.dateReleased DESC
   `;
 
+
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error fetching detailed released payroll:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
+
 
     // Audit log: viewing detailed released payroll
     logAudit(
@@ -168,14 +186,17 @@ router.get('/released-payroll-detailed', authenticateToken, (req, res) => {
       results.length > 0 ? results[0].id : null
     );
 
+
     res.json(results);
   });
 });
+
 
 // POST - Release payroll records (move from finalized to released)
 // POST - Release payroll records (copy from finalized to released, don't delete)
 router.post('/release-payroll', authenticateToken, (req, res) => {
   const { payrollIds, releasedBy } = req.body;
+
 
   if (!payrollIds || !Array.isArray(payrollIds) || payrollIds.length === 0) {
     return res
@@ -183,8 +204,10 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
       .json({ error: 'No payroll IDs provided for release.' });
   }
 
+
   // First, get the payroll data from finalized_payroll
   const getQuery = 'SELECT * FROM finalize_payroll WHERE id IN (?)';
+
 
   db.query(getQuery, [payrollIds], (err, payrollData) => {
     if (err) {
@@ -192,11 +215,13 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+
     if (payrollData.length === 0) {
       return res
         .status(404)
         .json({ error: 'No payroll records found to release.' });
     }
+
 
     // Check if any of these records are already released
     const checkReleasedQuery =
@@ -204,6 +229,7 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
     const employeeNumbers = payrollData.map((record) => record.employeeNumber);
     const startDates = payrollData.map((record) => record.startDate);
     const endDates = payrollData.map((record) => record.endDate);
+
 
     db.query(
       checkReleasedQuery,
@@ -214,6 +240,7 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
           return res.status(500).json({ error: 'Internal server error' });
         }
 
+
         // Filter out already released records
         const alreadyReleasedKeys = new Set(
           existingReleased.map(
@@ -222,6 +249,7 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
           )
         );
 
+
         const recordsToRelease = payrollData.filter(
           (record) =>
             !alreadyReleasedKeys.has(
@@ -229,11 +257,13 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
             )
         );
 
+
         if (recordsToRelease.length === 0) {
           return res
             .status(400)
             .json({ error: 'All selected records are already released.' });
         }
+
 
         // Prepare data for insertion into payroll_released
         const values = recordsToRelease.map((record) => [
@@ -282,8 +312,11 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
           record.feu,
           record.PhilHealthContribution,
           record.department,
+          record.rh,
+          record.sss,
           releasedBy || req.user.employeeNumber,
         ]);
+
 
         const insertQuery = `
         INSERT INTO payroll_released (
@@ -293,9 +326,10 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
           pay1stCompute, pay2ndCompute, rtIns, ec, increment, gsisSalaryLoan,
           gsisPolicyLoan, gsisArrears, cpl, mpl, eal, mplLite, emergencyLoan,
           pagibigFundCont, pagibig2, multiPurpLoan, position, liquidatingCash,
-          landbankSalaryLoan, earistCreditCoop, feu, PhilHealthContribution, department, releasedBy
+          landbankSalaryLoan, earistCreditCoop, feu, PhilHealthContribution, department, rh, sss, releasedBy
         ) VALUES ?
       `;
+
 
         db.query(insertQuery, [values], (err, result) => {
           if (err) {
@@ -310,6 +344,7 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
             return res.status(500).json({ error: 'Internal server error' });
           }
 
+
           // Log successful insertion
           logAudit(
             req.user,
@@ -319,8 +354,10 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
             payrollIds.join(', ')
           );
 
+
           // IMPORTANT: Don't delete from finalize_payroll - just copy to payroll_released
           // The records should remain in finalize_payroll for the PayrollProcessed view
+
 
           res.json({
             message: 'Payroll records released successfully.',
@@ -333,10 +370,12 @@ router.post('/release-payroll', authenticateToken, (req, res) => {
   });
 });
 
+
 // GET single released payroll record
 router.get('/released-payroll/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const query = 'SELECT * FROM payroll_released WHERE id = ?';
+
 
   db.query(query, [id], (err, result) => {
     if (err) {
@@ -344,23 +383,28 @@ router.get('/released-payroll/:id', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+
     if (result.length === 0) {
       return res
         .status(404)
         .json({ error: 'Released payroll record not found' });
     }
 
+
     // Audit log: viewing single released payroll record
     logAudit(req.user, 'view', 'payroll_released', id);
+
 
     res.json(result[0]);
   });
 });
 
+
 // DELETE released payroll record (if needed for admin purposes)
 router.delete('/released-payroll/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const query = 'DELETE FROM payroll_released WHERE id = ?';
+
 
   db.query(query, [id], (err, result) => {
     if (err) {
@@ -368,23 +412,27 @@ router.delete('/released-payroll/:id', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+
     if (result.affectedRows === 0) {
       return res
         .status(404)
         .json({ error: 'Released payroll record not found' });
     }
 
+
     // Audit log: deleting released payroll record
     logAudit(req.user, 'delete', 'payroll_released', id);
+
 
     res.json({ message: 'Released payroll record deleted successfully' });
   });
 });
 
+
 // GET released payroll statistics
 router.get('/released-payroll-stats', authenticateToken, (req, res) => {
   const query = `
-    SELECT 
+    SELECT
       COUNT(*) as totalReleased,
       COUNT(DISTINCT employeeNumber) as uniqueEmployees,
       COUNT(DISTINCT DATE(dateReleased)) as releaseDays,
@@ -395,17 +443,24 @@ router.get('/released-payroll-stats', authenticateToken, (req, res) => {
     FROM payroll_released
   `;
 
+
   db.query(query, (err, result) => {
     if (err) {
       console.error('Error fetching released payroll statistics:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+
     // Audit log: viewing released payroll statistics
     logAudit(req.user, 'view', 'payroll_released_stats', null);
+
 
     res.json(result[0]);
   });
 });
 
+
 module.exports = router;
+
+
+

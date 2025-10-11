@@ -39,6 +39,11 @@ import {
   ExitToApp,
   Payment,
   BusinessCenter,
+  CreditCard,
+  Compare,
+  Visibility,
+  Close,
+  EmojiPeople,
 } from '@mui/icons-material';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -93,6 +98,19 @@ const PayrollProcess = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
+  const [openViewModal, setOpenViewModal] = useState(false);
+  const [viewRow, setViewRow] = useState(null);
+
+  const handleView = (rowId) => {
+    const row = computedRows.find((item) => item.id === rowId);
+    setViewRow(row);
+    setOpenViewModal(true);
+  };
+
+  const handleCloseView = () => {
+    setOpenViewModal(false);
+    setViewRow(null);
+  };
 
   // Month options for filtering
   const monthOptions = [
@@ -285,25 +303,49 @@ const PayrollProcess = () => {
   const handleDepartmentChange = (event) => {
     const selectedDept = event.target.value;
     setSelectedDepartment(selectedDept);
-    applyFilters(selectedDept, searchTerm, selectedStatus, selectedMonth, selectedYear);
+    applyFilters(
+      selectedDept,
+      searchTerm,
+      selectedStatus,
+      selectedMonth,
+      selectedYear
+    );
   };
 
   const handleStatusChange = (event) => {
     const selectedStatusValue = event.target.value;
     setSelectedStatus(selectedStatusValue);
-    applyFilters(selectedDepartment, searchTerm, selectedStatusValue, selectedMonth, selectedYear);
+    applyFilters(
+      selectedDepartment,
+      searchTerm,
+      selectedStatusValue,
+      selectedMonth,
+      selectedYear
+    );
   };
 
   const handleMonthChange = (event) => {
     const selectedMonthValue = event.target.value;
     setSelectedMonth(selectedMonthValue);
-    applyFilters(selectedDepartment, searchTerm, selectedStatus, selectedMonthValue, selectedYear);
+    applyFilters(
+      selectedDepartment,
+      searchTerm,
+      selectedStatus,
+      selectedMonthValue,
+      selectedYear
+    );
   };
 
   const handleYearChange = (event) => {
     const selectedYearValue = event.target.value;
     setSelectedYear(selectedYearValue);
-    applyFilters(selectedDepartment, searchTerm, selectedStatus, selectedMonth, selectedYearValue);
+    applyFilters(
+      selectedDepartment,
+      searchTerm,
+      selectedStatus,
+      selectedMonth,
+      selectedYearValue
+    );
   };
 
   // HANDLE SEARCH IN DEPARTMENT AND SEARCH BUTTON
@@ -320,7 +362,13 @@ const PayrollProcess = () => {
     // If search term is empty, immediately reload all data
     if (!term.trim()) {
       fetchPayrollData();
-      applyFilters(selectedDepartment, '', selectedStatus, selectedMonth, selectedYear);
+      applyFilters(
+        selectedDepartment,
+        '',
+        selectedStatus,
+        selectedMonth,
+        selectedYear
+      );
       return;
     }
 
@@ -351,7 +399,10 @@ const PayrollProcess = () => {
       filtered = filtered.filter((record) => {
         if (record.startDate) {
           const recordDate = new Date(record.startDate);
-          const recordMonth = String(recordDate.getMonth() + 1).padStart(2, '0');
+          const recordMonth = String(recordDate.getMonth() + 1).padStart(
+            2,
+            '0'
+          );
           return recordMonth === month;
         }
         return false;
@@ -948,7 +999,6 @@ const PayrollProcess = () => {
           </Box>
         </Box>
       </Paper>
-
       <Box
         sx={{
           backgroundColor: 'white',
@@ -958,7 +1008,14 @@ const PayrollProcess = () => {
           mb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
           <FormControl
             variant="outlined"
             sx={{
@@ -1126,7 +1183,6 @@ const PayrollProcess = () => {
           />
         </Box>
       </Box>
-
       {loading ? (
         <Box display="flex" justifyContent="center" mt={10}>
           <CircularProgress />
@@ -1231,14 +1287,13 @@ const PayrollProcess = () => {
                       </TableCell>
 
                       <ExcelTableCell header>No.</ExcelTableCell>
+                      <ExcelTableCell header>View</ExcelTableCell>
                       <ExcelTableCell header>Department</ExcelTableCell>
                       <ExcelTableCell header>Employee Number</ExcelTableCell>
                       <ExcelTableCell header>Start Date</ExcelTableCell>
                       <ExcelTableCell header>End Date</ExcelTableCell>
                       <ExcelTableCell header>Name</ExcelTableCell>
                       <ExcelTableCell header>Position</ExcelTableCell>
-                      <ExcelTableCell header>Rate NBC 584</ExcelTableCell>
-                      <ExcelTableCell header>NBC 594</ExcelTableCell>
                       <ExcelTableCell header>Rate NBC 594</ExcelTableCell>
                       <ExcelTableCell header>NBC DIFF'L 597</ExcelTableCell>
                       <ExcelTableCell header>Increment</ExcelTableCell>
@@ -1366,6 +1421,30 @@ const PayrollProcess = () => {
                               <ExcelTableCell>
                                 {page * rowsPerPage + index + 1}
                               </ExcelTableCell>
+                              <ExcelTableCell>
+                                <Button
+                                  onClick={() => handleView(row.id)}
+                                  variant="contained"
+                                  size="small"
+                                  sx={{
+                                    bgcolor: '#ffffff',
+                                    color: '#6d2323',
+                                    minWidth: '80px',
+                                    border: '1px solid #6d2323',
+                                    width: '32px',
+                                    height: '32px',
+                                    padding: 0,
+                                    '&:hover': {
+                                      bgcolor: '#6d2323',
+                                      color: 'white',
+                                    },
+                                  }}
+                                  title="View Record"
+                                >
+                                  <Visibility fontSize="small" />
+                                  View
+                                </Button>
+                              </ExcelTableCell>
                               <ExcelTableCell>{row.department}</ExcelTableCell>
                               <ExcelTableCell>
                                 {row.employeeNumber}
@@ -1374,25 +1453,7 @@ const PayrollProcess = () => {
                               <ExcelTableCell>{row.endDate}</ExcelTableCell>
                               <ExcelTableCell>{row.name}</ExcelTableCell>
                               <ExcelTableCell>{row.position}</ExcelTableCell>
-                              <ExcelTableCell>
-                                {row.rateNbc584
-                                  ? Number(row.rateNbc584).toLocaleString(
-                                      'en-US',
-                                      {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      }
-                                    )
-                                  : ''}
-                              </ExcelTableCell>
-                              <ExcelTableCell>
-                                {row.nbc594
-                                  ? Number(row.nbc594).toLocaleString('en-US', {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })
-                                  : ''}
-                              </ExcelTableCell>
+
                               <ExcelTableCell>
                                 {row.rateNbc594
                                   ? Number(row.rateNbc594).toLocaleString(
@@ -1708,10 +1769,16 @@ const PayrollProcess = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#6d2323' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 'bold', color: '#6d2323' }}
+                  >
                     Total Records: {filteredData.length}
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#6d2323' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 'bold', color: '#6d2323' }}
+                  >
                     Selected: {selectedRows.length}
                   </Typography>
                 </Box>
@@ -1885,7 +1952,6 @@ const PayrollProcess = () => {
           </Box>
         </Box>
       )}
-
       <div
         style={{
           display: 'flex',
@@ -1921,19 +1987,20 @@ const PayrollProcess = () => {
           onClick={() => (window.location.href = '/payroll-processed')}
           size="medium"
           sx={{
-            backgroundColor: '#6d2323',
-            color: '#ffffff',
+            backgroundColor: '#ffffff',
+            color: '#6d2323',
             textTransform: 'none',
+            border: '1px solid #6d2323',
             '&:hover': {
               backgroundColor: '#a31d1d',
+              color: 'white',
             },
           }}
-          startIcon={<BusinessCenterIcon />}
+          startIcon={<CreditCard />}
         >
           View Processed Payroll
         </Button>
       </div>
-
       <Modal open={openModal} onClose={handleCancel}>
         <Box
           sx={{
@@ -1941,280 +2008,1122 @@ const PayrollProcess = () => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 800,
+            width: '95vw',
+            maxWidth: 1600,
+            height: '90vh',
             bgcolor: 'background.paper',
-            p: 4,
             borderRadius: 2,
-            maxHeight: '90vh',
-            overflowY: 'auto',
+            boxShadow: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            border: '3px solid #6d2323',
           }}
         >
           {editRow && (
             <>
-              <Typography variant="h5" mb={3}>
-                Edit Payroll Record
-              </Typography>
-
-              {/* Employee Info */}
-              <Typography variant="h6" gutterBottom>
-                Employee Information
-              </Typography>
-              <Grid container spacing={2}>
-                {employeeFields.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    {field === 'department' ? (
-                      // Department field with dropdown
-                      <FormControl fullWidth>
-                        <InputLabel id="department-label">
-                          Department
-                        </InputLabel>
-                        <Select
-                          labelId="department-label"
-                          id="department-select"
-                          name={field}
-                          value={editRow[field] || ''}
-                          onChange={handleModalChange}
-                          label="Department"
-                        >
-                          <MenuItem value="">
-                            <em>All Departments</em>
-                          </MenuItem>
-                          {departments.map((dept) => (
-                            <MenuItem key={dept.id} value={dept.code}>
-                              {dept.description}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : (
-                      // Other fields with text input
-                      <TextField
-                        fullWidth
-                        label={field}
-                        name={field}
-                        value={editRow[field] || ''}
-                        onChange={handleModalChange}
-                        InputLabelProps={{
-                          style: { fontSize: '15px' }, // Make the label bigger
-                        }}
-                        InputProps={{
-                          style: { fontSize: '15px' }, // Make the input text bigger
-                        }}
-                      />
-                    )}
-                  </Grid>
-                ))}
-              </Grid>
-
-              {/* MODAL EDIT*/}
-              {/* Salary Info */}
-              <Typography variant="h6" mt={4} gutterBottom>
-                Salary Rate and Adjustments
-              </Typography>
-              <Grid container spacing={2}>
-                {salaryRateandAdjustments.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      disabled={field === 'rateNbc594'}
-                      InputProps={{
-                        style:
-                          field === 'rateNbc594'
-                            ? {
-                                fontWeight: 'bold',
-                                color: 'black',
-                                fontSize: '15px',
-                              }
-                            : undefined,
-                      }}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              {/* Deductions */}
-              <Typography variant="h6" mt={5} gutterBottom>
-                Absent Deductions
-              </Typography>
-              <Grid container spacing={2}>
-                {SalaryComputation.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                      InputProps={{
-                        style: { fontSize: '15px' }, // Make the input text bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              <Typography variant="h6" mt={4} gutterBottom>
-                Payroll Disbursement
-              </Typography>
-              <Grid container spacing={2}>
-                {PayrollDisbursement.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                      InputProps={{
-                        style: { fontSize: '15px' }, // Make the input text bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              <Typography variant="h6" mt={4} gutterBottom>
-                GSIS Deductions
-              </Typography>
-              <Grid container spacing={2}>
-                {GsisDeductions.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                      InputProps={{
-                        style: { fontSize: '15px' }, // Make the input text bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              <Typography variant="h6" mt={4} gutterBottom>
-                PAGIBIG Deductions
-              </Typography>
-              <Grid container spacing={2}>
-                {PagIbigDeductions.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                      InputProps={{
-                        style: { fontSize: '15px' }, // Make the input text bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              <Typography variant="h6" mt={4} gutterBottom>
-                Total Other Deductions
-              </Typography>
-              <Grid container spacing={2}>
-                {totalOtherDeductions.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                      InputProps={{
-                        style: { fontSize: '15px' }, // Make the input text bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-
-              {/* Other Info */}
-              <Box mt={4} mb={2}>
-                <Typography variant="h6" fontWeight="bold">
-                  Total Contributions & Deductions
+              {/* Header */}
+              <Box
+                sx={{
+                  p: 3,
+                  bgcolor: '#6d2323',
+                  color: 'white',
+                  borderRadius: '2px 2px 0 0',
+                }}
+              >
+                <Typography variant="h5" fontWeight="bold">
+                  Edit Payroll Record - {editRow.name}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ opacity: 0.9, mt: 0.5, fontWeight: 'bold' }}
+                >
+                  Employee Number: {editRow.employeeNumber}
                 </Typography>
               </Box>
 
-              <Grid container spacing={2}>
-                {MandatoryDeductions.map((field) => (
-                  <Grid item xs={6} key={field}>
-                    <TextField
-                      fullWidth
-                      label={field}
-                      name={field}
-                      value={editRow[field] || ''}
-                      onChange={handleModalChange}
-                      InputLabelProps={{
-                        style: { fontSize: '15px' }, // Make the label bigger
-                      }}
-                      InputProps={{
-                        style: { fontSize: '15px' }, // Make the input text bigger
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+              {/* Main Content - Split View */}
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* LEFT SIDE - Original Values (Read-only) */}
+                <Box
+                  sx={{
+                    width: '50%',
+                    p: 3,
+                    overflowY: 'auto',
+                    bgcolor: '#f8f8f8',
+                    borderRight: '2px solid #6d2323',
+                    '&::-webkit-scrollbar': { width: '8px' },
+                    '&::-webkit-scrollbar-track': { background: '#f1f1f1' },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: '#888',
+                      borderRadius: '4px',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 3,
+                    }}
+                  >
+                    <Compare sx={{ color: '#6d2323' }} />
+                    <Typography variant="h6" fontWeight="bold" color="#6d2323">
+                      Original Values
+                    </Typography>
+                  </Box>
 
-              {/* Save / Cancel */}
-              <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>
-                <Button
-                  variant="contained"
-                  onClick={handleSave}
-                  startIcon={<SaveIcon />}
-                  style={{
-                    textTransform: 'none',
-                    width: '100px',
-                    backgroundColor: '#6D2323',
-                    color: '#FEF9E1',
+                  {/* Employee Information */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Employee Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Employee Number
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.employeeNumber}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Name
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.name}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Position
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.position}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Department
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.department}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Start Date
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.startDate}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          End Date
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.endDate}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Salary Rate and Adjustments */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Salary Rate and Adjustments
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Rate NBC 584
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.rateNbc584 || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          NBC 594
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.nbc594 || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Rate NBC 594
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight="500"
+                          sx={{ color: '#6d2323' }}
+                        >
+                          {editRow.rateNbc594 || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          NBC DIFF'L 597
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.nbcDiffl597 || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Increment
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.increment || '0.00'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Absent Deductions */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Absent Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          ABS
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.abs || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          Hours (H)
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.h || '0'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          Minutes (M)
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.m || '0'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Payroll Disbursement */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Payroll Disbursement
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          1st Pay
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.pay1st || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          2nd Pay
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.pay2nd || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          EC
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.ec || '0.00'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* GSIS Deductions */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      GSIS Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Personal Life Ret Ins
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.personalLifeRetIns || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          GSIS Salary Loan
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.gsisSalaryLoan || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          GSIS Policy Loan
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.gsisPolicyLoan || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          GSIS Arrears
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.gsisArrears || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          MPL
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.mpl || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          EAL
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.eal || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          CPL
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.cpl || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          MPL Lite
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.mplLite || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Emergency Loan
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.emergencyLoan || '0.00'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Pag-IBIG Deductions */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Pag-IBIG Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Pag-ibig Fund Cont
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.pagibigFundCont || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Multi-Purpose Loan
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.multiPurpLoan || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Pag-ibig 2
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.pagibig2 || '0.00'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Other Deductions */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Other Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Liquidating Cash
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.liquidatingCash || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Earist Credit Coop
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.earistCreditCoop || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          FEU
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.feu || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          LandBank Salary Loan
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.landbankSalaryLoan || '0.00'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Total Deductions */}
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Total Contributions & Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Withholding Tax
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.withholdingTax || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Total GSIS Deds
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.totalGsisDeds || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Total Pag-ibig Deds
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.totalPagibigDeds || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          PhilHealth
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.PhilHealthContribution || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Total Other Deds
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {editRow.totalOtherDeds || '0.00'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Total Deductions
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold"
+                          sx={{ color: '#d32f2f' }}
+                        >
+                          {editRow.totalDeductions || '0.00'}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Box>
+
+                {/* RIGHT SIDE - Editable Fields */}
+                <Box
+                  sx={{
+                    width: '50%',
+                    p: 3,
+                    overflowY: 'auto',
+                    bgcolor: 'white',
+                    '&::-webkit-scrollbar': { width: '8px' },
+                    '&::-webkit-scrollbar-track': { background: '#f1f1f1' },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: '#888',
+                      borderRadius: '4px',
+                    },
                   }}
                 >
-                  Save
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={handleCancel}
-                  startIcon={<CancelIcon />}
-                  style={{
-                    textTransform: 'none',
-                    width: '100px',
-                    backgroundColor: '#000000',
-                    color: '#ffffff',
-                  }}
-                >
-                  Cancel
-                </Button>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 3,
+                    }}
+                  >
+                    <EditIcon sx={{ color: '#6d2323' }} />
+                    <Typography variant="h6" fontWeight="bold" color="#6d2323">
+                      Edit Values
+                    </Typography>
+                  </Box>
+
+                  {/* Employee Information - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Employee Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Employee Number"
+                          name="employeeNumber"
+                          value={editRow.employeeNumber || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Name"
+                          name="name"
+                          value={editRow.name || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Position"
+                          name="position"
+                          value={editRow.position || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Department</InputLabel>
+                          <Select
+                            name="department"
+                            value={editRow.department || ''}
+                            onChange={handleModalChange}
+                            label="Department"
+                          >
+                            <MenuItem value="">
+                              <em>All Departments</em>
+                            </MenuItem>
+                            {departments.map((dept) => (
+                              <MenuItem key={dept.id} value={dept.code}>
+                                {dept.description}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Start Date"
+                          name="startDate"
+                          value={editRow.startDate || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="End Date"
+                          name="endDate"
+                          value={editRow.endDate || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Salary Rate and Adjustments - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Salary Rate and Adjustments
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Rate NBC 584"
+                          name="rateNbc584"
+                          value={editRow.rateNbc584 || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="NBC 594"
+                          name="nbc594"
+                          value={editRow.nbc594 || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Rate NBC 594"
+                          name="rateNbc594"
+                          value={editRow.rateNbc594 || ''}
+                          onChange={handleModalChange}
+                          disabled
+                          size="small"
+                          sx={{
+                            '& .MuiInputBase-input.Mui-disabled': {
+                              WebkitTextFillColor: '#6d2323',
+                              fontWeight: 'bold',
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="NBC DIFF'L 597"
+                          name="nbcDiffl597"
+                          value={editRow.nbcDiffl597 || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Increment"
+                          name="increment"
+                          value={editRow.increment || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Absent Deductions - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Absent Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="ABS"
+                          name="abs"
+                          value={editRow.abs || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="Hours (H)"
+                          name="h"
+                          value={editRow.h || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="Minutes (M)"
+                          name="m"
+                          value={editRow.m || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Payroll Disbursement - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Payroll Disbursement
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="1st Pay"
+                          name="pay1st"
+                          value={editRow.pay1st || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="2nd Pay"
+                          name="pay2nd"
+                          value={editRow.pay2nd || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="EC"
+                          name="ec"
+                          value={editRow.ec || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* GSIS Deductions - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      GSIS Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Personal Life Ret Ins"
+                          name="personalLifeRetIns"
+                          value={editRow.personalLifeRetIns || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="GSIS Salary Loan"
+                          name="gsisSalaryLoan"
+                          value={editRow.gsisSalaryLoan || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="GSIS Policy Loan"
+                          name="gsisPolicyLoan"
+                          value={editRow.gsisPolicyLoan || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="GSIS Arrears"
+                          name="gsisArrears"
+                          value={editRow.gsisArrears || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="MPL"
+                          name="mpl"
+                          value={editRow.mpl || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="EAL"
+                          name="eal"
+                          value={editRow.eal || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="CPL"
+                          name="cpl"
+                          value={editRow.cpl || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="MPL Lite"
+                          name="mplLite"
+                          value={editRow.mplLite || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Emergency Loan"
+                          name="emergencyLoan"
+                          value={editRow.emergencyLoan || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Pag-IBIG Deductions - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Pag-IBIG Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Pag-ibig Fund Cont"
+                          name="pagibigFundCont"
+                          value={editRow.pagibigFundCont || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Multi-Purpose Loan"
+                          name="multiPurpLoan"
+                          value={editRow.multiPurpLoan || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Pag-ibig 2"
+                          name="pagibig2"
+                          value={editRow.pagibig2 || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Other Deductions - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Other Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Liquidating Cash"
+                          name="liquidatingCash"
+                          value={editRow.liquidatingCash || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Earist Credit Coop"
+                          name="earistCreditCoop"
+                          value={editRow.earistCreditCoop || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="FEU"
+                          name="feu"
+                          value={editRow.feu || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="LandBank Salary Loan"
+                          name="landbankSalaryLoan"
+                          value={editRow.landbankSalaryLoan || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  {/* Total Deductions - Editable */}
+                  <Paper sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                      sx={{ color: '#6d2323' }}
+                    >
+                      Total Contributions & Deductions
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Withholding Tax"
+                          name="withholdingTax"
+                          value={editRow.withholdingTax || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Total GSIS Deds"
+                          name="totalGsisDeds"
+                          value={editRow.totalGsisDeds || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Total Pag-ibig Deds"
+                          name="totalPagibigDeds"
+                          value={editRow.totalPagibigDeds || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="PhilHealth"
+                          name="PhilHealthContribution"
+                          value={editRow.PhilHealthContribution || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Total Other Deds"
+                          name="totalOtherDeds"
+                          value={editRow.totalOtherDeds || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Total Deductions"
+                          name="totalDeductions"
+                          value={editRow.totalDeductions || ''}
+                          onChange={handleModalChange}
+                          size="small"
+                          sx={{
+                            '& .MuiInputBase-input': {
+                              fontWeight: 'bold',
+                              color: '#d32f2f',
+                            },
+                          }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Box>
+              </Box>
+
+              {/* Footer with Action Buttons */}
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderTop: '2px solid #e0e0e0',
+                  bgcolor: '#f8f8f8',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  💡 Tip: Compare original values on the left with your edits on
+                  the right
+                </Typography>
+                <Box display="flex" gap={2}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleCancel}
+                    startIcon={<CancelIcon />}
+                    sx={{
+                      textTransform: 'none',
+                      width: '120px',
+                      borderColor: '#6d2323',
+                      color: '#6d2323',
+                      '&:hover': {
+                        borderColor: '#6d2323',
+                        bgcolor: 'rgba(109, 35, 35, 0.04)',
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleSave}
+                    startIcon={<SaveIcon />}
+                    sx={{
+                      textTransform: 'none',
+                      width: '120px',
+                      backgroundColor: '#6d2323',
+                      color: '#fff',
+                      '&:hover': {
+                        backgroundColor: '#5b1d1d',
+                      },
+                    }}
+                  >
+                    Save
+                  </Button>
+                </Box>
               </Box>
             </>
           )}
         </Box>
       </Modal>
+
       <Modal open={showConfirmation} onClose={() => setShowConfirmation(false)}>
         <Box
           sx={{
@@ -2222,49 +3131,131 @@ const PayrollProcess = () => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: 'background.paper',
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
+            bgcolor: '#ffffff',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            p: 8,
+            borderRadius: 3,
             textAlign: 'center',
-            width: 400,
+            width: 440,
+            border: '1.5px solid #6d2323',
           }}
         >
-          <Typography variant="body2" mb={2}>
-            Please confirm that all the data provided are accurate before
-            proceeding. Are you sure you want to submit the payroll records?
+          {/* Centered Animated Icon */}
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              mb: 3,
+            }}
+          >
+            {/* Circular Loading Ring */}
+            <Box
+              sx={{
+                position: 'absolute',
+                width: 92,
+                height: 92,
+                borderRadius: '50%',
+                border: '3px solid transparent',
+                borderTopColor: '#6d2323',
+                borderRightColor: '#6d2323',
+                animation: 'spin 2.4s linear infinite',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' },
+                },
+              }}
+            />
+
+            {/* Pulsing Icon Background */}
+            <Box
+              sx={{
+                backgroundColor: '#6d232320',
+                borderRadius: '50%',
+                width: 80,
+                height: 80,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: 'pulse 2s ease-in-out infinite',
+                '@keyframes pulse': {
+                  '0%': {
+                    transform: 'scale(1)',
+                    boxShadow: '0 0 0 0 rgba(109, 35, 35, 0.4)',
+                  },
+                  '50%': {
+                    transform: 'scale(1.08)',
+                    boxShadow: '0 0 0 10px rgba(109, 35, 35, 0)',
+                  },
+                  '100%': {
+                    transform: 'scale(1)',
+                    boxShadow: '0 0 0 0 rgba(109, 35, 35, 0)',
+                  },
+                },
+              }}
+            >
+              <Payment sx={{ fontSize: 44, color: '#6d2323' }} />
+            </Box>
+          </Box>
+
+          {/* Title and Text */}
+          <Typography
+            variant="h6"
+            sx={{
+              color: '#6d2323',
+              mb: 1,
+              fontWeight: 'bold',
+            }}
+          >
+            Confirm Submission
           </Typography>
 
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'black',
+              mb: 3,
+              px: 2,
+              pb: 1,
+            }}
+          >
+            Please ensure that all payroll information has been reviewed and
+            verified. Do you wish to proceed with the submission?
+          </Typography>
+
+          {/* Buttons */}
           <Box display="flex" justifyContent="center" gap={2}>
             <Button
               variant="outlined"
-              style={{ color: 'black' }}
               onClick={() => setShowConfirmation(false)}
               disabled={isSubmitting}
+              sx={{
+                color: '#6d2323',
+                borderColor: '#6d2323',
+                '&:hover': {
+                  borderColor: '#6d2323',
+                  backgroundColor: '#6d232310',
+                },
+                px: 3,
+              }}
             >
-              Cancel
+              CANCEL
             </Button>
             <Button
               variant="contained"
-              style={{ backgroundColor: '#6D2323', width: '120px' }}
-              color="success"
+              disabled={isSubmitting}
               onClick={async () => {
                 setIsSubmitting(true);
                 setShowConfirmation(false);
-
-                // Start loading overlay
                 setLoading(true);
 
                 try {
-                  await handleSubmitPayroll(); // This is your real submit function
-
-                  // Show loading for 2-3 seconds, then success overlay, then navigate
+                  await handleSubmitPayroll();
                   setTimeout(() => {
                     setLoading(false);
                     setSuccessAction('export');
                     setSuccessOpen(true);
-
-                    // Navigate to payroll-processed after success overlay
                     setTimeout(() => {
                       setSuccessOpen(false);
                       window.location.href = '/payroll-processed';
@@ -2278,14 +3269,806 @@ const PayrollProcess = () => {
                   setIsSubmitting(false);
                 }
               }}
-              disabled={isSubmitting}
+              sx={{
+                backgroundColor: '#6d2323',
+                width: 120,
+                '&:hover': { backgroundColor: '#5b1d1d' },
+              }}
             >
-              Yes
+              YES
             </Button>
           </Box>
         </Box>
       </Modal>
 
+      {/*MODAL FOR THE VIEW*/}
+      <Modal open={openViewModal} onClose={handleCloseView}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '50vw',
+            maxWidth: 1600,
+            height: '90vh',
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            border: '3px solid #6d2323',
+          }}
+        >
+          {viewRow && (
+            <>
+              {/* Header */}
+              <Box
+                sx={{
+                  p: 3,
+                  bgcolor: '#6d2323',
+                  color: 'white',
+                  borderRadius: '2px 2px 0 0',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Box>
+                  <Typography variant="h5" fontWeight="bold">
+                    View Payroll Record - {viewRow.name}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ opacity: 0.9, mt: 0.5, fontWeight: 'bold' }}
+                  >
+                    Employee Number: {viewRow.employeeNumber}
+                  </Typography>
+                </Box>
+                <Button
+                  onClick={handleCloseView}
+                  sx={{
+                    color: 'white',
+                    minWidth: 'auto',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                    },
+                  }}
+                >
+                  <Close />
+                </Button>
+              </Box>
+
+              {/* Main Content - Single Column View (Read-only) */}
+              <Box
+                sx={{
+                  flex: 1,
+                  p: 3,
+                  overflowY: 'auto',
+                  bgcolor: '#f8f8f8',
+                  '&::-webkit-scrollbar': { width: '8px' },
+                  '&::-webkit-scrollbar-track': { background: '#f1f1f1' },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#888',
+                    borderRadius: '4px',
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 3,
+                  }}
+                >
+                  <PeopleIcon sx={{ color: '#6d2323' }} />
+                  <Typography variant="h6" fontWeight="bold" color="#6d2323">
+                    Employee Payroll Details
+                  </Typography>
+                </Box>
+
+                {/* Employee Information */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Employee Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Employee Number
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.employeeNumber}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Name
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.name}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Position
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.position}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Department
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.department}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Start Date
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.startDate}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        End Date
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.endDate}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Salary Rate and Adjustments */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Salary Rate and Adjustments
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Rate NBC 584
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.rateNbc584
+                          ? Number(viewRow.rateNbc584).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        NBC 594
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.nbc594
+                          ? Number(viewRow.nbc594).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Rate NBC 594
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: '#2E7D32' }}
+                      >
+                        {viewRow.rateNbc594
+                          ? Number(viewRow.rateNbc594).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        NBC DIFF'L 597
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.nbcDiffl597
+                          ? Number(viewRow.nbcDiffl597).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Increment
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.increment
+                          ? Number(viewRow.increment).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Gross Salary
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: '#2E7D32' }}
+                      >
+                        {viewRow.grossSalary}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Absent Deductions */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Absent Deductions
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        ABS
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.abs || '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Hours (H)
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.h || '0'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Minutes (M)
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.m || '0'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Net Salary
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: '#2E7D32' }}
+                      >
+                        {viewRow.netSalary}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Payroll Disbursement */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Payroll Disbursement
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={3}>
+                      <Typography variant="caption" color="text.secondary">
+                        1st Pay
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: 'red' }}
+                      >
+                        {viewRow.pay1st || '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Typography variant="caption" color="text.secondary">
+                        2nd Pay
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: 'red' }}
+                      >
+                        {viewRow.pay2nd || '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Typography variant="caption" color="text.secondary">
+                        EC
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.ec || '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Typography variant="caption" color="text.secondary">
+                        RT Ins.
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.rtIns || '0.00'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* GSIS Deductions */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    GSIS Deductions
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Personal Life Ret Ins
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.personalLifeRetIns || '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        GSIS Salary Loan
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.gsisSalaryLoan
+                          ? Number(viewRow.gsisSalaryLoan).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        GSIS Policy Loan
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.gsisPolicyLoan
+                          ? Number(viewRow.gsisPolicyLoan).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        GSIS Arrears
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.gsisArrears
+                          ? Number(viewRow.gsisArrears).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        MPL
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.mpl
+                          ? Number(viewRow.mpl).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        EAL
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.eal
+                          ? Number(viewRow.eal).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        CPL
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.cpl
+                          ? Number(viewRow.cpl).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        MPL Lite
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.mplLite
+                          ? Number(viewRow.mplLite).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Emergency Loan
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.emergencyLoan
+                          ? Number(viewRow.emergencyLoan).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Total GSIS Deductions
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: '#d32f2f' }}
+                      >
+                        {viewRow.totalGsisDeds || '0.00'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Pag-IBIG Deductions */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Pag-IBIG Deductions
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Pag-ibig Fund Cont
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.pagibigFundCont
+                          ? Number(viewRow.pagibigFundCont).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Multi-Purpose Loan
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.multiPurpLoan
+                          ? Number(viewRow.multiPurpLoan).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Pag-ibig 2
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.pagibig2
+                          ? Number(viewRow.pagibig2).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Total Pag-ibig Deductions
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: '#d32f2f' }}
+                      >
+                        {viewRow.totalPagibigDeds || '0.00'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Other Deductions */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Other Deductions
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Liquidating Cash
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.liquidatingCash
+                          ? Number(viewRow.liquidatingCash).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Earist Credit Coop
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.earistCreditCoop
+                          ? Number(viewRow.earistCreditCoop).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        FEU
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.feu
+                          ? Number(viewRow.feu).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        LandBank Salary Loan
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.landbankSalaryLoan
+                          ? Number(viewRow.landbankSalaryLoan).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Total Other Deductions
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ color: '#d32f2f' }}
+                      >
+                        {viewRow.totalOtherDeds || '0.00'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Total Deductions Summary */}
+                <Paper
+                  sx={{
+                    p: 2,
+                    mb: 2,
+                    bgcolor: 'white',
+                    border: '2px solid #2E7D32',
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Total Contributions & Deductions Summary
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Withholding Tax
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.withholdingTax
+                          ? Number(viewRow.withholdingTax).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                          : '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        PhilHealth
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {viewRow.PhilHealthContribution || '0.00'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Total Deductions
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        sx={{ color: '#d32f2f', fontSize: '1.1rem' }}
+                      >
+                        {viewRow.totalDeductions || '0.00'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Status */}
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'white' }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{ color: '#6d2323' }}
+                  >
+                    Processing Status
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Typography variant="caption" color="text.secondary">
+                        Status
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{
+                          color:
+                            viewRow.status === 'Processed' ? 'green' : 'orange',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        {viewRow.status === 'Processed' ? (
+                          <CheckCircleIcon sx={{ fontSize: 20 }} />
+                        ) : (
+                          <PendingIcon sx={{ fontSize: 20 }} />
+                        )}
+                        {viewRow.status}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Box>
+
+              {/* Footer with Close Button */}
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderTop: '2px solid #e0e0e0',
+                  bgcolor: '#f8f8f8',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                }}
+              >
+                <Button
+                  variant="contained"
+                  onClick={handleCloseView}
+                  startIcon={<Close />}
+                  sx={{
+                    textTransform: 'none',
+                    width: '120px',
+                    backgroundColor: '#6d2323',
+                    color: '#fff',
+                    '&:hover': {
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #6d2323',
+                      color: '#6d2323',
+                    },
+                  }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
       {/* Loading and Success Overlays */}
       <LoadingOverlay open={loading} message="Processing..." />
       <SuccessfulOverlay
@@ -2298,3 +4081,5 @@ const PayrollProcess = () => {
 };
 
 export default PayrollProcess;
+
+

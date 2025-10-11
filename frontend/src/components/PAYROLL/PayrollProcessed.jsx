@@ -25,9 +25,13 @@ import {
 import LoadingOverlay from '../LoadingOverlay';
 import SuccessfulOverlay from '../SuccessfulOverlay';
 import {
+  CloudUpload,
+  DeleteForever,
   Delete as DeleteIcon,
   Email,
+  Lock,
   Payment,
+  Pending,
   Publish as PublishIcon,
 } from '@mui/icons-material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -245,25 +249,49 @@ const PayrollProcessed = () => {
   const handleDepartmentChange = (event) => {
     const selectedDept = event.target.value;
     setSelectedDepartment(selectedDept);
-    applyFilters(selectedDept, searchTerm, selectedDate, selectedMonth, selectedYear);
+    applyFilters(
+      selectedDept,
+      searchTerm,
+      selectedDate,
+      selectedMonth,
+      selectedYear
+    );
   };
 
   const handleSearchChange = (event) => {
     const term = event.target.value;
     setSearchTerm(term);
-    applyFilters(selectedDepartment, term, selectedDate, selectedMonth, selectedYear);
+    applyFilters(
+      selectedDepartment,
+      term,
+      selectedDate,
+      selectedMonth,
+      selectedYear
+    );
   };
 
   const handleMonthChange = (event) => {
     const selectedMonthValue = event.target.value;
     setSelectedMonth(selectedMonthValue);
-    applyFilters(selectedDepartment, searchTerm, selectedDate, selectedMonthValue, selectedYear);
+    applyFilters(
+      selectedDepartment,
+      searchTerm,
+      selectedDate,
+      selectedMonthValue,
+      selectedYear
+    );
   };
 
   const handleYearChange = (event) => {
     const selectedYearValue = event.target.value;
     setSelectedYear(selectedYearValue);
-    applyFilters(selectedDepartment, searchTerm, selectedDate, selectedMonth, selectedYearValue);
+    applyFilters(
+      selectedDepartment,
+      searchTerm,
+      selectedDate,
+      selectedMonth,
+      selectedYearValue
+    );
   };
 
   const applyFilters = (department, search, filterDate, month, year) => {
@@ -307,7 +335,10 @@ const PayrollProcessed = () => {
       filtered = filtered.filter((record) => {
         if (record.startDate) {
           const recordDate = new Date(record.startDate);
-          const recordMonth = String(recordDate.getMonth() + 1).padStart(2, '0');
+          const recordMonth = String(recordDate.getMonth() + 1).padStart(
+            2,
+            '0'
+          );
           return recordMonth === month;
         }
         return false;
@@ -667,7 +698,14 @@ const PayrollProcessed = () => {
           mb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
           <TextField
             type="date"
             label="Search by Date"
@@ -920,11 +958,16 @@ const PayrollProcessed = () => {
                       <ExcelTableCell header>Increment</ExcelTableCell>
                       <ExcelTableCell header>Gross Salary</ExcelTableCell>
                       <ExcelTableCell header>
+                        <b>Rendered Days &</b>
+                      </ExcelTableCell>
+                      <ExcelTableCell header>
                         <b>ABS</b>
                       </ExcelTableCell>
                       <ExcelTableCell header>H</ExcelTableCell>
                       <ExcelTableCell header>M</ExcelTableCell>
+
                       <ExcelTableCell header>Net Salary</ExcelTableCell>
+                      <ExcelTableCell header>SSS</ExcelTableCell>
                       <ExcelTableCell header>Withholding Tax</ExcelTableCell>
                       <ExcelTableCell header>
                         <b>Total GSIS Deductions</b>
@@ -1102,6 +1145,18 @@ const PayrollProcessed = () => {
                                 : ''}
                             </ExcelTableCell>
                             <ExcelTableCell>
+                              {row.rh
+                                ? (() => {
+                                    const totalHours = Number(row.rh);
+                                    const days = Math.floor(totalHours / 8);
+                                    const hours = totalHours % 8;
+                                    return `${days} days ${
+                                      hours > 0 ? `& ${hours} hrs` : ''
+                                    }`.trim();
+                                  })()
+                                : ''}
+                            </ExcelTableCell>
+                            <ExcelTableCell>
                               {row.abs
                                 ? Number(row.abs).toLocaleString('en-US', {
                                     minimumFractionDigits: 2,
@@ -1121,6 +1176,14 @@ const PayrollProcessed = () => {
                                     }
                                   )
                                 : ''}{' '}
+                            </ExcelTableCell>
+                            <ExcelTableCell>
+                              {row.sss
+                                ? Number(row.sss).toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })
+                                : ''}
                             </ExcelTableCell>
                             <ExcelTableCell>
                               {row.withholdingTax
@@ -1532,10 +1595,16 @@ const PayrollProcessed = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#6d2323' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 'bold', color: '#6d2323' }}
+                  >
                     Total Records: {filteredFinalizedData.length}
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#6d2323' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 'bold', color: '#6d2323' }}
+                  >
                     Selected: {selectedRows.length}
                   </Typography>
                 </Box>
@@ -1699,15 +1768,17 @@ const PayrollProcessed = () => {
               onClick={() => (window.location.href = '/payroll-table')}
               size="medium"
               sx={{
-                backgroundColor: '#6d2323',
-                color: '#ffffff',
+                backgroundColor: '#ffffff',
+                color: '#6d2323',
                 textTransform: 'none',
+                border: '1px solid #6d2323',
 
                 '&:hover': {
                   backgroundColor: '#a31d1d',
+                  color: 'white',
                 },
               }}
-              startIcon={<BusinessCenterIcon />}
+              startIcon={<Pending />}
             >
               View Pending Payroll
             </Button>
@@ -1718,12 +1789,14 @@ const PayrollProcessed = () => {
               onClick={() => (window.location.href = '/payroll-released')}
               size="medium"
               sx={{
-                backgroundColor: '#6d2323',
-                color: '#ffffff',
+                backgroundColor: '#ffffff',
+                color: '#6d2323',
                 textTransform: 'none',
+                border: '1px solid #6d2323',
 
                 '&:hover': {
                   backgroundColor: '#a31d1d',
+                  color: 'white',
                 },
               }}
               startIcon={<BusinessCenterIcon />}
@@ -1757,121 +1830,230 @@ const PayrollProcessed = () => {
         onClose={() => setOpenConfirm(false)}
         PaperProps={{
           sx: {
-            minWidth: '400px',
+            minWidth: '420px',
             maxWidth: '600px',
+            borderRadius: '16px',
+            p: 2,
           },
         }}
       >
-        <DialogTitle>Delete this record?</DialogTitle>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            color: '#6D2323',
+            fontWeight: 'bold',
+          }}
+        >
+          <DeleteForever sx={{ color: '#6D2323', fontSize: 30 }} />
+          Delete Record Confirmation
+        </DialogTitle>
         <DialogContent>
-          Are you sure you want to delete{' '}
-          {selectedRow?.isBulk
-            ? `${selectedRow.ids.length} selected records`
-            : 'this record'}
-          ?
+          <Typography variant="body1" sx={{ mt: 1, color: 'black' }}>
+            Please confirm that you want to delete{' '}
+            <strong>
+              {selectedRow?.isBulk
+                ? `${selectedRow.ids.length} selected records`
+                : 'this record'}
+            </strong>
+            . This action cannot be undone.
+          </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ pr: 2, pb: 2 }}>
           <Button
             onClick={() => setOpenConfirm(false)}
-            style={{ color: 'black' }}
+            variant="outlined"
+            sx={{
+              color: 'black',
+              borderColor: 'black',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: '#f3f3f3' },
+            }}
           >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
-            style={{ backgroundColor: '#6D2323' }}
             variant="contained"
-            color="error"
+            sx={{
+              backgroundColor: '#6D2323',
+              color: 'white',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: '#8B2C2C' },
+            }}
+            startIcon={<DeleteForever />}
           >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* PASSKEY DIALOG */}
       <Dialog
         open={openPasskey}
         onClose={() => setOpenPasskey(false)}
         PaperProps={{
           sx: {
-            minWidth: '200px',
+            minWidth: '300px',
             maxWidth: '500px',
+            borderRadius: '16px',
+            p: 1,
           },
         }}
       >
-        <DialogTitle>Passkey Required</DialogTitle>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            color: '#6D2323',
+            fontWeight: 'bold',
+          }}
+        >
+          <Lock sx={{ color: '#6D2323', fontSize: 26 }} />
+          Administrator Verification
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="black" sx={{ mb: 2 }}>
-            Please enter the administrator passkey to confirm the deletion of
-            this payroll record.
+            Please enter the administrator passkey to authorize this deletion.
           </Typography>
           <TextField
             autoFocus
             margin="dense"
-            label="Enter a Passkey"
+            label="Enter Passkey"
             type="password"
             fullWidth
+            variant="outlined"
             value={passkeyInput}
             onChange={(e) => setPasskeyInput(e.target.value)}
           />
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ pr: 2, pb: 2 }}>
           <Button
             onClick={() => setOpenPasskey(false)}
-            sx={{ color: '#000000' }}
+            variant="outlined"
+            sx={{
+              color: 'black',
+              borderColor: 'black',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: '#f3f3f3' },
+            }}
           >
             Cancel
           </Button>
           <Button
             onClick={handlePasskeySubmit}
             variant="contained"
-            color="primary"
-            sx={{ bgcolor: '#6D2323' }}
+            sx={{
+              bgcolor: '#6D2323',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: '#8B2C2C' },
+            }}
+            startIcon={<Lock />}
           >
             Submit
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* RELEASE PAYROLL RECORDS DIALOG */}
       <Dialog
         open={openReleaseConfirm}
         onClose={() => setOpenReleaseConfirm(false)}
         PaperProps={{
           sx: {
-            minWidth: '400px',
-            borderRadius: '8px',
+            minWidth: '420px',
+            maxWidth: '600px',
+            borderRadius: '16px',
+            p: 1,
           },
         }}
       >
-        <DialogTitle>Release Payroll Records</DialogTitle>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            color: '#6D2323',
+            fontWeight: 'bold',
+          }}
+        >
+          <CloudUpload sx={{ color: '#6D2323', fontSize: 30 }} />
+          Release Payroll Records
+        </DialogTitle>
+
         <DialogContent>
-          <Typography>
-            Are you sure you want to release {selectedRows.length} selected
-            payroll record(s)? This action will move them to the Payroll
-            Released module and they will no longer be editable.
+          <Typography variant="body1" sx={{ mt: 1, color: 'black' }}>
+            Please confirm that you want to release{' '}
+            <strong>{selectedRows.length}</strong> selected payroll record
+            {selectedRows.length > 1 ? 's' : ''}. This action will move them to
+            the <strong>Payroll Released</strong> module, and they will no
+            longer be editable.
           </Typography>
+
+          {/* OPTIONAL: subtle pulse line loader when releasing */}
+          {releaseLoading && (
+            <Box
+              sx={{
+                mt: 2,
+                height: '4px',
+                width: '100%',
+                borderRadius: '2px',
+                background: 'linear-gradient(90deg, #6D2323, #FEF9E1, #6D2323)',
+                backgroundSize: '200% 100%',
+                animation: 'pulseLine 1.5s linear infinite',
+              }}
+            />
+          )}
         </DialogContent>
-        <DialogActions>
+
+        <DialogActions sx={{ pr: 2, pb: 2 }}>
           <Button
             onClick={() => setOpenReleaseConfirm(false)}
-            style={{ color: 'black' }}
+            variant="outlined"
+            sx={{
+              color: 'black',
+              borderColor: 'black',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: '#f3f3f3' },
+            }}
           >
             Cancel
           </Button>
+
           <Button
             onClick={handleReleasePayroll}
             variant="contained"
             disabled={releaseLoading}
             sx={{
-              backgroundColor: '#6d2323',
-              '&:hover': {
-                backgroundColor: '#a31d1d',
-              },
+              backgroundColor: '#6D2323',
+              color: 'white',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: '#8B2C2C' },
             }}
+            startIcon={
+              releaseLoading ? (
+                <CircularProgress size={18} sx={{ color: 'white' }} />
+              ) : (
+                <CloudUpload />
+              )
+            }
           >
             {releaseLoading ? 'Releasing...' : 'Release'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* 🔥 Add keyframes for the pulse line effect */}
+      <style>
+        {`
+    @keyframes pulseLine {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  `}
+      </style>
 
       {/* Loading and Success Overlays */}
       <LoadingOverlay
@@ -1888,3 +2070,5 @@ const PayrollProcessed = () => {
 };
 
 export default PayrollProcessed;
+
+

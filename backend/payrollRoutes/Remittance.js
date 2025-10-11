@@ -164,7 +164,7 @@ router.get('/employees/:employeeNumber', authenticateToken, (req, res) => {
 router.get('/employee-remittance', authenticateToken, (req, res) => {
   const sql = `
     SELECT r.id, r.employeeNumber,
-           COALESCE(pp.name, 
+           COALESCE(pp.name,
              CONCAT_WS(' ',
                p.firstName,
                p.middleName,
@@ -176,7 +176,7 @@ router.get('/employee-remittance', authenticateToken, (req, res) => {
              )
            ) as name,
            r.liquidatingCash, r.gsisSalaryLoan, r.gsisPolicyLoan, r.gsisArrears,
-           r.cpl, r.mpl, r.mplLite, r.emergencyLoan, r.nbc594, r.increment,
+           r.cpl, r.mpl, r.mplLite, r.emergencyLoan, r.nbc594, r.increment, r.sss,
            r.pagibig, r.pagibigFundCont, r.pagibig2, r.multiPurpLoan,
            r.landbankSalaryLoan, r.earistCreditCoop, r.feu, r.created_at
     FROM remittance_table r
@@ -186,10 +186,13 @@ router.get('/employee-remittance', authenticateToken, (req, res) => {
     ORDER BY r.created_at DESC
   `;
 
+
   db.query(sql, (err, result) => {
     if (err) {
       console.error('Error fetching remittance data:', err);
-      res.status(500).json({ message: 'Error fetching data', error: err.message });
+      res
+        .status(500)
+        .json({ message: 'Error fetching data', error: err.message });
     } else {
       try {
         logAudit(req.user, 'View', 'remittance_table', null, null);
@@ -200,6 +203,7 @@ router.get('/employee-remittance', authenticateToken, (req, res) => {
     }
   });
 });
+
 
 // NEW: GET person_table structure (for debugging)
 router.get('/debug/person-structure', authenticateToken, (req, res) => {
@@ -252,6 +256,7 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    sss,
     pagibig,
     pagibigFundCont,
     pagibig2,
@@ -261,6 +266,7 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
     feu,
   } = req.body;
 
+
   // First, validate that the employee exists
   const validateEmployeeSql = `
     SELECT u.employeeNumber
@@ -268,15 +274,18 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
     WHERE u.employeeNumber = ?
   `;
 
+
   db.query(validateEmployeeSql, [employeeNumber], (err, employeeResult) => {
     if (err) {
       console.error('Error validating employee:', err);
       return res.status(500).json({ message: 'Error validating employee' });
     }
 
+
     if (employeeResult.length === 0) {
       return res.status(400).json({ message: 'Employee not found' });
     }
+
 
     // Check for duplicate employeeNumber in remittance_table
     const checkDuplicateSql = `
@@ -285,30 +294,36 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
       WHERE employeeNumber = ?
     `;
 
+
     db.query(checkDuplicateSql, [employeeNumber], (err, duplicateResult) => {
       if (err) {
         console.error('Error checking for duplicate employee:', err);
-        return res.status(500).json({ message: 'Error checking for existing records' });
+        return res
+          .status(500)
+          .json({ message: 'Error checking for existing records' });
       }
 
+
       if (duplicateResult.length > 0) {
-        return res.status(409).json({ 
+        return res.status(409).json({
           message: 'Employee data already exists',
           error: 'DUPLICATE_EMPLOYEE',
-          existingRecordId: duplicateResult[0].id
+          existingRecordId: duplicateResult[0].id,
         });
       }
+
 
       // If employee exists and no duplicate found, proceed with insertion
       const sql = `
         INSERT INTO remittance_table (
           employeeNumber, liquidatingCash, gsisSalaryLoan, gsisPolicyLoan, gsisArrears,
-          cpl, mpl, mplLite, emergencyLoan, nbc594, increment,
+          cpl, mpl, mplLite, emergencyLoan, nbc594, increment, sss,
           pagibig, pagibigFundCont, pagibig2, multiPurpLoan,
           landbankSalaryLoan, earistCreditCoop, feu
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
+
 
       const values = [
         employeeNumber,
@@ -322,6 +337,7 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
         emergencyLoan || 0,
         nbc594 || 0,
         increment || 0,
+        sss || 0,
         pagibig || 0,
         pagibigFundCont || 0,
         pagibig2 || 0,
@@ -330,6 +346,7 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
         earistCreditCoop || 0,
         feu || 0,
       ];
+
 
       db.query(sql, values, (err, result) => {
         if (err) {
@@ -357,6 +374,7 @@ router.post('/employee-remittance', authenticateToken, (req, res) => {
   });
 });
 
+
 // ENHANCED: PUT with employee validation, duplicate check for different employees, and audit logging
 router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
@@ -372,6 +390,7 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    sss,
     pagibig,
     pagibigFundCont,
     pagibig2,
@@ -381,6 +400,7 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
     feu,
   } = req.body;
 
+
   // First, validate that the employee exists
   const validateEmployeeSql = `
     SELECT u.employeeNumber
@@ -388,15 +408,18 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
     WHERE u.employeeNumber = ?
   `;
 
+
   db.query(validateEmployeeSql, [employeeNumber], (err, employeeResult) => {
     if (err) {
       console.error('Error validating employee:', err);
       return res.status(500).json({ message: 'Error validating employee' });
     }
 
+
     if (employeeResult.length === 0) {
       return res.status(400).json({ message: 'Employee not found' });
     }
+
 
     // Check for duplicate employeeNumber in remittance_table (excluding current record)
     const checkDuplicateSql = `
@@ -405,22 +428,30 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
       WHERE employeeNumber = ? AND id != ?
     `;
 
-    db.query(checkDuplicateSql, [employeeNumber, id], (err, duplicateResult) => {
-      if (err) {
-        console.error('Error checking for duplicate employee:', err);
-        return res.status(500).json({ message: 'Error checking for existing records' });
-      }
 
-      if (duplicateResult.length > 0) {
-        return res.status(409).json({ 
-          message: 'Employee data already exists',
-          error: 'DUPLICATE_EMPLOYEE',
-          existingRecordId: duplicateResult[0].id
-        });
-      }
+    db.query(
+      checkDuplicateSql,
+      [employeeNumber, id],
+      (err, duplicateResult) => {
+        if (err) {
+          console.error('Error checking for duplicate employee:', err);
+          return res
+            .status(500)
+            .json({ message: 'Error checking for existing records' });
+        }
 
-      // If employee exists and no duplicate found, proceed with update
-      const sql = `
+
+        if (duplicateResult.length > 0) {
+          return res.status(409).json({
+            message: 'Employee data already exists',
+            error: 'DUPLICATE_EMPLOYEE',
+            existingRecordId: duplicateResult[0].id,
+          });
+        }
+
+
+        // If employee exists and no duplicate found, proceed with update
+        const sql = `
         UPDATE remittance_table
         SET employeeNumber = ?,
             liquidatingCash = ?,
@@ -433,6 +464,7 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
             emergencyLoan = ?,
             nbc594 = ?,
             increment = ?,
+            sss = ?,
             pagibig = ?,
             pagibigFundCont = ?,
             pagibig2 = ?,
@@ -443,52 +475,56 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
         WHERE id = ?
       `;
 
-      const values = [
-        employeeNumber,
-        liquidatingCash || 0,
-        gsisSalaryLoan || 0,
-        gsisPolicyLoan || 0,
-        gsisArrears || 0,
-        cpl || 0,
-        mpl || 0,
-        mplLite || 0,
-        emergencyLoan || 0,
-        nbc594 || 0,
-        increment || 0,
-        pagibig || 0,
-        pagibigFundCont || 0,
-        pagibig2 || 0,
-        multiPurpLoan || 0,
-        landbankSalaryLoan || 0,
-        earistCreditCoop || 0,
-        feu || 0,
-        id,
-      ];
 
-      db.query(sql, values, (err, result) => {
-        if (err) {
-          console.error('Error updating data:', err);
-          res.status(500).json({ message: 'Error updating data' });
-        } else {
-          if (result.affectedRows === 0) {
-            res.status(404).json({ message: 'Remittance record not found' });
+        const values = [
+          employeeNumber,
+          liquidatingCash || 0,
+          gsisSalaryLoan || 0,
+          gsisPolicyLoan || 0,
+          gsisArrears || 0,
+          cpl || 0,
+          mpl || 0,
+          mplLite || 0,
+          emergencyLoan || 0,
+          nbc594 || 0,
+          increment || 0,
+          sss || 0,
+          pagibig || 0,
+          pagibigFundCont || 0,
+          pagibig2 || 0,
+          multiPurpLoan || 0,
+          landbankSalaryLoan || 0,
+          earistCreditCoop || 0,
+          feu || 0,
+          id,
+        ];
+
+
+        db.query(sql, values, (err, result) => {
+          if (err) {
+            console.error('Error updating data:', err);
+            res.status(500).json({ message: 'Error updating data' });
           } else {
-            try {
-              logAudit(
-                req.user,
-                'Update',
-                'remittance_table',
-                id,
-                employeeNumber
-              );
-            } catch (e) {
-              console.error('Audit log error:', e);
+            if (result.affectedRows === 0) {
+              res.status(404).json({ message: 'Remittance record not found' });
+            } else {
+              try {
+                logAudit(
+                  req.user,
+                  'Update',
+                  'remittance_table',
+                  id,
+                  employeeNumber
+                );
+              } catch (e) {
+                console.error('Audit log error:', e);
+              }
+              res.status(200).json({ message: 'Data updated successfully' });
             }
-            res.status(200).json({ message: 'Data updated successfully' });
           }
-        }
-      });
-    });
+        });
+      }
+    );
   });
 });
 
@@ -508,6 +544,7 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
     emergencyLoan,
     nbc594,
     increment,
+    sss,
     pagibig,
     pagibigFundCont,
     pagibig2,
@@ -552,6 +589,7 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
           emergencyLoan = ?,
           nbc594 = ?,
           increment = ?,
+          sss = ?,
           pagibig = ?,
           pagibigFundCont = ?,
           pagibig2 = ?,
@@ -575,6 +613,7 @@ router.put('/employee-remittance/:id', authenticateToken, (req, res) => {
       emergencyLoan || 0,
       nbc594 || 0,
       increment || 0,
+      sss || 0,
       pagibig || 0,
       pagibigFundCont || 0,
       pagibig2 || 0,

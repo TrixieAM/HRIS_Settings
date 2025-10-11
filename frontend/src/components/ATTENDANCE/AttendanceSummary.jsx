@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
+
 const OverallAttendance = () => {
   const [employeeNumber, setEmployeeNumber] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -33,6 +34,8 @@ const OverallAttendance = () => {
   const [editRecord, setEditRecord] = useState([]);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingJO, setIsSubmittingJO] = useState(false);
+
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
@@ -52,24 +55,29 @@ const OverallAttendance = () => {
     };
   };
 
+
   useEffect(() => {
     const storedEmployeeNumber = localStorage.getItem('employeeNumber');
     const storedStartDate = localStorage.getItem('startDate');
     const storedEndDate = localStorage.getItem('endDate');
+
 
     if (storedEmployeeNumber) setEmployeeNumber(storedEmployeeNumber);
     if (storedStartDate) setStartDate(storedStartDate);
     if (storedEndDate) setEndDate(storedEndDate);
   }, []);
 
+
   const fetchAttendanceData = async () => {
     // Check for duplicate employee number in current data
+
 
     console.log('Sending request with params: ', {
       personID: employeeNumber,
       startDate,
       endDate,
     });
+
 
     try {
       const response = await axios.get(
@@ -84,6 +92,7 @@ const OverallAttendance = () => {
         }
       );
 
+
       if (response.status === 200) {
         setAttendanceData(response.data.data);
       } else {
@@ -95,8 +104,10 @@ const OverallAttendance = () => {
     }
   };
 
+
   const updateRecord = async () => {
     if (!editRecord || !editRecord.totalRenderedTimeMorning) return;
+
 
     try {
       await axios.put(
@@ -107,14 +118,17 @@ const OverallAttendance = () => {
       alert('Record was updated successfully');
       fetchAttendanceData(); // Refresh data before clearing edit state
 
+
       window.location.reload(); // Refresh the entire page
     } catch (error) {
       console.error('Error updating record:', error);
       alert('Update failed.');
     }
 
+
     setEditRecord(null); // Clear form after update
   };
+
 
   const deleteRecord = async (id, personID) => {
     try {
@@ -139,9 +153,11 @@ const OverallAttendance = () => {
     }
   };
 
+
   const submitToPayroll = async () => {
     // Prevent multiple submissions
     if (isSubmitting) return;
+
 
     // Check if there's data to submit
     if (!attendanceData || attendanceData.length === 0) {
@@ -149,7 +165,9 @@ const OverallAttendance = () => {
       return;
     }
 
+
     setIsSubmitting(true);
+
 
     try {
       // Create payload first to ensure data consistency
@@ -162,11 +180,13 @@ const OverallAttendance = () => {
         department: record.code,
       }));
 
+
       // Validate payload data
       const invalidRecords = payload.filter(
         (record) =>
           !record.employeeNumber || !record.startDate || !record.endDate
       );
+
 
       if (invalidRecords.length > 0) {
         alert(
@@ -175,9 +195,11 @@ const OverallAttendance = () => {
         return;
       }
 
+
       // Check each record for duplicates with the exact payload data
       for (const payloadRecord of payload) {
         const { employeeNumber, startDate, endDate } = payloadRecord;
+
 
         try {
           const response = await axios.get(
@@ -187,6 +209,7 @@ const OverallAttendance = () => {
               params: { employeeNumber, startDate, endDate },
             }
           );
+
 
           if (response.data.exists) {
             alert(
@@ -202,12 +225,14 @@ const OverallAttendance = () => {
         }
       }
 
+
       // Submit all records at once - only if no duplicates were found
       const submitResponse = await axios.post(
         `${API_BASE_URL}/PayrollRoute/add-rendered-time`,
         payload,
         getAuthHeaders()
       );
+
 
       // Check if submission was successful
       if (submitResponse.status === 200 || submitResponse.status === 201) {
@@ -219,6 +244,7 @@ const OverallAttendance = () => {
     } catch (error) {
       console.error('Error submitting to payroll:', error);
 
+
       // More specific error messages
       if (error.response) {
         // Server responded with error status
@@ -227,6 +253,7 @@ const OverallAttendance = () => {
           error.response.data?.message ||
           error.response.data?.error ||
           'Server error occurred';
+
 
         if (status === 409) {
           alert(
@@ -249,6 +276,74 @@ const OverallAttendance = () => {
       setIsSubmitting(false);
     }
   };
+
+
+  const submitPayrollJO = async () => {
+    // Prevent multiple submissions
+    if (isSubmittingJO) return;
+
+
+    if (!attendanceData || attendanceData.length === 0) {
+      alert('No attendance data to submit.');
+      return;
+    }
+
+
+    setIsSubmittingJO(true);
+
+
+    try {
+      for (const record of attendanceData) {
+        // Parse RH hours
+        let rhHours = 0;
+        if (record.overallRenderedOfficialTime) {
+          const parts = record.overallRenderedOfficialTime.split(':');
+          rhHours = parseInt(parts[0], 10) || 0;
+        }
+
+
+        // Parse tardiness into h, m, s
+        let h = 0,
+          m = 0,
+          s = 0;
+        if (record.overallRenderedOfficialTimeTardiness) {
+          const tParts = record.overallRenderedOfficialTimeTardiness.split(':');
+          h = parseInt(tParts[0], 10) || 0;
+          m = parseInt(tParts[1], 10) || 0;
+          s = parseInt(tParts[2], 10) || 0;
+        }
+
+
+        const payload = {
+          employeeNumber: record.employeeNumber || record.personID,
+          startDate: record.startDate,
+          endDate: record.endDate,
+          h,
+          m,
+          s,
+          rh: rhHours,
+          department: record.code,
+        };
+
+
+        await axios.post(
+          `${API_BASE_URL}/PayrollJORoutes/payroll-jo`,
+          payload,
+          getAuthHeaders()
+        );
+      }
+
+
+      alert('Submitted Payroll JO successfully!');
+      navigate('/payroll-jo');
+    } catch (error) {
+      console.error('Error submitting Payroll JO:', error);
+      alert('Failed to submit Payroll JO.');
+    } finally {
+      setIsSubmittingJO(false);
+    }
+  };
+
 
   return (
     <Container
@@ -309,6 +404,7 @@ const OverallAttendance = () => {
             required
           />
 
+
           <TextField
             label="Start Date"
             type="date"
@@ -320,6 +416,7 @@ const OverallAttendance = () => {
             required
           />
 
+
           <TextField
             label="End Date"
             type="date"
@@ -330,6 +427,7 @@ const OverallAttendance = () => {
             sx={{ width: 200 }}
             required
           />
+
 
           <Button
             variant="contained"
@@ -344,6 +442,7 @@ const OverallAttendance = () => {
             Fetch Attendance Records
           </Button>
         </Box>
+
 
         {/* Table to Display Data */}
         <Paper sx={{ marginTop: 3, overflowX: 'auto' }}>
@@ -491,6 +590,7 @@ const OverallAttendance = () => {
                     )}
                   </TableCell>
 
+
                   <TableCell style={{ textAlign: 'center' }}>
                     {editRecord && editRecord.id === record.id ? (
                       <TextField
@@ -506,6 +606,7 @@ const OverallAttendance = () => {
                       record.totalRenderedTimeAfternoon
                     )}
                   </TableCell>
+
 
                   <TableCell style={{ textAlign: 'center' }}>
                     {editRecord && editRecord.id === record.id ? (
@@ -614,6 +715,7 @@ const OverallAttendance = () => {
                     )}
                   </TableCell>
 
+
                   <TableCell style={{ textAlign: 'center' }}>
                     {editRecord && editRecord.id === record.id ? (
                       <TextField
@@ -629,6 +731,7 @@ const OverallAttendance = () => {
                       record.overallRenderedOfficialTime
                     )}
                   </TableCell>
+
 
                   <TableCell style={{ textAlign: 'center' }}>
                     {editRecord && editRecord.id === record.id ? (
@@ -647,6 +750,7 @@ const OverallAttendance = () => {
                     )}
                   </TableCell>
 
+
                   <TableCell>
                     {editRecord && editRecord.id === record.id ? (
                       <>
@@ -664,6 +768,7 @@ const OverallAttendance = () => {
                         >
                           Save
                         </Button>
+
 
                         {/* Cancel */}
                         <Button
@@ -697,6 +802,7 @@ const OverallAttendance = () => {
                           Edit
                         </Button>
 
+
                         <Button
                           onClick={() =>
                             deleteRecord(record.id, record.personID)
@@ -720,6 +826,7 @@ const OverallAttendance = () => {
           </Table>
         </Paper>
 
+
         {/* No Data Message */}
         {attendanceData.length === 0 && (
           <Typography
@@ -732,27 +839,55 @@ const OverallAttendance = () => {
         )}
       </Box>
 
-      <Button
-        variant="contained"
-        sx={{
-          mt: 3,
-          backgroundColor: isSubmitting ? '#9e9e9e' : '#6D2323',
-          color: '#ffffff',
-          width: '100%',
-          fontWeight: 'bold',
-          '&:hover': {
-            backgroundColor: isSubmitting ? '#9e9e9e' : '#5a1e1e',
-          },
-        }}
-        onClick={submitToPayroll}
-        disabled={isSubmitting || attendanceData.length === 0}
-      >
-        {isSubmitting
-          ? 'Submitting to Payroll...'
-          : 'Submit Overall Rendered Time to Payroll'}
-      </Button>
+
+      <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+        <Button
+          variant="contained"
+          sx={{
+            flex: 1,
+            backgroundColor: isSubmitting ? '#6d2323' : '#6D2323',
+            color: '#ffffff',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: isSubmitting ? '#fef9e1' : '#fef9e1',
+              border: '1px solid #6d2323',
+              color: '#6d2323',
+            },
+          }}
+          onClick={submitToPayroll}
+          disabled={isSubmitting || attendanceData.length === 0}
+        >
+          {isSubmitting
+            ? 'Submitting to Payroll...'
+            : 'Submit Payroll Designated'}
+        </Button>
+
+
+        <Button
+          variant="contained"
+          sx={{
+            flex: 1,
+            backgroundColor: isSubmittingJO ? '#6d2323' : '#6D2323',
+            color: '#fff',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: isSubmittingJO ? '#fef9e1' : '#fef9e1',
+              border: '1px solid #6d2323',
+              color: '#6d2323',
+            },
+          }}
+          onClick={submitPayrollJO}
+          disabled={isSubmittingJO || attendanceData.length === 0}
+        >
+          {isSubmittingJO ? 'Submitting to Payroll JO...' : 'Submit Payroll JO'}
+        </Button>
+      </Box>
     </Container>
   );
 };
 
+
 export default OverallAttendance;
+
+
+

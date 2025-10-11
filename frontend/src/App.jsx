@@ -125,6 +125,7 @@ import UsersList from './components/UsersList';
 import PagesList from './components/PagesList';
 import AuditLogs from './components/AuditLogs';
 import Settings from './components/Settings';
+import PayrollJO from './components/PAYROLL/PayrollJO';
 
 
 
@@ -565,6 +566,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+               <Route
+              path="/payroll-jo"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <PayrollJO />
+                </ProtectedRoute>
+              }
+            />
+
 
 
 

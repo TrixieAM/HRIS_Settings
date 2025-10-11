@@ -209,9 +209,11 @@ const useAuth = () => {
   return { username, fullName, employeeNumber, profilePicture };
 };
 
+// REPLACE the existing useDashboardData hook in AdminHome.jsx with this complete version
+
 const useDashboardData = () => {
   const [stats, setStats] = useState({
-    employees: 1242,
+    employees: 0,
     turnoverRate: 32,
     happinessRate: 78,
     teamKPI: 84.45,
@@ -221,33 +223,19 @@ const useDashboardData = () => {
     leaveApproved: 0,
     pendingPayroll: 0,
     processedPayroll: 0,
-    payslip: 0
+    payslipCount: 0
   });
   
   // Overview Tab Data
-  const [weeklyAttendanceData, setWeeklyAttendanceData] = useState([
-    { day: "Mon", present: 1150, absent: 92, late: 45 },
-    { day: "Tue", present: 1120, absent: 122, late: 45 },
-    { day: "Wed", present: 1140, absent: 102, late: 45 },
-    { day: "Thu", present: 1130, absent: 112, late: 45 },
-    { day: "Fri", present: 1089, absent: 153, late: 45 },
-  ]);
-  
-  const [departmentAttendanceData, setDepartmentAttendanceData] = useState([
-    { department: "IT", present: 245, absent: 15, rate: 94.2 },
-    { department: "HR", present: 89, absent: 6, rate: 93.7 },
-    { department: "Finance", present: 156, absent: 12, rate: 92.9 },
-    { department: "Sales", present: 387, absent: 43, rate: 90.0 },
-    { department: "Operations", present: 212, absent: 27, rate: 88.7 },
-  ]);
-  
+  const [weeklyAttendanceData, setWeeklyAttendanceData] = useState([]);
+  const [departmentAttendanceData, setDepartmentAttendanceData] = useState([]);
   const [payrollStatusData, setPayrollStatusData] = useState([
-    { status: "Processed", value: 1197, fill: '#800020' },
-    { status: "Pending", value: 45, fill: '#A52A2A' },
+    { status: "Processed", value: 0, fill: '#800020' },
+    { status: "Pending", value: 0, fill: '#A52A2A' },
     { status: "Failed", value: 0, fill: '#f44336' },
   ]);
   
-  // Analytics Tab Data
+  // Analytics Tab Data - Keep existing dummy data as fallback
   const [monthlyAttendanceTrend, setMonthlyAttendanceTrend] = useState([
     { month: "Jan", attendance: 94.2, leaves: 8.5, overtime: 12.3 },
     { month: "Feb", attendance: 93.8, leaves: 9.2, overtime: 11.8 },
@@ -283,22 +271,24 @@ const useDashboardData = () => {
   ]);
   
   const [attendanceChartData, setAttendanceChartData] = useState([
-    { name: "Present", value: 950, fill: '#800020' },
-    { name: "Absent", value: 200, fill: '#A52A2A' },
-    { name: "Late", value: 92, fill: '#8B0000' },
+    { name: "Present", value: 0, fill: '#800020' },
+    { name: "Absent", value: 0, fill: '#A52A2A' },
+    { name: "Late", value: 0, fill: '#8B0000' },
   ]);
+  
   const [leaveTrackerData, setLeaveTrackerData] = useState([
-    { name: "Sick Leave", value: 45 },
-    { name: "Vacation", value: 30 },
-    { name: "Personal", value: 15 },
-    { name: "Maternity", value: 10 },
+    { name: "Pending", value: 0 },
+    { name: "Approved", value: 0 },
+    { name: "Rejected", value: 0 },
   ]);
+  
   const [employmentStatusData, setEmploymentStatusData] = useState([
     { name: "Permanent", value: 47, fill: '#800020' },
     { name: "Contract", value: 25, fill: '#A52A2A' },
     { name: "Probation", value: 15, fill: '#8B0000' },
     { name: "Intern", value: 13, fill: '#660000' },
   ]);
+  
   const [announcements, setAnnouncements] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -310,127 +300,269 @@ const useDashboardData = () => {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       try {
-        // Fetch announcements
+        console.log('🚀 Starting data fetch...');
+
+        // ===== 1. Fetch Dashboard Stats =====
         try {
-          const annRes = await axios.get(`${API_BASE_URL}/api/announcements`, { headers });
-          setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
+          console.log('📊 Fetching dashboard stats...');
+          const dashboardStatsRes = await axios.get(`${API_BASE_URL}/api/dashboard/stats`, { headers });
+          const dashStats = dashboardStatsRes.data;
+          
+          console.log('✅ Dashboard stats received:', dashStats);
+          
+          setStats(prev => ({
+            ...prev,
+            employees: dashStats.totalEmployees || 0,
+            todayAttendance: dashStats.presentToday || 0,
+          }));
+
+          // Calculate attendance chart data from stats
+          const totalEmp = dashStats.totalEmployees || 0;
+          const presentToday = dashStats.presentToday || 0;
+          const absentToday = totalEmp - presentToday;
+          
+          setAttendanceChartData([
+            { name: "Present", value: presentToday, fill: '#800020' },
+            { name: "Absent", value: absentToday, fill: '#A52A2A' },
+            { name: "Late", value: 0, fill: '#8B0000' },
+          ]);
+
+          console.log('📈 Attendance chart data updated:', { present: presentToday, absent: absentToday });
+
         } catch (err) {
-          console.warn("Failed to fetch announcements:", err?.message);
+          console.error("❌ Failed to fetch dashboard stats:", err?.message);
+        }
+
+        // ===== 2. Fetch Weekly Attendance Overview =====
+        try {
+          console.log('📅 Fetching weekly attendance...');
+          const weeklyAttendanceRes = await axios.get(
+            `${API_BASE_URL}/api/dashboard/attendance-overview?days=5`, 
+            { headers }
+          );
+          const weeklyData = weeklyAttendanceRes.data;
+          
+          console.log('✅ Weekly attendance received:', weeklyData);
+          
+          // Transform to match chart format
+          const transformedWeekly = weeklyData.map(item => ({
+            day: item.day,
+            present: item.present,
+            absent: 0,
+            late: 0
+          }));
+          
+          setWeeklyAttendanceData(transformedWeekly);
+          console.log('📊 Weekly chart updated with', transformedWeekly.length, 'days');
+
+        } catch (err) {
+          console.error("❌ Failed to fetch weekly attendance:", err?.message);
+          // Keep empty array as fallback
+          setWeeklyAttendanceData([]);
+        }
+
+        // ===== 3. Fetch Department Distribution =====
+        try {
+          console.log('🏢 Fetching department distribution...');
+          const deptDistRes = await axios.get(
+            `${API_BASE_URL}/api/dashboard/department-distribution`, 
+            { headers }
+          );
+          const deptData = deptDistRes.data;
+          
+          console.log('✅ Department data received:', deptData);
+          
+          // Transform for horizontal bar chart
+          const transformedDept = deptData.map(item => ({
+            department: item.department,
+            present: item.employeeCount,
+            absent: 0,
+            rate: item.employeeCount > 0 ? 100 : 0
+          }));
+          
+          setDepartmentAttendanceData(transformedDept);
+          console.log('🏢 Department chart updated with', transformedDept.length, 'departments');
+
+        } catch (err) {
+          console.error("❌ Failed to fetch department distribution:", err?.message);
+          setDepartmentAttendanceData([]);
+        }
+
+        // ===== 4. Fetch Leave Statistics =====
+        try {
+          console.log('🏖️ Fetching leave statistics...');
+          const leaveStatsRes = await axios.get(
+            `${API_BASE_URL}/api/dashboard/leave-stats`, 
+            { headers }
+          );
+          const leaveStats = leaveStatsRes.data;
+          
+          console.log('✅ Leave stats received:', leaveStats);
+          
+          setStats(prev => ({
+            ...prev,
+            leaveRequests: leaveStats.total || 0,
+            leavePending: leaveStats.pending || 0,
+            leaveApproved: leaveStats.approved || 0,
+          }));
+
+          // Update leave tracker data for charts
+          setLeaveTrackerData([
+            { name: "Pending", value: leaveStats.pending || 0 },
+            { name: "Approved", value: leaveStats.approved || 0 },
+            { name: "Rejected", value: leaveStats.rejected || 0 },
+          ]);
+          
+          console.log('📊 Leave data updated:', leaveStats);
+
+        } catch (err) {
+          console.error("❌ Failed to fetch leave stats:", err?.message);
+        }
+
+        // ===== 5. Fetch Payroll Summary =====
+        try {
+          console.log('💰 Fetching payroll summary...');
+          const payrollSummaryRes = await axios.get(
+            `${API_BASE_URL}/api/dashboard/payroll-summary`, 
+            { headers }
+          );
+          const payrollSummary = payrollSummaryRes.data;
+          
+          console.log('✅ Payroll summary received:', payrollSummary);
+          
+          setStats(prev => ({
+            ...prev,
+            pendingPayroll: payrollSummary.pending || 0,
+            processedPayroll: payrollSummary.processed || 0,
+          }));
+
+          // Update payroll status pie chart
+          setPayrollStatusData([
+            { status: "Processed", value: payrollSummary.processed || 0, fill: '#800020' },
+            { status: "Pending", value: payrollSummary.pending || 0, fill: '#A52A2A' },
+            { status: "Failed", value: 0, fill: '#f44336' },
+          ]);
+          
+          console.log('💰 Payroll charts updated');
+
+        } catch (err) {
+          console.error("❌ Failed to fetch payroll summary:", err?.message);
+        }
+
+        // ===== 6. Fetch Monthly Attendance Trend =====
+        try {
+          console.log('📈 Fetching monthly attendance trend...');
+          const monthlyAttendanceRes = await axios.get(
+            `${API_BASE_URL}/api/dashboard/monthly-attendance`, 
+            { headers }
+          );
+          const monthlyData = monthlyAttendanceRes.data;
+          
+          console.log('✅ Monthly attendance received:', monthlyData.length, 'days');
+          
+          // Group by weeks for the analytics chart
+          const weeklyAverages = [];
+          let weekData = [];
+          
+          monthlyData.forEach((day, index) => {
+            weekData.push(day.present);
+            
+            // Every 7 days or at the end
+            if ((index + 1) % 7 === 0 || index === monthlyData.length - 1) {
+              const avg = weekData.reduce((a, b) => a + b, 0) / weekData.length;
+              weeklyAverages.push({
+                week: `Week ${weeklyAverages.length + 1}`,
+                attendance: avg.toFixed(1),
+                leaves: 0,
+                overtime: 0
+              });
+              weekData = [];
+            }
+          });
+          
+          if (weeklyAverages.length > 0) {
+            setMonthlyAttendanceTrend(weeklyAverages);
+            console.log('📊 Monthly trend updated with', weeklyAverages.length, 'weeks');
+          }
+
+        } catch (err) {
+          console.error("❌ Failed to fetch monthly attendance:", err?.message);
+        }
+
+        // ===== 7. Fetch Finalized Payroll Count =====
+        try {
+          console.log('📄 Fetching payslip count...');
+          const finalizedPayrollRes = await axios.get(
+            `${API_BASE_URL}/PayrollRoute/finalized-payroll`, 
+            { headers }
+          );
+          const payslipCount = Array.isArray(finalizedPayrollRes.data) 
+            ? finalizedPayrollRes.data.length 
+            : 0;
+          
+          setStats(prev => ({ ...prev, payslipCount }));
+          console.log('✅ Payslip count:', payslipCount);
+
+        } catch (err) {
+          console.error("❌ Failed to fetch payslip count:", err?.message);
+          // Set to 0 if fetch fails to prevent errors
+          setStats(prev => ({ ...prev, payslipCount: 0 }));
+        }
+
+        // ===== 8. Fetch Announcements =====
+        try {
+          console.log('📢 Fetching announcements...');
+          const annRes = await axios.get(`${API_BASE_URL}/api/announcements`, { headers });
+          const announcementData = Array.isArray(annRes.data) ? annRes.data : [];
+          setAnnouncements(announcementData);
+          console.log('✅ Announcements loaded:', announcementData.length);
+
+        } catch (err) {
+          console.error("❌ Failed to fetch announcements:", err?.message);
           setAnnouncements([]);
         }
 
-        // Fetch holidays
+        // ===== 9. Fetch Holidays =====
         try {
-          const res = await axios.get(`${API_BASE_URL}/holiday`);
+          console.log('🎉 Fetching holidays...');
+          const res = await axios.get(`${API_BASE_URL}/holiday`, { headers });
           if (Array.isArray(res.data)) {
             const transformedHolidays = res.data.map(item => {
               const d = new Date(item.date);
-              const normalizedDate = !isNaN(d) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` : item.date;
-              return { date: normalizedDate, name: item.description, status: item.status };
+              const normalizedDate = !isNaN(d) 
+                ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` 
+                : item.date;
+              return { 
+                date: normalizedDate, 
+                name: item.description, 
+                status: item.status 
+              };
             });
             setHolidays(transformedHolidays);
+            console.log('✅ Holidays loaded:', transformedHolidays.length);
           }
         } catch (err) {
-          console.error("Error fetching holidays:", err);
+          console.error("❌ Error fetching holidays:", err);
         }
 
-        // Fetch employees count
-        let employeesCount = 0;
-        try {
-          const usersRes = await axios.get(`${API_BASE_URL}/users`, { headers });
-          const usersData = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.users || []);
-          employeesCount = usersData.length;
-        } catch (err) {
-          console.warn("Failed to fetch users:", err?.message);
-          try {
-            const ptRes = await axios.get(`${API_BASE_URL}/personalinfo/person_table`, { headers });
-            employeesCount = Array.isArray(ptRes.data) ? ptRes.data.length : 0;
-          } catch (err2) {
-            console.warn("Fallback person_table failed:", err2?.message);
-          }
-        }
+        console.log('✨ All data fetch completed!');
 
-        // Fetch today's attendance
-        let todayAttendanceCount = 0;
-        try {
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          const todayEnd = new Date();
-          todayEnd.setHours(23, 59, 59, 999);
-          const startTimestamp = todayStart.getTime();
-          const endTimestamp = todayEnd.getTime();
-          const attendanceRes = await axios.post(`${API_BASE_URL}/api/attendance`, { personID: '', startDate: startTimestamp, endDate: endTimestamp }, { headers });
-          if (attendanceRes?.data) {
-            const records = Array.isArray(attendanceRes.data) ? attendanceRes.data : [];
-            const uniqueEmployees = new Set(records.filter(r => r.AttendanceState === 1).map(r => r.PersonID));
-            todayAttendanceCount = uniqueEmployees.size;
-          }
-        } catch (err) {
-          console.warn("Failed to fetch today's attendance:", err?.message);
-        }
-
-        // Fetch leave requests
-        let leaveReqs = [];
-        const leaveEndpoints = [`${API_BASE_URL}/api/admin/leave-requests`, `${API_BASE_URL}/api/leave-requests`, `${API_BASE_URL}/leave-requests`];
-        for (const ep of leaveEndpoints) {
-          try {
-            const res = await axios.get(ep, { headers });
-            if (res?.data) {
-              leaveReqs = Array.isArray(res.data) ? res.data : (res.data.data || []);
-              if (leaveReqs.length > 0) break;
-            }
-          } catch (err) {}
-        }
-
-        // Fetch payroll data
-        let payrollList = [];
-        try {
-          const payrollRes = await axios.get(`${API_BASE_URL}/payroll`, { headers });
-          payrollList = Array.isArray(payrollRes.data) ? payrollRes.data : (payrollRes.data?.data || []);
-        } catch (err) {
-          console.warn("Failed to fetch payroll:", err?.message);
-        }
-
-        // Fetch payslip count
-        let payslipCount = 0;
-        try {
-          const payslipRes = await axios.get(`${API_BASE_URL}/payslip`, { headers });
-          payslipCount = Array.isArray(payslipRes.data) ? payslipRes.data.length : (payslipRes.data?.data?.length || 0);
-        } catch (err) {
-          console.warn("Failed to fetch payslip:", err?.message);
-        }
-
-        const pendingPayroll = payrollList.filter(
-          p => String(p.status).toLowerCase() === "unprocess"
-        ).length;
-
-        const processedPayroll = payrollList.filter(
-          p => String(p.status).toLowerCase() === "processed"
-        ).length;
-
-        const leavePending = leaveReqs.filter(l => String(l.status).toLowerCase() === "pending").length;
-        const leaveApproved = leaveReqs.filter(l => String(l.status).toLowerCase() === "approved").length;
-
-        setStats({ 
-          employees: employeesCount, 
-          turnoverRate: 32,
-          happinessRate: 78,
-          teamKPI: 84.45,
-          todayAttendance: todayAttendanceCount, 
-          leaveRequests: leaveReqs.length, 
-          leavePending, 
-          leaveApproved, 
-          pendingPayroll, 
-          processedPayroll, 
-          payslip: payslipCount 
-        });
       } catch (err) {
-        console.error("Error fetching admin data:", err);
+        console.error("❌ Critical error fetching admin data:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchAllData();
+
+    // Auto-refresh every 5 minutes
+    console.log('⏰ Setting up auto-refresh (5 minutes)');
+    const interval = setInterval(fetchAllData, 5 * 60 * 1000);
+    return () => {
+      console.log('🛑 Clearing auto-refresh interval');
+      clearInterval(interval);
+    };
   }, []);
 
   return { 

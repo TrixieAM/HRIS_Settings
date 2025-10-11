@@ -199,7 +199,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     });
 
     // Restore current employee in UI
-    setDisplayEmployee(displayEmployee);
+    setDisplayEmployee(employee); // Restore to original employee prop
   };
 
   // Send Payslip via Gmail
@@ -330,8 +330,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
         message: 'An error occurred while sending the payslip.',
       });
     } finally {
-      // ✅ restore current employee
-      setDisplayEmployee(displayEmployee);
+      setDisplayEmployee(employee); // Restore to original employee prop
       setSending(false);
     }
   };
@@ -348,7 +347,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
 
     if (result.length > 0) {
       setFilteredPayroll(result);
-      setDisplayEmployee(null); // ❌ don’t auto-display
+      setDisplayEmployee(null); // don’t auto-display
       setSelectedMonth(''); // reset month filter
       setHasSearched(true);
     } else {
@@ -377,13 +376,34 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
     setSelectedMonth(month);
     const monthIndex = months.indexOf(month);
 
-    const result = filteredPayroll.filter((emp) => {
-      if (!emp.startDate) return false;
-      const empMonth = new Date(emp.startDate).getMonth();
-      return empMonth === monthIndex;
-    });
+    const result = allPayroll.filter(
+      // Filter from allPayroll, not filteredPayroll
+      (emp) =>
+        (hasSearched
+          ? emp.employeeNumber.toString().includes(search.trim()) ||
+            emp.name.toLowerCase().includes(search.trim().toLowerCase())
+          : true) && // Apply search filter if present
+        new Date(emp.startDate).getMonth() === monthIndex
+    );
 
     setDisplayEmployee(result.length > 0 ? result[0] : null);
+  };
+
+  // Helper function to format currency, returning blank if 0 or falsy
+  const formatCurrency = (value) => {
+    const num = parseFloat(value);
+    return !isNaN(num) && num !== 0 ? `₱${num.toLocaleString()}` : '';
+  };
+
+  // Helper function to format rendered days/hours, returning blank if 0 or falsy
+  const formatRenderedDays = (value) => {
+    const totalHours = Number(value);
+    if (!isNaN(totalHours) && totalHours > 0) {
+      const days = Math.floor(totalHours / 8);
+      const hours = totalHours % 8;
+      return `${days} days${hours > 0 ? ` & ${hours} hrs` : ''}`;
+    }
+    return '';
   };
 
   return (
@@ -541,7 +561,7 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
             borderRadius: 1,
             backgroundColor: '#fff',
             fontFamily: 'Arial, sans-serif',
-            position: 'relative', // ✅ important for watermark positioning
+            position: 'relative', // important for watermark positioning
             overflow: 'hidden',
           }}
         >
@@ -554,9 +574,9 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              opacity: 0.07, // ✅ makes it faint like a watermark
+              opacity: 0.07, // makes it faint like a watermark
               width: '100%', // adjust size as needed
-              pointerEvents: 'none', // ✅ so it doesn’t block clicks/selections
+              pointerEvents: 'none', // so it doesn’t block clicks/selections
               userSelect: 'none',
             }}
           />
@@ -645,185 +665,130 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
               },
               {
                 label: 'GROSS SALARY:',
-                value: displayEmployee.grossSalary
-                  ? `₱${parseFloat(
-                      displayEmployee.grossSalary
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.grossSalary),
+              },
+              {
+                label: 'Rendered Days:',
+                value: formatRenderedDays(displayEmployee.rh),
               },
               {
                 label: 'ABS:',
-                value: displayEmployee.abs
-                  ? `₱${parseFloat(displayEmployee.abs).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.abs),
               },
               {
                 label: 'WITHHOLDING TAX:',
-                value: displayEmployee.withholdingTax
-                  ? `₱${parseFloat(
-                      displayEmployee.withholdingTax
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.withholdingTax),
               },
               {
                 label: 'L.RET:',
-                value: displayEmployee.personalLifeRetIns
-                  ? `₱${parseFloat(
-                      displayEmployee.personalLifeRetIns
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.personalLifeRetIns),
               },
               {
                 label: 'GSIS SALARY LOAN:',
-                value: displayEmployee.gsisSalaryLoan
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisSalaryLoan
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.gsisSalaryLoan),
               },
               {
                 label: 'POLICY:',
-                value: displayEmployee.gsisPolicyLoan
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisPolicyLoan
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.gsisPolicyLoan),
               },
-
               {
                 label: 'HOUSING LOAN:',
-                value: displayEmployee.gsisSalaryLoan
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisSalaryLoan || 0
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.gsisHousingLoan), // Corrected to gsisHousingLoan
               },
               {
                 label: 'GSIS ARREARS:',
-                value: displayEmployee.gsisArrears
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisArrears
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.gsisArrears),
               },
               {
                 label: 'GFAL:',
-                value: '',
+                value: formatCurrency(displayEmployee.gfal), // Added GFAL if available
               },
               {
                 label: 'CPL:',
-                value: displayEmployee.cpl
-                  ? `₱${parseFloat(displayEmployee.cpl).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.cpl),
               },
               {
                 label: 'MPL:',
-                value: displayEmployee.mpl
-                  ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.mpl),
               },
               {
                 label: 'MPL LITE:',
-                value: displayEmployee.mplLite
-                  ? `₱${parseFloat(displayEmployee.mplLite).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.mplLite),
               },
               {
                 label: 'ELA:',
-                value: '',
+                value: formatCurrency(displayEmployee.ela), // Added ELA if available
+              },
+              {
+                label: 'SSS:',
+                value: formatCurrency(displayEmployee.sss),
               },
               {
                 label: 'PAG-IBIG:',
-                value: displayEmployee.pagibigFundCont
-                  ? `₱${parseFloat(
-                      displayEmployee.pagibigFundCont
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.pagibigFundCont),
               },
               {
-                label: 'MPL:',
-                value: displayEmployee.mpl
-                  ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
-                  : '',
+                label: 'MPL:', // Duplicate, assuming it's a different MPL or a typo. Using a generic 'mpl2' if exists
+                value: formatCurrency(displayEmployee.mpl2), // If there's another MPL field
               },
               {
                 label: 'PHILHEALTH:',
-                value: displayEmployee.PhilHealthContribution
-                  ? `₱${parseFloat(
-                      displayEmployee.PhilHealthContribution
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.PhilHealthContribution),
               },
               {
                 label: "PHILHEALTH (DIFF'L):",
-                value: '',
+                value: formatCurrency(displayEmployee.philhealthDiff), // Added if available
               },
               {
                 label: 'PAG-IBIG 2:',
-                value: displayEmployee.PhilHealthContribution
-                  ? `₱${parseFloat(
-                      displayEmployee.PhilHealthContribution
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.pagibig2), // Corrected to pagibig2 if available
               },
               {
                 label: 'LBP LOAN:',
-                value: '',
+                value: formatCurrency(displayEmployee.lbpLoan), // Added if available
               },
               {
                 label: 'MTSLAI:',
-                value: '',
+                value: formatCurrency(displayEmployee.mtslai), // Added if available
               },
               {
                 label: 'ECC:',
-                value: '',
+                value: formatCurrency(displayEmployee.ecc), // Added if available
               },
               {
                 label: 'TO BE REFUNDED:',
-                value: '',
+                value: formatCurrency(displayEmployee.toBeRefunded), // Added if available
               },
               {
                 label: 'FEU:',
-                value: displayEmployee.feu
-                  ? `₱${parseFloat(displayEmployee.feu).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.feu),
               },
               {
                 label: 'ESLAI:',
-                value: '',
+                value: formatCurrency(displayEmployee.eslai), // Added if available
               },
               {
                 label: 'TOTAL DEDUCTIONS:',
-                value: displayEmployee.totalDeductions
-                  ? `₱${parseFloat(
-                      displayEmployee.totalDeductions
-                    ).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.totalDeductions),
               },
               {
                 label: 'NET SALARY:',
-                value: displayEmployee.netSalary
-                  ? `₱${parseFloat(displayEmployee.netSalary).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.netSalary),
               },
               {
                 label: '1ST QUINCENA:',
-                value: displayEmployee.pay1st
-                  ? `₱${parseFloat(displayEmployee.pay1st).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.pay1st),
               },
               {
                 label: '2ND QUINCENA:',
-                value: displayEmployee.pay1st
-                  ? `₱${parseFloat(displayEmployee.pay2nd).toLocaleString()}`
-                  : '',
+                value: formatCurrency(displayEmployee.pay2nd),
               },
             ].map((row, index) => (
               <Box
                 key={index}
                 sx={{
                   display: 'flex',
-                  borderBottom: '1px solid black', // ✅ always show border
+                  borderBottom: '1px solid black', // always show border
                 }}
               >
                 {/* Left column (label) */}
@@ -854,7 +819,6 @@ const PayslipOverall = forwardRef(({ employee }, ref) => {
             sx={{ fontSize: '0.85rem' }}
           >
             <Typography>Certified Correct:</Typography>
-            <Typography>plus PERA – 2,000.00</Typography>
           </Box>
 
           <Box

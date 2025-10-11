@@ -10,6 +10,9 @@ import {
   CircularProgress,
   Alert,
   Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
   InputAdornment,
 } from '@mui/material';
@@ -38,10 +41,10 @@ const Payslip = forwardRef(({ employee }, ref) => {
     message: '',
   });
 
-  const [search, setSearch] = useState('');
-  const [hasSearched, setHasSearched] = useState(false); 
-  const [selectedMonth, setSelectedMonth] = useState(''); 
-  const [filteredPayroll, setFilteredPayroll] = useState([]); 
+  const [search, setSearch] = useState(''); // search input
+  const [hasSearched, setHasSearched] = useState(false); // flag if search was done
+  const [selectedMonth, setSelectedMonth] = useState(''); // which month is selected
+  const [filteredPayroll, setFilteredPayroll] = useState([]); // search r
   const [personID, setPersonID] = useState('');
   const months = [
     'Jan',
@@ -77,12 +80,12 @@ const Payslip = forwardRef(({ employee }, ref) => {
   };
 
   useEffect(() => {
-    // token < local storage
+    // Retrieve and decode the token from local storage
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setPersonID(decoded.employeeNumber); 
+        setPersonID(decoded.employeeNumber); // Set the employeeNumber in state
       } catch (error) {
         console.error('Error decoding token:', error);
       }
@@ -98,8 +101,8 @@ const Payslip = forwardRef(({ employee }, ref) => {
             `${API_BASE_URL}/PayrollReleasedRoute/released-payroll-detailed`,
             getAuthHeaders()
           );
-          setAllPayroll(res.data); 
-          setDisplayEmployee(null); 
+          setAllPayroll(res.data); // ✅ just store everything
+          setDisplayEmployee(null); // ✅ don't auto-display until month is chosen
           setLoading(false);
         } catch (err) {
           console.error('Error fetching payroll:', err);
@@ -144,6 +147,8 @@ const Payslip = forwardRef(({ employee }, ref) => {
 
     // PDF setup
     const pdf = new jsPDF('l', 'in', 'a4');
+    pdf.setFont('Arial', 'bold'); // or ('helvetica', 'normal') / ('courier', 'italic')
+
     const contentWidth = 3.5;
     const contentHeight = 7.1;
     const gap = 0.2;
@@ -387,7 +392,6 @@ const Payslip = forwardRef(({ employee }, ref) => {
         </Box>
       </Box>
 
-      {/* Payslip Content */}
       {loading ? (
         <Box display="flex" justifyContent="center" mt={10}>
           <CircularProgress sx={{ color: '#6D2323' }} />
@@ -493,7 +497,8 @@ const Payslip = forwardRef(({ employee }, ref) => {
                 label: 'EMPLOYEE NUMBER:',
                 value: (
                   <Typography sx={{ color: 'red', fontWeight: 'bold' }}>
-                    {displayEmployee.employeeNumber
+                    {displayEmployee.employeeNumber &&
+                    parseFloat(displayEmployee.employeeNumber) !== 0
                       ? `${parseFloat(displayEmployee.employeeNumber)}`
                       : ''}
                   </Typography>
@@ -507,180 +512,273 @@ const Payslip = forwardRef(({ employee }, ref) => {
                   </Typography>
                 ),
               },
+
               {
                 label: 'GROSS SALARY:',
-                value: displayEmployee.grossSalary
-                  ? `₱${parseFloat(
-                      displayEmployee.grossSalary
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.grossSalary &&
+                  parseFloat(displayEmployee.grossSalary) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.grossSalary
+                      ).toLocaleString()}`
+                    : '',
               },
               {
+                label: 'Rendered Days:',
+                value:
+                  displayEmployee.rh && parseFloat(displayEmployee.rh) !== 0
+                    ? (() => {
+                        const totalHours = Number(displayEmployee.rh);
+                        const days = Math.floor(totalHours / 8);
+                        const hours = totalHours % 8;
+                        return `${days} days${
+                          hours > 0 ? ` & ${hours} hrs` : ''
+                        }`;
+                      })()
+                    : '',
+              },
+
+              {
                 label: 'ABS:',
-                value: displayEmployee.abs
-                  ? `₱${parseFloat(displayEmployee.abs).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.abs && parseFloat(displayEmployee.abs) !== 0
+                    ? `₱${parseFloat(displayEmployee.abs).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'WITHHOLDING TAX:',
-                value: displayEmployee.withholdingTax
-                  ? `₱${parseFloat(
-                      displayEmployee.withholdingTax
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.withholdingTax &&
+                  parseFloat(displayEmployee.withholdingTax) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.withholdingTax
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'L.RET:',
-                value: displayEmployee.personalLifeRetIns
-                  ? `₱${parseFloat(
-                      displayEmployee.personalLifeRetIns
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.personalLifeRetIns &&
+                  parseFloat(displayEmployee.personalLifeRetIns) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.personalLifeRetIns
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'GSIS SALARY LOAN:',
-                value: displayEmployee.gsisSalaryLoan
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisSalaryLoan
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.gsisSalaryLoan &&
+                  parseFloat(displayEmployee.gsisSalaryLoan) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.gsisSalaryLoan
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'POLICY:',
-                value: displayEmployee.gsisPolicyLoan
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisPolicyLoan
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.gsisPolicyLoan &&
+                  parseFloat(displayEmployee.gsisPolicyLoan) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.gsisPolicyLoan
+                      ).toLocaleString()}`
+                    : '',
               },
 
               {
                 label: 'HOUSING LOAN:',
-                value: displayEmployee.gsisSalaryLoan
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisSalaryLoan || 0
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.gsisHousingLoan &&
+                  parseFloat(displayEmployee.gsisHousingLoan) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.gsisHousingLoan
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'GSIS ARREARS:',
-                value: displayEmployee.gsisArrears
-                  ? `₱${parseFloat(
-                      displayEmployee.gsisArrears
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.gsisArrears &&
+                  parseFloat(displayEmployee.gsisArrears) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.gsisArrears
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'GFAL:',
-                value: '',
+                value:
+                  displayEmployee.gfal && parseFloat(displayEmployee.gfal) !== 0
+                    ? `₱${parseFloat(displayEmployee.gfal).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'CPL:',
-                value: displayEmployee.cpl
-                  ? `₱${parseFloat(displayEmployee.cpl).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.cpl && parseFloat(displayEmployee.cpl) !== 0
+                    ? `₱${parseFloat(displayEmployee.cpl).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'MPL:',
-                value: displayEmployee.mpl
-                  ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.mpl && parseFloat(displayEmployee.mpl) !== 0
+                    ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'MPL LITE:',
-                value: displayEmployee.mplLite
-                  ? `₱${parseFloat(displayEmployee.mplLite).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.mplLite &&
+                  parseFloat(displayEmployee.mplLite) !== 0
+                    ? `₱${parseFloat(displayEmployee.mplLite).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'ELA:',
-                value: '',
+                value:
+                  displayEmployee.ela && parseFloat(displayEmployee.ela) !== 0
+                    ? `₱${parseFloat(displayEmployee.ela).toLocaleString()}`
+                    : '',
+              },
+              {
+                label: 'SSS:',
+                value:
+                  displayEmployee.sss && parseFloat(displayEmployee.sss) !== 0
+                    ? `₱${parseFloat(displayEmployee.sss).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'PAG-IBIG:',
-                value: displayEmployee.pagibigFundCont
-                  ? `₱${parseFloat(
-                      displayEmployee.pagibigFundCont
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.pagibigFundCont &&
+                  parseFloat(displayEmployee.pagibigFundCont) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.pagibigFundCont
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'MPL:',
-                value: displayEmployee.mpl
-                  ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.mpl && parseFloat(displayEmployee.mpl) !== 0
+                    ? `₱${parseFloat(displayEmployee.mpl).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'PHILHEALTH:',
-                value: displayEmployee.PhilHealthContribution
-                  ? `₱${parseFloat(
-                      displayEmployee.PhilHealthContribution
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.PhilHealthContribution &&
+                  parseFloat(displayEmployee.PhilHealthContribution) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.PhilHealthContribution
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: "PHILHEALTH (DIFF'L):",
-                value: '',
+                value:
+                  displayEmployee.philhealthDiff &&
+                  parseFloat(displayEmployee.philhealthDiff) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.philhealthDiff
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'PAG-IBIG 2:',
-                value: displayEmployee.PhilHealthContribution
-                  ? `₱${parseFloat(
-                      displayEmployee.PhilHealthContribution
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.pagibig2 &&
+                  parseFloat(displayEmployee.pagibig2) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.pagibig2
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'LBP LOAN:',
-                value: '',
+                value:
+                  displayEmployee.lbpLoan &&
+                  parseFloat(displayEmployee.lbpLoan) !== 0
+                    ? `₱${parseFloat(displayEmployee.lbpLoan).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'MTSLAI:',
-                value: '',
+                value:
+                  displayEmployee.mtslai &&
+                  parseFloat(displayEmployee.mtslai) !== 0
+                    ? `₱${parseFloat(displayEmployee.mtslai).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'ECC:',
-                value: '',
+                value:
+                  displayEmployee.ecc && parseFloat(displayEmployee.ecc) !== 0
+                    ? `₱${parseFloat(displayEmployee.ecc).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'TO BE REFUNDED:',
-                value: '',
+                value:
+                  displayEmployee.toBeRefunded &&
+                  parseFloat(displayEmployee.toBeRefunded) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.toBeRefunded
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'FEU:',
-                value: displayEmployee.feu
-                  ? `₱${parseFloat(displayEmployee.feu).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.feu && parseFloat(displayEmployee.feu) !== 0
+                    ? `₱${parseFloat(displayEmployee.feu).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'ESLAI:',
-                value: '',
+                value:
+                  displayEmployee.eslai &&
+                  parseFloat(displayEmployee.eslai) !== 0
+                    ? `₱${parseFloat(displayEmployee.eslai).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'TOTAL DEDUCTIONS:',
-                value: displayEmployee.totalDeductions
-                  ? `₱${parseFloat(
-                      displayEmployee.totalDeductions
-                    ).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.totalDeductions &&
+                  parseFloat(displayEmployee.totalDeductions) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.totalDeductions
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: 'NET SALARY:',
-                value: displayEmployee.netSalary
-                  ? `₱${parseFloat(displayEmployee.netSalary).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.netSalary &&
+                  parseFloat(displayEmployee.netSalary) !== 0
+                    ? `₱${parseFloat(
+                        displayEmployee.netSalary
+                      ).toLocaleString()}`
+                    : '',
               },
               {
                 label: '1ST QUINCENA:',
-                value: displayEmployee.pay1st
-                  ? `₱${parseFloat(displayEmployee.pay1st).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.pay1st &&
+                  parseFloat(displayEmployee.pay1st) !== 0
+                    ? `₱${parseFloat(displayEmployee.pay1st).toLocaleString()}`
+                    : '',
               },
               {
                 label: '2ND QUINCENA:',
-                value: displayEmployee.pay1st
-                  ? `₱${parseFloat(displayEmployee.pay2nd).toLocaleString()}`
-                  : '',
+                value:
+                  displayEmployee.pay2nd &&
+                  parseFloat(displayEmployee.pay2nd) !== 0
+                    ? `₱${parseFloat(displayEmployee.pay2nd).toLocaleString()}`
+                    : '',
               },
             ].map((row, index) => (
               <Box
@@ -718,7 +816,6 @@ const Payslip = forwardRef(({ employee }, ref) => {
             sx={{ fontSize: '0.85rem' }}
           >
             <Typography>Certified Correct:</Typography>
-            <Typography>plus PERA – 2,000.00</Typography>
           </Box>
 
           <Box
@@ -744,9 +841,9 @@ const Payslip = forwardRef(({ employee }, ref) => {
             '& .MuiAlert-icon': { color: '#6D2323' }, // icon same color
           }}
         >
-          There's no payslip saved for the month of <b>{selectedMonth}</b>.
+          There's no payslip saved for the month of <b>{selectedMonth}.</b>
         </Alert>
-      ) : (
+      ) : hasSearched ? (
         <Alert
           severity="info"
           sx={{
@@ -758,7 +855,7 @@ const Payslip = forwardRef(({ employee }, ref) => {
         >
           Please select a month to view your payslip.
         </Alert>
-      )}
+      ) : null}
 
       {/* Download Button */}
       {displayEmployee && (

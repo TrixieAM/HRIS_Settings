@@ -292,7 +292,6 @@ const PayrollJO = () => {
           grossAmount: row.grossAmount,
           h: row.h,
           m: row.m,
-          s: row.s || 0,
           netSalary: computeNetAmount(
             row.grossAmount,
             row.ratePerDay,
@@ -375,6 +374,7 @@ const PayrollJO = () => {
   };
 
   const handleDeleteClick = (row) => {
+    console.log('Delete button clicked for:', row);
     setRecordToDelete(row);
     setDeleteDialogOpen(true);
   };
@@ -1161,7 +1161,6 @@ const PayrollJO = () => {
                           ? formatCurrency(row.sssContribution)
                           : '—'}
                       </TableCell>
-
                       <TableCell sx={{ fontWeight: 'bold', color: '#6D2323' }}>
                         {formatCurrency(
                           computeNetAmount(
@@ -1213,15 +1212,7 @@ const PayrollJO = () => {
                               size="small"
                               sx={{ color: '#d32f2f' }}
                               onClick={() => handleDeleteClick(row)}
-                              disabled={
-                                row.status === 1 || // Disable if already processed
-                                finalizedPayroll.some(
-                                  (fp) =>
-                                    fp.employeeNumber === row.employeeNumber &&
-                                    fp.startDate === row.startDate &&
-                                    fp.endDate === row.endDate
-                                )
-                              }
+                              disabled={row.status === 1} // Disable if status is processed
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>

@@ -1449,4 +1449,3 @@ const PayrollJO = () => {
 };
 
 export default PayrollJO;
-

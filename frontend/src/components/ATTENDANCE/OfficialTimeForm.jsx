@@ -5,7 +5,6 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SaveIcon from '@mui/icons-material/Save';
 import SearchIcon from '@mui/icons-material/Search';
 
-
 import {
   Typography,
   TextField,
@@ -26,11 +25,9 @@ import {
   IconButton,
 } from '@mui/material';
 
-
 import LoadingOverlay from '../LoadingOverlay';
 import SuccessfulOverlay from '../SuccessfulOverlay';
 import { Close } from '@mui/icons-material';
-
 
 const OfficialTimeForm = () => {
   const [employeeID, setemployeeID] = useState('');
@@ -38,15 +35,12 @@ const OfficialTimeForm = () => {
   const [loading, setLoading] = useState(false);
   const [found, setFound] = useState(false);
 
-
   const [file, setFile] = useState(null);
-
 
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAction, setSuccessAction] = useState('');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewRecords, setPreviewRecords] = useState([]);
-
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
@@ -57,7 +51,6 @@ const OfficialTimeForm = () => {
       },
     };
   };
-
 
   const defaultRecords = [
     'Monday',
@@ -83,7 +76,6 @@ const OfficialTimeForm = () => {
     breaktime: '',
   }));
 
-
   const handleSearch = () => {
     if (!employeeID) {
       setSuccessAction('Please enter an Employee ID.');
@@ -91,7 +83,6 @@ const OfficialTimeForm = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
       return;
     }
-
 
     setLoading(true);
     axios
@@ -115,13 +106,11 @@ const OfficialTimeForm = () => {
       });
   };
 
-
   const handleChange = (index, field, value) => {
     const updatedRecords = [...records];
     updatedRecords[index][field] = value;
     setRecords(updatedRecords);
   };
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -131,7 +120,6 @@ const OfficialTimeForm = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
       return;
     }
-
 
     setLoading(true);
     axios
@@ -157,7 +145,6 @@ const OfficialTimeForm = () => {
         setTimeout(() => setSuccessOpen(false), 2000);
       });
   };
-
 
   const PreviewModal = () => (
     <Dialog
@@ -254,7 +241,6 @@ const OfficialTimeForm = () => {
     </Dialog>
   );
 
-
   const handleUpload = async () => {
     if (!file) {
       setSuccessAction('Please select a file!');
@@ -263,10 +249,8 @@ const OfficialTimeForm = () => {
       return;
     }
 
-
     const formData = new FormData();
     formData.append('file', file);
-
 
     setLoading(true);
     try {
@@ -281,20 +265,17 @@ const OfficialTimeForm = () => {
       );
       setLoading(false);
 
-
       // Display the uploaded records in modal if they exist
       if (response.data.records && response.data.records.length > 0) {
         setPreviewRecords(response.data.records);
         setShowPreviewModal(true);
       }
 
-
       setSuccessAction(
         `${response.data.message} (Inserted: ${response.data.inserted}, Updated: ${response.data.updated})`
       );
       setSuccessOpen(true);
       setTimeout(() => setSuccessOpen(false), 2000);
-
 
       // Clear file selection
       setFile(null);
@@ -306,7 +287,6 @@ const OfficialTimeForm = () => {
       setTimeout(() => setSuccessOpen(false), 2000);
     }
   };
-
 
   return (
     <Container
@@ -352,7 +332,6 @@ const OfficialTimeForm = () => {
           </Box>
         </Box>
       </Box>
-
 
       <Box
         display="flex"
@@ -422,7 +401,6 @@ const OfficialTimeForm = () => {
           </Box>
         </Box>
 
-
         {/* Right Section - Upload File */}
         <Box>
           <Typography
@@ -440,7 +418,6 @@ const OfficialTimeForm = () => {
               style={{ display: 'none' }}
               onChange={(e) => setFile(e.target.files[0])}
             />
-
 
             <label htmlFor="upload-button">
               <Button
@@ -472,7 +449,6 @@ const OfficialTimeForm = () => {
               </Button>
             </label>
 
-
             {file && (
               <Box
                 sx={{
@@ -488,7 +464,6 @@ const OfficialTimeForm = () => {
                 </Typography>
               </Box>
             )}
-
 
             <Button
               variant="contained"
@@ -716,7 +691,6 @@ const OfficialTimeForm = () => {
             </Table>
           </TableContainer>
 
-
           <Button
             type="submit"
             variant="contained"
@@ -734,8 +708,4 @@ const OfficialTimeForm = () => {
   );
 };
 
-
 export default OfficialTimeForm;
-
-
-

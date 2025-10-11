@@ -69,8 +69,8 @@ router.get('/api/attendance', authenticateToken, (req, res) => {
     users.employmentCategory, officialtime.*
     FROM attendanceRecord 
     JOIN users ON attendanceRecord.personID = users.employeeNumber 
-    JOIN officialtime ON attendanceRecord.Day = officialtime.day AND attendanceRecord.personID = officialtime.employeeID
-    WHERE attendanceRecord.personID = ? 
+    JOIN officialtime ON attendanceRecord.Day = officialtime.day AND attendancerecord.personID = officialtime.employeeID
+    WHERE attendanceRecord.personID = ?
     AND attendanceRecord.date BETWEEN ? AND ?
   `;
   db.query(sql, [personId, startDate, endDate], (err, results) => {
@@ -696,7 +696,44 @@ router.get('/api/audit-log', (req, res) => {
   });
 });
 
+// GET TIME IN TIME OUT FOR PERIOD
+router.post('/api/attendance-records', authenticateToken, (req, res) => {
+  const { personID, startDate, endDate } = req.body;
 
+  if (!personID || !startDate || !endDate) {
+    return res.status(400).json({
+      error: 'personID, startDate, and endDate are required',
+    });
+  }
+
+  const sql = `
+    SELECT 
+      id,
+      personID,
+      date,
+      Day,
+      timeIN,
+      breaktimeIN,
+      breaktimeOUT,
+      timeOUT
+    FROM attendancerecord
+    WHERE personID = ?
+      AND date >= ?
+      AND date <= ?
+    ORDER BY date ASC
+  `;
+
+  db.query(sql, [personID, startDate, endDate], (err, result) => {
+    if (err) {
+      console.error('Error fetching attendance records:', err);
+      return res.status(500).json({
+        message: 'Error fetching attendance records',
+      });
+    }
+
+    res.json(result);
+  });
+});
 
 // GET /attendance/monthly?month=2025-09
 router.get('/attendance/monthly', authenticateToken, (req, res) => {
@@ -721,50 +758,5 @@ router.get('/attendance/monthly', authenticateToken, (req, res) => {
     res.json(results);
   });
 });
-
-
-router.post('/api/attendance-records', authenticateToken, (req, res) => {
-  const { personID, startDate, endDate } = req.body;
-
-
-  if (!personID || !startDate || !endDate) {
-    return res.status(400).json({
-      error: 'personID, startDate, and endDate are required',
-    });
-  }
-
-
-  const sql = `
-    SELECT
-      id,
-      personID,
-      date,
-      Day,
-      timeIN,
-      breaktimeIN,
-      breaktimeOUT,
-      timeOUT
-    FROM attendancerecord
-    WHERE personID = ?
-      AND date >= ?
-      AND date <= ?
-    ORDER BY date ASC
-  `;
-
-
-  db.query(sql, [personID, startDate, endDate], (err, result) => {
-    if (err) {
-      console.error('Error fetching attendance records:', err);
-      return res.status(500).json({
-        message: 'Error fetching attendance records',
-      });
-    }
-
-
-    res.json(result);
-  });
-});
-
-
 
 module.exports = router;

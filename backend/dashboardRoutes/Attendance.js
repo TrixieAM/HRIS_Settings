@@ -1,6 +1,6 @@
+const db = require('../db');
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql2');
 const jwt = require('jsonwebtoken'); // add this near the top
 
 function authenticateToken(req, res, next) {
@@ -23,15 +23,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 function logAudit(
   user,

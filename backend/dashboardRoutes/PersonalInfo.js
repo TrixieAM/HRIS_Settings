@@ -1,19 +1,10 @@
+const db = require("../db");
 const express = require("express");
 const router = express.Router();
-const mysql = require("mysql2");
 
 
 
-//MYSQL CONNECTION
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 
 

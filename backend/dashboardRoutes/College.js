@@ -1,6 +1,6 @@
+const db = require("../db");
 const express = require("express");
 const multer = require("multer");
-const mysql = require("mysql2");
 
 const fs = require("fs"); // Import file system module
 const xlsx = require("xlsx");
@@ -8,16 +8,7 @@ const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 
-//MYSQL CONNECTION
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 
 router.get("/data", (req, res) => {

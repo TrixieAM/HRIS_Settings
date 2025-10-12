@@ -1,6 +1,6 @@
+const db = require('./db');
 const express = require('express');
 const multer = require('multer');
-const mysql = require('mysql2');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -196,17 +196,7 @@ const getDbHost = () => {
   }
 };
 
-//MYSQL CONNECTION
-const db = mysql.createPool({
-  host: getDbHost(),
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'HRIST',
-  password: process.env.DB_PASSWORD || '123',
-  database: process.env.DB_NAME || 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 const ensureAuditLogTableSQL = `
   CREATE TABLE IF NOT EXISTS audit_log (
@@ -730,14 +720,11 @@ app.post('/register', async (req, res) => {
     email,
     password,
     employeeNumber,
-    employmentCategory, // ✅ include from frontend
+    employmentCategory,
   } = req.body;
 
   try {
-    // Hash the password
     const hashedPass = await bcrypt.hash(password, 10);
-
-    // Build full name
     const fullName = [
       firstName,
       middleName || '',
@@ -747,7 +734,6 @@ app.post('/register', async (req, res) => {
       .filter(Boolean)
       .join(' ');
 
-    // Check if employee number already exists
     const checkQuery = `
       SELECT employeeNumber FROM users WHERE employeeNumber = ? 
       UNION 
@@ -771,28 +757,28 @@ app.post('/register', async (req, res) => {
             .send({ error: 'Employee number already exists' });
         }
 
-        // ✅ Insert into users table (use selected employmentCategory)
+        // ✅ Insert into users table
         const userQuery = `
-        INSERT INTO users (
-          email,
-          role,
-          password,
-          employeeNumber,
-          employmentCategory,
-          access_level,
-          username
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
+          INSERT INTO users (
+            email,
+            role,
+            password,
+            employeeNumber,
+            employmentCategory,
+            access_level,
+            username
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
 
         db.query(
           userQuery,
           [
             email,
-            'staff', // default role
+            'staff',
             hashedPass,
             employeeNumber,
-            employmentCategory ?? 0, // ✅ use frontend dropdown value, default 0
-            'user', // default access_level
+            employmentCategory ?? 0,
+            'user',
             fullName,
           ],
           (err) => {
@@ -805,14 +791,14 @@ app.post('/register', async (req, res) => {
 
             // ✅ Insert into person_table
             const personQuery = `
-            INSERT INTO person_table (
-              firstName,
-              middleName,
-              lastName,
-              nameExtension,
-              agencyEmployeeNum
-            ) VALUES (?, ?, ?, ?, ?)
-          `;
+              INSERT INTO person_table (
+                firstName,
+                middleName,
+                lastName,
+                nameExtension,
+                agencyEmployeeNum
+              ) VALUES (?, ?, ?, ?, ?)
+            `;
 
             db.query(
               personQuery,
@@ -829,24 +815,18 @@ app.post('/register', async (req, res) => {
                   // Clean up user record if person insert fails
                   const cleanupQuery =
                     'DELETE FROM users WHERE employeeNumber = ?';
-                  db.query(cleanupQuery, [employeeNumber], (cleanupErr) => {
-                    if (cleanupErr) {
-                      console.error(
-                        'Error cleaning up user record:',
-                        cleanupErr
-                      );
-                    }
-                  });
+                  db.query(cleanupQuery, [employeeNumber]);
                   return res
                     .status(500)
                     .send({ error: 'Failed to create person record' });
                 }
 
-                // ✅ Automatically insert into employment_category table
+                // ✅ ✅ INSERT INTO employment_category table
                 const empCatQuery = `
-                INSERT INTO employment_category (employeeNumber, employmentCategory)
-                VALUES (?, ?)
-              `;
+                  INSERT INTO employment_category (employeeNumber, employmentCategory)
+                  VALUES (?, ?)
+                `;
+                
                 db.query(
                   empCatQuery,
                   [employeeNumber, employmentCategory ?? 0],
@@ -856,7 +836,12 @@ app.post('/register', async (req, res) => {
                         'Error inserting into employment_category:',
                         catErr
                       );
-                      // We won’t fail registration for this, just log it
+                      // Rollback previous inserts
+                      db.query('DELETE FROM person_table WHERE agencyEmployeeNum = ?', [employeeNumber]);
+                      db.query('DELETE FROM users WHERE employeeNumber = ?', [employeeNumber]);
+                      return res.status(500).send({ 
+                        error: 'Failed to create employment category record' 
+                      });
                     }
 
                     res
@@ -892,7 +877,6 @@ app.post('/excel-register', async (req, res) => {
       users.map(
         (user) =>
           new Promise((resolve) => {
-            // Build full name
             const fullName = [
               user.firstName,
               user.middleName || '',
@@ -901,6 +885,14 @@ app.post('/excel-register', async (req, res) => {
             ]
               .filter(Boolean)
               .join(' ');
+
+            // Validate employmentCategory
+            if (user.employmentCategory !== '0' && user.employmentCategory !== '1') {
+              errors.push(
+                `Invalid employmentCategory for ${user.employeeNumber}: Must be '0' (JO) or '1' (Regular)`
+              );
+              return resolve();
+            }
 
             // Check if employee number already exists
             const queryCheck = `
@@ -929,16 +921,16 @@ app.post('/excel-register', async (req, res) => {
 
                 // Insert into users
                 const userQuery = `
-                INSERT INTO users (
-                  email,
-                  role,
-                  password,
-                  employeeNumber,
-                  employmentCategory,
-                  access_level,
-                  username
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-              `;
+                  INSERT INTO users (
+                    email,
+                    role,
+                    password,
+                    employeeNumber,
+                    employmentCategory,
+                    access_level,
+                    username
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
 
                 db.query(
                   userQuery,
@@ -947,7 +939,7 @@ app.post('/excel-register', async (req, res) => {
                     'staff',
                     bcrypt.hashSync(user.password, 10),
                     user.employeeNumber,
-                    '0',
+                    user.employmentCategory,
                     'user',
                     fullName,
                   ],
@@ -961,14 +953,14 @@ app.post('/excel-register', async (req, res) => {
 
                     // Insert into person_table
                     const personQuery = `
-                  INSERT INTO person_table (
-                    firstName,
-                    middleName,
-                    lastName,
-                    nameExtension,
-                    agencyEmployeeNum
-                  ) VALUES (?, ?, ?, ?, ?)
-                `;
+                      INSERT INTO person_table (
+                        firstName,
+                        middleName,
+                        lastName,
+                        nameExtension,
+                        agencyEmployeeNum
+                      ) VALUES (?, ?, ?, ?, ?)
+                    `;
 
                     db.query(
                       personQuery,
@@ -984,30 +976,39 @@ app.post('/excel-register', async (req, res) => {
                           errors.push(
                             `Error inserting person ${user.employeeNumber}: ${err.message}`
                           );
-                          // Clean up user record if person insert fails
-                          const cleanupQuery =
-                            'DELETE FROM users WHERE employeeNumber = ?';
-                          db.query(
-                            cleanupQuery,
-                            [user.employeeNumber],
-                            (cleanupErr) => {
-                              if (cleanupErr) {
-                                console.error(
-                                  'Error cleaning up user record:',
-                                  cleanupErr
-                                );
-                              }
-                            }
-                          );
+                          // Clean up user record
+                          db.query('DELETE FROM users WHERE employeeNumber = ?', [user.employeeNumber]);
                           return resolve();
                         }
 
-                        results.push({
-                          employeeNumber: user.employeeNumber,
-                          name: fullName,
-                          status: 'success',
-                        });
-                        resolve();
+                        // ✅ ✅ INSERT INTO employment_category table
+                        const empCatQuery = `
+                          INSERT INTO employment_category (employeeNumber, employmentCategory)
+                          VALUES (?, ?)
+                        `;
+                        
+                        db.query(
+                          empCatQuery,
+                          [user.employeeNumber, user.employmentCategory],
+                          (catErr) => {
+                            if (catErr) {
+                              errors.push(
+                                `Error inserting employment category ${user.employeeNumber}: ${catErr.message}`
+                              );
+                              // Rollback
+                              db.query('DELETE FROM person_table WHERE agencyEmployeeNum = ?', [user.employeeNumber]);
+                              db.query('DELETE FROM users WHERE employeeNumber = ?', [user.employeeNumber]);
+                              return resolve();
+                            }
+
+                            results.push({
+                              employeeNumber: user.employeeNumber,
+                              name: fullName,
+                              status: 'success',
+                            });
+                            resolve();
+                          }
+                        );
                       }
                     );
                   }
@@ -3279,83 +3280,7 @@ app.delete('/api/philhealth/:id', (req, res) => {
   });
 });
 
-// BULK REGISTER
-app.post('/excel-register', async (req, res) => {
-  const { users } = req.body;
 
-  if (!Array.isArray(users) || users.length === 0) {
-    return res.status(400).json({ message: 'No users data provided' });
-  }
-
-  const results = [];
-  const errors = [];
-
-  try {
-    await Promise.all(
-      users.map(
-        (user) =>
-          new Promise((resolve) => {
-            const queryCheck = 'SELECT * FROM users WHERE employeeNumber = ?';
-            db.query(queryCheck, [user.employeeNumber], (err, existingUser) => {
-              if (err) {
-                errors.push(
-                  `Error checking user ${user.employeeNumber}: ${err.message}`
-                );
-                return resolve();
-              }
-
-              if (existingUser.length > 0) {
-                errors.push(
-                  `Employee number ${user.employeeNumber} already exists`
-                );
-                return resolve();
-              }
-
-              const hashedPassword = bcrypt.hashSync(user.password, 10);
-              const queryInsert =
-                'INSERT INTO users (username, email, role, password, employeeNumber, employmentCategory, access_level) VALUES (?, ?, ?, ?, ?, ?, ?)';
-
-              db.query(
-                queryInsert,
-                [
-                  user.username,
-                  user.email,
-                  'staff',
-                  hashedPassword,
-                  user.employeeNumber,
-                  '0',
-                  'user',
-                ],
-                (err) => {
-                  if (err) {
-                    errors.push(
-                      `Error processing user ${user.employeeNumber}: ${err.message}`
-                    );
-                  } else {
-                    results.push({
-                      employeeNumber: user.employeeNumber,
-                      username: user.username,
-                      status: 'success',
-                    });
-                  }
-                  resolve();
-                }
-              );
-            });
-          })
-      )
-    );
-
-    // Send final results AFTER all queries are processed
-    res.json({
-      message: 'Bulk registration completed',
-      successful: results,
-      errors: errors,
-    });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
 
 // app.listen(5000, () => {
 //   console.log('Server runnning');

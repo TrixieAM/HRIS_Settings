@@ -1,5 +1,5 @@
+const db = require("../db");
 const express = require('express');
-const mysql = require('mysql2');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 
@@ -75,16 +75,7 @@ function logAudit(
 }
 
 
-//MYSQL CONNECTION
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 
 // Test endpoint to verify authentication

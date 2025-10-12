@@ -1,7 +1,6 @@
-
+const db = require("../db");
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql2');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -12,16 +11,6 @@ require('dotenv').config();
 const upload = multer({ storage: multer.memoryStorage() });
 
 
-// MYSQL CONNECTION
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
 
 
 // Authentication middleware

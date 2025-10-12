@@ -1,21 +1,12 @@
+const db = require("../db");
 const express = require("express");
 const multer = require("multer");
 const xlsx = require("xlsx");
 const fs = require("fs"); // Import file system module
-const mysql = require("mysql2"); // install this on the node modules of the front end
 const router = express.Router();
 
 
-//MYSQL CONNECTION
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 
 // CRUD routes (e.g., Create, Read, Update, Delete)

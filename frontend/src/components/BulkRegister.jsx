@@ -62,81 +62,96 @@ const BulkRegister = () => {
   // ACCESSING END
 
   // Handle file upload and parse Excel
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-        // Validate required columns exist
-        if (worksheet.length === 0) {
-          setErrMessage("Excel file is empty.");
-          return;
-        }
-
-        const firstRow = worksheet[0];
-        const requiredFields = ['employeeNumber', 'firstName', 'lastName', 'email', 'password'];
-        const missingFields = requiredFields.filter(field => !(field in firstRow));
-        
-        if (missingFields.length > 0) {
-          setErrMessage(`Missing required columns: ${missingFields.join(', ')}. Expected columns: employeeNumber, firstName, lastName, email, password, middleName (optional), nameExtension (optional)`);
-          return;
-        }
-
-        // Process users with validation
-        const processedUsers = worksheet.map((user, index) => {
-          // Clean up the user data
-          const processedUser = {
-            firstName: user.firstName?.toString().trim() || "",
-            middleName: user.middleName?.toString().trim() || null,
-            lastName: user.lastName?.toString().trim() || "",
-            nameExtension: user.nameExtension?.toString().trim() || null,
-            email: user.email?.toString().trim() || "",
-            employeeNumber: user.employeeNumber?.toString().trim() || "",
-            password: user.password?.toString().trim() || "",
-            role: "staff",
-            employmentCategory: "0",
-            access_level: "user"
-          };
-
-          return processedUser;
-        });
-
-        // Basic validation
-        const validationErrors = [];
-        processedUsers.forEach((user, index) => {
-          if (!user.firstName || !user.lastName || !user.email || !user.employeeNumber || !user.password) {
-            validationErrors.push(`Row ${index + 2}: Missing required fields`);
-          }
-          
-          // Email format validation
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (user.email && !emailRegex.test(user.email)) {
-            validationErrors.push(`Row ${index + 2}: Invalid email format`);
-          }
-        });
-
-        if (validationErrors.length > 0) {
-          setErrMessage(`Validation errors found:\n${validationErrors.slice(0, 5).join('\n')}${validationErrors.length > 5 ? '\n...and more' : ''}`);
-          return;
-        }
-
-        setUsers(processedUsers);
-        setErrMessage("");
-        
-      } catch (error) {
-        console.error("Error parsing Excel file:", error);
-        setErrMessage("Error parsing Excel file. Please check the file format.");
+      // Validate required columns exist
+      if (worksheet.length === 0) {
+        setErrMessage("Excel file is empty.");
+        return;
       }
-    };
-    reader.readAsArrayBuffer(file);
+
+      const firstRow = worksheet[0];
+      const requiredFields = ['employeeNumber', 'firstName', 'lastName', 'employmentCategory', 'email', 'password'];
+      const missingFields = requiredFields.filter(field => !(field in firstRow));
+      
+      if (missingFields.length > 0) {
+        setErrMessage(`Missing required columns: ${missingFields.join(', ')}. Expected columns: employeeNumber, firstName, lastName, employmentCategory, email, password, middleName (optional), nameExtension (optional)`);
+        return;
+      }
+
+      // Process users with validation
+      const processedUsers = worksheet.map((user, index) => {
+        // Normalize employmentCategory
+        let employmentCategory = user.employmentCategory?.toString().trim().toLowerCase() || "";
+        let employmentCategoryValue = "";
+        
+        if (employmentCategory === "regular") {
+          employmentCategoryValue = "1";
+        } else if (employmentCategory === "jo") {
+          employmentCategoryValue = "0";
+        }
+
+        // Clean up the user data
+        const processedUser = {
+          firstName: user.firstName?.toString().trim() || "",
+          middleName: user.middleName?.toString().trim() || null,
+          lastName: user.lastName?.toString().trim() || "",
+          nameExtension: user.nameExtension?.toString().trim() || null,
+          employmentCategory: employmentCategoryValue,
+          email: user.email?.toString().trim() || "",
+          employeeNumber: user.employeeNumber?.toString().trim() || "",
+          password: user.password?.toString().trim() || "",
+          role: "staff",
+          access_level: "user"
+        };
+
+        return processedUser;
+      });
+
+      // Basic validation
+      const validationErrors = [];
+      processedUsers.forEach((user, index) => {
+        if (!user.firstName || !user.lastName || !user.email || !user.employeeNumber || !user.password) {
+          validationErrors.push(`Row ${index + 2}: Missing required fields`);
+        }
+        
+        // Employment category validation
+        if (!user.employmentCategory) {
+          validationErrors.push(`Row ${index + 2}: Invalid employmentCategory. Must be 'Regular' or 'JO'`);
+        }
+        
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (user.email && !emailRegex.test(user.email)) {
+          validationErrors.push(`Row ${index + 2}: Invalid email format`);
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        setErrMessage(`Validation errors found:\n${validationErrors.slice(0, 5).join('\n')}${validationErrors.length > 5 ? '\n...and more' : ''}`);
+        return;
+      }
+
+      setUsers(processedUsers);
+      setErrMessage("");
+      
+    } catch (error) {
+      console.error("Error parsing Excel file:", error);
+      setErrMessage("Error parsing Excel file. Please check the file format.");
+    }
   };
+  reader.readAsArrayBuffer(file);
+};
 
   // Handle register via backend
   const handleRegister = async () => {
@@ -235,7 +250,7 @@ const BulkRegister = () => {
             textAlign: "left",
             backgroundColor: "#f5e6e6", 
             color: "#6d2323", 
-            border: "1px solid #e0c4c4", 
+            border: "1px solid #e0c4c4",
             "& .MuiAlert-icon": {
               color: "#6d2323"
             }
@@ -249,7 +264,7 @@ const BulkRegister = () => {
             <Typography variant="body2" sx={{ mb: 1 }}>
               <b>Required columns:</b>
               <Box sx={{ mt: 0.5 }}>
-                {['employeeNumber', 'firstName', 'lastName', 'email', 'password'].map((field) => (
+                {['employeeNumber', 'firstName', 'lastName', 'employmentCategory', 'email', 'password'].map((field) => (
                   <Chip 
                     key={field} 
                     label={field} 
@@ -283,7 +298,10 @@ const BulkRegister = () => {
                 ))}
               </Box>
             </Typography>
-            <Typography variant="body2" sx={{ mt: 1, fontStyle: "italic" }}>
+            <Typography variant="body2" sx={{ mt: 1, fontStyle: "italic", color: "#c62828" }}>
+              <b>Note:</b> employmentCategory must be either "Regular" or "JO"
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, fontStyle: "italic" }}>
               Make sure the first row contains these column headers exactly as shown.
             </Typography>
           </Box>

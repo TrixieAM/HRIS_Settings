@@ -1,22 +1,9 @@
-// ========================================
-// BACKEND: EmploymentCategoryRoutes.js
-// ========================================
-
+const db = require("../db");
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
 
-// MYSQL CONNECTION
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'HRIST',
-  password: '123',
-  database: 'earist_hris',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
@@ -143,6 +130,194 @@ router.get(
   }
 );
 
+
+router.get(
+  '/employment-category/search/:searchTerm',
+  authenticateToken,
+  (req, res) => {
+    const { searchTerm } = req.params;
+
+    if (!searchTerm || searchTerm.trim() === '') {
+      return res.status(400).json({ error: 'Search term is required' });
+    }
+
+    const sql = `
+      SELECT 
+        ec.id,
+        ec.employeeNumber,
+        ec.employmentCategory,
+        CONCAT_WS(', ', pt.lastName, CONCAT_WS(' ', pt.firstName, pt.middleName, pt.nameExtension)) AS employeeName,
+        CASE 
+          WHEN ec.employmentCategory = 0 THEN 'Job Order'
+          WHEN ec.employmentCategory = 1 THEN 'Regular'
+          ELSE 'Unknown'
+        END AS categoryLabel
+      FROM employment_category ec
+      LEFT JOIN person_table pt ON pt.agencyEmployeeNum = ec.employeeNumber
+      WHERE ec.employeeNumber LIKE ? 
+         OR pt.lastName LIKE ?
+         OR pt.firstName LIKE ?
+         OR pt.middleName LIKE ?
+         OR CONCAT(pt.firstName, ' ', pt.lastName) LIKE ?
+         OR CONCAT(pt.lastName, ' ', pt.firstName) LIKE ?
+      ORDER BY ec.employeeNumber ASC
+    `;
+
+    const searchPattern = `%${searchTerm}%`;
+
+    db.query(
+      sql,
+      [
+        searchPattern, 
+        searchPattern, 
+        searchPattern, 
+        searchPattern,
+        searchPattern,
+        searchPattern
+      ],
+      (err, results) => {
+        if (err) {
+          console.error('Error searching employment categories:', err);
+          return res
+            .status(500)
+            .json({ message: 'Error searching employment categories' });
+        }
+
+        // Log audit trail
+        logAudit(req.user, 'search', 'employment_category', null, searchTerm);
+        
+        res.json(results);
+      }
+    );
+  }
+);
+
+// ========================================
+// COMPLETE UPDATE ROUTE - Update employment category
+// ========================================
+router.put('/employment-category/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { employeeNumber, employmentCategory } = req.body;
+
+  // Validation
+  if (!employeeNumber) {
+    return res.status(400).json({ error: 'Employee number is required' });
+  }
+
+  if (employmentCategory !== 0 && employmentCategory !== 1) {
+    return res.status(400).json({
+      error: 'Employment category must be 0 (Job Order) or 1 (Regular)',
+    });
+  }
+
+  // Check if record exists
+  const checkSql = `SELECT employeeNumber FROM employment_category WHERE id = ?`;
+
+  db.query(checkSql, [id], (err, results) => {
+    if (err) {
+      console.error('Error checking record:', err);
+      return res.status(500).json({ message: 'Error checking record' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Employment category not found' });
+    }
+
+    const oldEmployeeNumber = results[0].employeeNumber;
+
+    // Check for duplicate if changing employee number
+    if (oldEmployeeNumber !== employeeNumber) {
+      const duplicateCheckSql = `SELECT id FROM employment_category WHERE employeeNumber = ? AND id != ?`;
+
+      db.query(
+        duplicateCheckSql,
+        [employeeNumber, id],
+        (err, duplicateResults) => {
+          if (err) {
+            console.error('Error checking duplicate:', err);
+            return res
+              .status(500)
+              .json({ message: 'Error checking duplicate' });
+          }
+
+          if (duplicateResults.length > 0) {
+            return res.status(409).json({
+              error: 'Employment category already exists for this employee',
+            });
+          }
+
+          // No duplicate found, proceed with update
+          performUpdate();
+        }
+      );
+    } else {
+      // Employee number not changed, proceed with update
+      performUpdate();
+    }
+
+    // Function to perform the actual update
+    function performUpdate() {
+      const updateSql = `
+        UPDATE employment_category 
+        SET employeeNumber = ?, employmentCategory = ?
+        WHERE id = ?
+      `;
+
+      db.query(
+        updateSql,
+        [employeeNumber, employmentCategory, id],
+        (err, result) => {
+          if (err) {
+            console.error('Error updating employment category:', err);
+            return res
+              .status(500)
+              .json({ message: 'Error updating employment category' });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Employment category not found' });
+          }
+
+          // ✅ SYNC: Also update users table
+          const updateUsersSql = `
+            UPDATE users 
+            SET employmentCategory = ? 
+            WHERE employeeNumber = ?
+          `;
+          
+          db.query(
+            updateUsersSql,
+            [employmentCategory, employeeNumber],
+            (updateErr, updateResult) => {
+              if (updateErr) {
+                console.error('Error updating users table:', updateErr);
+                // Don't fail the whole operation, just log the error
+                // You might want to handle this differently based on your requirements
+              }
+
+              // Log audit trail
+              logAudit(
+                req.user,
+                'update',
+                'employment_category',
+                id,
+                employeeNumber
+              );
+              
+              // Send success response
+              res.json({
+                message: 'Employment category updated successfully',
+                id,
+                employeeNumber,
+                employmentCategory,
+              });
+            }
+          );
+        }
+      );
+    }
+  });
+});
 // ========================================
 // CREATE - Add new employment category
 // ========================================
@@ -255,11 +430,9 @@ router.put('/employment-category/:id', authenticateToken, (req, res) => {
   }
 
   if (employmentCategory !== 0 && employmentCategory !== 1) {
-    return res
-      .status(400)
-      .json({
-        error: 'Employment category must be 0 (Job Order) or 1 (Regular)',
-      });
+    return res.status(400).json({
+      error: 'Employment category must be 0 (Job Order) or 1 (Regular)',
+    });
   }
 
   // Check if record exists
@@ -293,20 +466,21 @@ router.put('/employment-category/:id', authenticateToken, (req, res) => {
           }
 
           if (duplicateResults.length > 0) {
-            return res
-              .status(409)
-              .json({
-                error: 'Employment category already exists for this employee',
-              });
+            return res.status(409).json({
+              error: 'Employment category already exists for this employee',
+            });
           }
 
+          // No duplicate found, proceed with update
           performUpdate();
         }
       );
     } else {
+      // Employee number not changed, proceed with update
       performUpdate();
     }
 
+    // Function to perform the actual update
     function performUpdate() {
       const updateSql = `
         UPDATE employment_category 
@@ -325,31 +499,45 @@ router.put('/employment-category/:id', authenticateToken, (req, res) => {
               .json({ message: 'Error updating employment category' });
           }
 
-          // Also update users table
-          const updateUsersSql = `UPDATE users SET employmentCategory = ? WHERE employeeNumber = ?`;
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Employment category not found' });
+          }
+
+          // ✅ SYNC: Also update users table
+          const updateUsersSql = `
+            UPDATE users 
+            SET employmentCategory = ? 
+            WHERE employeeNumber = ?
+          `;
+          
           db.query(
             updateUsersSql,
             [employmentCategory, employeeNumber],
-            (updateErr) => {
+            (updateErr, updateResult) => {
               if (updateErr) {
                 console.error('Error updating users table:', updateErr);
+                // Don't fail the whole operation, just log the error
+                // You might want to handle this differently based on your requirements
               }
+
+              // Log audit trail
+              logAudit(
+                req.user,
+                'update',
+                'employment_category',
+                id,
+                employeeNumber
+              );
+              
+              // Send success response
+              res.json({
+                message: 'Employment category updated successfully',
+                id,
+                employeeNumber,
+                employmentCategory,
+              });
             }
           );
-
-          logAudit(
-            req.user,
-            'update',
-            'employment_category',
-            id,
-            employeeNumber
-          );
-          res.json({
-            message: 'Employment category updated successfully',
-            id,
-            employeeNumber,
-            employmentCategory,
-          });
         }
       );
     }
@@ -357,12 +545,17 @@ router.put('/employment-category/:id', authenticateToken, (req, res) => {
 });
 
 // ========================================
-// DELETE - Delete employment category
+// COMPLETE DELETE ROUTE - Delete employment category
 // ========================================
 router.delete('/employment-category/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
-  // Get employee number before deleting
+  // Validate ID
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid ID provided' });
+  }
+
+  // Get employee number before deleting (needed for audit log)
   const getEmployeeNumberSql = `SELECT employeeNumber FROM employment_category WHERE id = ?`;
 
   db.query(getEmployeeNumberSql, [id], (err, results) => {
@@ -377,7 +570,7 @@ router.delete('/employment-category/:id', authenticateToken, (req, res) => {
 
     const employeeNumber = results[0].employeeNumber;
 
-    // Delete record
+    // Delete the record from employment_category table
     const deleteSql = `DELETE FROM employment_category WHERE id = ?`;
 
     db.query(deleteSql, [id], (err, result) => {
@@ -388,58 +581,36 @@ router.delete('/employment-category/:id', authenticateToken, (req, res) => {
           .json({ message: 'Error deleting employment category' });
       }
 
-      logAudit(req.user, 'delete', 'employment_category', id, employeeNumber);
-      res.json({ message: 'Employment category deleted successfully' });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Employment category not found' });
+      }
+
+      // ✅ SYNC: Set employmentCategory to NULL (or 0) in users table
+      // You can choose NULL or a default value like 0
+      const updateUsersSql = `
+        UPDATE users 
+        SET employmentCategory = NULL 
+        WHERE employeeNumber = ?
+      `;
+      
+      db.query(updateUsersSql, [employeeNumber], (updateErr, updateResult) => {
+        if (updateErr) {
+          console.error('Error updating users table:', updateErr);
+          // Log the error but don't fail the delete operation
+        }
+
+        // Log audit trail
+        logAudit(req.user, 'delete', 'employment_category', id, employeeNumber);
+        
+        // Send success response
+        res.json({ 
+          message: 'Employment category deleted successfully',
+          deletedId: id,
+          employeeNumber: employeeNumber
+        });
+      });
     });
   });
 });
-
-// ========================================
-// SEARCH - Search employment categories
-// ========================================
-router.get(
-  '/employment-category/search/:searchTerm',
-  authenticateToken,
-  (req, res) => {
-    const { searchTerm } = req.params;
-
-    const sql = `
-    SELECT 
-      ec.id,
-      ec.employeeNumber,
-      ec.employmentCategory,
-      CONCAT_WS(', ', pt.lastName, CONCAT_WS(' ', pt.firstName, pt.middleName, pt.nameExtension)) AS employeeName,
-      CASE 
-        WHEN ec.employmentCategory = 0 THEN 'Job Order'
-        WHEN ec.employmentCategory = 1 THEN 'Regular'
-        ELSE 'Unknown'
-      END AS categoryLabel
-    FROM employment_category ec
-    LEFT JOIN person_table pt ON pt.agencyEmployeeNum = ec.employeeNumber
-    WHERE ec.employeeNumber LIKE ? 
-       OR pt.lastName LIKE ?
-       OR pt.firstName LIKE ?
-    ORDER BY ec.employeeNumber ASC
-  `;
-
-    const searchPattern = `%${searchTerm}%`;
-
-    db.query(
-      sql,
-      [searchPattern, searchPattern, searchPattern],
-      (err, results) => {
-        if (err) {
-          console.error('Error searching employment categories:', err);
-          return res
-            .status(500)
-            .json({ message: 'Error searching employment categories' });
-        }
-
-        logAudit(req.user, 'search', 'employment_category', null, searchTerm);
-        res.json(results);
-      }
-    );
-  }
-);
 
 module.exports = router;

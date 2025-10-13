@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import {
   Notifications as NotificationsIcon, ArrowDropDown as ArrowDropDownIcon, AccessTime, Receipt, ContactPage, UploadFile, Person, GroupAdd, TransferWithinAStation, Group, Pages, ReceiptLong, AcUnit, TrendingUp, TrendingDown, ArrowForward, PlayArrow, Pause, MoreVert,
-  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Event, Schedule, Lock, Star, Upgrade, Add, Close, Money, Work, Assessment, Timeline, Delete, Edit
+  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Event, Schedule, Lock, Star, Upgrade, Add, Close, Money, Work, Assessment, Timeline, Delete, Edit, Build
 } from "@mui/icons-material";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -51,97 +51,89 @@ const STAT_CARDS = [
     label: "Total Employees",
     valueKey: "employees",
     defaultValue: 0,
-    textValue: "Active workforce",
+    textValue: "Total Employees",
     icon: <PeopleIcon />,
     gradient: primaryGradient,
     shadow: cardShadow,
     trend: "+5%",
     trendUp: true,
-    subtitle: "Currently registered",
   },
   {
     label: "Present Today",
     valueKey: "todayAttendance",
     defaultValue: 0,
-    textValue: "On time",
+    textValue: "Today's Attendance",
     icon: <EventAvailableIcon />,
     gradient: primaryHoverGradient,
     shadow: cardShadow,
     trend: "+12%",
     trendUp: true,
-    subtitle: "Currently present",
   },
   {
     label: "Pending Payroll",
     valueKey: "pendingPayroll",
     defaultValue: 0,
-    textValue: "Awaiting approval",
+    textValue: "Payroll Processing",
     icon: <PendingActionsIcon />,
     gradient: "linear-gradient(135deg, #800020, #A52A2A)",
     shadow: cardShadow,
     trend: "-8%",
     trendUp: false,
-    subtitle: "To be processed",
   },
   {
     label: "Processed Payroll",
     valueKey: "processedPayroll",
     defaultValue: 0,
-    textValue: "Completed this month",
+    textValue: "Payroll Processed",
     icon: <WorkHistoryIcon />,
     gradient: "linear-gradient(135deg, #6A0DAD, #8A2BE2)",
     shadow: cardShadow,
     trend: "+6%",
     trendUp: true,
-    subtitle: "Successfully processed",
   },
   {
     label: "Released Payslips",
     valueKey: "payslipCount",
     defaultValue: 0,
-    textValue: "Distributed",
+    textValue: "Payslip Released",
     icon: <ReceiptLongIcon />,
     gradient: "linear-gradient(135deg, #FF7F50, #FF6347)",
     shadow: cardShadow,
     trend: "+2%",
     trendUp: true,
-    subtitle: "Payslips sent",
   },
   {
     label: "Leave Requests",
     valueKey: "leaveRequests",
     defaultValue: 0,
-    textValue: "Pending review",
+    textValue: "Coming Soon!",
     icon: <BeachAccessIcon />,
     gradient: "linear-gradient(135deg, #A52A2A, #800020)",
     shadow: cardShadow,
     trend: "+3%",
     trendUp: true,
-    subtitle: "Awaiting action",
   },
   {
     label: "Leave Pending",
     valueKey: "leavePending",
     defaultValue: 0,
-    textValue: "In queue",
+    textValue: "Coming Soon!",
     icon: <HourglassBottomIcon />,
     gradient: "linear-gradient(135deg, #FF4500, #FF6347)",
     shadow: cardShadow,
     trend: "-4%",
     trendUp: false,
-    subtitle: "Awaiting decision",
   },
   {
     label: "Leave Approved",
     valueKey: "leaveApproved",
     defaultValue: 0,
-    textValue: "Confirmed",
+    textValue: "Coming Soon!",
     icon: <CheckCircleIcon />,
     gradient: "linear-gradient(135deg, #228B22, #32CD32)",
     shadow: cardShadow,
     trend: "+9%",
     trendUp: true,
-    subtitle: "Approved leaves",
   },
 ];
 
@@ -1457,12 +1449,13 @@ const TaskList = () => {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             onClick={() => setAddTaskOpen(false)}
-            variant="outlined"
+            variant="contained"
             sx={{
               borderRadius: 2,
               textTransform: "none",
               fontWeight: 500,
-              color: darkText,
+              color: "#FFFFFF",
+              bgcolor: '#000000'
             }}
           >
             Cancel
@@ -2186,8 +2179,33 @@ const AdminHome = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <CompactChart title="Leave Distribution" height={200}>
-                    <ResponsiveContainer width="100%" height="100%">
+                <CompactChart title="Leave Distribution" height={200}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        textAlign: "center",
+                        color: "#6d2323",
+                        animation: "fadeInOut 2.5s ease-in-out infinite",
+                      }}
+                    >
+                      <Build sx={{ fontSize: 48, mb: 1, opacity: 0.8 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: "bold",
+                          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+                          letterSpacing: "1px",
+                        }}
+                      >
+                        Coming Soon
+                      </Typography>
+                    </Box>
+
+                    {/* <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie 
                           data={leaveDistributionData} 
@@ -2203,7 +2221,16 @@ const AdminHome = () => {
                         </Pie>
                         <RechartTooltip />
                       </PieChart>
-                    </ResponsiveContainer>
+                    </ResponsiveContainer> */}
+
+                    <style>
+                      {`
+                        @keyframes fadeInOut {
+                          0%, 100% { opacity: 1; transform: scale(1); }
+                          50% { opacity: 0.6; transform: scale(1.05); }
+                        }
+                      `}
+                    </style>
                   </CompactChart>
                 </Grid>
               </Grid>

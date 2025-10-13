@@ -807,7 +807,7 @@ const Home = () => {
                     { label: "DTR", link: "/daily_time_record", icon: <AccessTime /> },
                     { label: "PDS", link: "/pds1", icon: <ContactPage /> },
                     { label: "Payslip", link: "/payslip", icon: <Receipt /> },
-                    { label: "Leave", link: "/leave-request-user", icon: <UploadFile /> },
+                    // { label: "Leave", link: "/leave-request-user", icon: <UploadFile /> },
                     { label: "Attendance", link: "/attendance-user-state", icon: <Person /> },
                   ].map((item, i) => (
                     <Grid item xs={6} key={i}>

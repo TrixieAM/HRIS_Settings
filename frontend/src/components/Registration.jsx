@@ -39,6 +39,7 @@ import {
   Settings,
   CheckCircle,
   Close,
+  WorkOutline,
 } from '@mui/icons-material';
 import AccessDenied from './AccessDenied';
 import { CategoryOutlined } from '@mui/icons-material';
@@ -898,88 +899,145 @@ const Registration = () => {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="employmentCategory-label">
-                    Employment Category
-                  </InputLabel>
-                  <Select
-                    labelId="employmentCategory-label"
-                    name="employmentCategory"
-                    value={formData.employmentCategory || 0}
-                    label="Employment Category"
-                    onChange={handleChanges}
-                  >
-                    <MenuItem value={0}>Job Order</MenuItem>
-                    <MenuItem value={1}>Regular</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  name="employeeNumber"
-                  label="Employee Number *"
-                  type="number"
-                  fullWidth
-                  value={formData.employeeNumber}
-                  onChange={handleChanges}
-                  onFocus={() => setFocusedField('employeeNumber')}
-                  onBlur={() => setFocusedField(null)}
-                  InputLabelProps={{
-                    required: false,
-                    sx: { fontWeight: 600 },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <BadgeOutlined
-                          sx={{
-                            color:
-                              focusedField === 'employeeNumber'
-                                ? '#6d2323'
-                                : '#8a4747',
-                            transition: 'color 0.3s ease',
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button':
-                      {
+              <Grid container spacing={5}>
+                <Grid item xs={12} sm={6}>
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      mt: 2.5,
+                      ml: 2.5,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#8a4747',
+                          borderWidth: 2,
+                        },
+                        '&.Mui-focused': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(109, 35, 35, 0.15)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#6d2323',
+                          borderWidth: 2,
+                        },
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: '#6d2323',
+                        fontWeight: 700,
+                      },
+                    }}
+                  >
+                    <InputLabel
+                      id="employmentCategory-label"
+                      sx={{
+                        fontWeight: 600,
+                      }}
+                    >
+                      Employment Category *
+                    </InputLabel>
+
+                    <Select
+                      labelId="employmentCategory-label"
+                      name="employmentCategory"
+                      value={formData.employmentCategory || ''}
+                      label="Employment Category"
+                      onChange={handleChanges}
+                      onFocus={() => setFocusedField('employmentCategory')}
+                      onBlur={() => setFocusedField(null)}
+                      startAdornment={
+                        <InputAdornment position="start">
+                          <WorkOutline
+                            sx={{
+                              color:
+                                focusedField === 'employmentCategory'
+                                  ? '#6d2323'
+                                  : '#8a4747',
+                              transition: 'color 0.3s ease',
+                            }}
+                          />
+                        </InputAdornment>
+                      }
+                    >
+                      <MenuItem value={0}>Job Order</MenuItem>
+                      <MenuItem value={1}>Regular</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Employee Number */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="employeeNumber"
+                    label="Employee Number *"
+                    type="number"
+                    fullWidth
+                    value={formData.employeeNumber}
+                    onChange={handleChanges}
+                    onFocus={() => setFocusedField('employeeNumber')}
+                    onBlur={() => setFocusedField(null)}
+                    InputLabelProps={{
+                      required: false,
+                      sx: { fontWeight: 600 },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <BadgeOutlined
+                            sx={{
+                              color:
+                                focusedField === 'employeeNumber'
+                                  ? '#6d2323'
+                                  : '#8a4747',
+                              transition: 'color 0.3s ease',
+                            }}
+                          />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      mt: 2.5,
+                      '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
                         WebkitAppearance: 'none',
                         margin: 0,
                       },
-                    '& input[type=number]': {
-                      MozAppearance: 'textfield',
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
+                      '& input[type=number]': {
+                        MozAppearance: 'textfield',
                       },
-                      '&:hover fieldset': {
-                        borderColor: '#8a4747',
-                        borderWidth: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#8a4747',
+                          borderWidth: 2,
+                        },
+                        '&.Mui-focused': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(109, 35, 35, 0.15)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#6d2323',
+                          borderWidth: 2,
+                        },
                       },
-                      '&.Mui-focused': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(109, 35, 35, 0.15)',
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: '#6d2323',
+                        fontWeight: 700,
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#6d2323',
-                        borderWidth: 2,
-                      },
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: '#6d2323',
-                      fontWeight: 700,
-                    },
-                  }}
-                />
+                    }}
+                  />
+                </Grid>
               </Grid>
+
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   name="password"

@@ -1,6 +1,7 @@
 import API_BASE_URL from '../apiConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -34,10 +35,12 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
   Lock as LockIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import LoadingOverlay from './LoadingOverlay'; // Adjust path as needed
 
 const AuditLogs = () => {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -211,6 +214,11 @@ const AuditLogs = () => {
     }
   };
 
+  const handleCloseDialog = () => {
+    setPasswordDialogOpen(false);
+    navigate('/admin-home'); // Navigate back to home page
+  };
+
   const fetchLogs = async () => {
     try {
       setLoading(true);
@@ -353,12 +361,25 @@ const AuditLogs = () => {
             color: 'white',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
+            justifyContent: 'space-between',
+            p: 2,
           }}
         >
-          <LockIcon />
-          Audit Logs Access
+          <Box display="flex" alignItems="center" justifyContent="center" flex={1}>
+            <LockIcon sx={{ mr: 1 }} />
+            Audit Logs Access
+          </Box>
+          <IconButton
+            onClick={handleCloseDialog}
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
         <DialogContent sx={{ mt: 3 }}>
           <Typography
@@ -381,18 +402,6 @@ const AuditLogs = () => {
             error={!!passwordError}
             helperText={passwordError}
             onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
@@ -478,6 +487,17 @@ const AuditLogs = () => {
               >
                 Logout
               </Button>
+              <IconButton
+                onClick={() => navigate('/')}
+                sx={{
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  },
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
             </Box>
           </Box>
         </Paper>

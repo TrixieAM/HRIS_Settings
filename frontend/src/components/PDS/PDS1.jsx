@@ -471,7 +471,7 @@ const countries = [
 
                         <tr>
                             <td colSpan="2" style={{height:'0.1in', fontSize:'58.6%'}}>
-                                <b> <i> Revised 2017</i></b>
+                                <b> <i> Revised 2025</i></b>
                             </td>
                         </tr>
 
@@ -650,7 +650,7 @@ const countries = [
                 <tr>
                 <td colSpan="3" rowSpan="2" style={{height:'0.25in', fontSize:'58.6%', backgroundColor:'lightgray', border:'1px solid black'}}>
                 3.&emsp;DATE OF BIRTH <br></br>
-                <p> &emsp;&emsp;(mm/dd/yyyy) </p>
+                <p> &emsp;&emsp;(dd/mm/yyyy) </p>
                 </td>
 
 
@@ -659,7 +659,9 @@ const countries = [
 
                 <td colSpan="4" rowSpan="2" style={{height:'0.25in', fontSize:'58.6%', border:'1px solid black'}}>
                    
-                {personalInfo ? personalInfo.birthDate : ''}
+                 {personalInfo?.birthDate
+                    ? new Date(personalInfo.birthDate).toLocaleDateString('en-GB') 
+                    : ''}
                 </td>
 
 
@@ -1143,7 +1145,7 @@ const countries = [
                
                 <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', backgroundColor: 'lightgray', border: '1px solid black', textAlign: 'center' }}>
                     DATE OF BIRTH<br />
-                    (mm/dd/yyyy)
+                    (dd/mm/yyyy)
                 </td>      
             </tr>
             <tr>
@@ -1157,7 +1159,9 @@ const countries = [
             {childrenInfo1 ? childrenInfo1.childrenLastName: ''}, {childrenInfo1 ? childrenInfo1.childrenFirstName: ''},  {childrenInfo1 ? childrenInfo1.childrenMiddleName : ''}
             </td>
             <td colSpan="2" rowSpan="2" style={{ height: '0.125in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo1 ? childrenInfo1.dateOfBirth: ''}
+            {childrenInfo1?.dateOfBirth
+                ? new Date(childrenInfo1.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
             </td>
         </tr>
         <tr>
@@ -1173,7 +1177,9 @@ const countries = [
             {childrenInfo2 ? childrenInfo2.childrenLastName: ''}, {childrenInfo2 ? childrenInfo2.childrenFirstName: ''}, {childrenInfo2 ? childrenInfo2.childrenMiddleName : ''}
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-           {childrenInfo2 ? childrenInfo2.dateOfBirth: ''}
+           {childrenInfo2?.dateOfBirth
+            ? new Date(childrenInfo2.dateOfBirth).toLocaleDateString("en-GB")
+            : ""}
             </td>      
         </tr>
         <tr>
@@ -1191,7 +1197,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo3 ? `${childrenInfo3.dateOfBirth}` : ''}
+           {childrenInfo3?.dateOfBirth
+            ? new Date(childrenInfo3.dateOfBirth).toLocaleDateString("en-GB")
+            : ""}
 
 
 
@@ -1213,7 +1221,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo4 ? `${childrenInfo4.dateOfBirth}` : ''}
+            {childrenInfo4?.dateOfBirth
+                ? new Date(childrenInfo4.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
 
 
 
@@ -1235,7 +1245,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo5 ? `${childrenInfo5.dateOfBirth}` : ''}
+            {childrenInfo5?.dateOfBirth
+                ? new Date(childrenInfo5.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
 
 
 
@@ -1257,7 +1269,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo6 ? `${childrenInfo6.dateOfBirth}` : ''}
+            {childrenInfo6?.dateOfBirth
+                ? new Date(childrenInfo6.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
 
 
 
@@ -1283,7 +1297,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo7 ? `${childrenInfo7.dateOfBirth}` : ''}
+            {childrenInfo7?.dateOfBirth
+                ? new Date(childrenInfo7.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
             </td>      
         </tr>
         <tr>
@@ -1301,7 +1317,9 @@ const countries = [
 
             </td>
             <td colSpan="2" rowSpan="2" style={{ height: '0.125in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo8 ? `${childrenInfo8.dateOfBirth}` : ''}
+            {childrenInfo8?.dateOfBirth
+                ? new Date(childrenInfo8.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
             </td>
         </tr>
         <tr>
@@ -1321,7 +1339,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo9 ? `${childrenInfo9.dateOfBirth}` : ''}
+           {childrenInfo9?.dateOfBirth
+                ? new Date(childrenInfo9.dateOfBirth).toLocaleDateString("en-GB")
+                : ""}
             </td>      
         </tr>
         <tr>
@@ -1336,7 +1356,9 @@ const countries = [
 
             </td>
             <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-            {childrenInfo10 ? `${childrenInfo10.dateOfBirth}` : ''}
+           {childrenInfo10?.dateOfBirth
+            ? new Date(childrenInfo10.dateOfBirth).toLocaleDateString("en-GB")
+            : ""}
 
 
 
@@ -1358,7 +1380,9 @@ const countries = [
         {childrenInfo11 ? `${childrenInfo11.childrenLastName}, ${childrenInfo11.childrenFirstName}, ${childrenInfo11.childrenMiddleName}` : ''}
         </td>
         <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-        {childrenInfo11 ? `${childrenInfo11.dateOfBirth}` : ''}
+        {childrenInfo11?.dateOfBirth
+            ? new Date(childrenInfo11.dateOfBirth).toLocaleDateString("en-GB")
+            : ""}
         </td>
     </tr>
     <tr>
@@ -1369,7 +1393,9 @@ const countries = [
         {childrenInfo12 ? `${childrenInfo12.childrenLastName}, ${childrenInfo12.childrenFirstName}, ${childrenInfo12.childrenMiddleName}` : ''}
         </td>
         <td colSpan="2" style={{ height: '0.25in', fontSize: '58.6%', border: '1px solid black' }}>
-        {childrenInfo12 ? `${childrenInfo12.dateOfBirth}` : ''}
+        {childrenInfo12?.dateOfBirth
+            ? new Date(childrenInfo12.dateOfBirth).toLocaleDateString("en-GB")
+            : ""}
         </td>
     </tr>
     <tr>
@@ -1661,7 +1687,7 @@ const countries = [
             </tr>
             <tr>
                 <td colSpan="15" style={{ height: '0.1in', fontSize: '58.6%', border: '1px solid white', textAlign: 'right' }}>
-                    <i>CS FORM 212 (Revised 2017), Page 1 of 4</i>
+                    <i>CS FORM 212 (Revised 2025), Page 1 of 4</i>
                 </td>
             </tr>
         </tbody>

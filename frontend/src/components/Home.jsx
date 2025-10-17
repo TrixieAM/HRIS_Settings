@@ -1,35 +1,70 @@
-import API_BASE_URL from '../apiConfig';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  IconButton, Modal, Tooltip, Container, Box, Grid, Menu, MenuItem, Divider, Dialog, Typography, Avatar, Button, Badge, Chip, Fade, Grow, Card, CardContent, Skeleton, LinearProgress
+  IconButton,
+  Modal,
+  Tooltip,
+  Box,
+  Grid,
+  Typography,
+  Avatar,
+  Button,
+  Badge,
+  Card,
+  CardContent,
+  Divider,
+  Paper,
+  Chip,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
-import {
-  ArrowBackIosNew as ArrowBackIosNewIcon,
-  ArrowForwardIos as ArrowForwardIosIcon,
-  Notifications as NotificationsIcon,
-  ArrowDropDown as ArrowDropDownIcon,
-  AccessTime, AccountBalance, Description, Download, KeyboardArrowDown, Person, ContactPage, Receipt, UploadFile,
-  PlayArrow, Pause, Close as CloseIcon, TrendingUp, TrendingDown,
-  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Autorenew as AutorenewIcon
-} from '@mui/icons-material';
-import logo from "../assets/logo.PNG";
 
-// Color palette from AdminHome
-const primaryGradient = "linear-gradient(135deg, #800020, #A52A2A)";
-const primaryHoverGradient = "linear-gradient(135deg, #A52A2A, #800020)";
-const darkText = "#4B0000";
-const mediumText = "#800020";
-const cardBackground = "rgba(255,248,231,0.85)";
-const cardBorder = "rgba(128,0,32,0.15)";
-const cardShadow = "0 15px 40px rgba(128,0,32,0.2)";
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import {
+  AccessTime,
+  AccountBalance,
+  Description,
+  Download,
+  Person,
+  ContactPage,
+  Receipt,
+  Event,
+  TrendingUp,
+  CalendarMonth,
+  Logout,
+  Settings,
+  Dashboard as DashboardIcon,
+  InsertDriveFile,
+  WorkHistory,
+  Close,
+  Add,
+  Note,
+  Edit,
+  Delete,
+  Save
+} from '@mui/icons-material';
+
+const API_BASE_URL = 'http://localhost:5000';
+
+const COLORS = {
+  primary: '#6d2323',
+  secondary: '#fef9e1',
+  white: '#ffffff',
+  black: '#000000',
+  lightGray: '#f5f5f5',
+  darkGray: '#666666'
+};
 
 const Home = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [username, setUsername] = useState('');
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState('');
   const [employeeNumber, setEmployeeNumber] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -39,45 +74,53 @@ const Home = () => {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [holidays, setHolidays] = useState([]);
   const [payrollData, setPayrollData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [notifModalOpen, setNotifModalOpen] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const openMenu = Boolean(anchorEl);
-  const [logoutOpen, setLogoutOpen] = useState(false);
-  
+ 
+  // New states for notes and events
+  const [notes, setNotes] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [openNoteDialog, setOpenNoteDialog] = useState(false);
+  const [openEventDialog, setOpenEventDialog] = useState(false);
+  const [currentNote, setCurrentNote] = useState({ date: '', content: '' });
+  const [currentEvent, setCurrentEvent] = useState({ date: '', title: '', description: '' });
+  const [selectedDate, setSelectedDate] = useState('');
+  const [viewNotesDialog, setViewNotesDialog] = useState(false);
+
   const navigate = useNavigate();
+
   const month = calendarDate.getMonth();
   const year = calendarDate.getFullYear();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const [attendance, setAttendance] = useState({
-    timeIn: '00:00:00',
-    breakIn: '00:00:00',
-    breakOut: '00:00:00',
-    timeOut: '00:00:00',
-  });
-
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
-
-  const handleLogout = () => {
-    setLogoutOpen(true);
-    setTimeout(() => {
-      localStorage.removeItem("token");
-      window.location.href = "/";
-    }, 500); 
-  };
-
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDate(new Date());
-      setCurrentTime(new Date());
-    }, 3000);
+    const interval = setInterval(() => setCurrentDate(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Load notes and events from database
+  useEffect(() => {
+    const fetchNotesAndEvents = async () => {
+      if (!employeeNumber) return;
+      
+      try {
+        const notesRes = await axios.get(`${API_BASE_URL}/api/notes/${employeeNumber}`);
+        const eventsRes = await axios.get(`${API_BASE_URL}/api/events/${employeeNumber}`);
+        
+        setNotes(Array.isArray(notesRes.data) ? notesRes.data : []);
+        setEvents(Array.isArray(eventsRes.data) ? eventsRes.data : []);
+      } catch (err) {
+        console.error('Error fetching notes and events:', err);
+        // Fallback to localStorage if API fails
+        const savedNotes = JSON.parse(localStorage.getItem('employeeNotes') || '[]');
+        const savedEvents = JSON.parse(localStorage.getItem('employeeEvents') || '[]');
+        setNotes(savedNotes);
+        setEvents(savedEvents);
+      }
+    };
+    
+    fetchNotesAndEvents();
+  }, [employeeNumber]);
 
   const getUserInfo = () => {
     const token = localStorage.getItem('token');
@@ -101,106 +144,10 @@ const Home = () => {
     if (userInfo.employeeNumber) setEmployeeNumber(userInfo.employeeNumber);
   }, []);
 
-  // Fetch today's attendance - using same logic as AttendanceUserState
-  useEffect(() => {
-    if (!employeeNumber) return;
-    
-    const fetchAttendance = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const today = new Date();
-        const formattedToday = today.toISOString().substring(0, 10);
-        
-        // Adjust dates to ensure records are captured (backend quirk workaround)
-        const adjustedStartDate = new Date(formattedToday);
-        adjustedStartDate.setDate(adjustedStartDate.getDate() - 1);
-        const adjustedStart = adjustedStartDate.toISOString().substring(0, 10);
-        
-        const adjustedEndDate = new Date(formattedToday);
-        adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
-        const adjustedEnd = adjustedEndDate.toISOString().substring(0, 10);
-        
-        const response = await axios.post(
-          `${API_BASE_URL}/attendance/api/attendance`,
-          { 
-            personID: employeeNumber, 
-            startDate: adjustedStart, 
-            endDate: adjustedEnd 
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        
-        console.log('Attendance response:', response.data);
-        
-        if (response.data && response.data.length > 0) {
-          // Filter for today's records - handle MM/DD/YYYY format from API
-          const todayRecords = response.data.filter(record => {
-            // Convert MM/DD/YYYY to YYYY-MM-DD for comparison
-            const dateParts = record.Date.split('/');
-            if (dateParts.length === 3) {
-              const month = dateParts[0].padStart(2, '0');
-              const day = dateParts[1].padStart(2, '0');
-              const year = dateParts[2];
-              const recordDate = `${year}-${month}-${day}`;
-              console.log('Comparing:', recordDate, 'with', formattedToday);
-              return recordDate === formattedToday;
-            }
-            return false;
-          });
-          
-          console.log('Today\'s filtered records:', todayRecords);
-          
-          const timeIn = todayRecords.find(r => r.AttendanceState === 1)?.Time || '00:00:00';
-          const breakIn = todayRecords.find(r => r.AttendanceState === 3)?.Time || '00:00:00';
-          const breakOut = todayRecords.find(r => r.AttendanceState === 2)?.Time || '00:00:00';
-          const timeOut = todayRecords.find(r => r.AttendanceState === 4)?.Time || '00:00:00';
-          
-          console.log('Extracted times:', { timeIn, breakIn, breakOut, timeOut });
-          
-          setAttendance({
-            timeIn,
-            breakIn,
-            breakOut,
-            timeOut,
-          });
-        } else {
-          setAttendance({
-            timeIn: '00:00:00',
-            breakIn: '00:00:00',
-            breakOut: '00:00:00',
-            timeOut: '00:00:00',
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching attendance:', err);
-        setAttendance({
-          timeIn: '00:00:00',
-          breakIn: '00:00:00',
-          breakOut: '00:00:00',
-          timeOut: '00:00:00',
-        });
-      }
-    };
-
-  fetchAttendance();
-  const intervalId = setInterval(fetchAttendance, 1000);
-  return () => clearInterval(intervalId);
-}, [employeeNumber]);
-  // Fetch announcements
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE_URL}/api/announcements`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const res = await axios.get(`${API_BASE_URL}/api/announcements`);
         setAnnouncements(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Error fetching announcements:', err);
@@ -210,20 +157,11 @@ const Home = () => {
     fetchAnnouncements();
   }, []);
 
-  // Auto slide
-  useEffect(() => {
-    if (announcements.length === 0 || !autoPlay) return;
-    const t = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % announcements.length);
-    }, 5000);
-    return () => clearInterval(t);
-  }, [announcements, autoPlay]);
-
   const handlePrevSlide = () => {
     if (announcements.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + announcements.length) % announcements.length);
   };
-  
+
   const handleNextSlide = () => {
     if (announcements.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % announcements.length);
@@ -233,22 +171,21 @@ const Home = () => {
     setSelectedAnnouncement(announcement);
     setOpenModal(true);
   };
-  
+
   const handleCloseModal = () => {
     setOpenModal(false);
     setSelectedAnnouncement(null);
   };
 
-  // Fetch profile picture
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   useEffect(() => {
     const fetchProfilePicture = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const res = await axios.get(`${API_BASE_URL}/personalinfo/person_table`);
         const list = Array.isArray(res.data) ? res.data : [];
         const match = list.find((p) => String(p.agencyEmployeeNum) === String(employeeNumber));
         if (match && match.profile_picture) setProfilePicture(match.profile_picture);
@@ -260,31 +197,23 @@ const Home = () => {
         console.error('Error loading profile picture:', err);
       }
     };
+
     if (employeeNumber) fetchProfilePicture();
   }, [employeeNumber]);
 
-  // Fetch payroll
   useEffect(() => {
     const fetchPayrollData = async () => {
       if (!employeeNumber) return;
       try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const res = await axios.get(`${API_BASE_URL}/api/finalized-payroll`);
         const list = Array.isArray(res.data) ? res.data : [];
         const userPayroll = list.find((p) =>
           String(p.employeeNumber) === String(employeeNumber) ||
           String(p.agencyEmployeeNum) === String(employeeNumber)
         );
         setPayrollData(userPayroll || null);
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching payroll:', err);
-        setLoading(false);
       }
     };
     fetchPayrollData();
@@ -297,22 +226,30 @@ const Home = () => {
     return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Fetch holidays
+  const generateCalendar = () => {
+    const days = [];
+    const totalCells = 42;
+    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+    for (let i = 0; i < adjustedFirstDay; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    const remaining = totalCells - days.length;
+    for (let i = 0; i < remaining; i++) days.push(null);
+    return days;
+  };
+
+  const calendarDays = generateCalendar();
+
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE_URL}/holiday`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const res = await axios.get(`${API_BASE_URL}/holiday`);
         if (Array.isArray(res.data)) {
           const transformedHolidays = res.data.map(item => {
             const d = new Date(item.date);
             const normalizedDate = !isNaN(d)
               ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
               : item.date;
+
             return {
               date: normalizedDate,
               name: item.description,
@@ -328,782 +265,1230 @@ const Home = () => {
     fetchHolidays();
   }, []);
 
-  // Calendar generation
-  const generateCalendar = () => {
-    const days = [];
-    const totalCells = 42;
-    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
-    for (let i = 0; i < adjustedFirstDay; i++) days.push(null);
-    for (let d = 1; d <= daysInMonth; d++) days.push(d);
-    const remaining = totalCells - days.length;
-    for (let i = 0; i < remaining; i++) days.push(null);
-    return days;
+  // Note and Event handlers
+  const handleAddNote = () => {
+    if (!selectedDate) return;
+    setCurrentNote({ date: selectedDate, content: '' });
+    setOpenNoteDialog(true);
   };
-  
-  const calendarDays = generateCalendar();
+
+  const handleSaveNote = async () => {
+    try {
+      const newNote = {
+        employee_number: employeeNumber,
+        date: currentNote.date,
+        content: currentNote.content
+      };
+      
+      const res = await axios.post(`${API_BASE_URL}/api/notes`, newNote);
+      const updatedNotes = [...notes, res.data];
+      setNotes(updatedNotes);
+      
+      // Also save to localStorage as backup
+      localStorage.setItem('employeeNotes', JSON.stringify(updatedNotes));
+      
+      setOpenNoteDialog(false);
+      setCurrentNote({ date: '', content: '' });
+    } catch (err) {
+      console.error('Error saving note:', err);
+      // Fallback to localStorage if API fails
+      const newNote = {
+        id: Date.now(),
+        date: currentNote.date,
+        content: currentNote.content,
+        createdAt: new Date().toISOString()
+      };
+      const updatedNotes = [...notes, newNote];
+      setNotes(updatedNotes);
+      localStorage.setItem('employeeNotes', JSON.stringify(updatedNotes));
+      setOpenNoteDialog(false);
+      setCurrentNote({ date: '', content: '' });
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/notes/${noteId}`);
+      const updatedNotes = notes.filter(n => n.id !== noteId);
+      setNotes(updatedNotes);
+      
+      // Also update localStorage
+      localStorage.setItem('employeeNotes', JSON.stringify(updatedNotes));
+    } catch (err) {
+      console.error('Error deleting note:', err);
+      // Fallback to localStorage if API fails
+      const updatedNotes = notes.filter(n => n.id !== noteId);
+      setNotes(updatedNotes);
+      localStorage.setItem('employeeNotes', JSON.stringify(updatedNotes));
+    }
+  };
+
+  const handleAddEvent = () => {
+    if (!selectedDate) return;
+    setCurrentEvent({ date: selectedDate, title: '', description: '' });
+    setOpenEventDialog(true);
+  };
+
+  const handleSaveEvent = async () => {
+    try {
+      const newEvent = {
+        employee_number: employeeNumber,
+        date: currentEvent.date,
+        title: currentEvent.title,
+        description: currentEvent.description
+      };
+      
+      const res = await axios.post(`${API_BASE_URL}/api/events`, newEvent);
+      const updatedEvents = [...events, res.data];
+      setEvents(updatedEvents);
+      
+      // Also save to localStorage as backup
+      localStorage.setItem('employeeEvents', JSON.stringify(updatedEvents));
+      
+      setOpenEventDialog(false);
+      setCurrentEvent({ date: '', title: '', description: '' });
+    } catch (err) {
+      console.error('Error saving event:', err);
+      // Fallback to localStorage if API fails
+      const newEvent = {
+        id: Date.now(),
+        date: currentEvent.date,
+        title: currentEvent.title,
+        description: currentEvent.description,
+        createdAt: new Date().toISOString(),
+        notified: false
+      };
+      const updatedEvents = [...events, newEvent];
+      setEvents(updatedEvents);
+      localStorage.setItem('employeeEvents', JSON.stringify(updatedEvents));
+      setOpenEventDialog(false);
+      setCurrentEvent({ date: '', title: '', description: '' });
+    }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/events/${eventId}`);
+      const updatedEvents = events.filter(e => e.id !== eventId);
+      setEvents(updatedEvents);
+      
+      // Also update localStorage
+      localStorage.setItem('employeeEvents', JSON.stringify(updatedEvents));
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      // Fallback to localStorage if API fails
+      const updatedEvents = events.filter(e => e.id !== eventId);
+      setEvents(updatedEvents);
+      localStorage.setItem('employeeEvents', JSON.stringify(updatedEvents));
+    }
+  };
+
+  const getNotesForDate = (dateStr) => {
+    return notes.filter(n => n.date === dateStr);
+  };
+
+  const getEventsForDate = (dateStr) => {
+    return events.filter(e => e.date === dateStr);
+  };
+
+  const getTodayEvents = () => {
+    const today = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+    return events.filter(e => e.date === today);
+  };
+
+  const getUpcomingEvents = () => {
+    const today = new Date();
+    const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+    return events.filter(e => {
+      const eventDate = new Date(e.date);
+      return eventDate >= today && eventDate <= threeDaysLater;
+    });
+  };
+
+  // Combine notes and events for recent activity
+  const getRecentActivity = () => {
+    const allActivity = [
+      ...notes.map(note => ({
+        id: note.id,
+        type: 'note',
+        title: 'Note',
+        content: note.content,
+        date: note.date,
+        createdAt: note.createdAt || new Date().toISOString()
+      })),
+      ...events.map(event => ({
+        id: event.id,
+        type: 'event',
+        title: event.title,
+        content: event.description,
+        date: event.date,
+        createdAt: event.createdAt || new Date().toISOString()
+      }))
+    ];
+    
+    // Sort by creation date (newest first) and take the latest 5
+    return allActivity.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  };
+
+  const quickActions = [
+    { icon: <AccessTime />, label: 'DTR', link: '/daily_time_record', color: COLORS.primary },
+    { icon: <Receipt />, label: 'Payslip', link: '/payslip', color: COLORS.primary },
+    { icon: <ContactPage />, label: 'PDS', link: '/pds1', color: COLORS.primary },
+    { icon: <WorkHistory />, label: 'Attendance', link: '/attendance-user-state', color: COLORS.primary },
+  ];
+
+  const allNotifications = [
+    ...announcements.map(a => ({ type: 'announcement', data: a, date: a.date })),
+    ...getUpcomingEvents().map(e => ({ type: 'event', data: e, date: e.date }))
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <Box sx={{ 
-      background: '#6d2323', 
-      minHeight: '85%', 
-      py: 1.5, 
-      borderRadius: '14px',
-      mt: -2,
+    <Box sx={{
+      minHeight: '100vh',
+      backgroundColor: COLORS.secondary,
+      p: { xs: 2, md: 1 }
     }}>
-      <Container maxWidth="xl" sx={{ px: 2, pt: 2 }}>
-        {/* Header */}
-        <Grow in timeout={300}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 3,
-              background: cardBackground,
-              backdropFilter: 'blur(15px)',
-              borderRadius: 4,
-              p: 2,
-              border: `1px solid ${cardBorder}`,
-              boxShadow: cardShadow,
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{
-                  color: darkText,
-                  fontWeight: 700,
-                }}
-              >
-                Hello, {fullName || username}!
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#666666',
-                  mt: 0.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5
-                }}
-              >
-                <AccessTime sx={{ fontSize: 14 }} />
-                {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                <span style={{ marginLeft: '8px' }}>
-                  {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-              <Tooltip title="Refresh">
-                <IconButton
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(128, 0, 32, 0.1)',
-                    '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.2)' },
-                    color: mediumText,
-                  }}
-                  onClick={() => window.location.reload()}
-                >
-                  <AutorenewIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-
-              <Tooltip title="Notifications">
-                <IconButton
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(128, 0, 32, 0.1)',
-                    '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.2)' },
-                    color: mediumText,
-                  }}
-                  onClick={() => setNotifModalOpen(true)}
-                >
-                  <Badge badgeContent={announcements.length} color="error" max={9}>
-                    <NotificationsIcon fontSize="small" />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
-
-              <Box
-                sx={{
-                  position: 'relative',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    inset: -2,
-                    borderRadius: '50%',
-                    padding: '2px',
-                    background: primaryGradient,
-                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude',
-                  },
-                }}
-              >
-                <IconButton onClick={handleMenuOpen} sx={{ p: 0.5 }}>
-                  <Avatar
-                    alt={username}
-                    src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
-                    sx={{ width: 36, height: 36 }}
-                  />
-                </IconButton>
-              </Box>
-              
-              <Menu 
-                anchorEl={anchorEl} 
-                open={openMenu} 
-                onClose={handleMenuClose} 
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} 
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }} 
-                PaperProps={{ 
-                  sx: { 
-                    borderRadius: 2, 
-                    minWidth: 180, 
-                    backgroundColor: '#FEF9E1',
-                    border: `1px solid ${cardBorder}`,
-                    boxShadow: cardShadow,
-                    '& .MuiMenuItem-root': { 
-                      fontSize: '0.875rem',
-                      '&:hover': { 
-                        background: 'rgba(128, 0, 32, 0.1)' 
-                      }, 
-                    }, 
-                  }, 
-                }} 
-              > 
-                <MenuItem onClick={() => { handleMenuClose(); navigate("/profile"); }}>
-                  <AccountCircle sx={{ mr: 1, fontSize: 20 }} /> Profile
-                </MenuItem> 
-                <MenuItem onClick={() => { handleMenuClose(); navigate("/settings"); }}>
-                  <Settings sx={{ mr: 1, fontSize: 20 }} /> Settings
-                </MenuItem> 
-                <MenuItem onClick={() => { handleMenuClose(); navigate("/faqs"); }}>
-                  <HelpOutline sx={{ mr: 1, fontSize: 20 }} /> FAQs
-                </MenuItem> 
-                <MenuItem onClick={() => { handleMenuClose(); navigate("/privacy-policy"); }}>
-                  <PrivacyTip sx={{ mr: 1, fontSize: 20 }} /> Privacy Policy
-                </MenuItem> 
-                <Divider sx={{ borderColor: cardBorder }} /> 
-                <MenuItem onClick={() => { handleMenuClose(); handleLogout(); }}>
-                  <Logout sx={{ mr: 1, fontSize: 20 }} /> Sign Out
-                </MenuItem>
-              </Menu>
-            </Box>
-          </Box>
-        </Grow>
-
-        {/* Main Content Area */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
-            <Grow in timeout={400}>
-              <Card sx={{
-                background: cardBackground,
-                backdropFilter: 'blur(15px)',
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 4,
-                boxShadow: cardShadow,
-                height: '80%',
-                transition: 'all 0.3s',
-                '&:hover': { 
-                  transform: 'translateY(-4px)', 
-                  boxShadow: '0 20px 50px rgba(128,0,32,0.3)' 
-                }
-              }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" sx={{ color: darkText, fontWeight: 700, mb: 2 }}>
-                    Today's Attendance
-                  </Typography>
-                  <Link to="/attendance-user-state" style={{ textDecoration: 'none' }}>
-                  <Grid container spacing={1}>
-                      {[
-                        { label: 'TIME IN', value: attendance.timeIn },
-                        { label: 'BREAK IN', value: attendance.breakIn },      // Going to lunch
-                        { label: 'BREAK OUT', value: attendance.breakOut },    // Returning from lunch
-                        { label: 'TIME OUT', value: attendance.timeOut },
-                      ].map((item, idx) => (
-                        <Grid item xs={6} key={idx}>
-                          <Box sx={{
-                            background: `${mediumText}10`,
-                            backdropFilter: 'blur(10px)',
-                            border: `1px solid ${cardBorder}`,
-                            borderRadius: 2,
-                            p: 1.5,
-                            textAlign: 'center',
-                            transition: 'all 0.3s',
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              background: `${mediumText}20`,
-                            }
-                          }}>
-                            <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: mediumText, mb: 0.5 }}>
-                              {item.label}
-                            </Typography>
-                            <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: darkText }}>
-                              {item.value}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Link>
-                </CardContent>
-              </Card>
-            </Grow>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Grow in timeout={500}>
-              <Card sx={{
-                background: cardBackground,
-                backdropFilter: 'blur(15px)',
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 4,
-                boxShadow: cardShadow,
-                height: '80%',
-                transition: 'all 0.3s',
-                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 50px rgba(128,0,32,0.3)' }
-              }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" sx={{ color: darkText, fontWeight: 600}}>
-                    Payslip
-                  </Typography>
-                  
-                  {/* Payslip Section */}
-                  <Box sx={{ mb: 1 }}>
-                    <Link to="/payslip" style={{ textDecoration: 'none' }}>
-                      <Grid container spacing={1}>
-                        <Grid item xs={6}>
-                          <Box sx={{
-                            background: `${mediumText}10`,
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: 2,
-                            p: 1,
-                            textAlign: 'center',
-                            transition: 'all 0.3s',
-                            '&:hover': { transform: 'scale(1.05)' }
-                          }}>
-                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: mediumText, mb: 0.5 }}>
-                              1st Pay
-                            </Typography>
-                            <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: darkText }}>
-                              {payrollData ? formatCurrency(payrollData.pay1st) : '₱00.00'}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Box sx={{
-                            background: `${mediumText}10`,
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: 2,
-                            p: 1,
-                            textAlign: 'center',
-                            transition: 'all 0.3s',
-                            '&:hover': { transform: 'scale(1.05)' }
-                          }}>
-                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: mediumText, mb: 0.5 }}>
-                              2nd Pay
-                            </Typography>
-                            <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: darkText }}>
-                              {payrollData ? formatCurrency(payrollData.pay2nd) : '₱00.00'}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </Link>
-                  </Box>
-
-                  {/* Leave Balance Section */}
-                  <Box>
-                    <Typography variant="h6" sx={{ color: darkText, fontWeight: 600 }}>
-                    Leave Balance
-                    </Typography>
-                    <Box sx={{
-                      background: `${mediumText}10`,
-                      backdropFilter: 'blur(10px)',
-                      borderRadius: 2,
-                      p: 1,
-                      textAlign: 'center'
-                    }}>
-                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: mediumText, mb: 0.5 }}>
-                        All Leaves
-                      </Typography>
-                      <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: darkText }}>
-                        386
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grow>
-          </Grid>
-
-          {/* Calendar - Now aligned with top row */}
-          <Grid item xs={12} md={4}>
-            <Grow in timeout={600}>
-              <Card sx={{
-                background: cardBackground,
-                backdropFilter: 'blur(15px)',
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 4,
-                p: 2,
-                boxShadow: cardShadow,
-                height: '90%',
-                transition: 'all 0.3s',
-                '&:hover': { boxShadow: '0 20px 50px rgba(128,0,32,0.3)' }
-              }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <IconButton size="small"
-                    onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
-                    sx={{ bgcolor: `${mediumText}10`, '&:hover': { bgcolor: `${mediumText}20` }, color: mediumText }}>
-                    <ArrowBackIosNewIcon fontSize="small" />
-                  </IconButton>
-                  <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: darkText }}>
-                    {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </Typography>
-                  <IconButton size="small"
-                    onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
-                    sx={{ bgcolor: `${mediumText}10`, '&:hover': { bgcolor: `${mediumText}20` }, color: mediumText }}>
-                    <ArrowForwardIosIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-
-                <Grid container spacing={0.5} sx={{ mb: 1 }}>
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                    <Grid item xs={12 / 7} key={day}>
-                      <Typography sx={{ textAlign: 'center', fontWeight: 700, fontSize: '0.7rem', color: '#666666', py: 0.5 }}>
-                        {day}
-                      </Typography>
-                    </Grid>
-                  ))}
-                </Grid>
-
-                <Grid container spacing={0.5}>
-                  {calendarDays.map((day, index) => {
-                    const currentDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                    const holidayData = holidays.find(h => h.date === currentDate && h.status === "Active");
-                    const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-                    return (
-                      <Grid item xs={12 / 7} key={index}>
-                        <Tooltip title={holidayData ? holidayData.name : isToday ? "Today" : ""} arrow>
-                          <Box sx={{
-                            textAlign: 'center',
-                            py: 0.8,
-                            fontSize: '0.8rem',
-                            borderRadius: 1,
-                            color: holidayData ? '#ffffff' : day ? darkText : 'transparent',
-                            background: holidayData ? primaryGradient : isToday ? `${mediumText}20` : 'transparent',
-                            fontWeight: holidayData || isToday ? 700 : 400,
-                            cursor: holidayData ? 'pointer' : 'default',
-                            transition: 'all 0.3s',
-                            border: isToday && !holidayData ? `1px solid ${mediumText}` : 'none',
-                            '&:hover': holidayData || isToday ? {
-                              transform: 'scale(1.15)',
-                              boxShadow: holidayData ? '0 4px 12px rgba(128,0,32,0.3)' : '0 4px 12px rgba(128,0,32,0.2)',
-                              zIndex: 10
-                            } : {}
-                          }}>
-                            {day || ""}
-                          </Box>
-                        </Tooltip>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
-              </Card>
-            </Grow>
-          </Grid>
-
-          {/* Bottom Row - Slideshow and Quick Actions */}
+      {/* Header */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, md: 3 },
+          mb: 3,
+          borderRadius: 3,
+          background: COLORS.primary,
+          color: COLORS.white,
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(109, 35, 35, 0.3)'
+        }}
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: -50,
+          right: -50,
+          width: 200,
+          height: 200,
+          borderRadius: '50%',
+          background: 'rgba(255, 255, 255, 0.05)',
+        }} />
+       
+        <Grid container alignItems="center" spacing={2}>
           <Grid item xs={12} md={8}>
-            <Fade in timeout={800}>
-              <Card sx={{
-                background: cardBackground,
-                backdropFilter: 'blur(15px)',
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 4,
-                overflow: 'hidden',
-                boxShadow: cardShadow,
-                position: 'relative',
-                mt: -7
-              }}>
-                <Box sx={{ position: 'relative', height: 450, cursor: 'pointer' }} onClick={() => {
-                  const announcement = announcements[currentSlide];
-                  if (announcement) handleOpenModal(announcement);
-                }}>
-                  {announcements.length > 0 ? (
-                    <>
-                      <Box component="img"
-                        src={announcements[currentSlide]?.image ? `${API_BASE_URL}${announcements[currentSlide].image}` : "/api/placeholder/800/400"}
-                        alt={announcements[currentSlide]?.title || "Announcement"}
-                        sx={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.7s ease' }}
-                      />
-                      <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 70%)' }} />
-                      
-                      <IconButton onClick={(e) => { e.stopPropagation(); handlePrevSlide(); }}
-                        sx={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'translateY(-50%) scale(1.1)' }, color: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', transition: 'all 0.3s' }}>
-                        <ArrowBackIosNewIcon />
-                      </IconButton>
-                      
-                      <IconButton onClick={(e) => { e.stopPropagation(); handleNextSlide(); }}
-                        sx={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'translateY(-50%) scale(1.1)' }, color: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', transition: 'all 0.3s' }}>
-                        <ArrowForwardIosIcon />
-                      </IconButton>
-                      
-                      <IconButton onClick={(e) => { e.stopPropagation(); setAutoPlay(!autoPlay); }}
-                        sx={{ position: 'absolute', top: 24, right: 24, bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'scale(1.1)' }, color: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', transition: 'all 0.3s' }}>
-                        {autoPlay ? <Pause /> : <PlayArrow />}
-                      </IconButton>
-
-                      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 4, color: '#ffffff' }}>
-                        <Chip label="ANNOUNCEMENT" size="small" sx={{ mb: 2, bgcolor: 'rgba(128, 0, 32, 0.5)', backdropFilter: 'blur(10px)', color: '#ffffff', fontWeight: 700, fontSize: '0.7rem', border: '1px solid rgba(254, 249, 225, 0.3)' }} />
-                        <Typography variant="h3" sx={{ fontWeight: 800, mb: 1, textShadow: '0 4px 12px rgba(0,0,0,0.5)', lineHeight: 1.2 }}>
-                          {announcements[currentSlide]?.title}
-                        </Typography>
-                        <Typography sx={{ opacity: 0.95, fontSize: '1rem', textShadow: '0 2px 8px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <AccessTime sx={{ fontSize: 18 }} />
-                          {new Date(announcements[currentSlide]?.date).toDateString()}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ position: 'absolute', bottom: 24, right: 24, display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                        {announcements.map((_, idx) => (
-                          <Box key={idx}
-                            sx={{ width: currentSlide === idx ? 32 : 10, height: 10, borderRadius: 5, bgcolor: currentSlide === idx ? '#ffffff' : 'rgba(254,249,225,0.4)', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', border: '1px solid rgba(254,249,225,0.3)', '&:hover': { bgcolor: 'rgba(254,249,225,0.7)', transform: 'scale(1.2)' } }}
-                            onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }}
-                          />
-                        ))}
-                      </Box>
-                    </>
-                  ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 2 }}>
-                      <NotificationsIcon sx={{ fontSize: 80, color: 'rgba(128, 0, 32, 0.3)' }} />
-                      <Typography variant="h5" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>No announcements available</Typography>
-                    </Box>
-                  )}
-                </Box>
-              </Card>
-            </Fade>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+              Welcome back, {fullName || username || 'Employee'}!
+            </Typography>
+            <Typography variant="body1" sx={{ opacity: 0.9, fontSize: { xs: '0.875rem', md: '1rem' } }}>
+              {currentDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </Typography>
           </Grid>
-
-          {/* Quick Actions - Now below the calendar */}
           <Grid item xs={12} md={4}>
-            <Grow in timeout={700}>
-              <Card sx={{
-                background: cardBackground,
-                backdropFilter: 'blur(15px)',
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 4,
+            <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 2, alignItems: 'center' }}>
+              <Box sx={{
+                textAlign: 'right',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
                 p: 2,
-                boxShadow: cardShadow,
-                height: '91%'
+                borderRadius: 2
               }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: darkText }}>
-                  Quick Actions
+                <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+                  {currentDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                 </Typography>
-                <Grid container spacing={1}>
-                  {[
-                    { label: "DTR", link: "/daily_time_record", icon: <AccessTime /> },
-                    { label: "PDS", link: "/pds1", icon: <ContactPage /> },
-                    { label: "Payslip", link: "/payslip", icon: <Receipt /> },
-                    // { label: "Leave", link: "/leave-request-user", icon: <UploadFile /> },
-                    { label: "Attendance", link: "/attendance-user-state", icon: <Person /> },
-                  ].map((item, i) => (
-                    <Grid item xs={6} key={i}>
-                      <Grow in timeout={800 + i * 100}>
-                        <Link to={item.link} style={{ textDecoration: "none" }}>
-                          <Box sx={{
-                            p: 1.5,
-                            borderRadius: 2,
-                            background: `${mediumText}10`,
-                            border: `1px solid ${cardBorder}`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: 1,
-                            transition: 'all 0.3s',
-                            cursor: 'pointer',
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              background: `${mediumText}20`,
-                              boxShadow: '0 8px 24px rgba(128,0,32,0.2)'
-                            }
-                          }}>
-                            <Box sx={{
-                              color: mediumText,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'transform 0.3s',
-                              '&:hover': { transform: 'rotate(360deg)' }
-                            }}>
-                              {React.cloneElement(item.icon, { sx: { fontSize: 24 } })}
-                            </Box>
-                            <Typography sx={{
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              color: darkText,
-                              textAlign: 'center'
-                            }}>
-                              {item.label}
-                            </Typography>
-                          </Box>
-                        </Link>
-                      </Grow>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Card>
-            </Grow>
+              </Box>
+              <IconButton
+                onClick={() => setNotifModalOpen(true)}
+                sx={{
+                  color: COLORS.white,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.1)'
+                  },
+                  transition: 'all 0.3s'
+                }}
+              >
+                <Badge badgeContent={allNotifications.length} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+            </Box>
           </Grid>
         </Grid>
-      </Container>
+      </Paper>
 
-      {/* Announcement Modal */}
+      <Grid container spacing={3}>
+        {/* Left Column */}
+        <Grid item xs={12} md={7} lg={8}>
+          {/* Announcement Slideshow - BIGGER */}
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 3,
+              borderRadius: 3,
+              overflow: 'hidden',
+              position: 'relative',
+              height: { xs: 350, sm: 450, md: 550 },
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              backgroundColor: COLORS.white,
+              boxShadow: '0 8px 32px rgba(109, 35, 35, 0.15)',
+              '&:hover': {
+                transform: 'translateY(-8px)',
+                boxShadow: '0 16px 48px rgba(109, 35, 35, 0.25)'
+              }
+            }}
+            onClick={() => announcements[currentSlide] && handleOpenModal(announcements[currentSlide])}
+          >
+            {announcements.length > 0 ? (
+              <>
+                <Box
+                  component="img"
+                  src={
+                    announcements[currentSlide]?.image
+                      ? `${API_BASE_URL}${announcements[currentSlide].image}`
+                      : "/api/placeholder/1200/600"
+                  }
+                  alt={announcements[currentSlide]?.title || "Announcement"}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+                    p: { xs: 2, md: 4 },
+                  }}
+                >
+                  <Chip
+                    label="Announcement"
+                    size="small"
+                    sx={{
+                      mb: 2,
+                      backgroundColor: COLORS.secondary,
+                      color: COLORS.primary,
+                      fontWeight: 700,
+                      fontSize: '0.875rem',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    }}
+                  />
+                  <Typography variant="h4" sx={{ color: COLORS.white, fontWeight: 700, mb: 1, fontSize: { xs: '1.25rem', md: '2rem' } }}>
+                    {announcements[currentSlide]?.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: COLORS.white, opacity: 0.9, fontSize: { xs: '0.75rem', md: '1rem' } }}>
+                    {new Date(announcements[currentSlide]?.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </Typography>
+                </Box>
+                <IconButton
+                  onClick={(e) => { e.stopPropagation(); handlePrevSlide(); }}
+                  sx={{
+                    position: 'absolute',
+                    left: { xs: 10, md: 20 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(254, 249, 225, 0.95)',
+                    color: COLORS.primary,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                    '&:hover': {
+                      backgroundColor: COLORS.secondary,
+                      transform: 'translateY(-50%) scale(1.1)'
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <ArrowBackIosNewIcon />
+                </IconButton>
+                <IconButton
+                  onClick={(e) => { e.stopPropagation(); handleNextSlide(); }}
+                  sx={{
+                    position: 'absolute',
+                    right: { xs: 10, md: 20 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(254, 249, 225, 0.95)',
+                    color: COLORS.primary,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                    '&:hover': {
+                      backgroundColor: COLORS.secondary,
+                      transform: 'translateY(-50%) scale(1.1)'
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <ArrowForwardIosIcon />
+                </IconButton>
+               
+                {/* Slide Indicators */}
+                <Box sx={{
+                  position: 'absolute',
+                  bottom: 20,
+                  right: 20,
+                  display: 'flex',
+                  gap: 1
+                }}>
+                  {announcements.map((_, idx) => (
+                    <Box
+                      key={idx}
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        backgroundColor: idx === currentSlide ? COLORS.secondary : 'rgba(255,255,255,0.5)',
+                        transition: 'all 0.3s',
+                        cursor: 'pointer'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentSlide(idx);
+                      }}
+                    />
+                  ))}
+                </Box>
+              </>
+            ) : (
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                backgroundColor: COLORS.lightGray
+              }}>
+                <Typography color="textSecondary">No announcements available</Typography>
+              </Box>
+            )}
+          </Paper>
+
+                    
+          {/* Quick Actions Grid - Compact */}
+          <Paper elevation={0} sx={{ backgroundColor: COLORS.white, p: { xs: 2, md: 3 }, borderRadius: 3, mb: 3, boxShadow: '0 4px 20px rgba(109, 35, 35, 0.08)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <DashboardIcon sx={{ color: COLORS.primary, mr: 1, fontSize: 24 }} />
+              <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.primary, fontSize: '1.125rem' }}>
+                Employee Panel
+              </Typography>
+            </Box>
+            <Grid container spacing={2}>
+              {quickActions.map((action, index) => (
+                <Grid item xs={6} sm={6} md={3} key={index}>
+                  <Link to={action.link} style={{ textDecoration: 'none' }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: { xs: 2, sm: 3 },
+                        textAlign: 'center',
+                        borderRadius: 2,
+                        backgroundColor: COLORS.white,
+                        transition: 'all 0.3s',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(109, 35, 35, 0.08)',
+                        '&:hover': {
+                          backgroundColor: COLORS.primary,
+                          transform: 'translateY(-8px)',
+                          boxShadow: '0 12px 24px rgba(109, 35, 35, 0.2)',
+                          '& .action-icon': {
+                            color: COLORS.white,
+                            transform: 'scale(1.2) rotate(5deg)'
+                          },
+                          '& .action-label': { color: COLORS.white }
+                        }
+                      }}
+                    >
+                      <Box
+                        className="action-icon"
+                        sx={{
+                          color: action.color,
+                          mb: 1,
+                          fontSize: { xs: 32, sm: 40 },
+                          transition: 'all 0.3s',
+                          display: 'flex',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {action.icon}
+                      </Box>
+                      <Typography
+                        className="action-label"
+                        variant="caption"
+                        sx={{
+                          fontWeight: 600,
+                          color: COLORS.black,
+                          transition: 'color 0.3s',
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                        }}
+                      >
+                        {action.label}
+                      </Typography>
+                    </Paper>
+                  </Link>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+
+          {/* Payslip Card */}
+          <Paper elevation={0} sx={{ backgroundColor: COLORS.white, p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: '0 4px 20px rgba(109, 35, 35, 0.08)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Receipt sx={{ color: COLORS.primary, mr: 1, fontSize: 24 }} />
+                <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.primary, fontSize: '1.125rem' }}>
+                  Latest Payslip
+                </Typography>
+              </Box>
+              <Chip
+                label={payrollData?.period || 'Latest Period'}
+                sx={{
+                  backgroundColor: COLORS.secondary,
+                  color: COLORS.primary,
+                  fontWeight: 600
+                }}
+              />
+            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    background: `linear-gradient(135deg, ${COLORS.primary} 0%, #8d3333 100%)`,
+                    color: COLORS.white,
+                    borderRadius: 2,
+                    transition: 'all 0.3s',
+                    boxShadow: '0 4px 16px rgba(109, 35, 35, 0.2)',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 8px 24px rgba(109, 35, 35, 0.3)'
+                    }
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="caption" sx={{ opacity: 0.9, mb: 1, display: 'block' }}>
+                      1st Quincena
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
+                      {payrollData ? formatCurrency(payrollData.pay1st) : '₱-.--'}
+                    </Typography>
+                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                      <AccountBalance sx={{ mr: 1, fontSize: 18 }} />
+                      <Typography variant="caption">{payrollData?.period1_desc || '1st Half'}</Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    background: `linear-gradient(135deg, #8d3333 0%, ${COLORS.primary} 100%)`,
+                    color: COLORS.white,
+                    borderRadius: 2,
+                    transition: 'all 0.3s',
+                    boxShadow: '0 4px 16px rgba(109, 35, 35, 0.2)',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 8px 24px rgba(109, 35, 35, 0.3)'
+                    }
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="caption" sx={{ opacity: 0.9, mb: 1, display: 'block' }}>
+                      2nd Quincena
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
+                      {payrollData ? formatCurrency(payrollData.pay2nd) : '₱-.--'}
+                    </Typography>
+                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                      <AccountBalance sx={{ mr: 1, fontSize: 18 }} />
+                      <Typography variant="caption">{payrollData?.period2_desc || '2nd Half'}</Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+            <Link to="/payslip" style={{ textDecoration: 'none' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{
+                  mt: 2,
+                  borderColor: COLORS.primary,
+                  color: COLORS.primary,
+                  fontWeight: 600,
+                  borderWidth: 2,
+                  '&:hover': {
+                    borderColor: COLORS.primary,
+                    backgroundColor: COLORS.primary,
+                    color: COLORS.white,
+                    borderWidth: 2,
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(109, 35, 35, 0.2)'
+                  },
+                  transition: 'all 0.3s'
+                }}
+                startIcon={<Download />}
+              >
+                View Full Payslip
+              </Button>
+            </Link>
+          </Paper>
+        </Grid>
+
+        {/* Right Column */}
+        <Grid item xs={12} md={5} lg={4}>
+          {/* Profile Card */}
+          <Paper elevation={0} sx={{ backgroundColor: COLORS.white, p: 3, borderRadius: 3, mb: 3, textAlign: 'center', boxShadow: '0 4px 20px rgba(109, 35, 35, 0.08)' }}>
+            <Avatar
+              src={profilePicture ? `${API_BASE_URL}${profilePicture}` : undefined}
+              sx={{
+                width: 100,
+                height: 100,
+                margin: '0 auto 16px',
+                border: `4px solid ${COLORS.primary}`,
+                boxShadow: '0 4px 15px rgba(109, 35, 35, 0.2)',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                  boxShadow: '0 8px 24px rgba(109, 35, 35, 0.3)'
+                }
+              }}
+            />
+            <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.primary, mb: 0.5 }}>
+              {fullName || username || 'Employee Name'}
+            </Typography>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+              ID: {employeeNumber || '#00000000'}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                size="small"
+                startIcon={<Settings />}
+                sx={{
+                  backgroundColor: COLORS.primary,
+                  color: "white",
+                  '&:hover': {
+                    backgroundColor: '#8d3333',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)',
+                    '& .MuiSvgIcon-root': {
+                      transform: 'rotate(90deg)'
+                    }
+                  },
+                  '& .MuiSvgIcon-root': {
+                    transition: 'transform 0.3s'
+                  }
+                }}
+              >
+                Profile
+              </Button>
+              <Button
+                fullWidth
+                variant="contained"
+                size="small"
+                startIcon={<Logout />}
+                onClick={handleLogout}
+                sx={{
+                  backgroundColor: COLORS.primary,
+                  '&:hover': {
+                    backgroundColor: '#8d3333',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)'
+                  },
+                  transition: 'all 0.3s'
+                }}
+              >
+                Logout
+              </Button>
+            </Box>
+          </Paper>
+
+          {/* Calendar with Notes */}
+          <Paper elevation={0} sx={{ backgroundColor: COLORS.white, p: 3, borderRadius: 3, mb: 3, boxShadow: '0 4px 20px rgba(109, 35, 35, 0.08)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <IconButton
+                size="small"
+                onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
+                sx={{
+                  color: COLORS.primary,
+                  '&:hover': {
+                    backgroundColor: COLORS.secondary,
+                    transform: 'scale(1.1)'
+                  },
+                  transition: 'all 0.3s'
+                }}
+              >
+                <ArrowBackIosNewIcon fontSize="small" />
+              </IconButton>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CalendarMonth sx={{ color: COLORS.primary, mr: 1 }} />
+                <Typography fontWeight={700} sx={{ color: COLORS.primary }}>
+                  {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </Typography>
+              </Box>
+              <IconButton
+                size="small"
+                onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
+                sx={{
+                  color: COLORS.primary,
+                  '&:hover': {
+                    backgroundColor: COLORS.secondary,
+                    transform: 'scale(1.1)'
+                  },
+                  transition: 'all 0.3s'
+                }}
+              >
+                <ArrowForwardIosIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <Grid container spacing={0.5} sx={{ mb: 1 }}>
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+                <Grid item xs={12 / 7} key={i}>
+                  <Typography
+                    sx={{
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      color: COLORS.primary,
+                      py: 0.5
+                    }}
+                  >
+                    {day}
+                  </Typography>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Grid container spacing={0.5}>
+              {calendarDays.map((day, index) => {
+                const currentDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const holidayData = holidays.find(h => h.date === currentDateStr && h.status === "Active");
+                const dayNotes = getNotesForDate(currentDateStr);
+                const dayEvents = getEventsForDate(currentDateStr);
+                const hasNotesOrEvents = dayNotes.length > 0 || dayEvents.length > 0;
+                const isToday = day === new Date().getDate() &&
+                               month === new Date().getMonth() &&
+                               year === new Date().getFullYear();
+
+                return (
+                  <Grid item xs={12 / 7} key={index}>
+                    <Tooltip
+                      title={
+                        holidayData ? holidayData.name :
+                        hasNotesOrEvents ? `${dayNotes.length} note(s), ${dayEvents.length} event(s)` :
+                        ""
+                      }
+                      arrow
+                    >
+                      <Box
+                        onClick={() => {
+                          if (day) {
+                            setSelectedDate(currentDateStr);
+                            setViewNotesDialog(true);
+                          }
+                        }}
+                        sx={{
+                          textAlign: 'center',
+                          p: 0.8,
+                          fontSize: '0.875rem',
+                          borderRadius: 1,
+                          minHeight: 21,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: holidayData ? COLORS.white : isToday ? COLORS.white : day ? COLORS.black : 'transparent',
+                          backgroundColor: holidayData ? COLORS.primary : isToday ? '#8d3333' : 'transparent',
+                          fontWeight: holidayData || isToday ? 700 : 400,
+                          border: isToday ? `2px solid ${COLORS.secondary}` : 'none',
+                          cursor: day ? 'pointer' : 'default',
+                          position: 'relative',
+                          transition: 'all 0.2s',
+                          '&:hover': day ? {
+                            transform: 'scale(1.15)',
+                            boxShadow: '0 4px 12px rgba(109, 35, 35, 0.2)',
+                            backgroundColor: holidayData ? COLORS.primary : isToday ? '#8d3333' : COLORS.secondary,
+                            zIndex: 10
+                          } : {}
+                        }}
+                      >
+                        {day || ''}
+                        {hasNotesOrEvents && day && (
+                          <Box sx={{
+                            display: 'flex',
+                            gap: 0.25,
+                            mt: 0.25,
+                            position: 'absolute',
+                            bottom: 2
+                          }}>
+                            {dayNotes.length > 0 && (
+                              <Box sx={{
+                                width: 4,
+                                height: 4,
+                                borderRadius: '50%',
+                                backgroundColor: holidayData || isToday ? COLORS.white : '#ff9800'
+                              }} />
+                            )}
+                            {dayEvents.length > 0 && (
+                              <Box sx={{
+                                width: 4,
+                                height: 4,
+                                borderRadius: '50%',
+                                backgroundColor: holidayData || isToday ? COLORS.white : '#4caf50'
+                              }} />
+                            )}
+                          </Box>
+                        )}
+                      </Box>
+                    </Tooltip>
+                  </Grid>
+                );
+              })}
+            </Grid>
+
+            <Divider sx={{ my: 2 }} />
+           
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+              <Tooltip title="Add Note">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const today = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+                    setSelectedDate(today);
+                    handleAddNote();
+                  }}
+                  sx={{
+                    backgroundColor: COLORS.secondary,
+                    color: COLORS.primary,
+                    '&:hover': {
+                      backgroundColor: COLORS.primary,
+                      color: COLORS.white,
+                      transform: 'scale(1.1) rotate(90deg)'
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <Note fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Add Event">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const today = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+                    setSelectedDate(today);
+                    handleAddEvent();
+                  }}
+                  sx={{
+                    backgroundColor: COLORS.secondary,
+                    color: COLORS.primary,
+                    '&:hover': {
+                      backgroundColor: COLORS.primary,
+                      color: COLORS.white,
+                      transform: 'scale(1.1) rotate(90deg)'
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <Add fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center', fontSize: '0.75rem' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#ff9800' }} />
+                <Typography variant="caption">Notes</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#4caf50' }} />
+                <Typography variant="caption">Events</Typography>
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Recent Activity - Updated to show Notes and Events */}
+          <Paper elevation={0} sx={{ backgroundColor: COLORS.white, p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(109, 35, 35, 0.08)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <TrendingUp sx={{ color: COLORS.primary, mr: 1 }} />
+              <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.primary, fontSize: '1.125rem' }}>
+                Your Notes and Events
+              </Typography>
+            </Box>
+            <Box sx={{ maxHeight: 215, overflowY: 'auto' }}>
+              {getRecentActivity().length > 0 ? (
+                getRecentActivity().map((item, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      mb: 2,
+                      p: 2,
+                      backgroundColor: item.type === 'note' ? COLORS.secondary : '#e8f5e9',
+                      borderRadius: 2,
+                      borderLeft: `4px solid ${item.type === 'note' ? COLORS.primary : '#4caf50'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      boxShadow: '0 2px 8px rgba(109, 35, 35, 0.08)',
+                      '&:hover': {
+                        transform: 'translateX(8px)',
+                        boxShadow: '0 4px 16px rgba(109, 35, 35, 0.15)'
+                      }
+                    }}
+                    onClick={() => {
+                      setSelectedDate(item.date);
+                      setViewNotesDialog(true);
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      {item.type === 'note' ? <Note sx={{ fontSize: 16, mr: 1, color: COLORS.primary }} /> : <Event sx={{ fontSize: 16, mr: 1, color: '#4caf50' }} />}
+                      <Typography variant="caption" sx={{ color: item.type === 'note' ? COLORS.primary : '#2e7d32', fontWeight: 600, display: 'block' }}>
+                        {item.type === 'note' ? 'Note' : 'Event'}: {item.title}
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="textSecondary" sx={{ display: 'block', ml: 3.5 }}>
+                      {item.content && item.content.length > 50 ? `${item.content.substring(0, 50)}...` : item.content}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary" sx={{ display: 'block', ml: 3.5, mt: 0.5 }}>
+                      {new Date(item.date).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                ))
+              ) : (
+                <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', py: 3 }}>
+                  No recent activity
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Announcement Detail Modal */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <Fade in={openModal}>
-          <Box sx={{
+        <Box
+          sx={{
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '90%',
-            maxWidth: 800,
-            bgcolor: cardBackground,
-            backdropFilter: 'blur(40px)',
-            border: `1px solid ${cardBorder}`,
-            boxShadow: '0 24px 64px rgba(128,0,32,0.5)',
-            borderRadius: 4,
-            overflow: 'hidden',
+            width: { xs: '90%', sm: '80%', md: '600px' },
             maxHeight: '90vh',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            {selectedAnnouncement && (
-              <>
-                <Box sx={{ position: 'relative' }}>
-                  {selectedAnnouncement.image && (
-                    <Box component="img"
-                      src={`${API_BASE_URL}${selectedAnnouncement.image}`}
-                      alt={selectedAnnouncement.title}
-                      sx={{ width: '100%', height: 350, objectFit: 'cover' }}
-                    />
-                  )}
-                  <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(128,0,32,0.7) 100%)' }} />
-                  <IconButton onClick={handleCloseModal}
-                    sx={{ position: 'absolute', top: 20, right: 20, bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', border: `1px solid ${cardBorder}`, color: '#ffffff', '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.5)', transform: 'rotate(90deg)' }, transition: 'all 0.3s' }}>
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-                <Box sx={{ p: 4, overflowY: 'auto' }}>
-                  <Typography variant="h3" sx={{ fontWeight: 800, mb: 2, color: darkText, textShadow: '0 2px 10px rgba(128,0,32,0.3)' }}>
-                    {selectedAnnouncement.title}
-                  </Typography>
-                  <Chip icon={<AccessTime style={{ color: mediumText }} />}
-                    label={new Date(selectedAnnouncement.date).toLocaleDateString()}
-                    sx={{ mb: 3, bgcolor: 'rgba(128, 0, 32, 0.3)', backdropFilter: 'blur(10px)', color: mediumText, border: `1px solid ${cardBorder}` }}
-                  />
-                  <Typography variant="body1" sx={{ color: mediumText, lineHeight: 1.8, fontSize: '1.05rem' }}>
-                    {selectedAnnouncement.about}
-                  </Typography>
-                </Box>
-              </>
-            )}
-          </Box>
-        </Fade>
+            overflowY: 'auto',
+            bgcolor: COLORS.white,
+            borderRadius: 3,
+            boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
+            p: 4
+          }}
+        >
+          {selectedAnnouncement && (
+            <>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: COLORS.primary, flex: 1 }}>
+                  {selectedAnnouncement.title}
+                </Typography>
+                <IconButton
+                  onClick={handleCloseModal}
+                  sx={{
+                    color: COLORS.primary,
+                    '&:hover': {
+                      backgroundColor: COLORS.secondary,
+                      transform: 'rotate(90deg)'
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <Close />
+                </IconButton>
+              </Box>
+             
+              {selectedAnnouncement.image && (
+                <Box
+                  component="img"
+                  src={`${API_BASE_URL}${selectedAnnouncement.image}`}
+                  alt={selectedAnnouncement.title}
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: 400,
+                    objectFit: 'cover',
+                    borderRadius: 2,
+                    mb: 3
+                  }}
+                />
+              )}
+             
+              <Typography variant="body1" paragraph sx={{ color: COLORS.darkGray, lineHeight: 1.8 }}>
+                {selectedAnnouncement.about}
+              </Typography>
+             
+              <Divider sx={{ my: 2 }} />
+             
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" color="textSecondary">
+                  Posted on: {new Date(selectedAnnouncement.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={handleCloseModal}
+                  sx={{
+                    backgroundColor: COLORS.primary,
+                    '&:hover': {
+                      backgroundColor: '#8d3333',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)'
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
       </Modal>
 
       {/* Notifications Modal */}
       <Modal open={notifModalOpen} onClose={() => setNotifModalOpen(false)}>
-        <Fade in={notifModalOpen}>
-          <Box sx={{
-            position: 'absolute',
-            top: 100,
-            right: 24,
-            width: 420,
-            maxWidth: '90vw',
-            bgcolor: cardBackground,
-            backdropFilter: 'blur(40px)',
-            border: `1px solid ${cardBorder}`,
-            boxShadow: '0 24px 64px rgba(128,0,32,0.5)',
-            borderRadius: 4,
-            overflow: 'hidden',
-            maxHeight: 'calc(100vh - 140px)'
-          }}>
-            <Box sx={{
-              p: 3,
-              borderBottom: `1px solid ${cardBorder}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: 'linear-gradient(135deg, rgba(128, 0, 32, 0.1) 0%, rgba(165, 42, 42, 0.05) 100%)'
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: darkText }}>
-                Notifications
-              </Typography>
-              <IconButton size="small" onClick={() => setNotifModalOpen(false)}
-                sx={{ color: mediumText, '&:hover': { bgcolor: 'rgba(128, 0, 32, 0.1)', transform: 'rotate(90deg)' }, transition: 'all 0.3s' }}>
-                <CloseIcon />
-              </IconButton>
-            </Box>
-            <Box sx={{ maxHeight: 'calc(100vh - 250px)', overflowY: 'auto', p: 2 }}>
-              {announcements.slice(0, 8).map((item, idx) => (
-                <Grow in timeout={300 + idx * 50} key={idx}>
-                  <Box sx={{
-                    mb: 2,
-                    p: 2.5,
-                    borderRadius: 3,
-                    background: 'rgba(128, 0, 32, 0.05)',
-                    border: `1px solid ${cardBorder}`,
-                    cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      background: 'rgba(128, 0, 32, 0.1)',
-                      transform: 'translateX(8px)',
-                      boxShadow: '0 8px 24px rgba(128,0,32,0.2)'
-                    }
-                  }}
-                    onClick={() => {
-                      setSelectedAnnouncement(item);
-                      setNotifModalOpen(false);
-                      setOpenModal(true);
-                    }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: darkText, mb: 0.5, lineHeight: 1.4 }}>
-                      {item.title}
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: '#666666', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <AccessTime sx={{ fontSize: 14 }} />
-                      {item.date ? new Date(item.date).toLocaleDateString() : ""}
-                    </Typography>
-                  </Box>
-                </Grow>
-              ))}
-              {announcements.length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 8 }}>
-                  <NotificationsIcon sx={{ fontSize: 80, color: 'rgba(128, 0, 32, 0.2)', mb: 2 }} />
-                  <Typography sx={{ color: '#666666', fontSize: '1rem' }}>
-                    No notifications at the moment
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </Box>
-        </Fade>
-      </Modal>
-
-      {/* Logout Dialog */}
-      <Dialog
-        open={logoutOpen}
-        fullScreen
-        PaperProps={{
-          sx: { backgroundColor: "transparent", boxShadow: "none" },
-        }}
-        BackdropProps={{
-          sx: {
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(4px)",
-          },
-        }}
-      >
         <Box
           sx={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            overflow: "hidden",
-            position: "relative",
+            position: 'absolute',
+            top: { xs: '50%', md: '80px' },
+            right: { xs: '50%', md: '20px' },
+            transform: { xs: 'translate(50%, -50%)', md: 'none' },
+            width: { xs: '90%', sm: '400px' },
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            bgcolor: COLORS.white,
+            borderRadius: 3,
+            boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
+            p: 3
           }}
         >
-          {[0, 1, 2, 3].map((i) => (
-            <Box
-              key={i}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <NotificationsIcon sx={{ color: COLORS.primary, mr: 1 }} />
+              <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.primary }}>
+                Notifications
+              </Typography>
+            </Box>
+            <IconButton
+              size="small"
+              onClick={() => setNotifModalOpen(false)}
               sx={{
-                width: 20,
-                height: 20,
-                borderRadius: "50%",
-                background: i % 2 === 0 ? "rgba(128,0,32,0.8)" : "rgba(255,248,225,0.8)",
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transformOrigin: "-60px 0px",
-                animation: `orbit${i} ${3 + i}s linear infinite`,
-                boxShadow: "0 0 15px rgba(128,0,32,0.5), 0 0 8px rgba(255,248,225,0.5)",
-              }}
-            />
-          ))}
-
-          <Box sx={{ position: "relative", width: 120, height: 120 }}>
-            <Box
-              sx={{
-                width: 120,
-                height: 120,
-                borderRadius: "50%",
-                background: "radial-gradient(circle at 30% 30%, #A52A2A, #800020)",
-                boxShadow: "0 0 40px rgba(128,0,32,0.7), 0 0 80px rgba(128,0,32,0.5)",
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                animation: "floatSphere 2s ease-in-out infinite alternate",
+                color: COLORS.primary,
+                '&:hover': {
+                  backgroundColor: COLORS.secondary,
+                  transform: 'rotate(90deg)'
+                },
+                transition: 'all 0.3s'
               }}
             >
-              <Box
-                component="img"
-                src={logo}
-                alt="Logo"
-                sx={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: "50%",
-                  boxShadow: "0 0 20px rgba(128,0,32,0.7), 0 0 10px #FFF8E1",
-                  animation: "heartbeat 1s infinite",
-                }}
-              />
-            </Box>
+              <Close />
+            </IconButton>
           </Box>
 
-          <Typography
-            variant="h6"
-            sx={{
-              mt: 3,
-              fontWeight: "bold",
-              color: "#FFF8E1",
-              textShadow: "0 0 10px #800020",
-              animation: "pulse 1.5s infinite",
-            }}
-          >
-            Signing out...
-          </Typography>
-
-          <Box component="style" children={`
-            @keyframes heartbeat {
-              0%,100% { transform: scale(1); }
-              25%,75% { transform: scale(1.15); }
-              50% { transform: scale(1.05); }
-            }
-            @keyframes pulse {
-              0% { opacity: 1; }
-              50% { opacity: 0.6; }
-              100% { opacity: 1; }
-            }
-            @keyframes floatSphere {
-              0% { transform: translate(-50%, -50%) translateY(0); }
-              50% { transform: translate(-50%, -50%) translateY(-15px); }
-              100% { transform: translate(-50%, -50%) translateY(0); }
-            }
-            @keyframes orbit0 { 0% { transform: rotate(0deg) translateX(60px); } 100% { transform: rotate(360deg) translateX(60px); } }
-            @keyframes orbit1 { 0% { transform: rotate(90deg) translateX(60px); } 100% { transform: rotate(450deg) translateX(60px); } }
-            @keyframes orbit2 { 0% { transform: rotate(180deg) translateX(60px); } 100% { transform: rotate(540deg) translateX(60px); } }
-            @keyframes orbit3 { 0% { transform: rotate(270deg) translateX(60px); } 100% { transform: rotate(630deg) translateX(60px); } }
-          `}/>
+          {allNotifications.length > 0 ? (
+            allNotifications.map((notif, idx) => (
+              <Box
+                key={idx}
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  backgroundColor: notif.type === 'event' ? '#e8f5e9' : COLORS.secondary,
+                  borderRadius: 2,
+                  borderLeft: `4px solid ${notif.type === 'event' ? '#4caf50' : COLORS.primary}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  '&:hover': {
+                    transform: 'translateX(8px)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+                  }
+                }}
+                onClick={() => {
+                  if (notif.type === 'announcement') {
+                    setSelectedAnnouncement(notif.data);
+                    setNotifModalOpen(false);
+                    setOpenModal(true);
+                  }
+                }}
+              >
+                <Typography fontWeight={600} fontSize="0.9rem" sx={{ color: notif.type === 'event' ? '#2e7d32' : COLORS.primary, mb: 0.5 }}>
+                  {notif.type === 'event' ? '📅' : '📢'} {notif.type === 'event' ? notif.data.title : notif.data.title}
+                </Typography>
+                <Typography fontSize="0.75rem" color="textSecondary">
+                  {new Date(notif.date).toLocaleDateString()}
+                </Typography>
+                {notif.type === 'event' && (
+                  <Typography fontSize="0.8rem" sx={{ mt: 1 }}>
+                    {notif.data.description}
+                  </Typography>
+                )}
+              </Box>
+            ))
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <NotificationsIcon sx={{ fontSize: 48, color: COLORS.darkGray, opacity: 0.3, mb: 2 }} />
+              <Typography color="textSecondary">No notifications at the moment</Typography>
+            </Box>
+          )}
         </Box>
+      </Modal>
+
+      {/* View Notes/Events Dialog */}
+      <Dialog
+        open={viewNotesDialog}
+        onClose={() => setViewNotesDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ backgroundColor: COLORS.primary, color: COLORS.white }}>
+          {selectedDate && new Date(selectedDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: COLORS.primary, mb: 1, display: 'flex', alignItems: 'center' }}>
+            <Note sx={{ mr: 1 }} /> Notes
+          </Typography>
+          {getNotesForDate(selectedDate).length > 0 ? (
+            getNotesForDate(selectedDate).map(note => (
+              <Box key={note.id} sx={{ mb: 2, p: 2, backgroundColor: COLORS.secondary, borderRadius: 2 }}>
+                <Typography variant="body2">{note.content}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <IconButton size="small" onClick={() => handleDeleteNote(note.id)} sx={{ color: '#d32f2f' }}>
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>No notes for this date</Typography>
+          )}
+
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: COLORS.primary, mb: 1, mt: 3, display: 'flex', alignItems: 'center' }}>
+            <Event sx={{ mr: 1 }} /> Events
+          </Typography>
+          {getEventsForDate(selectedDate).length > 0 ? (
+            getEventsForDate(selectedDate).map(event => (
+              <Box key={event.id} sx={{ mb: 2, p: 2, backgroundColor: '#e8f5e9', borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{event.title}</Typography>
+                <Typography variant="body2">{event.description}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <IconButton size="small" onClick={() => handleDeleteEvent(event.id)} sx={{ color: '#d32f2f' }}>
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>No events for this date</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setViewNotesDialog(false); handleAddNote(); }} startIcon={<Note />} sx={{ backgroundColor: "#000000", color: '#FFFFFF' }}>
+            Add Note
+          </Button>
+          <Button onClick={() => { setViewNotesDialog(false); handleAddEvent(); }} startIcon={<Add />} sx={{ backgroundColor: "#000000", color: '#FFFFFF' }}>
+            Add Event
+          </Button>
+          <Button onClick={() => setViewNotesDialog(false)} variant="contained" sx={{ backgroundColor: COLORS.primary }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Note Dialog */}
+      <Dialog open={openNoteDialog} onClose={() => setOpenNoteDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: COLORS.primary, color: COLORS.white }}>Add Note</DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Note Content"
+            value={currentNote.content}
+            onChange={(e) => setCurrentNote({ ...currentNote, content: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="caption" color="textSecondary">
+            Date: {currentNote.date && new Date(currentNote.date).toLocaleDateString()}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setOpenNoteDialog(false)} 
+            variant="contained"
+            sx={{ backgroundColor: "#000000"}}
+            disabled={!currentNote.content}>Cancel</Button>
+          <Button
+            onClick={handleSaveNote}
+            variant="contained"
+            startIcon={<Save />}
+            sx={{ backgroundColor: COLORS.primary }}
+            disabled={!currentNote.content}
+          >
+            Save Note
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Event Dialog */}
+      <Dialog open={openEventDialog} onClose={() => setOpenEventDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: COLORS.primary, color: COLORS.white }}>Add Event</DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Event Title"
+            value={currentEvent.title}
+            onChange={(e) => setCurrentEvent({ ...currentEvent, title: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label="Event Description"
+            value={currentEvent.description}
+            onChange={(e) => setCurrentEvent({ ...currentEvent, description: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="caption" color="textSecondary">
+            Date: {currentEvent.date && new Date(currentEvent.date).toLocaleDateString()}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+          onClick={() => setOpenEventDialog(false)} 
+            variant="contained"
+            sx={{ backgroundColor: "#000000" }}
+            disabled={!currentNote.content}>Cancel</Button>
+          <Button
+            onClick={handleSaveEvent}
+            variant="contained"
+            startIcon={<Save />}
+            sx={{ backgroundColor: COLORS.primary }}
+            disabled={!currentEvent.title}
+          >
+            Save Event
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

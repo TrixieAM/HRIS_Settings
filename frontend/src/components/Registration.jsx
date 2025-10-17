@@ -53,7 +53,7 @@ const Registration = () => {
     email: '',
     employeeNumber: '',
     password: '',
-    employmentCategory: 0, // add this
+    employmentCategory: 0,
   });
 
   const [errMessage, setErrorMessage] = useState();
@@ -133,7 +133,7 @@ const Registration = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'employmentCategory' ? Number(value) : value, // ✅ convert
+      [name]: name === 'employmentCategory' ? Number(value) : value,
     }));
   };
 
@@ -189,8 +189,11 @@ const Registration = () => {
       });
 
       if (response.ok) {
-        setSuccessMessage('User registered successfully!');
+        setSuccessMessage('User registered successfully! Login Information have been sent to their email.')
         setErrorMessage('');
+        setTimeout(() => {
+        setSuccessMessage('');
+        }, 3000);
         setFormData({
           firstName: '',
           middleName: '',
@@ -199,6 +202,7 @@ const Registration = () => {
           email: '',
           employeeNumber: '',
           password: '',
+          employmentCategory: 0,
         });
       } else {
         const errorData = await response.json();
@@ -267,8 +271,7 @@ const Registration = () => {
     <Container
       maxWidth="md"
       sx={{
-        display: 'flex',
-        minHeight: '90vh',
+        display: 'absolute',
         backgroundColor: '#fff8e1',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1037,8 +1040,7 @@ const Registration = () => {
                 </Grid>
               </Grid>
 
-
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   name="password"
                   label="Password *"
@@ -1097,89 +1099,89 @@ const Registration = () => {
               </Grid>
             </Grid>
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              startIcon={<PersonAddAlt1 />}
-              sx={{
-                bgcolor: '#6d2323',
-                mt: 4,
-                py: 1.8,
-                fontSize: '1.1rem',
-                fontWeight: 700,
-                borderRadius: 2,
-                textTransform: 'none',
-                boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: '-100%',
-                  width: '100%',
-                  height: '100%',
-                  background:
-                    'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                  transition: 'left 0.5s ease',
-                },
-                '&:hover::before': {
-                  left: '100%',
-                },
-                '&:hover': {
-                  bgcolor: '#5a1e1e',
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 8px 24px rgba(109, 35, 35, 0.4)',
-                },
-                transition: 'all 0.3s ease',
-              }}
-            >
-              Register User
-            </Button>
-          </form>
+            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    fullWidth
+                    startIcon={<PersonAddAlt1 />}
+                    sx={{
+                      bgcolor: '#6d2323',
+                      py: 1.8,
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: '-100%',
+                        width: '100%',
+                        height: '100%',
+                        background:
+                          'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                        transition: 'left 0.5s ease',
+                      },
+                      '&:hover::before': {
+                        left: '100%',
+                      },
+                      '&:hover': {
+                        bgcolor: '#5a1e1e',
+                        transform: 'translateY(-3px)',
+                        boxShadow: '0 8px 24px rgba(109, 35, 35, 0.4)',
+                      },
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Register User
+                  </Button>
 
-          <Button
-            type="button"
-            variant="contained"
-            fullWidth
-            startIcon={<GroupAdd />}
-            sx={{
-              bgcolor: '#000',
-              mt: 2.5,
-              py: 1.8,
-              fontSize: '1rem',
-              fontWeight: 700,
-              borderRadius: 2,
-              textTransform: 'none',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: '-100%',
-                width: '100%',
-                height: '100%',
-                background:
-                  'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
-                transition: 'left 0.5s ease',
-              },
-              '&:hover::before': {
-                left: '100%',
-              },
-              '&:hover': {
-                bgcolor: '#2a2a2a',
-                transform: 'translateY(-3px)',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-            onClick={() => navigate('/bulk-register')}
-          >
-            Bulk Registration
-          </Button>
+                  <Button
+                    type="button"
+                    variant="contained"
+                    fullWidth
+                    startIcon={<GroupAdd />}
+                    sx={{
+                      bgcolor: '#000',
+                      py: 1.8,
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: '-100%',
+                        width: '100%',
+                        height: '100%',
+                        background:
+                          'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                        transition: 'left 0.5s ease',
+                      },
+                      '&:hover::before': {
+                        left: '100%',
+                      },
+                      '&:hover': {
+                        bgcolor: '#2a2a2a',
+                        transform: 'translateY(-3px)',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                      },
+                      transition: 'all 0.3s ease',
+                    }}
+                    onClick={() => navigate('/bulk-register')}
+                  >
+                    Bulk Registration
+                  </Button>
+                </Box>
+            </form>
         </Paper>
       </Grow>
     </Container>

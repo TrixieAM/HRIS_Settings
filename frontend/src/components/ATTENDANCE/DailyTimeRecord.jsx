@@ -1,15 +1,20 @@
-import API_BASE_URL from '../../apiConfig';
-import React, { useEffect,useState } from 'react';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import API_BASE_URL from "../../apiConfig";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import { TextField, Button, Box } from "@mui/material";
-import earistLogo from '../../assets/earistLogo.jpg';
-import { AccessTime, Print, SaveOutlined, Search, SearchOutlined } from '@mui/icons-material';
-import PrintIcon from '@mui/icons-material/Print'
-
+import earistLogo from "../../assets/earistLogo.jpg";
+import {
+  AccessTime,
+  Print,
+  SaveOutlined,
+  Search,
+  SearchOutlined,
+} from "@mui/icons-material";
+import PrintIcon from "@mui/icons-material/Print";
 
 const DailyTimeRecord = () => {
-  const [personID, setPersonID] = useState('');
+  const [personID, setPersonID] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [records, setRecords] = useState([]);
@@ -17,15 +22,14 @@ const DailyTimeRecord = () => {
   const [officialTimes, setOfficialTimes] = useState({});
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     };
   };
-
 
   useEffect(() => {
     // Retrieve and decode the token from local storage
@@ -40,14 +44,17 @@ const DailyTimeRecord = () => {
     }
   }, []);
 
-
   const fetchRecords = async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/attendance/api/view-attendance`, {
-        personID,
-        startDate,
-        endDate,
-      }, getAuthHeaders());
+      const response = await axios.post(
+        `${API_BASE_URL}/attendance/api/view-attendance`,
+        {
+          personID,
+          startDate,
+          endDate,
+        },
+        getAuthHeaders()
+      );
 
       const data = response.data;
 
@@ -56,9 +63,9 @@ const DailyTimeRecord = () => {
         setRecords(data);
 
         // Extract and set the employee name from the first record
-        const { firstName, lastName} = data[0];
+        const { firstName, lastName } = data[0];
         setEmployeeName(`${firstName} ${lastName}`);
-        
+
         // Fetch official times separately using the personID
         await fetchOfficialTimes(personID);
       } else {
@@ -71,37 +78,35 @@ const DailyTimeRecord = () => {
     }
   };
 
-
   // New function to fetch official times
-const fetchOfficialTimes = async (employeeID) => {
-  try {
-    const response = await axios.get(
-      `${API_BASE_URL}/officialtimetable/${employeeID}`,
-      getAuthHeaders() // ✅ Pass token headers
-    );
+  const fetchOfficialTimes = async (employeeID) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/officialtimetable/${employeeID}`,
+        getAuthHeaders() // ✅ Pass token headers
+      );
 
-    const data = response.data;
+      const data = response.data;
 
-    // Map the official times by day
-    const officialTimesMap = data.reduce((acc, record) => {
-      acc[record.day] = {
-        officialTimeIN: record.officialTimeIN,
-        officialTimeOUT: record.officialTimeOUT,
-        officialBreaktimeIN: record.officialBreaktimeIN,
-        officialBreaktimeOUT: record.officialBreaktimeOUT,
-      };
-      return acc;
-    }, {});
+      // Map the official times by day
+      const officialTimesMap = data.reduce((acc, record) => {
+        acc[record.day] = {
+          officialTimeIN: record.officialTimeIN,
+          officialTimeOUT: record.officialTimeOUT,
+          officialBreaktimeIN: record.officialBreaktimeIN,
+          officialBreaktimeOUT: record.officialBreaktimeOUT,
+        };
+        return acc;
+      }, {});
 
-    setOfficialTimes(officialTimesMap);
-  } catch (error) {
-    console.error("Error fetching official times:", error);
-    setOfficialTimes({});
-  }
-};
+      setOfficialTimes(officialTimesMap);
+    } catch (error) {
+      console.error("Error fetching official times:", error);
+      setOfficialTimes({});
+    }
+  };
 
-
-   // Also fetch official times when personID changes (on component mount)
+  // Also fetch official times when personID changes (on component mount)
   useEffect(() => {
     if (personID) {
       fetchOfficialTimes(personID);
@@ -135,16 +140,26 @@ const fetchOfficialTimes = async (employeeID) => {
     return date.toLocaleDateString(undefined, options).toUpperCase();
   };
 
-  const currentYear = 2024;
+  const currentYear = new Date().getFullYear();
   const months = [
-     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
 
-   const handleMonthClick = (monthIndex) => {
-    const year = 2024;
+  const handleMonthClick = (monthIndex) => {
+    const year = new Date().getFullYear();
     const start = new Date(Date.UTC(year, monthIndex, 1));
-    const end = new Date(Date.UTC(year, monthIndex + 1, 0)); 
+    const end = new Date(Date.UTC(year, monthIndex + 1, 0));
 
     const formattedStart = start.toISOString().substring(0, 10);
     const formattedEnd = end.toISOString().substring(0, 10);
@@ -153,9 +168,7 @@ const fetchOfficialTimes = async (employeeID) => {
     setEndDate(formattedEnd);
   };
 
-  
-  
- // Function to format the start date (Month DayNumber)
+  // Function to format the start date (Month DayNumber)
   const formatStartDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -163,8 +176,7 @@ const fetchOfficialTimes = async (employeeID) => {
     return date.toLocaleDateString("en-US", options);
   };
 
-
-// Function to format the end date (DayNumber, Year)
+  // Function to format the end date (DayNumber, Year)
   const formatEndDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -176,13 +188,12 @@ const fetchOfficialTimes = async (employeeID) => {
   const formattedStartDate = formatStartDate(startDate);
   const formattedEndDate = formatEndDate(endDate);
 
-
-
   return (
-    
-    <div className="container faculty" style={{transform: 'scale(0.8)', marginTop: '-10rem'}}>
-     
-    <style>
+    <div
+      className="container faculty"
+      style={{ transform: "scale(0.8)", marginTop: "-10rem" }}
+    >
+      <style>
         {`
           @media print {
             .no-print { 
@@ -244,96 +255,155 @@ const fetchOfficialTimes = async (employeeID) => {
         `}
       </style>
 
-
-      
       <div
-      className="search-container no-print textfield-container"
+        className="search-container no-print textfield-container"
         style={{
-          backgroundColor: '#6D2323',
-          color: '#ffffff',
-          padding: '10px',
-          width: '98%',
-          borderRadius: '8px',
-          borderBottomLeftRadius: '0px',
-          borderBottomRightRadius: '0px',
-          marginTop: '-10%'
-        
+          backgroundColor: "#6D2323",
+          color: "#ffffff",
+          padding: "20px",
+          borderRadius: "8px",
+          borderBottomLeftRadius: "0px",
+          borderBottomRightRadius: "0px",
         }}
       >
-  
-  <div  style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
-    <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
-    <div>
-      <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-        Daily Time Record
-      </h4>
-      <p style={{ margin: 0, fontSize: '85%' }}>
-        Filter your DTR records by date
-      </p>
-    </div>
-  </div>
-      </div>   
-
-       
-      <div
-      className="search-container no-print textfield-container"
-  style={{
-    backgroundColor: 'white',
-    padding: '20px',
-    paddingTop: '30px',
-    width: '97%',    
-    paddingBottom: '30px',
-    borderRadius: '0px 0px 8px 8px',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
-  }}
->
- 
-  {/* Month Buttons */}
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 5, ml: 30, mt: 0.5 }}>
-                          {months.map((month, index) => (
-                            <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#A31d1d" } }}>
-                              {month}
-                            </Button>
-                          ))}
-                        </Box>
-
- <div className="search-container no-print textfield-container" >
-       
-        <TextField sx={{ width: "350px", paddingLeft: '25px', paddingRight: "10px", backgroundColor:'white'}} m disabled value={personID} variant="outlined" />
-
-
-        <TextField sx={{ width: "350px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
-
-
-        <TextField sx={{ width: "350px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
-
-
-        <Button
-          sx={{
-            width: "230px",
-            height: "55px",
-            marginleft: "40px",
-            margintop: "10px",
-            bgcolor: "#6D2323",
-            fontWeight: 'bold',
-            fontSize: '17px'
-          }}
-          variant="contained"
-          color="primary"
-          onClick={fetchRecords || fetchOfficialTimes}
-          fullWidth
+        <div
+          style={{ display: "flex", alignItems: "center", color: "#ffffff" }}
         >
-          <SearchOutlined /> &nbsp;
-          Search
-        </Button>
+          <AccessTime
+            sx={{
+              fontSize: "3rem",
+              marginRight: "16px",
+              marginLeft: "5px",
+            }}
+          />
+          <div>
+            <h4 style={{ margin: 0, fontSize: "150%", marginBottom: "2px" }}>
+              Daily Time Record
+            </h4>
+            <p style={{ margin: 0, fontSize: "85%" }}>
+              Filter your DTR records by date
+            </p>
+          </div>
+        </div>
       </div>
+
+      <div
+        className="search-container no-print textfield-container"
+        style={{
+          backgroundColor: "white",
+          padding: "30px 20px",
+          borderRadius: "0px 0px 8px 8px",
+          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 1, // normal spacing
+          mb: 2,
+          width: "100%",
+        }}
+      >
+        {months.map((month, index) => (
+          <Button
+            key={month}
+            variant="contained"
+            onClick={() => handleMonthClick(index)}
+            sx={{
+              backgroundColor: "#6D2323",
+              color: "white",
+              fontSize: "18px",    
+              padding: "8px 18px", 
+              minWidth: "95px",     
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "#A31d1d" },
+            }}
+          >
+            {month}
+          </Button>
+        ))}
+      </Box>
+
+        <div
+          className="search-container no-print textfield-container"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "15px",
+          }}
+        >
+          <TextField
+            sx={{
+              width: "350px",
+              backgroundColor: "white",
+            }}
+            disabled
+            value={personID}
+            variant="outlined"
+          />
+
+          <TextField
+            sx={{
+              width: "350px",
+              backgroundColor: "white",
+            }}
+            label="Start Date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <TextField
+            sx={{
+              width: "350px",
+              backgroundColor: "white",
+            }}
+            label="End Date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <Button
+            sx={{
+              width: "230px",
+              height: "55px",
+              bgcolor: "#6D2323",
+              fontWeight: "bold",
+              fontSize: "17px",
+            }}
+            variant="contained"
+            color="primary"
+            onClick={fetchRecords || fetchOfficialTimes}
+          >
+            <SearchOutlined /> &nbsp; Search
+          </Button>
+        </div>
       </div>
 
 
       <br />
-      <div className="table-container" style={{marginBottom: '3%', backgroundColor:'white'}}>
+      <div
+        className="table-container"
+        style={{ marginBottom: "3%", backgroundColor: "white" }}
+      >
         <div className="table-wrapper">
-          <div style={{ display: "flex", gap: '2%', justifyContent: 'center'}} className="table-side-by-side">
+          <div
+            style={{ display: "flex", gap: "2%", justifyContent: "center" }}
+            className="table-side-by-side"
+          >
             <table
               style={{
                 border: "1px solid black",
@@ -342,7 +412,7 @@ const fetchOfficialTimes = async (employeeID) => {
               }}
               className="print-visble"
             >
-              <thead style={{ textAlign: "center", position: 'relative' }}>
+              <thead style={{ textAlign: "center", position: "relative" }}>
                 <tr>
                   <div
                     style={{
@@ -351,16 +421,16 @@ const fetchOfficialTimes = async (employeeID) => {
                       left: "50%",
                       transform: "translateX(-50%)",
                       fontWeight: "bold",
-                      fontSize: '13px'
+                      fontSize: "13px",
                     }}
                   >
                     Republic of the Philippines
                   </div>
-              
+
                   <td
                     colSpan="1"
                     style={{
-                      position: 'relative',
+                      position: "relative",
                       padding: "0",
                       lineHeight: "0",
                       height: "0px",
@@ -368,19 +438,30 @@ const fetchOfficialTimes = async (employeeID) => {
                       marginRight: "0",
                     }}
                   >
-                    <img src={earistLogo} alt="EARIST Logo" width="55" height="55"  style={{position: 'absolute', marginTop: '-14%', left: '60%'}}/>
+                    <img
+                      src={earistLogo}
+                      alt="EARIST Logo"
+                      width="55"
+                      height="55"
+                      style={{
+                        position: "absolute",
+                        marginTop: "-14%",
+                        left: "60%",
+                      }}
+                    />
                   </td>
                   <td colSpan="3">
-                      <p
+                    <p
                       style={{
-                        marginTop: '15%',
+                        marginTop: "15%",
                         fontSize: "15px",
                         fontWeight: "bold",
                         textAlign: "center",
-                        marginLeft: '20%'
+                        marginLeft: "20%",
                       }}
                     >
-                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE & TECHNOLOGY
+                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE &
+                      TECHNOLOGY
                     </p>
                   </td>
                   <td></td>
@@ -415,13 +496,12 @@ const fetchOfficialTimes = async (employeeID) => {
                     </p>
                   </td>
                 </tr>
-
                 <tr>
                   <td colSpan="9" style={{ padding: "2", lineHeight: "0" }}>
                     <h4>DAILY TIME RECORD</h4>
                   </td>
                 </tr>
-                <tr style={{position: 'relative'}}>
+                <tr style={{ position: "relative" }}>
                   <td colSpan="3" style={{ padding: "2", lineHeight: "0" }}>
                     <p
                       style={{
@@ -429,8 +509,8 @@ const fetchOfficialTimes = async (employeeID) => {
                         margin: "0",
                         height: "20px",
                         textAlign: "left",
-                        padding: '0 1rem',
-                        marginTop: '6%',
+                        padding: "0 1rem",
+                        marginTop: "6%",
                       }}
                     >
                       NAME: <b>{employeeName}</b>
@@ -438,7 +518,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   </td>
                   <td></td>
                 </tr>
-
                 <tr>
                   <td colSpan="5" style={{ padding: "2", lineHeight: "0" }}>
                     <p
@@ -446,24 +525,31 @@ const fetchOfficialTimes = async (employeeID) => {
                         fontSize: "15px",
                         margin: "0",
                         height: "10px",
-                        paddingLeft: '1rem',
+                        paddingLeft: "1rem",
                         textAlign: "Left",
                       }}
                     >
-                      Covered Dates: <b>{formattedStartDate} - {formattedEndDate}</b>
+                      Covered Dates:{" "}
+                      <b>
+                        {formattedStartDate} - {formattedEndDate}
+                      </b>
                     </p>
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="3" style={{ padding: "2", lineHeight: "2", textAlign: "left" }}>
+                  <td
+                    colSpan="3"
+                    style={{ padding: "2", lineHeight: "2", textAlign: "left" }}
+                  >
                     <p
                       style={{
                         fontSize: "15px",
                         margin: "0",
-                        paddingLeft: '1rem'
+                        paddingLeft: "1rem",
                       }}
                     >
-                      For the month of: <b>{startDate ? formatMonth(startDate) : ""}</b>
+                      For the month of:{" "}
+                      <b>{startDate ? formatMonth(startDate) : ""}</b>
                     </p>
                   </td>
                   <td></td>
@@ -473,55 +559,24 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
                 </tr>
                 <tr>
-                    <td
+                  <td
                     style={{
                       fontSize: "15px",
                       margin: "0",
                       height: "10px",
-                      position:'absolute',
-                      paddingLeft: '1rem',
-                      textAlign: 'left'
+                      position: "absolute",
+                      paddingLeft: "1rem",
+                      textAlign: "left",
                     }}
                   >
                     Official hours for arrival (regular day) and departure
                   </td>
                 </tr>
-                
-                <tr>
-                  
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                
-               
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
-                  <td></td>
-
-                  
-                </tr>
-                
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
                   <td></td>
                 </tr>
                 <tr>
@@ -530,8 +585,13 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
 
-                  
+                  <td></td>
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -544,8 +604,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -558,10 +616,19 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
@@ -572,170 +639,206 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                 <tr>
+                <tr>
                   <td></td>
                   <td></td>
-                  <td style={{position: 'absolute', display: 'flex', flexDirection: 'column', right: '50%', gap: '1px', paddingBottom: '5rem'}}>Regular days M-TH</td>
-                  <td></td>
-                  <td></td>
-              
-
-            
-                    
-                     <tr style={{position: 'absolute', display: 'flex', flexDirection: 'column', right: '5%', gap: '1px', paddingBottom: '2rem'}}>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      position: "absolute",
+                      display: "flex",
+                      flexDirection: "column",
+                      right: "50%",
+                      gap: "1px",
+                      paddingBottom: "5rem",
                     }}
                   >
-                    M - {officialTimes["Monday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Monday"]?.officialTimeOUT || "00:00:00"}
+                    Regular days M-TH
                   </td>
+                  <td></td>
+                  <td></td>
 
-                  <td
+                  <tr
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
+                      position: "absolute",
+                      display: "flex",
+                      flexDirection: "column",
+                      right: "5%",
+                      gap: "1px",
+                      paddingBottom: "2rem",
                     }}
                   >
-                    T - {officialTimes["Tuesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Tuesday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      M -{" "}
+                      {officialTimes["Monday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Monday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
 
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      T -{" "}
+                      {officialTimes["Tuesday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Tuesday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      W -{" "}
+                      {officialTimes["Wednesday"]?.officialTimeIN || "00:00:00"}{" "}
+                      -{" "}
+                      {officialTimes["Wednesday"]?.officialTimeOUT ||
+                        "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      TH -{" "}
+                      {officialTimes["Thursday"]?.officialTimeIN || "00:00:00"}{" "}
+                      -{" "}
+                      {officialTimes["Thursday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      F -{" "}
+                      {officialTimes["Friday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Friday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      SAT -{" "}
+                      {officialTimes["Saturday"]?.officialTimeIN || "00:00:00"}{" "}
+                      -{" "}
+                      {officialTimes["Saturday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      SUN -{" "}
+                      {officialTimes["Sunday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Sunday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                  </tr>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>{" "}
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
                   <td
+                    colSpan="3"
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      position: "absolute",
+                      display: "flex",
+                      justifyContent: "left",
+                      flexDirection: "column",
+                      right: "58.2%",
+                      gap: "1px",
+                      paddingBottom: "5rem",
                     }}
                   >
-                    W - {officialTimes["Wednesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Wednesday"]?.officialTimeOUT || "00:00:00"}
+                    Saturdays
                   </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    TH - {officialTimes["Thursday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Thursday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    F - {officialTimes["Friday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Friday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Saturday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Sunday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                </tr>
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                    
-                  <td></td>
 
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                  
-                </tr>
-                <tr>
-                  
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3" style={{position: 'absolute', display: 'flex', justifyContent: 'left', flexDirection: 'column', right: '58.2%', gap: '1px', paddingBottom: '5rem'}}>Saturdays</td>
-                  
                   <td></td>
                   <td></td>
                 </tr>
@@ -745,8 +848,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -759,22 +860,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                 <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -787,8 +872,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -801,8 +884,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -815,8 +896,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -829,259 +908,233 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
                 </tr>
-
-                 <tr>
+                <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                 <tr>
+                <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
-
-                  <td></td>
-
-                 <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>  
                 </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
 
-                
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>
+                </tr>
               </thead>
               <tr>
                 <th
@@ -1101,11 +1154,9 @@ const fetchOfficialTimes = async (employeeID) => {
                   P.M.
                 </th>
                 <th style={{ border: "1px solid black" }}>Late</th>
-                <th style={{ border: "1px solid black" }}>
-                  Undertime
-                </th>
+                <th style={{ border: "1px solid black" }}>Undertime</th>
               </tr>
-              <tr style={{textAlign: 'center'}}>
+              <tr style={{ textAlign: "center" }}>
                 <td style={{ border: "1px solid black" }}>Arrival</td>
                 <td style={{ border: "1px solid black" }}>Departure</td>
                 <td style={{ border: "1px solid black" }}>Arrival</td>
@@ -1117,17 +1168,68 @@ const fetchOfficialTimes = async (employeeID) => {
               <tbody>
                 {Array.from({ length: 31 }, (_, i) => {
                   const day = (i + 1).toString().padStart(2, "0");
-                  const record = records.find((r) => r.date.endsWith(`-${day}`));
+                  const record = records.find((r) =>
+                    r.date.endsWith(`-${day}`)
+                  );
 
                   return (
                     <tr key={i}>
-                      <td style={{ border: "1px solid black", textAlign: 'center'}}>{day}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.timeIN || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.timeOUT || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.breaktimeIN || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.breaktimeOUT || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.hours || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.minutes || ""}</td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {day}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.timeIN || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.timeOUT || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.breaktimeIN || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.breaktimeOUT || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.hours || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.minutes || ""}
+                      </td>
                     </tr>
                   );
                 })}
@@ -1150,10 +1252,13 @@ const fetchOfficialTimes = async (employeeID) => {
                           marginTop: "10px",
                         }}
                       >
-                        I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival and departure from office.
+                        I certify on my honor that the above is a true and
+                        correct report of the hours of work performed, record of
+                        which was made daily at the time of arrival and
+                        departure from office.
                       </p>
                       <br />
-                
+
                       <hr
                         style={{
                           borderTop: "1px double black",
@@ -1161,7 +1266,9 @@ const fetchOfficialTimes = async (employeeID) => {
                           margin: "0 auto",
                         }}
                       />
-                      <p style={{ textAlign: "center", marginTop: "12px" }}>Verified as to prescribe office hours.</p>
+                      <p style={{ textAlign: "center", marginTop: "12px" }}>
+                        Verified as to prescribe office hours.
+                      </p>
                       <br />
                       <hr
                         style={{
@@ -1187,8 +1294,7 @@ const fetchOfficialTimes = async (employeeID) => {
               }}
               className="print-visble"
             >
-              <thead style={{ textAlign: "center", position: 'relative' }}>
-               
+              <thead style={{ textAlign: "center", position: "relative" }}>
                 <tr>
                   <div
                     style={{
@@ -1197,16 +1303,16 @@ const fetchOfficialTimes = async (employeeID) => {
                       left: "50%",
                       transform: "translateX(-50%)",
                       fontWeight: "bold",
-                      fontSize: '13px'
+                      fontSize: "13px",
                     }}
                   >
                     Republic of the Philippines
                   </div>
-              
+
                   <td
                     colSpan="1"
                     style={{
-                      position: 'relative',
+                      position: "relative",
                       padding: "0",
                       lineHeight: "0",
                       height: "0px",
@@ -1214,19 +1320,30 @@ const fetchOfficialTimes = async (employeeID) => {
                       marginRight: "0",
                     }}
                   >
-                    <img src={earistLogo} alt="EARIST Logo" width="55" height="55"  style={{position: 'absolute', marginTop: '-14%', left: '60%'}}/>
+                    <img
+                      src={earistLogo}
+                      alt="EARIST Logo"
+                      width="55"
+                      height="55"
+                      style={{
+                        position: "absolute",
+                        marginTop: "-14%",
+                        left: "60%",
+                      }}
+                    />
                   </td>
                   <td colSpan="3">
                     <p
                       style={{
-                        marginTop: '15%',
+                        marginTop: "15%",
                         fontSize: "15px",
                         fontWeight: "bold",
                         textAlign: "center",
-                        marginLeft: '23%'
+                        marginLeft: "23%",
                       }}
                     >
-                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE & TECHNOLOGY
+                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE &
+                      TECHNOLOGY
                     </p>
                   </td>
                   <td></td>
@@ -1261,13 +1378,12 @@ const fetchOfficialTimes = async (employeeID) => {
                     </p>
                   </td>
                 </tr>
-
                 <tr>
                   <td colSpan="9" style={{ padding: "2", lineHeight: "0" }}>
                     <h4>DAILY TIME RECORD</h4>
                   </td>
                 </tr>
-                <tr style={{position: 'relative'}}>
+                <tr style={{ position: "relative" }}>
                   <td colSpan="3" style={{ padding: "2", lineHeight: "0" }}>
                     <p
                       style={{
@@ -1275,8 +1391,8 @@ const fetchOfficialTimes = async (employeeID) => {
                         margin: "0",
                         height: "20px",
                         textAlign: "left",
-                        padding: '0 1rem',
-                        marginTop: '6%',
+                        padding: "0 1rem",
+                        marginTop: "6%",
                       }}
                     >
                       NAME: <b>{employeeName}</b>
@@ -1284,7 +1400,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   </td>
                   <td></td>
                 </tr>
-
                 <tr>
                   <td colSpan="5" style={{ padding: "2", lineHeight: "0" }}>
                     <p
@@ -1292,24 +1407,31 @@ const fetchOfficialTimes = async (employeeID) => {
                         fontSize: "15px",
                         margin: "0",
                         height: "10px",
-                        paddingLeft: '1rem',
+                        paddingLeft: "1rem",
                         textAlign: "Left",
                       }}
                     >
-                      Covered Dates: <b>{formattedStartDate} - {formattedEndDate}</b>
+                      Covered Dates:{" "}
+                      <b>
+                        {formattedStartDate} - {formattedEndDate}
+                      </b>
                     </p>
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="3" style={{ padding: "2", lineHeight: "2", textAlign: "left" }}>
+                  <td
+                    colSpan="3"
+                    style={{ padding: "2", lineHeight: "2", textAlign: "left" }}
+                  >
                     <p
                       style={{
                         fontSize: "15px",
                         margin: "0",
-                        paddingLeft: '1rem'
+                        paddingLeft: "1rem",
                       }}
                     >
-                      For the month of: <b>{startDate ? formatMonth(startDate) : ""}</b>
+                      For the month of:{" "}
+                      <b>{startDate ? formatMonth(startDate) : ""}</b>
                     </p>
                   </td>
                   <td></td>
@@ -1319,55 +1441,24 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
                 </tr>
                 <tr>
-                    <td
+                  <td
                     style={{
                       fontSize: "15px",
                       margin: "0",
                       height: "10px",
-                      position:'absolute',
-                      paddingLeft: '1rem',
-                      textAlign: 'left'
+                      position: "absolute",
+                      paddingLeft: "1rem",
+                      textAlign: "left",
                     }}
                   >
                     Official hours for arrival (regular day) and departure
                   </td>
                 </tr>
-                
-                <tr>
-                  
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                
-               
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
-                  <td></td>
-
-                  
-                </tr>
-                
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
                   <td></td>
                 </tr>
                 <tr>
@@ -1376,8 +1467,13 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
 
-                  
+                  <td></td>
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1390,8 +1486,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1404,10 +1498,19 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
@@ -1418,170 +1521,206 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                 <tr>
+                <tr>
                   <td></td>
                   <td></td>
-                  <td style={{position: 'absolute', display: 'flex', flexDirection: 'column', right: '50%', gap: '1px', paddingBottom: '5rem'}}>Regular days M-TH</td>
-                  <td></td>
-                  <td></td>
-              
-
-            
-                    
-                     <tr style={{position: 'absolute', display: 'flex', flexDirection: 'column', right: '5%', gap: '1px', paddingBottom: '2rem'}}>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      position: "absolute",
+                      display: "flex",
+                      flexDirection: "column",
+                      right: "50%",
+                      gap: "1px",
+                      paddingBottom: "5rem",
                     }}
                   >
-                    M - {officialTimes["Monday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Monday"]?.officialTimeOUT || "00:00:00"}
+                    Regular days M-TH
                   </td>
+                  <td></td>
+                  <td></td>
 
-                  <td
+                  <tr
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
+                      position: "absolute",
+                      display: "flex",
+                      flexDirection: "column",
+                      right: "5%",
+                      gap: "1px",
+                      paddingBottom: "2rem",
                     }}
                   >
-                    T - {officialTimes["Tuesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Tuesday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      M -{" "}
+                      {officialTimes["Monday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Monday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
 
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      T -{" "}
+                      {officialTimes["Tuesday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Tuesday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      W -{" "}
+                      {officialTimes["Wednesday"]?.officialTimeIN || "00:00:00"}{" "}
+                      -{" "}
+                      {officialTimes["Wednesday"]?.officialTimeOUT ||
+                        "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      TH -{" "}
+                      {officialTimes["Thursday"]?.officialTimeIN || "00:00:00"}{" "}
+                      -{" "}
+                      {officialTimes["Thursday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      F -{" "}
+                      {officialTimes["Friday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Friday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      SAT -{" "}
+                      {officialTimes["Saturday"]?.officialTimeIN || "00:00:00"}{" "}
+                      -{" "}
+                      {officialTimes["Saturday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                    <td
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        margin: "0",
+                        height: "10px",
+                        textAlign: "Left",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      SUN -{" "}
+                      {officialTimes["Sunday"]?.officialTimeIN || "00:00:00"} -{" "}
+                      {officialTimes["Sunday"]?.officialTimeOUT || "00:00:00"}
+                    </td>
+                  </tr>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>{" "}
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
                   <td
+                    colSpan="3"
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      position: "absolute",
+                      display: "flex",
+                      justifyContent: "left",
+                      flexDirection: "column",
+                      right: "58.2%",
+                      gap: "1px",
+                      paddingBottom: "5rem",
                     }}
                   >
-                    W - {officialTimes["Wednesday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Wednesday"]?.officialTimeOUT || "00:00:00"}
+                    Saturdays
                   </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    TH - {officialTimes["Thursday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Thursday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    F - {officialTimes["Friday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Friday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Saturday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                  <td
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "00:00:00"} - {officialTimes["Sunday"]?.officialTimeOUT || "00:00:00"}
-                  </td>
-                </tr>
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                    
-                  <td></td>
 
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                  
-                </tr>
-                <tr>
-                  
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3" style={{position: 'absolute', display: 'flex', justifyContent: 'left', flexDirection: 'column', right: '58.2%', gap: '1px', paddingBottom: '5rem'}}>Saturdays</td>
-                  
                   <td></td>
                   <td></td>
                 </tr>
@@ -1591,8 +1730,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1605,22 +1742,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                 <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1633,8 +1754,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1647,8 +1766,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1661,8 +1778,6 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1675,259 +1790,233 @@ const fetchOfficialTimes = async (employeeID) => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
                 </tr>
-
-                 <tr>
+                <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                 <tr>
+                <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
-
-                  <td></td>
-
-                 <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>  
                 </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
 
-                
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>{" "}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>
+                </tr>
               </thead>
               <tr>
                 <th
@@ -1947,11 +2036,9 @@ const fetchOfficialTimes = async (employeeID) => {
                   P.M.
                 </th>
                 <th style={{ border: "1px solid black" }}>Late</th>
-                <th style={{ border: "1px solid black" }}>
-                  Undertime
-                </th>
+                <th style={{ border: "1px solid black" }}>Undertime</th>
               </tr>
-              <tr style={{textAlign: 'center'}}>
+              <tr style={{ textAlign: "center" }}>
                 <td style={{ border: "1px solid black" }}>Arrival</td>
                 <td style={{ border: "1px solid black" }}>Departure</td>
                 <td style={{ border: "1px solid black" }}>Arrival</td>
@@ -1963,17 +2050,68 @@ const fetchOfficialTimes = async (employeeID) => {
               <tbody>
                 {Array.from({ length: 31 }, (_, i) => {
                   const day = (i + 1).toString().padStart(2, "0");
-                  const record = records.find((r) => r.date.endsWith(`-${day}`));
+                  const record = records.find((r) =>
+                    r.date.endsWith(`-${day}`)
+                  );
 
                   return (
                     <tr key={i}>
-                      <td style={{ border: "1px solid black", textAlign: 'center'}}>{day}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.timeIN || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.timeOUT || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.breaktimeIN || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.breaktimeOUT || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.hours || ""}</td>
-                      <td style={{ border: "1px solid black", textAlign: 'center' }}>{record?.minutes || ""}</td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {day}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.timeIN || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.timeOUT || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.breaktimeIN || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.breaktimeOUT || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.hours || ""}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {record?.minutes || ""}
+                      </td>
                     </tr>
                   );
                 })}
@@ -1996,10 +2134,13 @@ const fetchOfficialTimes = async (employeeID) => {
                           marginTop: "10px",
                         }}
                       >
-                        I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival and departure from office.
+                        I certify on my honor that the above is a true and
+                        correct report of the hours of work performed, record of
+                        which was made daily at the time of arrival and
+                        departure from office.
                       </p>
                       <br />
-                     
+
                       <hr
                         style={{
                           borderTop: "1px double black",
@@ -2007,7 +2148,9 @@ const fetchOfficialTimes = async (employeeID) => {
                           margin: "0 auto",
                         }}
                       />
-                      <p style={{ textAlign: "center", marginTop: "12px" }}>Verified as to prescribe office hours.</p>
+                      <p style={{ textAlign: "center", marginTop: "12px" }}>
+                        Verified as to prescribe office hours.
+                      </p>
                       <br />
                       <hr
                         style={{
@@ -2018,7 +2161,6 @@ const fetchOfficialTimes = async (employeeID) => {
                           marginRight: "20px",
                         }}
                       />
-                     
                     </div>
                   </td>
                 </tr>
@@ -2032,22 +2174,18 @@ const fetchOfficialTimes = async (employeeID) => {
         sx={{
           width: "200px",
           height: "55px",
-          marginLeft: '84%',
+          marginLeft: "84%",
           margintop: "10px",
-          bgcolor: '#6D2323',
-          fontSize: '15px',
-          
+          bgcolor: "#6D2323",
+          fontSize: "15px",
         }}
         className="no-print"
         variant="contained"
         color="primary"
         onClick={printPage}
         fullWidth
-        
       >
-          <PrintIcon style={{ fontSize: '24px' }} /> &nbsp;
-        
-        Print
+        <PrintIcon style={{ fontSize: "24px" }} /> &nbsp; Print
       </Button>
     </div>
   );

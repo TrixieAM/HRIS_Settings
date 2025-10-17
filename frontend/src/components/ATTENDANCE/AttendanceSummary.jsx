@@ -355,7 +355,6 @@ const OverallAttendance = () => {
           backgroundColor: '#6D2323',
           color: '#ffffff',
           padding: '20px',
-          width: '96.7%',
           borderRadius: '8px',
           borderBottomLeftRadius: '0px',
           borderBottomRightRadius: '0px',

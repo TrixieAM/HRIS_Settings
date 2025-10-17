@@ -1,11 +1,28 @@
 import API_BASE_URL from "../apiConfig";
 import React, { useState, useEffect } from "react";
-import { Container, Paper, Typography, Button, Alert, Box, Chip, CircularProgress } from "@mui/material";
+import {
+  Container,
+  Paper,
+  Typography,
+  Button,
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  Card,
+  CardContent,
+  Grid,
+  Fade,
+  Avatar,
+  IconButton,
+  Tooltip,
+  Divider,
+  alpha,
+} from "@mui/material";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
 import {
   GroupAdd,
-  PersonAdd,
   CloudUpload,
   TableChart,
   CheckCircleOutline,
@@ -15,6 +32,8 @@ import {
   FileUpload,
   People,
   ArrowBack,
+  Refresh,
+  Clear,
 } from "@mui/icons-material";
 import AccessDenied from "./AccessDenied";
 
@@ -26,132 +45,130 @@ const BulkRegister = () => {
 
   const navigate = useNavigate();
 
-   //ACCESSING
-  // Page access control states
-  const [hasAccess, setHasAccess] = useState(null);
-  // Page access control
-  useEffect(() => {
-    const userId = localStorage.getItem('employeeNumber');
-    const pageId = 17; // PAGE ID
-    if (!userId) {
-      setHasAccess(false);
-      return;
-    }
-    const checkAccess = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (response.ok) {
-          const accessData = await response.json();
-          const hasPageAccess = accessData.some(access => 
-            access.page_id === pageId && String(access.page_privilege) === '1'
-          );
-          setHasAccess(hasPageAccess);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setHasAccess(false);
-      }
-    };
-    checkAccess();
-  }, []);
-  // ACCESSING END
+  // Color scheme matching ViewAttendanceRecord
+  const primaryColor = '#6d2323';
+  const creamColor = '#FEF9E1';
+  const blackColor = '#000000';
+  const whiteColor = '#FFFFFF';
+
+  // Page access control states
+  const [hasAccess, setHasAccess] = useState(null);
+
+  // Page access control
+  useEffect(() => {
+    const userId = localStorage.getItem('employeeNumber');
+    const pageId = 17;
+    if (!userId) {
+      setHasAccess(false);
+      return;
+    }
+    const checkAccess = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/page_access/${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const accessData = await response.json();
+          const hasPageAccess = accessData.some(access => 
+            access.page_id === pageId && String(access.page_privilege) === '1'
+          );
+          setHasAccess(hasPageAccess);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Error checking access:', error);
+        setHasAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
 
   // Handle file upload and parse Excel
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    try {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-      // Validate required columns exist
-      if (worksheet.length === 0) {
-        setErrMessage("Excel file is empty.");
-        return;
-      }
+        if (worksheet.length === 0) {
+          setErrMessage("Excel file is empty.");
+          return;
+        }
 
-      const firstRow = worksheet[0];
-      const requiredFields = ['employeeNumber', 'firstName', 'lastName', 'employmentCategory', 'email', 'password'];
-      const missingFields = requiredFields.filter(field => !(field in firstRow));
-      
-      if (missingFields.length > 0) {
-        setErrMessage(`Missing required columns: ${missingFields.join(', ')}. Expected columns: employeeNumber, firstName, lastName, employmentCategory, email, password, middleName (optional), nameExtension (optional)`);
-        return;
-      }
-
-      // Process users with validation
-      const processedUsers = worksheet.map((user, index) => {
-        // Normalize employmentCategory
-        let employmentCategory = user.employmentCategory?.toString().trim().toLowerCase() || "";
-        let employmentCategoryValue = "";
+        const firstRow = worksheet[0];
+        const requiredFields = ['employeeNumber', 'firstName', 'lastName', 'email', 'employmentCategory', 'password'];
+        const missingFields = requiredFields.filter(field => !(field in firstRow));
         
-        if (employmentCategory === "regular") {
-          employmentCategoryValue = "1";
-        } else if (employmentCategory === "jo") {
-          employmentCategoryValue = "0";
+        if (missingFields.length > 0) {
+          setErrMessage(`Missing required columns: ${missingFields.join(', ')}. Expected columns: employeeNumber, firstName, lastName, email, employmentCategory, password, middleName (optional), nameExtension (optional)`);
+          return;
         }
 
-        // Clean up the user data
-        const processedUser = {
-          firstName: user.firstName?.toString().trim() || "",
-          middleName: user.middleName?.toString().trim() || null,
-          lastName: user.lastName?.toString().trim() || "",
-          nameExtension: user.nameExtension?.toString().trim() || null,
-          employmentCategory: employmentCategoryValue,
-          email: user.email?.toString().trim() || "",
-          employeeNumber: user.employeeNumber?.toString().trim() || "",
-          password: user.password?.toString().trim() || "",
-          role: "staff",
-          access_level: "user"
-        };
+        const processedUsers = worksheet.map((user, index) => {
+          let employmentCategory = user.employmentCategory?.toString().trim().toLowerCase() || "";
+          let employmentCategoryValue = "";
+          
+          if (employmentCategory === "regular") {
+            employmentCategoryValue = "1";
+          } else if (employmentCategory === "jo") {
+            employmentCategoryValue = "0";
+          }
 
-        return processedUser;
-      });
+          const processedUser = {
+            firstName: user.firstName?.toString().trim() || "",
+            middleName: user.middleName?.toString().trim() || null,
+            lastName: user.lastName?.toString().trim() || "",
+            nameExtension: user.nameExtension?.toString().trim() || null,
+            employmentCategory: employmentCategoryValue,
+            email: user.email?.toString().trim() || "",
+            employeeNumber: user.employeeNumber?.toString().trim() || "",
+            password: user.password?.toString().trim() || "",
+            role: "staff",
+            access_level: "user"
+          };
 
-      // Basic validation
-      const validationErrors = [];
-      processedUsers.forEach((user, index) => {
-        if (!user.firstName || !user.lastName || !user.email || !user.employeeNumber || !user.password) {
-          validationErrors.push(`Row ${index + 2}: Missing required fields`);
+          return processedUser;
+        });
+
+        const validationErrors = [];
+        processedUsers.forEach((user, index) => {
+          if (!user.firstName || !user.lastName || !user.email || !user.employeeNumber || !user.password) {
+            validationErrors.push(`Row ${index + 2}: Missing required fields`);
+          }
+          
+          if (!user.employmentCategory) {
+            validationErrors.push(`Row ${index + 2}: Invalid employmentCategory. Must be 'Regular' or 'JO'`);
+          }
+          
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (user.email && !emailRegex.test(user.email)) {
+            validationErrors.push(`Row ${index + 2}: Invalid email format`);
+          }
+        });
+
+        if (validationErrors.length > 0) {
+          setErrMessage(`Validation errors found:\n${validationErrors.slice(0, 5).join('\n')}${validationErrors.length > 5 ? '\n...and more' : ''}`);
+          return;
         }
+
+        setUsers(processedUsers);
+        setErrMessage("");
         
-        // Employment category validation
-        if (!user.employmentCategory) {
-          validationErrors.push(`Row ${index + 2}: Invalid employmentCategory. Must be 'Regular' or 'JO'`);
-        }
-        
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (user.email && !emailRegex.test(user.email)) {
-          validationErrors.push(`Row ${index + 2}: Invalid email format`);
-        }
-      });
-
-      if (validationErrors.length > 0) {
-        setErrMessage(`Validation errors found:\n${validationErrors.slice(0, 5).join('\n')}${validationErrors.length > 5 ? '\n...and more' : ''}`);
-        return;
+      } catch (error) {
+        console.error("Error parsing Excel file:", error);
+        setErrMessage("Error parsing Excel file. Please check the file format.");
       }
-
-      setUsers(processedUsers);
-      setErrMessage("");
-      
-    } catch (error) {
-      console.error("Error parsing Excel file:", error);
-      setErrMessage("Error parsing Excel file. Please check the file format.");
-    }
+    };
+    reader.readAsArrayBuffer(file);
   };
-  reader.readAsArrayBuffer(file);
-};
 
   // Handle register via backend
   const handleRegister = async () => {
@@ -181,325 +198,437 @@ const handleFileUpload = (e) => {
     }
   };
 
-  // ACCESSING 2
-  // Loading state
-  if (hasAccess === null) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress sx={{ color: "#6d2323", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323" }}>
-            Loading access information...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  // Access denied state - Now using the reusable component
-  if (!hasAccess) {
-    return (
-      <AccessDenied 
-        title="Access Denied"
-        message="You do not have permission to access View Attendance Records. Contact your administrator to request access."
-        returnPath="/admin-home"
-        returnButtonText="Return to Home"
-      />
-    );
-  }
-  //ACCESSING END2
+  const handleClearAll = () => {
+    setUsers([]);
+    setSuccess([]);
+    setErrors([]);
+    setErrMessage("");
+  };
 
-  return (
-    <Container
-      maxWidth="lg"
-      sx={{
-        display: "flex",
-        minHeight: "70vh",
-        backgroundColor: "#fff8e1",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 2,
-        py: 3,
-      }}
-    >
-      <Paper 
-        elevation={4} 
-        sx={{ 
-          p: 4, 
-          width: "100%", 
-          textAlign: "center",
-          border: "2px solid #f5e6e6",
-          background: "linear-gradient(135deg, #ffffff 0%, #fefefe 100%)",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 2 }}>
-          <GroupAdd sx={{ fontSize: 40, color: "#6d2323", mr: 1 }} />
-          <Typography variant="h4" sx={{ color: "#6d2323", fontWeight: "bold" }}>
-            Bulk Users Registration
-          </Typography>
-        </Box>
-
-        <Typography gutterBottom sx={{ mt: 1, mb: 4, color: "#8a4747" }}>
-          <b>Register multiple users using Excel file</b>
-        </Typography>
-
-        <Alert 
-          icon={<InfoOutlined fontSize="inherit" />}
-          severity="info" 
-          sx={{ 
-            mb: 3, 
-            textAlign: "left",
-            backgroundColor: "#f5e6e6", 
-            color: "#6d2323", 
-            border: "1px solid #e0c4c4",
-            "& .MuiAlert-icon": {
-              color: "#6d2323"
-            }
-          }}
-        >
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-            <TableChart sx={{ mr: 1, verticalAlign: "middle" }} />
-            Excel File Requirements:
-          </Typography>
-          <Box sx={{ ml: 4 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              <b>Required columns:</b>
-              <Box sx={{ mt: 0.5 }}>
-                {['employeeNumber', 'firstName', 'lastName', 'employmentCategory', 'email', 'password'].map((field) => (
-                  <Chip 
-                    key={field} 
-                    label={field} 
-                    size="small" 
-                    sx={{ 
-                      m: 0.2, 
-                      bgcolor: "#6d2323", 
-                      color: "white",
-                      fontSize: "0.75rem"
-                    }} 
-                  />
-                ))}
-              </Box>
-            </Typography>
-            <Typography variant="body2">
-              <b>Optional columns:</b>
-              <Box sx={{ mt: 0.5 }}>
-                {['middleName', 'nameExtension'].map((field) => (
-                  <Chip 
-                    key={field} 
-                    label={field} 
-                    size="small" 
-                    variant="outlined"
-                    sx={{ 
-                      m: 0.2, 
-                      borderColor: "#8a4747", 
-                      color: "#8a4747",
-                      fontSize: "0.75rem"
-                    }} 
-                  />
-                ))}
-              </Box>
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1, fontStyle: "italic", color: "#c62828" }}>
-              <b>Note:</b> employmentCategory must be either "Regular" or "JO"
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5, fontStyle: "italic" }}>
-              Make sure the first row contains these column headers exactly as shown.
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <Box sx={{ bgcolor: creamColor, minHeight: '100vh', py: 8 }}>
+        <Container maxWidth="md">
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <CircularProgress sx={{ color: primaryColor, mb: 2 }} />
+            <Typography variant="h6" sx={{ color: primaryColor }}>
+              Loading access information...
             </Typography>
           </Box>
-        </Alert>
+        </Container>
+      </Box>
+    );
+  }
 
+  // Access denied state
+  if (!hasAccess) {
+    return (
+      <AccessDenied 
+        title="Access Denied"
+        message="You do not have permission to access Bulk User Registration. Contact your administrator to request access."
+        returnPath="/admin-home"
+        returnButtonText="Return to Home"
+      />
+    );
+  }
+
+  return (
+    <Box sx={{ bgcolor: creamColor, minHeight: '100vh', py: 3 }}>
+      <Container maxWidth="lg">
+        {/* Header */}
+        <Fade in timeout={500}>
+          <Box sx={{ mb: 4 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+                color: whiteColor,
+                borderRadius: 3,
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+                }
+              }}
+            >
+              <Box display="flex" alignItems="center" justifyContent="space-between" position="relative" zIndex={1}>
+                <Box display="flex" alignItems="center">
+                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mr: 3, width: 56, height: 56 }}>
+                    <GroupAdd sx={{ fontSize: 32 }} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      Bulk Users Registration
+                    </Typography>
+                    <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                      Register multiple users using Excel file
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Tooltip title="Clear All">
+                    <IconButton 
+                      onClick={handleClearAll}
+                      sx={{ 
+                        bgcolor: 'rgba(255,255,255,0.1)', 
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                        color: whiteColor
+                      }}
+                    >
+                      <Clear />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
+        </Fade>
+
+        {/* Instructions Card */}
+        <Fade in timeout={700}>
+          <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box display="flex" alignItems="center" mb={2}>
+                <InfoOutlined sx={{ color: primaryColor, mr: 1, fontSize: 28 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600, color: blackColor }}>
+                  Excel File Requirements
+                </Typography>
+              </Box>
+              
+              <Divider sx={{ mb: 2 }} />
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: blackColor, mb: 1 }}>
+                    Required Columns:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {['employeeNumber', 'firstName', 'lastName', 'email', 'employmentCategory', 'password'].map((field) => (
+                      <Chip 
+                        key={field} 
+                        label={field} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: primaryColor, 
+                          color: whiteColor,
+                          fontSize: '0.75rem',
+                          fontWeight: 500
+                        }} 
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: blackColor, mb: 1 }}>
+                    Optional Columns:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {['middleName', 'nameExtension'].map((field) => (
+                      <Chip 
+                        key={field} 
+                        label={field} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ 
+                          borderColor: primaryColor, 
+                          color: primaryColor,
+                          fontSize: '0.75rem'
+                        }} 
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              </Grid>
+              
+              <Alert 
+                severity="warning"
+                sx={{ 
+                  mt: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(primaryColor, 0.05),
+                  color: primaryColor,
+                  '& .MuiAlert-icon': { color: primaryColor }
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  <strong>Note:</strong> employmentCategory must be either "Regular" or "JO"
+                </Typography>
+              </Alert>
+            </CardContent>
+          </Card>
+        </Fade>
+
+        {/* Error Message */}
         {errMessage && (
-          <Alert 
-            icon={<ErrorOutline fontSize="inherit" />}
-            severity="error" 
-            sx={{ 
-              mb: 2, 
-              textAlign: "left", 
-              whiteSpace: "pre-line",
-              backgroundColor: "#6d2323",
-              color: "white",
-              "& .MuiAlert-icon": {
-                color: "white"
-              }
-            }}
-          >
-            {errMessage}
-          </Alert>
+          <Fade in timeout={300}>
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 3, 
+                borderRadius: 2,
+                whiteSpace: "pre-line"
+              }}
+              onClose={() => setErrMessage("")}
+            >
+              {errMessage}
+            </Alert>
+          </Fade>
         )}
 
-        <Box 
-          sx={{ 
-            mb: 3,
-            p: 3,
-            border: "2px dashed #e0c4c4",
-            borderRadius: 2,
-            backgroundColor: "#fdfcfc",
-            transition: "all 0.3s ease",
-            "&:hover": {
-              borderColor: "#8a4747",
-              backgroundColor: "#f9f8f8",
-            }
-          }}
-        >
-          <FileUpload sx={{ fontSize: 48, color: "#8a4747", mb: 2 }} />
-          <Typography variant="h6" sx={{ color: "#6d2323", mb: 2 }}>
-            Choose Excel File
-          </Typography>
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            style={{ 
-              padding: "8px",
-              border: "1px solid #e0c4c4",
-              borderRadius: "4px",
-              backgroundColor: "white",
-              color: "#6d2323",
-              cursor: "pointer",
-            }}
-          />
-        </Box>
+        {/* Upload Card */}
+        <Fade in timeout={900}>
+          <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box 
+                sx={{ 
+                  p: 4,
+                  border: `2px dashed ${alpha(primaryColor, 0.3)}`,
+                  borderRadius: 3,
+                  backgroundColor: alpha(creamColor, 0.3),
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: primaryColor,
+                    backgroundColor: alpha(creamColor, 0.5),
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <FileUpload sx={{ fontSize: 64, color: primaryColor, mb: 2 }} />
+                <Typography variant="h6" sx={{ color: blackColor, mb: 2, fontWeight: 600 }}>
+                  Upload Excel File
+                </Typography>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload">
+                  <Button
+                    component="span"
+                    variant="contained"
+                    startIcon={<CloudUpload />}
+                    sx={{
+                      bgcolor: primaryColor,
+                      color: whiteColor,
+                      py: 1.5,
+                      px: 4,
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      '&:hover': {
+                        bgcolor: alpha(primaryColor, 0.8),
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Choose File
+                  </Button>
+                </label>
+              </Box>
+            </CardContent>
+          </Card>
+        </Fade>
 
+        {/* Users Loaded Status */}
         {users.length > 0 && (
-          <Alert 
-            icon={<CheckCircleOutline fontSize="inherit" />}
-            severity="success" 
-            sx={{ 
-              mb: 3,
-              backgroundColor: "#f5e6e6",
-              color: "#6d2323",
-              border: "1px solid #e0c4c4",
-              "& .MuiAlert-icon": {
-                color: "#6d2323"
-              }
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <People sx={{ mr: 1 }} />
-              <Typography variant="body1">
-                <b>{users.length} user(s)</b> loaded from Excel file and ready to register.
-              </Typography>
-            </Box>
-          </Alert>
+          <Fade in timeout={500}>
+            <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              <Box sx={{ 
+                p: 3, 
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`, 
+                color: whiteColor,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderRadius: '12px 12px 0 0'
+              }}>
+                <Box display="flex" alignItems="center">
+                  <People sx={{ fontSize: 32, mr: 2 }} />
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                      Users Ready
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                      {users.length} user{users.length !== 1 ? 's' : ''} loaded
+                    </Typography>
+                  </Box>
+                </Box>
+                <CheckCircleOutline sx={{ fontSize: 48, opacity: 0.3 }} />
+              </Box>
+            </Card>
+          </Fade>
         )}
 
-        <Button
-          variant="contained"
-          fullWidth
-          startIcon={<CloudUpload />}
-          sx={{ 
-            bgcolor: "#6d2323", 
-            mt: 2,
-            py: 1.5,
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            "&:hover": {
-              bgcolor: "#5a1e1e",
-              transform: "translateY(-2px)",
-              boxShadow: "0 6px 20px rgba(109, 35, 35, 0.3)",
-            },
-            transition: "all 0.3s ease",
-          }}
-          onClick={handleRegister}
-          disabled={users.length === 0}
-        >
-          Upload & Register Users
-        </Button>
+        {/* Action Buttons */}
+        <Fade in timeout={1100}>
+          <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    startIcon={<CloudUpload />}
+                    onClick={handleRegister}
+                    disabled={users.length === 0}
+                    sx={{
+                      py: 1.5,
+                      bgcolor: primaryColor,
+                      color: whiteColor,
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      borderRadius: 2,
+                      '&:hover': {
+                        bgcolor: alpha(primaryColor, 0.8),
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(109, 35, 35, 0.3)'
+                      },
+                      '&:disabled': {
+                        bgcolor: alpha(primaryColor, 0.3),
+                        color: alpha(whiteColor, 0.5)
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Upload & Register Users
+                  </Button>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<ArrowBack />}
+                    onClick={() => navigate("/registration")}
+                    sx={{
+                      py: 1.5,
+                      borderColor: primaryColor,
+                      color: primaryColor,
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      borderRadius: 2,
+                      borderWidth: 2,
+                      '&:hover': {
+                        borderColor: primaryColor,
+                        borderWidth: 2,
+                        bgcolor: alpha(primaryColor, 0.04),
+                        transform: 'translateY(-2px)',
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Back to User Registration
+                  </Button>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Fade>
 
-        <Button
-          variant="contained"
-          fullWidth
-          startIcon={<ArrowBack />}
-          sx={{ 
-            bgcolor: "#8a4747", 
-            mt: 2,
-            py: 1.5,
-            fontSize: "1rem",
-            fontWeight: "bold",
-            "&:hover": {
-              bgcolor: "#6d2323",
-              transform: "translateY(-2px)",
-              boxShadow: "0 6px 20px rgba(138, 71, 71, 0.3)",
-            },
-            transition: "all 0.3s ease",
-          }}
-          onClick={() => navigate("/registration")}
-        >
-          Back to User Registration
-        </Button>
-
-        {/* Display Results */}
+        {/* Success Results */}
         {success.length > 0 && (
-          <Alert 
-            icon={<CheckCircleOutline fontSize="inherit" />}
-            severity="success" 
-            sx={{ 
-              mt: 3, 
-              textAlign: "left",
-              backgroundColor: "#dcf8e3f6",
-              color: "#41644",
-              border: "1px solid #41644",
-              "& .MuiAlert-icon": {
-                color: "#41644"
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-              <People sx={{ mr: 1, verticalAlign: "middle" }} />
-              Successful Registrations ({success.length}):
-            </Typography>
-            <Box sx={{ maxHeight: "200px", overflow: "auto" }}>
-              <ul style={{ margin: 0, paddingLeft: "20px" }}>
+          <Fade in timeout={500}>
+            <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: '#4caf50',
+                color: whiteColor,
+                borderRadius: '12px 12px 0 0',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <CheckCircleOutline sx={{ mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Successful Registrations ({success.length})
+                </Typography>
+              </Box>
+              <CardContent sx={{ maxHeight: '300px', overflow: 'auto' }}>
                 {success.map((user, index) => (
-                  <li key={index} style={{ marginBottom: "4px" }}>
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      p: 1.5, 
+                      mb: 1,
+                      borderRadius: 2,
+                      bgcolor: alpha('#4caf50', 0.05),
+                      display: 'flex',
+                      alignItems: 'center',
+                      '&:last-child': { mb: 0 }
+                    }}
+                  >
                     <Chip 
                       label={user.employeeNumber} 
                       size="small" 
-                      sx={{ mr: 1, bgcolor: "#6d2323", color: "white" }} 
+                      sx={{ mr: 2, bgcolor: primaryColor, color: whiteColor, fontWeight: 600 }} 
                     />
-                    {user.name}
-                  </li>
+                    <Typography variant="body2" sx={{ color: blackColor }}>
+                      {user.name}
+                    </Typography>
+                  </Box>
                 ))}
-              </ul>
-            </Box>
-          </Alert>
+              </CardContent>
+            </Card>
+          </Fade>
         )}
 
+        {/* Error Results */}
         {errors.length > 0 && (
-          <Alert 
-            icon={<Warning fontSize="inherit" />}
-            severity="warning" 
-            sx={{ 
-              mt: 3, 
-              textAlign: "left",
-              backgroundColor: "#6d2323",
-              color: "white",
-              "& .MuiAlert-icon": {
-                color: "white"
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-              <ErrorOutline sx={{ mr: 1, verticalAlign: "middle" }} />
-              Registration Errors ({errors.length}):
-            </Typography>
-            <Box sx={{ maxHeight: "200px", overflow: "auto" }}>
-              <ul style={{ margin: 0, paddingLeft: "20px" }}>
+          <Fade in timeout={500}>
+            <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: '#f44336',
+                color: whiteColor,
+                borderRadius: '12px 12px 0 0',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <ErrorOutline sx={{ mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Registration Errors ({errors.length})
+                </Typography>
+              </Box>
+              <CardContent sx={{ maxHeight: '300px', overflow: 'auto' }}>
                 {errors.slice(0, 10).map((err, index) => (
-                  <li key={index} style={{ marginBottom: "4px", fontSize: "0.9rem" }}>
-                    {err}
-                  </li>
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      p: 1.5, 
+                      mb: 1,
+                      borderRadius: 2,
+                      bgcolor: alpha('#f44336', 0.05),
+                      '&:last-child': { mb: 0 }
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: blackColor }}>
+                      • {err}
+                    </Typography>
+                  </Box>
                 ))}
                 {errors.length > 10 && (
-                  <li style={{ fontStyle: "italic", color: "#ffcccc" }}>
-                    ...and {errors.length - 10} more errors
-                  </li>
+                  <Box sx={{ p: 1.5, textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: alpha(blackColor, 0.6) }}>
+                      ...and {errors.length - 10} more errors
+                    </Typography>
+                  </Box>
                 )}
-              </ul>
-            </Box>
-          </Alert>
+              </CardContent>
+            </Card>
+          </Fade>
         )}
-      </Paper>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

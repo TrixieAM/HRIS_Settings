@@ -910,22 +910,12 @@ const AttendanceModuleNonTeachingStaff = () => {
   };
 
   return (
-    <Container
-      maxWidth={false} // Disable the default maxWidth
-      sx={{
-        maxWidth: "4500px", // Set your custom width
-        margin: "0 auto", // Center the container
-        padding: "0px", // Optional padding
-      }}
-    >
-<Container sx={{ mt: 2, bgcolor: '#FEF9E1' }}>
-      {/* header card ---------------------------------------------------- */}
+      <Container sx={{ mt: 2, backgroundColor: '#FEF9E1', pb: 4 }} maxWidth={false}>
       <div
                   style={{
                     backgroundColor: '#6D2323',
                     color: '#ffffff',
                     padding: '20px',
-                    width: '96.6%',
                     borderRadius: '8px',
                     borderBottomLeftRadius: '0px',
                     borderBottomRightRadius: '0px',
@@ -959,7 +949,17 @@ const AttendanceModuleNonTeachingStaff = () => {
         {/* colored banner */}
 
   {/* Month Buttons */}
-         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 12.7 }}>
+         <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center", 
+              alignItems: "center", 
+              gap: 0.5,
+              mb: 2,
+            }}
+          >
+
            {months.map((month, index) => (
              <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
                {month}
@@ -1742,9 +1742,6 @@ const AttendanceModuleNonTeachingStaff = () => {
 
         
         
-    </Container>
-
-
     </Container>
   );
 };

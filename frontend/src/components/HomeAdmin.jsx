@@ -7,7 +7,8 @@ import {
 } from "@mui/material";
 import {
   Notifications as NotificationsIcon, ArrowDropDown as ArrowDropDownIcon, AccessTime, Receipt, ContactPage, UploadFile, Person, GroupAdd, TransferWithinAStation, Group, Pages, ReceiptLong, AcUnit, TrendingUp, TrendingDown, ArrowForward, PlayArrow, Pause, MoreVert,
-  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Event, Schedule, Lock, Star, Upgrade, Add, Close, Money, Work, Assessment, Timeline, Delete, Edit, Build
+  AccountCircle, Settings, HelpOutline, PrivacyTip, Logout, Event, Schedule, Lock, Star, Upgrade, Add, Close, Money, Work, Assessment, Timeline, Delete, Edit, Build,
+  PersonAdd
 } from "@mui/icons-material";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -28,6 +29,7 @@ import {
   WorkHistory as WorkHistoryIcon,
   ReceiptLong as ReceiptLongIcon,
   HourglassBottom as HourglassBottomIcon,  
+  History
 } from "@mui/icons-material";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RechartTooltip, ResponsiveContainer, CartesianGrid, Cell, PieChart, Pie, Legend, LineChart, Line, Area, AreaChart, RadialBarChart, RadialBar,
@@ -45,7 +47,7 @@ const cardBackground = "rgba(255,248,231,0.85)";
 const cardBorder = "rgba(128,0,32,0.15)";
 const cardShadow = "0 15px 40px rgba(128,0,32,0.2)";
 
-// Configuration
+// Configuration - Removed leave-related cards
 const STAT_CARDS = [
   {
     label: "Total Employees",
@@ -102,39 +104,6 @@ const STAT_CARDS = [
     trend: "+2%",
     trendUp: true,
   },
-  {
-    label: "Leave Requests",
-    valueKey: "leaveRequests",
-    defaultValue: 0,
-    textValue: "Coming Soon!",
-    icon: <BeachAccessIcon />,
-    gradient: "linear-gradient(135deg, #A52A2A, #800020)",
-    shadow: cardShadow,
-    trend: "+3%",
-    trendUp: true,
-  },
-  {
-    label: "Leave Pending",
-    valueKey: "leavePending",
-    defaultValue: 0,
-    textValue: "Coming Soon!",
-    icon: <HourglassBottomIcon />,
-    gradient: "linear-gradient(135deg, #FF4500, #FF6347)",
-    shadow: cardShadow,
-    trend: "-4%",
-    trendUp: false,
-  },
-  {
-    label: "Leave Approved",
-    valueKey: "leaveApproved",
-    defaultValue: 0,
-    textValue: "Coming Soon!",
-    icon: <CheckCircleIcon />,
-    gradient: "linear-gradient(135deg, #228B22, #32CD32)",
-    shadow: cardShadow,
-    trend: "+9%",
-    trendUp: true,
-  },
 ];
 
 const QUICK_ACTIONS = [
@@ -144,15 +113,11 @@ const QUICK_ACTIONS = [
   { label: "DTRs", link: "/daily_time_record_faculty", icon: <AccessTimeIcon />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
   { label: "Announcements", link: "/announcement", icon: <CampaignIcon />, gradient: "linear-gradient(135deg, #800020, #A52A2A)" },
   { label: "Holidays", link: "/holiday", icon: <AcUnit />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
+  { label: "Audit Logs", link: "/audit-logs", icon: <History />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
+  { label: "Registration", link: "/registration", icon: <PersonAdd />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
+  { label: "Payslip", link: "/distribution-payslip", icon: <PersonAdd />, gradient: "linear-gradient(135deg, #A52A2A, #800020)" },
 ];
 
-
-const TASKS = [
-  { id: 1, title: "Process June Payroll", completed: false, priority: "high" },
-  { id: 2, title: "Review Attendance Reports", completed: false, priority: "medium" },
-  { id: 3, title: "Update Employee Records", completed: true, priority: "low" },
-  { id: 4, title: "Generate Monthly Reports", completed: false, priority: "medium" },
-];
 
 const COLORS = ['#800020', '#A52A2A', '#8B0000', '#660000', '#4B0000'];
 
@@ -210,9 +175,6 @@ const useDashboardData = () => {
     happinessRate: 78,
     teamKPI: 84.45,
     todayAttendance: 0,
-    leaveRequests: 0,
-    leavePending: 0,
-    leaveApproved: 0,
     pendingPayroll: 0,
     processedPayroll: 0,
     payslipCount: 0
@@ -246,39 +208,10 @@ const useDashboardData = () => {
     { month: "Jun", grossPay: 2580000, netPay: 2075000, deductions: 505000 },
   ]);
   
-  const [leaveDistributionData, setLeaveDistributionData] = useState([
-    { type: "Sick Leave", count: 145, percentage: 35.4 },
-    { type: "Vacation", count: 128, percentage: 31.2 },
-    { type: "Personal", count: 87, percentage: 21.2 },
-    { type: "Maternity", count: 28, percentage: 6.8 },
-    { type: "Paternity", count: 22, percentage: 5.4 },
-  ]);
-  
-  const [overtimeData, setOvertimeData] = useState([
-    { department: "IT", hours: 245, employees: 45 },
-    { department: "Sales", hours: 189, employees: 67 },
-    { department: "Operations", hours: 156, employees: 38 },
-    { department: "Finance", hours: 98, employees: 22 },
-    { department: "HR", hours: 67, employees: 15 },
-  ]);
-  
   const [attendanceChartData, setAttendanceChartData] = useState([
     { name: "Present", value: 0, fill: '#800020' },
     { name: "Absent", value: 0, fill: '#A52A2A' },
     { name: "Late", value: 0, fill: '#8B0000' },
-  ]);
-  
-  const [leaveTrackerData, setLeaveTrackerData] = useState([
-    { name: "Pending", value: 0 },
-    { name: "Approved", value: 0 },
-    { name: "Rejected", value: 0 },
-  ]);
-  
-  const [employmentStatusData, setEmploymentStatusData] = useState([
-    { name: "Permanent", value: 47, fill: '#800020' },
-    { name: "Contract", value: 25, fill: '#A52A2A' },
-    { name: "Probation", value: 15, fill: '#8B0000' },
-    { name: "Intern", value: 13, fill: '#660000' },
   ]);
   
   const [announcements, setAnnouncements] = useState([]);
@@ -292,7 +225,7 @@ const useDashboardData = () => {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       try {
-        console.log('🚀 Starting data fetch...');
+        console.log(' Starting data fetch...');
 
         // ===== 1. Fetch Dashboard Stats =====
         try {
@@ -322,7 +255,7 @@ const useDashboardData = () => {
           console.log('📈 Attendance chart data updated:', { present: presentToday, absent: absentToday });
 
         } catch (err) {
-          console.error("❌ Failed to fetch dashboard stats:", err?.message);
+          console.error(" Failed to fetch dashboard stats:", err?.message);
         }
 
         // ===== 2. Fetch Weekly Attendance Overview =====
@@ -345,24 +278,24 @@ const useDashboardData = () => {
           }));
           
           setWeeklyAttendanceData(transformedWeekly);
-          console.log('📊 Weekly chart updated with', transformedWeekly.length, 'days');
+          console.log('Weekly chart updated with', transformedWeekly.length, 'days');
 
         } catch (err) {
-          console.error("❌ Failed to fetch weekly attendance:", err?.message);
+          console.error(" Failed to fetch weekly attendance:", err?.message);
           // Keep empty array as fallback
           setWeeklyAttendanceData([]);
         }
 
         // ===== 3. Fetch Department Distribution =====
         try {
-          console.log('🏢 Fetching department distribution...');
+          console.log('Fetching department distribution...');
           const deptDistRes = await axios.get(
             `${API_BASE_URL}/api/dashboard/department-distribution`, 
             { headers }
           );
           const deptData = deptDistRes.data;
           
-          console.log('✅ Department data received:', deptData);
+          console.log(' Department data received:', deptData);
           
           // Transform for horizontal bar chart
           const transformedDept = deptData.map(item => ({
@@ -373,54 +306,23 @@ const useDashboardData = () => {
           }));
           
           setDepartmentAttendanceData(transformedDept);
-          console.log('🏢 Department chart updated with', transformedDept.length, 'departments');
+          console.log('Department chart updated with', transformedDept.length, 'departments');
 
         } catch (err) {
-          console.error("❌ Failed to fetch department distribution:", err?.message);
+          console.error("Failed to fetch department distribution:", err?.message);
           setDepartmentAttendanceData([]);
-        }
-
-        // ===== 4. Fetch Leave Statistics =====
-        try {
-          console.log('🏖️ Fetching leave statistics...');
-          const leaveStatsRes = await axios.get(
-            `${API_BASE_URL}/api/dashboard/leave-stats`, 
-            { headers }
-          );
-          const leaveStats = leaveStatsRes.data;
-          
-          console.log('✅ Leave stats received:', leaveStats);
-          
-          setStats(prev => ({
-            ...prev,
-            leaveRequests: leaveStats.total || 0,
-            leavePending: leaveStats.pending || 0,
-            leaveApproved: leaveStats.approved || 0,
-          }));
-
-          // Update leave tracker data for charts
-          setLeaveTrackerData([
-            { name: "Pending", value: leaveStats.pending || 0 },
-            { name: "Approved", value: leaveStats.approved || 0 },
-            { name: "Rejected", value: leaveStats.rejected || 0 },
-          ]);
-          
-          console.log('📊 Leave data updated:', leaveStats);
-
-        } catch (err) {
-          console.error("❌ Failed to fetch leave stats:", err?.message);
         }
 
         // ===== 5. Fetch Payroll Summary =====
         try {
-          console.log('💰 Fetching payroll summary...');
+          console.log('Fetching payroll summary...');
           const payrollSummaryRes = await axios.get(
             `${API_BASE_URL}/api/dashboard/payroll-summary`, 
             { headers }
           );
           const payrollSummary = payrollSummaryRes.data;
           
-          console.log('✅ Payroll summary received:', payrollSummary);
+          console.log('Payroll summary received:', payrollSummary);
           
           setStats(prev => ({
             ...prev,
@@ -443,14 +345,14 @@ const useDashboardData = () => {
 
         // ===== 6. Fetch Monthly Attendance Trend =====
         try {
-          console.log('📈 Fetching monthly attendance trend...');
+          console.log('Fetching monthly attendance trend...');
           const monthlyAttendanceRes = await axios.get(
             `${API_BASE_URL}/api/dashboard/monthly-attendance`, 
             { headers }
           );
           const monthlyData = monthlyAttendanceRes.data;
           
-          console.log('✅ Monthly attendance received:', monthlyData.length, 'days');
+          console.log(' Monthly attendance received:', monthlyData.length, 'days');
           
           // Group by weeks for the analytics chart
           const weeklyAverages = [];
@@ -474,16 +376,16 @@ const useDashboardData = () => {
           
           if (weeklyAverages.length > 0) {
             setMonthlyAttendanceTrend(weeklyAverages);
-            console.log('📊 Monthly trend updated with', weeklyAverages.length, 'weeks');
+            console.log('Monthly trend updated with', weeklyAverages.length, 'weeks');
           }
 
         } catch (err) {
-          console.error("❌ Failed to fetch monthly attendance:", err?.message);
+          console.error("Failed to fetch monthly attendance:", err?.message);
         }
 
         // ===== 7. Fetch Finalized Payroll Count =====
         try {
-          console.log('📄 Fetching payslip count...');
+          console.log(' Fetching payslip count...');
           const finalizedPayrollRes = await axios.get(
             `${API_BASE_URL}/PayrollRoute/finalized-payroll`, 
             { headers }
@@ -493,30 +395,30 @@ const useDashboardData = () => {
             : 0;
           
           setStats(prev => ({ ...prev, payslipCount }));
-          console.log('✅ Payslip count:', payslipCount);
+          console.log(' Payslip count:', payslipCount);
 
         } catch (err) {
-          console.error("❌ Failed to fetch payslip count:", err?.message);
+          console.error(" Failed to fetch payslip count:", err?.message);
           // Set to 0 if fetch fails to prevent errors
           setStats(prev => ({ ...prev, payslipCount: 0 }));
         }
 
         // ===== 8. Fetch Announcements =====
         try {
-          console.log('📢 Fetching announcements...');
+          console.log(' Fetching announcements...');
           const annRes = await axios.get(`${API_BASE_URL}/api/announcements`, { headers });
           const announcementData = Array.isArray(annRes.data) ? annRes.data : [];
           setAnnouncements(announcementData);
-          console.log('✅ Announcements loaded:', announcementData.length);
+          console.log('Announcements loaded:', announcementData.length);
 
         } catch (err) {
-          console.error("❌ Failed to fetch announcements:", err?.message);
+          console.error(" Failed to fetch announcements:", err?.message);
           setAnnouncements([]);
         }
 
         // ===== 9. Fetch Holidays =====
         try {
-          console.log('🎉 Fetching holidays...');
+          console.log(' Fetching holidays...');
           const res = await axios.get(`${API_BASE_URL}/holiday`, { headers });
           if (Array.isArray(res.data)) {
             const transformedHolidays = res.data.map(item => {
@@ -531,16 +433,16 @@ const useDashboardData = () => {
               };
             });
             setHolidays(transformedHolidays);
-            console.log('✅ Holidays loaded:', transformedHolidays.length);
+            console.log(' Holidays loaded:', transformedHolidays.length);
           }
         } catch (err) {
-          console.error("❌ Error fetching holidays:", err);
+          console.error(" Error fetching holidays:", err);
         }
 
-        console.log('✨ All data fetch completed!');
+        console.log(' All data fetch completed!');
 
       } catch (err) {
-        console.error("❌ Critical error fetching admin data:", err);
+        console.error(" Critical error fetching admin data:", err);
       } finally {
         setLoading(false);
       }
@@ -549,10 +451,10 @@ const useDashboardData = () => {
     fetchAllData();
 
     // Auto-refresh every 5 minutes
-    console.log('⏰ Setting up auto-refresh (5 minutes)');
+    console.log(' Setting up auto-refresh (5 minutes)');
     const interval = setInterval(fetchAllData, 5 * 60 * 1000);
     return () => {
-      console.log('🛑 Clearing auto-refresh interval');
+      console.log(' Clearing auto-refresh interval');
       clearInterval(interval);
     };
   }, []);
@@ -564,11 +466,7 @@ const useDashboardData = () => {
     payrollStatusData,
     monthlyAttendanceTrend,
     payrollTrendData,
-    leaveDistributionData,
-    overtimeData,
     attendanceChartData, 
-    leaveTrackerData, 
-    employmentStatusData,
     announcements, 
     holidays, 
     loading 
@@ -1125,34 +1023,34 @@ const RecentActivity = () => {
     {
       id: 2,
       user: "Jane Smith",
-      action: "Approved leave request for Michael Brown",
-      time: "15 minutes ago",
-      icon: <CheckCircleIcon />,
-      color: "#4caf50"
-    },
-    {
-      id: 3,
-      user: "Robert Johnson",
       action: "Updated employee records",
-      time: "1 hour ago",
+      time: "15 minutes ago",
       icon: <Person />,
       color: "#2196f3"
     },
     {
-      id: 4,
-      user: "Emily Davis",
+      id: 3,
+      user: "Robert Johnson",
       action: "Generated monthly attendance report",
-      time: "2 hours ago",
+      time: "1 hour ago",
       icon: <Assessment />,
       color: "#ff9800"
     },
     {
-      id: 5,
-      user: "System",
+      id: 4,
+      user: "Emily Davis",
       action: "New announcement posted: Company Holiday Schedule",
-      time: "3 hours ago",
+      time: "2 hours ago",
       icon: <CampaignIcon />,
       color: "#9c27b0"
+    },
+    {
+      id: 5,
+      user: "System",
+      action: "Database backup completed successfully",
+      time: "3 hours ago",
+      icon: <CheckCircleIcon />,
+      color: "#4caf50"
     }
   ];
 
@@ -1235,7 +1133,6 @@ const TaskList = () => {
   const [newTask, setNewTask] = useState({ title: "", priority: "medium" });
   const [showSuccess, setShowSuccess] = useState(false);
 
-
   // Fetch tasks on load
   useEffect(() => {
     axios.get(`${API_BASE_URL}/tasks`).then((res) => setTasks(res.data));
@@ -1249,19 +1146,28 @@ const TaskList = () => {
   };
 
   const handleAddTask = async () => {
-  if (!newTask.title.trim()) return;
-  const res = await axios.post(`${API_BASE_URL}/tasks`, newTask);
-  setTasks([res.data, ...tasks]);
-  setNewTask({ title: "", priority: "medium" });
-  setAddTaskOpen(false);
-  setShowSuccess(true); 
-  setTimeout(() => setShowSuccess(false), 2000);
-};
-
+    if (!newTask.title.trim()) return;
+    const res = await axios.post(`${API_BASE_URL}/tasks`, newTask);
+    setTasks([res.data, ...tasks]);
+    setNewTask({ title: "", priority: "medium" });
+    setAddTaskOpen(false);
+    setShowSuccess(true); 
+    setTimeout(() => setShowSuccess(false), 2000);
+  };
 
   const handleDelete = async (id) => {
     await axios.delete(`${API_BASE_URL}/tasks/${id}`);
     setTasks(tasks.filter(task => task.id !== id));
+  };
+
+  // Function to get display label for priority
+  const getPriorityLabel = (priority) => {
+    switch(priority) {
+      case "high": return "Urgent";
+      case "medium": return "Soon";
+      case "low": return "Later";
+      default: return priority;
+    }
   };
 
   return (
@@ -1274,10 +1180,13 @@ const TaskList = () => {
           borderRadius: 4,
           mb: 2,
           boxShadow: cardShadow,
+          height: 270, // Fixed height
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {showSuccess && <SuccessfulOverlay message="Task added successfully!" />}
-        <CardContent sx={{ p: 2 }}>
+        <CardContent sx={{ p: 2, display: "flex", flexDirection: "column", height: "100%" }}>
           {/* Header */}
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, color: darkText, fontSize: "0.95rem" }}>
@@ -1298,64 +1207,85 @@ const TaskList = () => {
             </IconButton>
           </Box>
 
-          {/* Task list */}
-          <List dense sx={{ p: 0 }}>
-            {tasks.slice(0, 6).map((task) => (
-              <ListItem
-                key={task.id}
-                sx={{ p: 0, mb: 1, display: "flex", alignItems: "center" }}
-              >
-                <Checkbox
-                  checked={task.completed}
-                  onChange={() => handleToggle(task.id)}
-                  size="small"
-                  sx={{
-                    color: mediumText,
-                    "&.Mui-checked": { color: mediumText },
-                  }}
-                />
-                <ListItemText
-                  primary={task.title}
-                  primaryTypographyProps={{
-                    sx: {
-                      fontSize: "0.85rem",
-                      color: task.completed ? "#999999" : darkText,
-                      textDecoration: task.completed ? "line-through" : "none",
-                    },
-                  }}
-                />
-                <Chip
-                  label={task.priority}
-                  size="small"
-                  sx={{
-                    fontSize: "0.65rem",
-                    height: 20,
-                    bgcolor:
-                      task.priority === "high"
-                        ? "#f4433610"
-                        : task.priority === "medium"
-                        ? "#ff980010"
-                        : "#4caf5010",
-                    color:
-                      task.priority === "high"
-                        ? "#f44336"
-                        : task.priority === "medium"
-                        ? "#ff9800"
-                        : "#4caf50",
-                    mr: 1,
-                  }}
-                />
-                {/* Delete Button */}
-                <IconButton
-                  size="small"
-                  onClick={() => handleDelete(task.id)}
-                  sx={{ color: "#6d2323" }}
+          {/* Scrollable Task list */}
+          <Box sx={{ 
+            flex: 1, 
+            overflowY: "auto", 
+            overflowX: "hidden",
+            pr: 1,
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "rgba(128, 0, 32, 0.1)",
+              borderRadius: "3px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "rgba(128, 0, 32, 0.3)",
+              borderRadius: "3px",
+              "&:hover": {
+                background: "rgba(128, 0, 32, 0.5)",
+              },
+            },
+          }}>
+            <List dense sx={{ p: 0 }}>
+              {tasks.map((task) => (
+                <ListItem
+                  key={task.id}
+                  sx={{ p: 0, mb: 1, display: "flex", alignItems: "center" }}
                 >
-                  <Delete fontSize="small" />
-                </IconButton>
-              </ListItem>
-            ))}
-          </List>
+                  <Checkbox
+                    checked={task.completed}
+                    onChange={() => handleToggle(task.id)}
+                    size="small"
+                    sx={{
+                      color: mediumText,
+                      "&.Mui-checked": { color: mediumText },
+                    }}
+                  />
+                  <ListItemText
+                    primary={task.title}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: "0.85rem",
+                        color: task.completed ? "#999999" : darkText,
+                        textDecoration: task.completed ? "line-through" : "none",
+                      },
+                    }}
+                  />
+                  <Chip
+                    label={getPriorityLabel(task.priority)}
+                    size="small"
+                    sx={{
+                      fontSize: "0.65rem",
+                      height: 20,
+                      bgcolor:
+                        task.priority === "high"
+                          ? "#f4433610"
+                          : task.priority === "medium"
+                          ? "#ff980010"
+                          : "#4caf5010",
+                      color:
+                        task.priority === "high"
+                          ? "#f44336"
+                          : task.priority === "medium"
+                          ? "#ff9800"
+                          : "#4caf50",
+                      mr: 1,
+                    }}
+                  />
+                  {/* Delete Button */}
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDelete(task.id)}
+                    sx={{ color: "#6d2323" }}
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
         </CardContent>
       </Card>
 
@@ -1441,7 +1371,7 @@ const TaskList = () => {
                   }),
                 }}
               >
-                {priority}
+                {getPriorityLabel(priority)} {/* Use the function to get display label */}
               </Button>
             ))}
           </Box>
@@ -1475,13 +1405,9 @@ const TaskList = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
     </>
   );
 };
-
-
-
 
 const QuickActions = () => (
   <Card sx={{ 
@@ -1512,7 +1438,7 @@ const QuickActions = () => (
                   gap: 0.5, 
                   transition: 'all 0.3s', 
                   cursor: 'pointer',
-                  height: 60,
+                  height: 43,
                   '&:hover': { 
                     background: `${mediumText}10`, 
                     transform: 'translateY(-2px)', 
@@ -1708,11 +1634,7 @@ const AdminHome = () => {
     payrollStatusData,
     monthlyAttendanceTrend,
     payrollTrendData,
-    leaveDistributionData,
-    overtimeData,
     attendanceChartData, 
-    leaveTrackerData, 
-    employmentStatusData,
     announcements, 
     holidays, 
     loading 
@@ -1911,7 +1833,7 @@ const AdminHome = () => {
           </Box>
         </Grow>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Now only 5 cards */}
         <Box
           sx={{
             display: "flex",
@@ -1926,8 +1848,8 @@ const AdminHome = () => {
               key={card.label}
               sx={{
                 flex: "1 1 0",
-                maxWidth: "12%",
-                minWidth: "120px",
+                maxWidth: "19%", // Adjusted for 5 cards
+                minWidth: "140px", // Slightly wider for better spacing
               }}
             >
               <CompactStatCard
@@ -1973,7 +1895,6 @@ const AdminHome = () => {
             <TaskList />
           </Grid>
         </Grid>
-
 
         {/* Main Content Area */}
         <Grid container spacing={2}>
@@ -2136,7 +2057,7 @@ const AdminHome = () => {
                   </CompactChart>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12}>
                   <CompactChart title="Payroll Trend (₱)" height={200}>
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={payrollTrendData}>
@@ -2175,62 +2096,6 @@ const AdminHome = () => {
                         />
                       </AreaChart>
                     </ResponsiveContainer>
-                  </CompactChart>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                <CompactChart title="Leave Distribution" height={200}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        textAlign: "center",
-                        color: "#6d2323",
-                        animation: "fadeInOut 2.5s ease-in-out infinite",
-                      }}
-                    >
-                      <Build sx={{ fontSize: 48, mb: 1, opacity: 0.8 }} />
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: "bold",
-                          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
-                          letterSpacing: "1px",
-                        }}
-                      >
-                        Coming Soon
-                      </Typography>
-                    </Box>
-
-                    {/* <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie 
-                          data={leaveDistributionData} 
-                          cx="50%" 
-                          cy="50%" 
-                          outerRadius={70}
-                          dataKey="count"
-                          label={({ type, percentage }) => `${type}: ${percentage}%`}
-                        >
-                          {leaveDistributionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <RechartTooltip />
-                      </PieChart>
-                    </ResponsiveContainer> */}
-
-                    <style>
-                      {`
-                        @keyframes fadeInOut {
-                          0%, 100% { opacity: 1; transform: scale(1); }
-                          50% { opacity: 0.6; transform: scale(1.05); }
-                        }
-                      `}
-                    </style>
                   </CompactChart>
                 </Grid>
               </Grid>

@@ -278,7 +278,7 @@ const PDS2 = () => {
                         </td>
                         <td colSpan="3" rowSpan="2" style={{height:'0.3in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px 0px 1px 1px solid black', textAlign:'center'}}>
                             INCLUSIVE DATES <br></br>
-                            (mm/dd/yyyy)
+                            (dd/mm/yyyy)
                         </td>
                         <td colSpan="4" rowSpan="3" style={{height:'0.3in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black', textAlign:'center'}}>
                             POSITION TITLE <br></br>
@@ -329,10 +329,14 @@ const PDS2 = () => {
                     {normalizedWorkExperience.map((workexperience, index) => (
                     <tr key={index}>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'62.5%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workDateFrom: ''}
+                          {workexperience?.workDateFrom
+                            ? new Date(workexperience.workDateFrom).toLocaleDateString("en-GB")
+                            : ""}
                         </td>
                         <td colSpan="2" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
-                        {workexperience ? workexperience.workDateTo: ''}
+                          {workexperience?.workDateTo
+                            ? new Date(workexperience.workDateTo).toLocaleDateString("en-GB")
+                            : ""}
                         </td>
                         <td colSpan="4" style={{height:'0.3in', fontSize:'58%', border: '1px solid black'}}>
                         {workexperience ? workexperience.workPositionTitle: ''}
@@ -386,7 +390,7 @@ const PDS2 = () => {
                     </tr>
                     <tr>
                         <td colSpan="18" style={{height:'0.11in', fontSize:'50%', border: '1px solid white', textAlign: 'right'}}>
-                        <i>CS FORM 212 (Revised 2017), Page 2 of 4</i>
+                        <i>CS FORM 212 (Revised 2025), Page 2 of 4</i>
                         </td>
                     </tr>
 

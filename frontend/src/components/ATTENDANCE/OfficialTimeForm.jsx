@@ -294,7 +294,7 @@ const OfficialTimeForm = () => {
         paddingBottom: '70px',
         borderRadius: '10px',
         paddingTop: '20px',
-        minWidth: '1200px', // Set a minimum width
+        minWidth: '1500px', // Set a minimum width
         width: '100%',
       }}
     >

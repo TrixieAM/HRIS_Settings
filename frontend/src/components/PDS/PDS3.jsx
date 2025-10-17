@@ -244,7 +244,7 @@ const PDS3 = () => {
                             </td>
                             <td colSpan="2" style={{ height:'0.2in', fontSize:'62.5%', backgroundColor:'lightgray', border: '1px solid black', textAlign: 'center'}}>
                                 INCLUSIVE DATES<br></br>
-                                (mm/dd/yyyy)
+                                (dd/mm/yyyy)
                             </td>
                             <td colSpan="1" rowSpan="2" style={{ height:'0.3in', fontSize:'50%', backgroundColor:'lightgray', border: '1px solid black', textAlign: 'center'}}>
                                 NUMBER OF<br></br>
@@ -270,10 +270,14 @@ const PDS3 = () => {
                             </td>
                            
                             <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.dateFrom: ''}
+                            {voluntarywork?.dateFrom
+                              ? new Date(voluntarywork.dateFrom).toLocaleDateString("en-GB")
+                              : ""}
                             </td>
                             <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
-                            {voluntarywork ? voluntarywork.dateTo: ''}
+                            {voluntarywork?.dateTo
+                              ? new Date(voluntarywork.dateTo).toLocaleDateString("en-GB")
+                              : ""}
                             </td>
                             <td colSpan="1" style={{ height:'0.3in', fontSize:'55%', border: '1px solid black'}}>
                             {voluntarywork ? voluntarywork.numberOfHours: ''}
@@ -307,7 +311,7 @@ const PDS3 = () => {
                             <td colSpan="2" style={{ height:'0.4in', fontSize:'55%', backgroundColor:'lightgray', border: '1px solid black', textAlign: 'center'}}>
                                 INCLUSIVE DATES OF<br></br>
                                 ATTENDANCE<br></br>
-                                (mm/dd/yyyy)
+                                (dd/mm/yyyy)
                             </td>
                             <td colSpan="1" rowSpan="2" style={{height:'0.5in', fontSize:'55%', backgroundColor:'lightgray', border: '1px solid black', textAlign: 'center'}}>
                                 NUMBER OF<br></br>
@@ -339,10 +343,14 @@ const PDS3 = () => {
                            {learningdevelopment ? learningdevelopment.titleOfProgram: ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.dateFrom: ''}
+                             {learningdevelopment && learningdevelopment.dateFrom
+                              ? new Date(learningdevelopment.dateFrom).toLocaleDateString('en-GB')
+                              : ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
-                            {learningdevelopment ? learningdevelopment.dateTo: ''}
+                            {learningdevelopment && learningdevelopment.dateTo
+                              ? new Date(learningdevelopment.dateTo).toLocaleDateString('en-GB')
+                              : ''}
                             </td>
                             <td colSpan="1" style={{ height:'0.25in', fontSize:'55%', border: '1px solid black'}}>
                             {learningdevelopment ? learningdevelopment.numberOfHours: ''}
@@ -425,7 +433,7 @@ const PDS3 = () => {
                         </tr>
                         <tr>
                             <td colSpan="15" style={{ height:'0.11in', fontSize:'50%', border: '1px solid white', textAlign: 'right'}}>
-                            <i>CS FORM 212 (Revised 2017), Page 3 of 4</i>
+                            <i>CS FORM 212 (Revised 2025), Page 3 of 4</i>
                             </td>
                         </tr>
 

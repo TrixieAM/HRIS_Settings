@@ -791,7 +791,6 @@ const AttendanceModuleFaculty = () => {
                         backgroundColor: '#6D2323',
                         color: '#ffffff',
                         padding: '20px',
-                        width: '96.6%',
                         borderRadius: '8px',
                         borderBottomLeftRadius: '0px',
                         borderBottomRightRadius: '0px',
@@ -810,22 +809,30 @@ const AttendanceModuleFaculty = () => {
                           </p>
                         </div>
                       </div>
-          </div>
-         
-    <Box
-      sx={{
-        backgroundColor: '#ffffff',
-        p: 3,
-        borderBottomLeftRadius: '5px',
-        borderBottomRightRadius: '5px',
-        boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
-        mb: 3,
-      }}
-    >
-      {/* header band */}
-       {/* Month Buttons */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2, ml: 12.7 }}>
-                {months.map((month, index) => (
+                  </div>
+                
+                  <Box
+                    sx={{
+                      backgroundColor: '#ffffff',
+                      p: 3,
+                      borderBottomLeftRadius: '5px',
+                      borderBottomRightRadius: '5px',
+                      boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
+                      mb: 3,
+                    }}
+                  >
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
+                      alignItems: "center", 
+                      gap: 0.5,
+                      mb: 2,
+                    }}
+                  >
+                  {months.map((month, index) => (
                   <Button key={month} variant="contained" onClick={() => handleMonthClick(index)} sx={{ backgroundColor: "#6D2323", color: "white", "&:hover": { backgroundColor: "#d4bd99" } }}>
                     {month}
                   </Button>
@@ -958,9 +965,6 @@ const AttendanceModuleFaculty = () => {
                   </TableCell>
                   <TableCell
                     sx={{
-                      width: "150px",
-                      maxWidth: "150px",
-                      minWidth: "120px",
                       textAlign: "center", // Optional: ensures text alignment remains consistent
                       overflow: "hidden", // Optional: handle overflow
                       textOverflow: "ellipsis", // Optional: adds ellipsis for overflowing text

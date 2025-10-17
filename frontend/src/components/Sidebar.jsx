@@ -229,6 +229,8 @@ const Sidebar = ({
     setSelectedItem('official_time');
   } else if (currentPath === '/payroll-table') {
     setSelectedItem('payroll-table');
+  } else if (currentPath === '/payroll-jo') {
+    setSelectedItem('payroll-jo');
   } else if (currentPath === '/payroll-processed') {
     setSelectedItem('payroll-processed');
   } else if (currentPath === '/payroll-released') {
@@ -1862,7 +1864,40 @@ const Sidebar = ({
                       >
                         <EditNoteIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Payroll | Processing" sx={{ marginLeft: '-10px' }} />
+                      <ListItemText primary="Payroll REG | Processing" sx={{ marginLeft: '-10px' }} />
+                    </ListItem>
+
+
+
+                  <ListItem
+                      button
+                      component={Link}
+                      to="/payroll-jo"
+                      sx={{
+                        color: selectedItem === 'payroll-jo' ? '#000000' : '#FFFFFF',
+                        bgcolor: selectedItem === 'payroll-jo' ? '#FEF9E1' : 'inherit',
+                        '&:hover': {
+                          bgcolor: '#6D2323',
+                          color: '#FFFFFF',
+                          borderTopRightRadius: '15px',
+                          borderBottomRightRadius: '15px',
+                          '& .MuiListItemIcon-root': { color: '#FFFFFF' },
+                        },
+                        borderTopRightRadius: selectedItem === 'payroll-jo' ? '15px' : 0,
+                        borderBottomRightRadius: selectedItem === 'payroll-jo' ? '15px' : 0,
+                      }}
+                      onClick={() => handleItemClick('payroll-jo')}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          marginRight: '-1rem',
+                          color: selectedItem === 'payroll-jo' ? '#000000' : '#FFFFFF',
+                          '&:hover': { color: '#000000' },
+                        }}
+                      >
+                        <EditNoteIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Payroll JO | Processing" sx={{ marginLeft: '-10px' }} />
                     </ListItem>
 
                     <ListItem
@@ -2175,7 +2210,7 @@ const Sidebar = ({
                       <ListItemText primary="Department Assignment" sx={{ marginLeft: '-10px' }} />
                     </ListItem>
 
-                    <ListItem
+                    {/* <ListItem
                       button
                       component={Link}
                       to="/leave-table"
@@ -2269,7 +2304,7 @@ const Sidebar = ({
                       primary="Leave Management"
                       sx={{ marginLeft: '-10px' }}
                     />
-                  </ListItem>
+                  </ListItem> */}
 
                   </List>
                 </Collapse>

@@ -98,6 +98,7 @@ import ScholarshipAgreement from './components/FORMS/ScholarshipAgreement';
 import SubjectStillToBeTaken from './components/FORMS/SubjectStillToBeTaken';
 import IndividualFacultyLoading from './components/FORMS/IndividualFacultyLoading';
 import HrmsRequestForms from './components/FORMS/HRMSRequestForms';
+import EmploymentCategoryManagement from './components/EmploymentCategory';
 
 
 // PDS
@@ -880,6 +881,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
                   <AdminHome/>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="employee-category"
+              element={
+                <ProtectedRoute allowedRoles={['staff','administrator', 'superadmin']}>
+                  <EmploymentCategoryManagement/>
                 </ProtectedRoute>
               }
             />

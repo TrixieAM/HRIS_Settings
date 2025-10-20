@@ -36,7 +36,6 @@ import {
   CheckCircleOutline,
   ErrorOutline,
   WarningAmber,
-  Settings,
   CheckCircle,
   Close,
   WorkOutline,
@@ -949,7 +948,7 @@ const Registration = () => {
                       labelId="employmentCategory-label"
                       name="employmentCategory"
                       value={formData.employmentCategory || ''}
-                      label="Employment Category"
+                      label="Employment Categoryx"
                       onChange={handleChanges}
                       onFocus={() => setFocusedField('employmentCategory')}
                       onBlur={() => setFocusedField(null)}

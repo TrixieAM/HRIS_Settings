@@ -44,9 +44,7 @@ import {
   ArrowForwardIos,
   Clear,
   Refresh,
-  Download,
   MoreVert,
-  FilterAlt,
   Info,
   CheckCircle,
   Cancel,
@@ -323,57 +321,7 @@ const AllAttendanceRecord = () => {
                       <Refresh />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Download">
-                    <IconButton 
-                      sx={{ 
-                        bgcolor: 'rgba(255,255,255,0.1)', 
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
-                        color: whiteColor
-                      }}
-                    >
-                      <Download />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="More options">
-                    <IconButton 
-                      onClick={handleMoreClick}
-                      sx={{ 
-                        bgcolor: 'rgba(255,255,255,0.1)', 
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
-                        color: whiteColor
-                      }}
-                    >
-                      <MoreVert />
-                    </IconButton>
-                  </Tooltip>
-                  <Menu
-                    anchorEl={moreAnchorEl}
-                    open={moreOpen}
-                    onClose={handleMoreClose}
-                    PaperProps={{
-                      sx: {
-                        mt: 1,
-                        '& .MuiMenuItem-root': {
-                          '&:hover': {
-                            bgcolor: alpha(primaryColor, 0.08)
-                          }
-                        }
-                      }
-                    }}
-                  >
-                    <MenuItem onClick={handleMoreClose}>
-                      <ListItemIcon>
-                        <Download fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Export as CSV</ListItemText>
-                    </MenuItem>
-                    <MenuItem onClick={handleMoreClose}>
-                      <ListItemIcon>
-                        <FilterAlt fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Advanced Filters</ListItemText>
-                    </MenuItem>
-                  </Menu>
+      
                 </Box>
               </Box>
             </Paper>

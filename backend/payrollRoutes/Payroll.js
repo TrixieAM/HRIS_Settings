@@ -21,7 +21,7 @@ function authenticateToken(req, res, next) {
       console.log('JWT verification error:', err.message);
       return res.status(403).json({ error: 'Invalid token' });
     }
-    console.log('Decoded JWT:', user); // 👈 see what fields are in the token
+    console.log('Decoded JWT:', user);
     req.user = user;
     next();
   });
@@ -35,7 +35,6 @@ function logAudit(
   recordId,
   targetEmployeeNumber = null
 ) {
-  // Ensure user object exists and has employeeNumber
   if (!user || !user.employeeNumber) {
     console.error('Invalid user object for audit logging:', user);
     return;
@@ -75,10 +74,6 @@ function logAudit(
 }
 
 
-
-
-
-// Test endpoint to verify authentication
 router.get('/test-auth', authenticateToken, (req, res) => {
   res.json({
     message: 'Authentication successful',
@@ -89,7 +84,6 @@ router.get('/test-auth', authenticateToken, (req, res) => {
 
 
 router.get('/payroll', authenticateToken, (req, res) => {
-  // Add WHERE clause to exclude records with rh values
   const sql = 'SELECT * FROM payroll_processing WHERE rh IS NULL OR rh = ""';
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err });
@@ -527,7 +521,6 @@ router.put(
     }
 
 
-    // First, update payroll_processing
     const payrollQuery = `
     UPDATE payroll_processing p
     LEFT JOIN item_table itt ON p.employeeNumber = itt.employeeID
@@ -607,8 +600,6 @@ router.put(
 
       logAudit(req.user, 'update', 'Payroll Processing', id, employeeNumber);
 
-
-      // Check if remittance record exists for this employee
       const checkRemittanceQuery = `
         SELECT id FROM remittance_table
         WHERE employeeNumber = ?
@@ -646,7 +637,6 @@ router.put(
 
 
         if (checkResult.length > 0) {
-          // Update existing record
           const updateRemittanceQuery = `
             UPDATE remittance_table SET
               nbc594 = ?,
@@ -686,7 +676,6 @@ router.put(
             }
           );
         } else {
-          // Insert new record
           const insertRemittanceQuery = `
             INSERT INTO remittance_table (
               employeeNumber,
@@ -730,7 +719,6 @@ router.put(
 
 
         function proceedWithPersonUpdate() {
-          // Update person_table
           const personQuery = `
             UPDATE person_table
             SET firstName = ?, middleName = ?, lastName = ?, nameExtension = ?
@@ -747,8 +735,6 @@ router.put(
                 return res.status(500).json({ error: 'Internal server error' });
               }
 
-
-              // Update PhilHealth contribution
               const philHealthQuery = `
                 UPDATE philhealth
                 SET PhilHealthContribution = ?
@@ -770,8 +756,6 @@ router.put(
                       .json({ error: 'Internal server error' });
                   }
 
-
-                  // Update department_assignment table
                   const departmentAssignmentQuery = `
                     UPDATE department_assignment
                     SET code = ?
@@ -865,8 +849,6 @@ router.post('/add-rendered-time', authenticateToken, async (req, res) => {
         overallRenderedOfficialTimeTardiness,
       } = record;
 
-
-      // Fetch the latest department code based on the employee number from department_assignment
       const departmentQuery = `
         SELECT code FROM department_assignment
         WHERE employeeNumber = ?
@@ -879,8 +861,6 @@ router.post('/add-rendered-time', authenticateToken, async (req, res) => {
         .promise()
         .query(departmentQuery, [employeeNumber]);
 
-
-      // Check if a department is found for the employee
       if (departmentRows.length === 0) {
         return res.status(404).json({
           error: `Department not found for employee ${employeeNumber}.`,
@@ -907,7 +887,7 @@ router.post('/add-rendered-time', authenticateToken, async (req, res) => {
       }
 
 
-      // Avoid duplicate payroll entries for the same employee and period
+      // Avoid duplicate payroll entries
       const existsQuery = `
         SELECT id FROM payroll_processing
         WHERE employeeNumber = ? AND startDate = ? AND endDate = ?
@@ -921,7 +901,6 @@ router.post('/add-rendered-time', authenticateToken, async (req, res) => {
 
 
       if (existingRows.length === 0) {
-        // Insert the record into payroll including the department (code)
         const insertQuery = `
           INSERT INTO payroll_processing (employeeNumber, startDate, endDate, h, m, s, department)
           VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -973,7 +952,7 @@ router.get('/finalized-payroll', authenticateToken, (req, res) => {
     }
 
 
-    // Audit log: viewing finalized payroll
+    // Audit log
     logAudit(
       req.user,
       'view',
@@ -1062,7 +1041,6 @@ router.post('/finalized-payroll', authenticateToken, (req, res) => {
   db.query(insertQuery, [values], (err, result) => {
     if (err) {
       console.error('Error inserting finalized payroll:', err);
-      // Log the failed attempt
       const employeeNumbers = payrollData
         .map((entry) => entry.employeeNumber)
         .join(', ');
@@ -1076,8 +1054,6 @@ router.post('/finalized-payroll', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-
-    // Log successful insertion immediately
     const employeeNumbers = payrollData
       .map((entry) => entry.employeeNumber)
       .join(', ');
@@ -1089,11 +1065,7 @@ router.post('/finalized-payroll', authenticateToken, (req, res) => {
       employeeNumbers
     );
 
-
-    // Extract names to update status
     const employeeNames = payrollData.map((entry) => entry.name);
-
-
     const updateQuery = `
       UPDATE payroll_processing
       SET status = 1
@@ -1107,7 +1079,6 @@ router.post('/finalized-payroll', authenticateToken, (req, res) => {
           'Error updating status in payroll_processing:',
           updateErr
         );
-        // Log the status update failure
         logAudit(
           req.user,
           'status_update_failed',
@@ -1120,8 +1091,6 @@ router.post('/finalized-payroll', authenticateToken, (req, res) => {
           .json({ error: 'Payroll inserted, but failed to update status.' });
       }
 
-
-      // Log successful status update
       logAudit(
         req.user,
         'status_update',
@@ -1151,8 +1120,6 @@ router.delete('/finalized-payroll/:id', authenticateToken, (req, res) => {
     WHERE name = ?
   `;
 
-
-  // First delete
   db.query(deleteQuery, [id], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -1161,8 +1128,6 @@ router.delete('/finalized-payroll/:id', authenticateToken, (req, res) => {
       return res.status(404).json({ message: 'Payroll record not found' });
     }
 
-
-    // Then update status
     db.query(updateQuery, [name], (updateErr, updateResult) => {
       if (updateErr) {
         return res
@@ -1170,8 +1135,7 @@ router.delete('/finalized-payroll/:id', authenticateToken, (req, res) => {
           .json({ error: 'Deleted but failed to update status.' });
       }
 
-
-      // Audit log: deleting finalized payroll
+      // Audit log
       logAudit(req.user, 'delete', 'finalize_payroll', id, employeeNumber);
 
 

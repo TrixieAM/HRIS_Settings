@@ -18,6 +18,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import '@fontsource/poppins';
 import earistLogo from './assets/earistLogo.jpg';
 import hrisLogo from './assets/hrisLogo.png';
+import API_BASE_URL from './apiConfig';
 
 
 import Login from './components/Login';
@@ -25,9 +26,7 @@ import Register from './components/Register';
 import LoadingOverlay from './components/LoadingOverlay';
 import SuccessfulOverlay from './components/SuccessfulOverlay';
 import AccessDenied from './components/AccessDenied';
-
-
-
+import SystemSetting from './SystemSettings';
 
 import Home from './components/Home';
 import Sidebar from './components/Sidebar';
@@ -39,7 +38,6 @@ import BulkRegister from './components/BulkRegister';
 import Registration from './components/Registration';
 
 
-//DASHBOARD
 import PersonalTable from './components/DASHBOARD/PersonTable';
 import Children from './components/DASHBOARD/Children';
 import College from './components/DASHBOARD/College';
@@ -52,7 +50,6 @@ import Eligibility from './components/DASHBOARD/Eligibility';
 import GraduateTable from './components/DASHBOARD/GraduateStudies';
 
 
-//ATTENDANCE RECORDS
 import ViewAttendanceRecord from './components/ATTENDANCE/AttendanceDevice';
 import AttendanceModification from './components/ATTENDANCE/AttendanceModification';
 import AttendanceUserState from './components/ATTENDANCE/AttendanceUserState';
@@ -66,7 +63,6 @@ import OverallAttendancePage from './components/ATTENDANCE/AttendanceSummary';
 import OfficialTimeForm from './components/ATTENDANCE/OfficialTimeForm';
 
 
-//PAYROLL
 import PayrollProcess from './components/PAYROLL/PayrollProcessing';
 import Remittances from './components/PAYROLL/Remittances';
 import ItemTable from './components/PAYROLL/ItemTable';
@@ -79,8 +75,6 @@ import PayrollProcessed from './components/PAYROLL/PayrollProcessed';
 import PayrollReleased from './components/PAYROLL/PayrollReleased';
 
 
-
-//FORMS
 import AssessmentClearance from './components/FORMS/AssessmentClearance';
 import Clearance from './components/FORMS/Clearance';
 import ClearanceBack from './components/FORMS/ClearanceBack';
@@ -101,19 +95,17 @@ import HrmsRequestForms from './components/FORMS/HRMSRequestForms';
 import EmploymentCategoryManagement from './components/EmploymentCategory';
 
 
-// PDS
 import PDS1 from './components/PDS/PDS1';
 import PDS2 from './components/PDS/PDS2';
 import PDS3 from './components/PDS/PDS3';
 import PDS4 from './components/PDS/PDS4';
 
 
-//PAYSLIP
 import Payslip from './components/PAYROLL/Payslip';
 import PayslipOverall from './components/PAYROLL/PayslipOverall';
 import PayslipDistribution from './components/PAYROLL/PayslipDistribution';
 
-//LEAVE
+
 import LeaveRequestUser from './components/LEAVE/LeaveRequestUser';
 import LeaveTable from './components/LEAVE/LeaveTable';
 import LeaveRequest from './components/LEAVE/LeaveRequest';
@@ -121,17 +113,12 @@ import LeaveDatePickerModal from './components/LEAVE/LeaveDatePicker';
 import LeaveAssignment from './components/LEAVE/LeaveAssignment';
 import LeaveCredits from './components/LEAVE/LeaveCredits';
 
-
 import UsersList from './components/UsersList';
 import PagesList from './components/PagesList';
 import AuditLogs from './components/AuditLogs';
 import Settings from './components/Settings';
 import PayrollJO from './components/PAYROLL/PayrollJO';
-
 import UnderConstruction from './components/UnderConstruction';
-
-
-
 
 function App() {
   const [open, setOpen] = useState(false);
@@ -145,6 +132,68 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   
+
+  const [systemSettings, setSystemSettings] = useState({
+    primaryColor: '#894444',
+    secondaryColor: '#6d2323',
+    accentColor: '#FEF9E1',
+    textColor: '#FFFFFF',
+    hoverColor: '#6D2323',
+    backgroundColor: '#FFFFFF', 
+    institutionLogo: '',
+    hrisLogo: '',
+    institutionName: 'Eulogio "Amang" Rodriguez Institute of Science and Technology',
+    systemName: 'Human Resources Information System',
+    institutionAbbreviation: 'EARIST',
+    footerText: '© 2025 EARIST Manila - Human Resources Information System. All rights Reserved.',
+    enableWatermark: true,
+  });
+
+  
+  useEffect(() => {
+    if (systemSettings?.backgroundColor) {
+      document.documentElement.style.setProperty(
+        '--background-color', 
+        systemSettings.backgroundColor
+      );
+    }
+  }, [systemSettings?.backgroundColor]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        
+        const localSettings = localStorage.getItem('systemSettings');
+        if (localSettings) {
+          const parsed = JSON.parse(localSettings);
+          setSystemSettings(parsed);
+          
+          document.documentElement.style.setProperty(
+            '--background-color', 
+            parsed.backgroundColor || '#FFFFFF'
+          );
+        }
+
+        
+        const url = API_BASE_URL.includes('/api') 
+          ? `${API_BASE_URL}/system-settings`
+          : `${API_BASE_URL}/api/system-settings`;
+        
+        const response = await axios.get(url);
+        setSystemSettings(response.data);
+        localStorage.setItem('systemSettings', JSON.stringify(response.data));
+        
+        document.documentElement.style.setProperty(
+          '--background-color', 
+          response.data.backgroundColor || '#FFFFFF'
+        );
+      } catch (error) {
+        console.error('Error loading system settings:', error);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleClick = () => setOpen(!open);
   const handleClickAttendance = () => setOpen2(!open2);
@@ -164,96 +213,146 @@ function App() {
     }
   };
 
-  const handleItemClick = (item) => {setSelectedItem(item);};
+ const handleItemClick = (item) => {
+    setSelectedItem(item);
+  };
 
+  const drawerWidth = 270;
+  const collapsedWidth = 60;
 
-  const drawerWidth = 270; // Width when open
-  const collapsedWidth = 60; // Width when collapsed
-
+  const dynamicTheme = createTheme({
+    typography: {
+      fontFamily: 'Poppins, sans-serif',
+      body1: { fontSize: '13px' },
+    },
+    palette: {
+      primary: {
+        main: systemSettings.primaryColor,
+        dark: systemSettings.hoverColor,
+        light: systemSettings.accentColor,
+      },
+      secondary: {
+        main: systemSettings.secondaryColor,
+      },
+      background: {
+        default: '#f5f5f5',
+        paper: '#ffffff',
+      },
+      text: {
+        primary: '#333333',
+        secondary: '#666666',
+      },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          contained: {
+            backgroundColor: systemSettings.primaryColor,
+            color: systemSettings.textColor,
+            '&:hover': {
+              backgroundColor: systemSettings.hoverColor,
+            },
+          },
+          outlined: {
+            borderColor: systemSettings.primaryColor,
+            color: systemSettings.primaryColor,
+            '&:hover': {
+              borderColor: systemSettings.hoverColor,
+              backgroundColor: `${systemSettings.accentColor}33`,
+            },
+          },
+        },
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backgroundColor: systemSettings.primaryColor,
+          },
+        },
+      },
+      MuiTableHead: {
+        styleOverrides: {
+          root: {
+            '& .MuiTableCell-head': {
+              backgroundColor: systemSettings.primaryColor,
+              color: systemSettings.textColor,
+              fontWeight: 'bold',
+            },
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          filled: {
+            backgroundColor: systemSettings.accentColor,
+            color: '#000000',
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            '&.Mui-selected': {
+              color: systemSettings.primaryColor,
+            },
+          },
+        },
+      },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: {
+            backgroundColor: `${systemSettings.accentColor}88`,
+          },
+          bar: {
+            backgroundColor: systemSettings.primaryColor,
+          },
+        },
+      },
+    },
+  });
 
   return (
-      <ThemeProvider
-        theme={createTheme({
-          typography: {
-            fontFamily: 'Poppins, sans-serif',
-            body1: { fontSize: '13px' },
-          },
-        })}
-      >
- 
-      <Box
+      <ThemeProvider theme={dynamicTheme}>
+       <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
           minHeight: '10vh',
           overflow: 'hidden',
-          
         }}
       >
-      {/* Header */}
-       <AppBar
+        {}
+        <AppBar
           position="fixed"
           sx={{ 
             zIndex: 1201, 
-            bgcolor: '#6d2323', 
+            bgcolor: systemSettings.secondaryColor,
             height: '62px',
             overflow: 'hidden',
           }}
         >
-          {/* Watermark inside the AppBar */}
-          <Box
-            component="img"
-            src={hrisLogo}
-            alt="Watermark"
-            sx={{
-              position: 'absolute',    
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              opacity: 0.05,             
-              width: '100%',             
-              pointerEvents: 'none',     
-              userSelect: 'none',
-            }}
-          />
-
           <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
-      
-              <>
-                {/* EARIST Logo */}
-                <img
-                  src={earistLogo} 
-                  alt="EARIST Logo" 
-                  width="45" 
-                  height="45" 
-                  style={{
-                    marginRight: '10px',
-                    border: '1px solid white',
-                    borderRadius: '50px',
-                    marginLeft: '-15px'
-                  }}
-                />
-
-                {/* HRIS Logo */}
-                {/* <img
-                  src={hrisLogo} 
-                  alt="HRIS Logo" 
-                  width="45" 
-                  height="45" 
-                  style={{
-                    marginRight: '10px',
-                    border: '1px solid black',
-                    borderRadius: '50px',
-                  }}
-                /> */}
-              </>
+            <>
+              <img
+                src={systemSettings.institutionLogo || earistLogo} 
+                alt="Institution Logo" 
+                width="45" 
+                height="45" 
+                style={{
+                  marginRight: '10px',
+                  border: '1px solid white',
+                  borderRadius: '50px',
+                  marginLeft: '-15px'
+                }}
+              />
+            </>
             
             <Box>
-              <Typography variant="body2" noWrap sx={{ lineHeight: 1.2, color: 'white', marginTop: '8px' }}>
-                Eulogio "Amang" Rodriguez Institute of Science and Technology
+              <Typography variant="body2" noWrap sx={{ lineHeight: 1.2, color: systemSettings.textColor, marginTop: '8px' }}>
+                {systemSettings.institutionName}
               </Typography>
-              <Typography variant="subtitle1" noWrap sx={{ color: 'white', fontWeight: 'bold', marginTop: '-5px' }}>
-                Human Resources Information System
+              <Typography variant="subtitle1" noWrap sx={{ color: systemSettings.textColor, fontWeight: 'bold', marginTop: '-5px' }}>
+                {systemSettings.systemName}
               </Typography>
             </Box>
           </Toolbar>
@@ -275,26 +374,45 @@ function App() {
             handleClickForms={handleClickForms}
             open5={open5}
             handleClickPDSFiles={handleClickPDSFiles}
-            onDrawerStateChange={handleDrawerStateChange} // NEW PROP
+            onDrawerStateChange={handleDrawerStateChange}
+            systemSettings={systemSettings}
+
           />
         )}
 
 
 
-        {/* Main Content */}
-        <Box
-          component="main"
-          onClick={handleMainContentClick} // NEW: Close sidebar on click
-          sx={{
-            flexGrow: 1,
-            bgcolor: 'transparent',
-            p: 5,
-            marginLeft: drawerOpen ? `${drawerWidth}px` : `${collapsedWidth}px`, // UPDATED
-            transition: 'margin-left 0.3s ease', // NEW: Smooth transition
-            fontFamily: 'Poppins, sans-serif',
-            minHeight: '100vh', // NEW: Ensure full height for click detection
-          }}
-        >
+        {}
+         <Box
+            component="main"
+            onClick={handleMainContentClick}
+            sx={{
+              flexGrow: 1,
+              bgcolor: 'transparent', 
+              p: 5,
+              marginLeft: drawerOpen ? `${drawerWidth}px` : `${collapsedWidth}px`,
+              transition: 'margin-left 0.3s ease',
+              fontFamily: 'Poppins, sans-serif',
+              minHeight: '100vh',
+              
+              '& .MuiPaper-root': {
+                borderColor: systemSettings.primaryColor,
+              },
+              '& .MuiButton-contained': {
+                backgroundColor: systemSettings.primaryColor,
+                '&:hover': {
+                  backgroundColor: systemSettings.hoverColor,
+                },
+              },
+              '& .MuiTableHead-root': {
+                '& .MuiTableCell-head': {
+                  backgroundColor: systemSettings.primaryColor,
+                  color: systemSettings.textColor,
+                  fontWeight: 'bold',
+                },
+              },
+            }}
+          >
           <Toolbar />
           <Routes>
             <Route path="/register" element={<Register />} />
@@ -449,7 +567,7 @@ function App() {
               }
             />
             <Route
-              path="/attendance_module" //non-teaching
+              path="/attendance_module" 
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <AttendanceModule />
@@ -457,7 +575,7 @@ function App() {
               }
             />
             <Route
-              path="/attendance_module_faculty" //30hrs
+              path="/attendance_module_faculty" 
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <AttendanceModuleFaculty />
@@ -469,7 +587,7 @@ function App() {
 
 
             <Route
-              path="/attendance_module_faculty_40hrs" //40hrs
+              path="/attendance_module_faculty_40hrs" 
               element={
                 <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
                   <AttendanceModuleFaculty40 />
@@ -934,6 +1052,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/system-settings"
+              element={
+                <ProtectedRoute allowedRoles={['administrator', 'superadmin']}>
+                  <SystemSetting />
+                </ProtectedRoute>
+              }
+            />
+           
            
 
             <Route path="/under-construction" element={<UnderConstruction />} />
@@ -944,8 +1072,8 @@ function App() {
 
 
 
-        {/* Footer */}
-       <Box
+        {}
+      <Box
           component="footer"
           sx={{
             position: 'fixed',
@@ -953,35 +1081,16 @@ function App() {
             left: 0,
             width: '100%',
             zIndex: (theme) => theme.zIndex.drawer + 1,
-            bgcolor: '#6d2323',
-            color: 'white',
+            bgcolor: systemSettings.secondaryColor,
+            color: systemSettings.textColor,
             textAlign: 'center',
             padding: '20px',
             height: '10px',
             overflow: 'hidden',
           }}
         >
-          {/* Watermark */}
-          <Box
-            component="img"
-            src={hrisLogo}
-            alt="Watermark"
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              opacity: 0.05,        
-              width: '100%',        
-              pointerEvents: 'none', 
-              userSelect: 'none',
-              zIndex: 0,            
-            }}
-          />
-
-          {/* Footer Text */}
           <Typography variant="body2" sx={{ zIndex: 1, position: 'relative' }}>
-            {'© 2025 EARIST Manila - Human Resources Information System. All rights Reserved.'}
+            {systemSettings.footerText}
           </Typography>
         </Box>
       </Box>
@@ -999,12 +1108,3 @@ export default function WrappedApp() {
     </Router>
   );
 }
-
-
-
-
-
-
-
-
-

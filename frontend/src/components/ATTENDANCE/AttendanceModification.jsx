@@ -254,10 +254,17 @@ const AttendanceSearch = () => {
     <Box sx={{ 
       background: `linear-gradient(135deg, ${accentColor} 0%, ${accentDark} 50%, ${accentColor} 100%)`,
       py: 4,
-      borderRadius: '14px'
+      borderRadius: '14px',
+      width: '100vw', // Full viewport width
+      mx: 'auto', // Center horizontally
+      maxWidth: '100%', // Ensure it doesn't exceed viewport
+      overflow: 'hidden', // Prevent horizontal scroll
+      position: 'relative',
+      left: '50%',
+      transform: 'translateX(-50%)', // Center the element
     }}>
       {/* Wider Container */}
-      <Container maxWidth="xl" sx={{ px: 4 }}>
+      <Box sx={{ px: 6, mx: 'auto', maxWidth: '1600px' }}>
         {/* Breadcrumbs */}
         <Fade in timeout={300}>
           <Box sx={{ mb: 3 }}>
@@ -840,7 +847,7 @@ const AttendanceSearch = () => {
             </GlassCard>
           </Fade>
         )}
-      </Container>
+      </Box>
     </Box>
   );
 };

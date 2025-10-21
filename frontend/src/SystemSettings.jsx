@@ -28,6 +28,10 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -40,6 +44,7 @@ import {
   Settings as SettingsIcon,
   CheckCircle,
   Error as ErrorIcon,
+  Undo as UndoIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -165,8 +170,10 @@ const SystemSetting = () => {
     enableWatermark: true,
   });
 
+  const [originalColors, setOriginalColors] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -197,7 +204,18 @@ const SystemSetting = () => {
       
       console.log('Fetching from:', url); 
       const response = await axios.get(url);
-      setSettings(response.data);
+      const fetchedSettings = response.data;
+      setSettings(fetchedSettings);
+      
+      const colorFields = [
+        'primaryColor', 'secondaryColor', 'accentColor', 'textColor',
+        'textPrimaryColor', 'textSecondaryColor', 'hoverColor', 'backgroundColor'
+      ];
+      const originalColorValues = {};
+      colorFields.forEach(field => {
+        originalColorValues[field] = fetchedSettings[field];
+      });
+      setOriginalColors(originalColorValues);
     } catch (error) {
       console.error('Error fetching settings:', error);
       console.error('Full error:', error.response || error); 
@@ -289,41 +307,64 @@ const SystemSetting = () => {
     }
   };
 
-  const handleReset = async () => {
-    if (window.confirm('Are you sure you want to reset all settings to default?')) {
-      try {
-        setSaving(true);
-        const url = API_BASE_URL.includes('/api') 
-          ? `${API_BASE_URL}/system-settings/reset`
-          : `${API_BASE_URL}/api/system-settings/reset`;
-        
-        await axios.post(url);
-        localStorage.removeItem('systemSettings');
-        
-        setSnackbar({
-          open: true,
-          message: 'Settings reset successfully! Reloading page...',
-          severity: 'success',
-        });
-        
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } catch (error) {
-        console.error('Error resetting settings:', error);
-        console.error('Full error:', error.response || error);
-        setSnackbar({
-          open: true,
-          message: 'Error resetting settings. Please try again.',
-          severity: 'error',
-        });
-        setSaving(false);
-      }
+  const executeReset = async () => {
+    try {
+      setSaving(true);
+      const url = API_BASE_URL.includes('/api') 
+        ? `${API_BASE_URL}/system-settings/reset`
+        : `${API_BASE_URL}/api/system-settings/reset`;
+      
+      await axios.post(url);
+      localStorage.removeItem('systemSettings');
+      
+      setSnackbar({
+        open: true,
+        message: 'Settings reset successfully! Reloading page...',
+        severity: 'success',
+      });
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      console.error('Full error:', error.response || error);
+      setSnackbar({
+        open: true,
+        message: 'Error resetting settings. Please try again.',
+        severity: 'error',
+      });
+      setSaving(false);
     }
+  };
+
+  const handleReset = () => {
+    setConfirmResetOpen(true);
+  };
+
+  const handleConfirmReset = async () => {
+    setConfirmResetOpen(false);
+    await executeReset();
+  };
+
+  const handleCancelReset = () => {
+    setConfirmResetOpen(false);
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleColorReset = () => {
+    setSettings({
+      ...settings,
+      ...originalColors
+    });
+    setSnackbar({
+      open: true,
+      message: 'Colors reset to original values!',
+      severity: 'success',
+    });
   };
 
   if (loading) {
@@ -452,7 +493,7 @@ const SystemSetting = () => {
                     <Avatar sx={{ bgcolor: alpha(settings.accentColor, 0.8), color: settings.textPrimaryColor }}>
                       <PaletteIcon />
                     </Avatar>
-                    <Box>
+                    <Box sx={{ flexGrow: 1 }}>
                       <Typography variant="h5" component="div" sx={{ fontWeight: 600, color: settings.textPrimaryColor }}>
                         Color Palette
                       </Typography>
@@ -460,6 +501,22 @@ const SystemSetting = () => {
                         Customize the colors used throughout the system
                       </Typography>
                     </Box>
+                    <Tooltip title="Reset colors to original values">
+                      <IconButton
+                        onClick={handleColorReset}
+                        sx={{
+                          color: settings.textPrimaryColor,
+                          backgroundColor: alpha(settings.accentColor, 0.3),
+                          '&:hover': {
+                            backgroundColor: alpha(settings.accentColor, 0.5),
+                            transform: 'scale(1.05)',
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <UndoIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 }
                 sx={{ 
@@ -806,6 +863,49 @@ const SystemSetting = () => {
           </Typography>
         </Box>
       </Backdrop>
+
+      <Dialog
+        open={confirmResetOpen}
+        onClose={handleCancelReset}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            background: `linear-gradient(135deg, ${settings.accentColor} 0%, ${settings.backgroundColor} 100%)`,
+            boxShadow: '0 8px 40px rgba(109, 35, 35, 0.15)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: settings.textPrimaryColor, fontWeight: 700 }}>
+          Confirm Reset
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: settings.textPrimaryColor }}>
+            Are you sure you want to reset all settings to default?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <ProfessionalButton
+            variant="outlined"
+            onClick={handleCancelReset}
+            sx={{
+              borderColor: settings.primaryColor,
+              color: settings.textPrimaryColor,
+              '&:hover': { backgroundColor: alpha(settings.primaryColor, 0.1) }
+            }}
+          >
+            Cancel
+          </ProfessionalButton>
+          <ProfessionalButton
+            variant="contained"
+            onClick={handleConfirmReset}
+            sx={{ bgcolor: settings.primaryColor, color: settings.accentColor, '&:hover': { bgcolor: settings.secondaryColor } }}
+          >
+            Reset
+          </ProfessionalButton>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

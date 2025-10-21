@@ -81,6 +81,51 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/logo.PNG';
 
+const useSystemSettings = () => {
+  const [settings, setSettings] = useState({
+    primaryColor: '#894444',
+    secondaryColor: '#6d2323',
+    accentColor: '#FEF9E1',
+    textColor: '#FFFFFF',
+    textPrimaryColor: '#6D2323', 
+    textSecondaryColor: '#FEF9E1', 
+    hoverColor: '#6D2323',
+    backgroundColor: '#FFFFFF',
+  });
+
+  useEffect(() => {
+    
+    const storedSettings = localStorage.getItem('systemSettings');
+    if (storedSettings) {
+      try {
+        const parsedSettings = JSON.parse(storedSettings);
+        setSettings(parsedSettings);
+      } catch (error) {
+        console.error('Error parsing stored settings:', error);
+      }
+    }
+
+    
+    const fetchSettings = async () => {
+      try {
+        const url = API_BASE_URL.includes('/api') 
+          ? `${API_BASE_URL}/system-settings`
+          : `${API_BASE_URL}/api/system-settings`;
+        
+        const response = await axios.get(url);
+        setSettings(response.data);
+        localStorage.setItem('systemSettings', JSON.stringify(response.data));
+      } catch (error) {
+        console.error('Error fetching system settings:', error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  return settings;
+};
+
 
 const drawerWidth = 270;
 const collapsedWidth = 60;
@@ -115,6 +160,7 @@ const Sidebar = ({
   handleClickPDSFiles,
   onDrawerStateChange,
   systemSettings,
+  
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -125,9 +171,13 @@ const Sidebar = ({
   const [profilePicture, setProfilePicture] = useState('');
   const [employeeNumber, setEmployeeNumber] = useState('');
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const settings = useSystemSettings();
+
 
   const navigate = useNavigate();
   const location = useLocation(); 
+
+  
 
   useEffect(() => {
     const storedUser = localStorage.getItem('username');
@@ -165,6 +215,8 @@ const Sidebar = ({
       fetchProfileData();
     }
   }, [employeeNumber, location.pathname]);
+
+  
 
   const currentPath = location.pathname;
   useEffect(() => {
@@ -486,9 +538,9 @@ const Sidebar = ({
                           width: 35,
                           height: 35,
                           marginLeft: -1,
-                          color: "#ffffff",
+                          color: settings.textSecondaryColor,
                           bgcolor: "#000000",
-                          border: "2px solid " + (systemSettings?.hoverColor || '#6d2323'),
+                          border: "2px solid " + (settings.hoverColor || '#6d2323'),
                         }}
                       />
                       <Box>
@@ -498,7 +550,7 @@ const Sidebar = ({
                           sx={{
                             fontFamily: "Poppins, sans-serif",
                             marginLeft: "9px",
-                            color: systemSettings?.textColor || "#FFFFFF",
+                            color: settings.textSecondaryColor,
                           }}
                         >
                           {fullName || username}
@@ -509,7 +561,7 @@ const Sidebar = ({
                           sx={{
                             fontFamily: "Poppins, sans-serif",
                             marginLeft: "9px",
-                            color: systemSettings?.textColor || "#FFFFFF",
+                            color: settings.textSecondaryColor,
                           }}
                         >
                           {employeeNumber}
@@ -530,7 +582,7 @@ const Sidebar = ({
                       onClick={handleToggleLock}
                       size="small"
                       sx={{
-                        color: isLocked ? (systemSettings?.accentColor || "#FEF9E1") : (systemSettings?.textColor || "#FFFFFF"),
+                        color: isLocked ? (settings.accentColor || "#FEF9E1") : (settings.textSecondaryColor || "#FFFFFF"),
                         transition: "all 0.3s ease",
                         "&:hover": {
                           bgcolor: "rgba(255, 255, 255, 0.1)",
@@ -684,7 +736,7 @@ const Sidebar = ({
                     bgcolor: "transparent",
                     fontWeight: "bold",
                     fontSize: "0.7rem",
-                    color: systemSettings?.textColor || "#FFFFFF",
+                    color: settings.textSecondaryColor,
                     fontFamily: "Poppins, sans-serif",
                     textTransform: "uppercase",
                     mb: -1
@@ -702,21 +754,21 @@ const Sidebar = ({
               onClick={() => handleItemClick('home')}
               sx={{
                 cursor: 'pointer',
-                bgcolor: selectedItem === 'home' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                color: selectedItem === 'home' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                bgcolor: selectedItem === 'home' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                color: selectedItem === 'home' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                 '& .MuiListItemIcon-root': {
-                  color: selectedItem === 'home' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'home' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
                 '& .MuiListItemText-primary': {
-                  color: selectedItem === 'home' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'home' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
 
                 '&:hover': {
-                  bgcolor: systemSettings?.hoverColor || '#6D2323',
-                  color: systemSettings?.textColor || '#FFFFFF',
-                  '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                  '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                  bgcolor: settings.hoverColor || '#6D2323',
+                  color: settings.textSecondaryColor,
+                  '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                  '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                 },
 
                 borderTopRightRadius: selectedItem === 'home' ? '15px' : 0,
@@ -738,21 +790,21 @@ const Sidebar = ({
               to="/attendance-user-state"
               onClick={() => handleItemClick('attendance-user-state')}
               sx={{
-                bgcolor: selectedItem === 'attendance-user-state' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                color: selectedItem === 'attendance-user-state' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                bgcolor: selectedItem === 'attendance-user-state' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                color: selectedItem === 'attendance-user-state' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                 '& .MuiListItemIcon-root': {
-                  color: selectedItem === 'attendance-user-state' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'attendance-user-state' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
                 '& .MuiListItemText-primary': {
-                  color: selectedItem === 'attendance-user-state' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'attendance-user-state' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
 
                 '&:hover': {
-                  bgcolor: systemSettings?.hoverColor || '#6D2323',
-                  color: systemSettings?.textColor || '#FFFFFF',
-                  '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                  '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                  bgcolor: settings.hoverColor || '#6D2323',
+                  color: settings.textSecondaryColor,
+                  '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                  '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                 },
 
                 borderTopRightRadius: selectedItem === 'attendance-user-state' ? '15px' : 0,
@@ -773,21 +825,21 @@ const Sidebar = ({
               to="/daily_time_record"
               onClick={() => handleItemClick('daily_time_record')}
               sx={{
-                bgcolor: selectedItem === 'daily_time_record' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                color: selectedItem === 'daily_time_record' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                bgcolor: selectedItem === 'daily_time_record' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                color: selectedItem === 'daily_time_record' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                 '& .MuiListItemIcon-root': {
-                  color: selectedItem === 'daily_time_record' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'daily_time_record' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
                 '& .MuiListItemText-primary': {
-                  color: selectedItem === 'daily_time_record' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'daily_time_record' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
 
                 '&:hover': {
-                  bgcolor: systemSettings?.hoverColor || '#6D2323',
-                  color: systemSettings?.textColor || '#FFFFFF',
-                  '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                  '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                  bgcolor: settings.hoverColor || '#6D2323',
+                  color: settings.textSecondaryColor,
+                  '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                  '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                 },
 
                 borderTopRightRadius: selectedItem === 'daily_time_record' ? '15px' : 0,
@@ -808,21 +860,21 @@ const Sidebar = ({
               to="/payslip"
               onClick={() => handleItemClick('payslip')}
               sx={{
-                bgcolor: selectedItem === 'payslip' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                color: selectedItem === 'payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                bgcolor: selectedItem === 'payslip' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                color: selectedItem === 'payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                 '& .MuiListItemIcon-root': {
-                  color: selectedItem === 'payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
                 '& .MuiListItemText-primary': {
-                  color: selectedItem === 'payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
 
                 '&:hover': {
-                  bgcolor: systemSettings?.hoverColor || '#6D2323',
-                  color: systemSettings?.textColor || '#FFFFFF',
-                  '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                  '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                  bgcolor: settings.hoverColor || '#6D2323',
+                  color: settings.textSecondaryColor,
+                  '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                  '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                 },
 
                 borderTopRightRadius: selectedItem === 'payslip' ? '15px' : 0,
@@ -843,15 +895,15 @@ const Sidebar = ({
                     component={Link} 
                     to= '/leave-request-user' 
                     sx={{
-                      color: selectedItem === 'leave-request-user' ? '#000000' : 'inherit',
+                      color: selectedItem === 'leave-request-user' ? settings.textPrimaryColor : 'inherit',
                       bgcolor: selectedItem === 'leave-request-user' ? '#FEF9E1' : 'inherit',
                       '&:hover': {
-                        bgcolor: '#6D2323',
-                        color: '#FFFFFF',
+                        bgcolor: settings.hoverColor || '#6D2323',
+                        color: settings.textSecondaryColor,
                         borderTopRightRadius: '15px',
                         borderBottomRightRadius: '15px',
                         '& .MuiListItemIcon-root': {
-                          color: '#FFFFFF',
+                          color: settings.textSecondaryColor,
                         }
                       },
                       borderTopRightRadius: selectedItem === 'leave-request-user' ? '15px' : 0,
@@ -860,8 +912,8 @@ const Sidebar = ({
                     onClick={() => handleItemClick('leave-request-user')} 
                     >
                     <ListItemIcon sx={{ marginRight: '-1rem',
-                      color: selectedItem === 'leave-request-user' ? '#000000' : 'inherit',
-                      '&:hover': { color: '#000000' }
+                      color: selectedItem === 'leave-request-user' ? settings.textPrimaryColor : 'inherit',
+                      '&:hover': { color: settings.textPrimaryColor }
                     }}>
                       <TransferWithinAStation />
                     </ListItemIcon>
@@ -872,18 +924,18 @@ const Sidebar = ({
                   button
                   onClick={handleClickPDSFiles}
                   sx={{ 
-                    color: systemSettings?.textColor || '#FFFFFF', 
+                    color: settings.textSecondaryColor, 
                     cursor: 'pointer' 
                   }}
                 >
                   <ListItemIcon>
-                    <ContactPageIcon sx={{ color: systemSettings?.textColor || '#FFFFFF' }} />
+                    <ContactPageIcon sx={{ color: settings.textSecondaryColor }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="PDS Files"
                     sx={{ marginLeft: '-10px' }}
                   />
-                  <ListItemIcon sx={{ marginLeft: '10rem', color: systemSettings?.textColor || '#FFFFFF' }}>
+                  <ListItemIcon sx={{ marginLeft: '10rem', color: settings.textSecondaryColor }}>
                     {open5 ? <ExpandLess /> : <ExpandMore />}
                   </ListItemIcon>
                 </ListItem>
@@ -898,21 +950,21 @@ const Sidebar = ({
                       to="/pds1"
                       onClick={() => handleItemClick('pds1')}
                       sx={{
-                        bgcolor: selectedItem === 'pds1' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'pds1' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'pds1' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'pds1' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'pds1' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds1' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'pds1' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds1' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'pds1' ? '15px' : 0,
@@ -932,21 +984,21 @@ const Sidebar = ({
                       to="/pds2"
                       onClick={() => handleItemClick('pds2')}
                       sx={{
-                        bgcolor: selectedItem === 'pds2' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'pds2' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'pds2' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'pds2' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'pds2' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds2' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'pds2' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds2' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'pds2' ? '15px' : 0,
@@ -966,21 +1018,21 @@ const Sidebar = ({
                       to="/pds3"
                       onClick={() => handleItemClick('pds3')}
                       sx={{
-                        bgcolor: selectedItem === 'pds3' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'pds3' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'pds3' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'pds3' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'pds3' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds3' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'pds3' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds3' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'pds3' ? '15px' : 0,
@@ -1000,21 +1052,21 @@ const Sidebar = ({
                       to="/pds4"
                       onClick={() => handleItemClick('pds4')}
                       sx={{
-                        bgcolor: selectedItem === 'pds4' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'pds4' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'pds4' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'pds4' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'pds4' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds4' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'pds4' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'pds4' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'pds4' ? '15px' : 0,
@@ -1042,7 +1094,7 @@ const Sidebar = ({
                     bgcolor: "transparent",
                     fontWeight: "bold",
                     fontSize: "0.7rem",
-                    color: systemSettings?.textColor || "white",
+                    color: settings.textSecondaryColor || "white",
                     fontFamily: "Poppins, sans-serif",
                     textTransform: "uppercase",
                     mt: -1,
@@ -1063,21 +1115,21 @@ const Sidebar = ({
               to="/registration"
               onClick={() => handleItemClick('bulk-register')}
               sx={{
-                bgcolor: selectedItem === 'bulk-register' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                color: selectedItem === 'bulk-register' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                bgcolor: selectedItem === 'bulk-register' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                color: selectedItem === 'bulk-register' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                 '& .MuiListItemIcon-root': {
-                  color: selectedItem === 'bulk-register' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'bulk-register' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
                 '& .MuiListItemText-primary': {
-                  color: selectedItem === 'bulk-register' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                  color: selectedItem === 'bulk-register' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                 },
 
                 '&:hover': {
-                  bgcolor: systemSettings?.hoverColor || '#6D2323',
-                  color: systemSettings?.textColor || '#FFFFFF',
-                  '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                  '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                  bgcolor: settings.hoverColor || '#6D2323',
+                  color: settings.textSecondaryColor,
+                  '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                  '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                 },
 
                 borderTopRightRadius: selectedItem === 'bulk-register' ? '15px' : 0,
@@ -1102,7 +1154,7 @@ const Sidebar = ({
                     handleClick();
                   }}
                   sx={{
-                    color: systemSettings?.textColor || '#FFFFFF',
+                    color: settings.textSecondaryColor,
                     cursor: 'pointer',
                     borderTopRightRadius:
                       selectedItem === 'Dashboards' ? '15px' : 0,
@@ -1111,13 +1163,13 @@ const Sidebar = ({
                   }}
                 >
                   <ListItemIcon>
-                    <DashboardIcon sx={{ color: systemSettings?.textColor || '#FFFFFF' }} />
+                    <DashboardIcon sx={{ color: settings.textSecondaryColor }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Information Management"
                     sx={{ marginLeft: '-10px' }}
                   />
-                  <ListItemIcon sx={{ marginLeft: '10rem', color: systemSettings?.textColor || '#FFFFFF' }}>
+                  <ListItemIcon sx={{ marginLeft: '10rem', color: settings.textSecondaryColor }}>
                     {open ? <ExpandLess /> : <ExpandMore />}
                   </ListItemIcon>
                 </ListItem>
@@ -1131,21 +1183,21 @@ const Sidebar = ({
                       to="/personalinfo"
                       onClick={() => handleItemClick('personalinfo')}
                       sx={{
-                        bgcolor: selectedItem === 'personalinfo' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'personalinfo' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'personalinfo' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'personalinfo' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'personalinfo' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'personalinfo' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'personalinfo' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'personalinfo' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'personalinfo' ? '15px' : 0,
@@ -1165,21 +1217,21 @@ const Sidebar = ({
                       to="/children"
                       onClick={() => handleItemClick('children')}
                       sx={{
-                        bgcolor: selectedItem === 'children' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'children' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'children' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'children' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'children' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'children' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'children' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'children' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'children' ? '15px' : 0,
@@ -1199,21 +1251,21 @@ const Sidebar = ({
                       to="/college"
                       onClick={() => handleItemClick('college')}
                       sx={{
-                        bgcolor: selectedItem === 'college' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'college' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'college' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'college' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'college' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'college' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'college' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'college' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'college' ? '15px' : 0,
@@ -1233,21 +1285,21 @@ const Sidebar = ({
                       to="/graduate"
                       onClick={() => handleItemClick('graduate')}
                       sx={{
-                        bgcolor: selectedItem === 'graduate' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'graduate' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'graduate' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'graduate' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'graduate' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'graduate' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'graduate' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'graduate' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'graduate' ? '15px' : 0,
@@ -1267,21 +1319,21 @@ const Sidebar = ({
                       to="/vocational"
                       onClick={() => handleItemClick('vocational')}
                       sx={{
-                        bgcolor: selectedItem === 'vocational' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'vocational' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'vocational' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'vocational' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'vocational' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'vocational' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'vocational' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'vocational' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'vocational' ? '15px' : 0,
@@ -1301,21 +1353,21 @@ const Sidebar = ({
                       to="/learningdev"
                       onClick={() => handleItemClick('learningdev')}
                       sx={{
-                        bgcolor: selectedItem === 'learningdev' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'learningdev' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'learningdev' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'learningdev' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'learningdev' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'learningdev' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'learningdev' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'learningdev' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'learningdev' ? '15px' : 0,
@@ -1335,21 +1387,21 @@ const Sidebar = ({
                       to="/eligibility"
                       onClick={() => handleItemClick('eligibility')}
                       sx={{
-                        bgcolor: selectedItem === 'eligibility' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'eligibility' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'eligibility' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'eligibility' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'eligibility' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'eligibility' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'eligibility' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'eligibility' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'eligibility' ? '15px' : 0,
@@ -1369,21 +1421,21 @@ const Sidebar = ({
                       to="/voluntarywork"
                       onClick={() => handleItemClick('voluntarywork')}
                       sx={{
-                        bgcolor: selectedItem === 'voluntarywork' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'voluntarywork' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'voluntarywork' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'voluntarywork' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'voluntarywork' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'voluntarywork' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'voluntarywork' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'voluntarywork' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'voluntarywork' ? '15px' : 0,
@@ -1403,21 +1455,21 @@ const Sidebar = ({
                       to="/workexperience"
                       onClick={() => handleItemClick('workexperience')}
                       sx={{
-                        bgcolor: selectedItem === 'workexperience' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'workexperience' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'workexperience' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'workexperience' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'workexperience' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'workexperience' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'workexperience' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'workexperience' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'workexperience' ? '15px' : 0,
@@ -1437,21 +1489,21 @@ const Sidebar = ({
                       to="/other-information"
                       onClick={() => handleItemClick('other-information')}
                       sx={{
-                        bgcolor: selectedItem === 'other-information' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'other-information' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'other-information' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'other-information' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'other-information' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'other-information' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'other-information' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'other-information' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'other-information' ? '15px' : 0,
@@ -1478,7 +1530,7 @@ const Sidebar = ({
                     handleClickAttendance();
                   }}
                   sx={{
-                    color: systemSettings?.textColor || '#FFFFFF',
+                    color: settings.textSecondaryColor,
                     cursor: 'pointer',
                     borderTopRightRadius: selectedItem === 'Records' ? '15px' : 0,
                     borderBottomRightRadius:
@@ -1486,13 +1538,13 @@ const Sidebar = ({
                   }}
                 >
                   <ListItemIcon>
-                    <AccessTimeIcon sx={{ color: systemSettings?.textColor || '#FFFFFF' }} />
+                    <AccessTimeIcon sx={{ color: settings.textSecondaryColor }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Attendance Management"
                     sx={{ marginLeft: '-10px' }}
                   />
-                  <ListItemIcon sx={{ marginLeft: '10rem', color: systemSettings?.textColor || '#FFFFFF' }}>
+                  <ListItemIcon sx={{ marginLeft: '10rem', color: settings.textSecondaryColor }}>
                     {open2 ? <ExpandLess /> : <ExpandMore />}
                   </ListItemIcon>
                 </ListItem>
@@ -1506,21 +1558,21 @@ const Sidebar = ({
                       to="/view_attendance"
                       onClick={() => handleItemClick('view_attendance')}
                       sx={{
-                        bgcolor: selectedItem === 'view_attendance' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'view_attendance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'view_attendance' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'view_attendance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'view_attendance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'view_attendance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'view_attendance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'view_attendance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'view_attendance' ? '15px' : 0,
@@ -1541,21 +1593,21 @@ const Sidebar = ({
                       to="/attendance_form"
                       onClick={() => handleItemClick('attendance_form')}
                       sx={{
-                        bgcolor: selectedItem === 'attendance_form' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'attendance_form' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'attendance_form' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'attendance_form' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'attendance_form' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'attendance_form' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'attendance_form' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'attendance_form' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'attendance_form' ? '15px' : 0,
@@ -1576,21 +1628,21 @@ const Sidebar = ({
                       to="/search_attendance"
                       onClick={() => handleItemClick('search_attendance')}
                       sx={{
-                        bgcolor: selectedItem === 'search_attendance' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'search_attendance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'search_attendance' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'search_attendance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'search_attendance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'search_attendance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'search_attendance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'search_attendance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'search_attendance' ? '15px' : 0,
@@ -1611,21 +1663,21 @@ const Sidebar = ({
                       to="/daily_time_record_faculty"
                       onClick={() => handleItemClick('daily_time_record_faculty')}
                       sx={{
-                        bgcolor: selectedItem === 'daily_time_record_faculty' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
-                        color: selectedItem === 'daily_time_record_faculty' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                        bgcolor: selectedItem === 'daily_time_record_faculty' ? (settings.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'daily_time_record_faculty' ? settings.textPrimaryColor : (settings.textSecondaryColor),
 
                         '& .MuiListItemIcon-root': {
-                          color: selectedItem === 'daily_time_record_faculty' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'daily_time_record_faculty' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
                         '& .MuiListItemText-primary': {
-                          color: selectedItem === 'daily_time_record_faculty' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'daily_time_record_faculty' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         },
 
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-                          '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+                          '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
                         },
 
                         borderTopRightRadius: selectedItem === 'daily_time_record_faculty' ? '15px' : 0,
@@ -1645,15 +1697,15 @@ const Sidebar = ({
                       component={Link}
                       to="/attendance_module"
                       sx={{
-                        color: selectedItem === 'attendance_module' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'attendance_module' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'attendance_module' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'attendance_module' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'attendance_module' ? '15px' : 0,
@@ -1664,8 +1716,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'attendance_module' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'attendance_module' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <WorkHistory />
@@ -1679,15 +1731,15 @@ const Sidebar = ({
                       component={Link}
                       to="/attendance_module_faculty"
                       sx={{
-                        color: selectedItem === 'attendance_module_faculty' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'attendance_module_faculty' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'attendance_module_faculty' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'attendance_module_faculty' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'attendance_module_faculty' ? '15px' : 0,
@@ -1698,8 +1750,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'attendance_module_faculty' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'attendance_module_faculty' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <WorkHistory />
@@ -1713,15 +1765,15 @@ const Sidebar = ({
                       component={Link}
                       to="/attendance_module_faculty_40hrs"
                       sx={{
-                        color: selectedItem === 'attendance_module_faculty_40hrs' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'attendance_module_faculty_40hrs' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'attendance_module_faculty_40hrs' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'attendance_module_faculty_40hrs' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'attendance_module_faculty_40hrs' ? '15px' : 0,
@@ -1732,8 +1784,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'attendance_module_faculty_40hrs' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'attendance_module_faculty_40hrs' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <WorkHistory />
@@ -1747,15 +1799,15 @@ const Sidebar = ({
                       component={Link}
                       to="/attendance_summary"
                       sx={{
-                        color: selectedItem === 'attendance_summary' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'attendance_summary' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'attendance_summary' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'attendance_summary' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'attendance_summary' ? '15px' : 0,
@@ -1766,8 +1818,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'attendance_summary' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'attendance_summary' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <FolderSpecial />
@@ -1781,15 +1833,15 @@ const Sidebar = ({
                       component={Link}
                       to="/official_time"
                       sx={{
-                        color: selectedItem === 'official_time' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'official_time' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'official_time' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'official_time' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'official_time' ? '15px' : 0,
@@ -1800,8 +1852,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'official_time' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'official_time' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <AccessAlarm />
@@ -1819,18 +1871,18 @@ const Sidebar = ({
                   button
                   onClick={handleClickPayroll}
                   sx={{ 
-                    color: systemSettings?.textColor || '#FFFFFF', 
+                    color: settings.textSecondaryColor, 
                     cursor: 'pointer' 
                   }}
                 >
                   <ListItemIcon>
-                    <AccountBalanceIcon sx={{ color: systemSettings?.textColor || '#FFFFFF' }} />
+                    <AccountBalanceIcon sx={{ color: settings.textSecondaryColor }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Payroll Management"
                     sx={{ marginLeft: '-10px' }}
                   />
-                  <ListItemIcon sx={{ marginLeft: '10rem', color: systemSettings?.textColor || '#FFFFFF' }}>
+                  <ListItemIcon sx={{ marginLeft: '10rem', color: settings.textSecondaryColor }}>
                     {open3 ? <ExpandLess /> : <ExpandMore />}
                   </ListItemIcon>
                 </ListItem>
@@ -1842,14 +1894,14 @@ const Sidebar = ({
                       component={Link}
                       to="/payroll-table"
                       sx={{
-                        color: selectedItem === 'payroll-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'payroll-table' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'payroll-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'payroll-table' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'payroll-table' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'payroll-table' ? '15px' : 0,
@@ -1859,8 +1911,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'payroll-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'payroll-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <EditNoteIcon />
@@ -1875,14 +1927,14 @@ const Sidebar = ({
                       component={Link}
                       to="/payroll-jo"
                       sx={{
-                        color: selectedItem === 'payroll-jo' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'payroll-jo' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'payroll-jo' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'payroll-jo' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'payroll-jo' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'payroll-jo' ? '15px' : 0,
@@ -1892,8 +1944,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'payroll-jo' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'payroll-jo' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <EditNoteIcon />
@@ -1906,14 +1958,14 @@ const Sidebar = ({
                       component={Link}
                       to="/payroll-processed"
                       sx={{
-                        color: selectedItem === 'payroll-processed' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'payroll-processed' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'payroll-processed' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'payroll-processed' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'payroll-processed' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'payroll-processed' ? '15px' : 0,
@@ -1923,8 +1975,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'payroll-processed' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'payroll-processed' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <PaymentsIcon />
@@ -1937,14 +1989,14 @@ const Sidebar = ({
                       component={Link}
                       to="/payroll-released"
                       sx={{
-                        color: selectedItem === 'payroll-released' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'payroll-released' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'payroll-released' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'payroll-released' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'payroll-released' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'payroll-released' ? '15px' : 0,
@@ -1954,8 +2006,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'payroll-released' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'payroll-released' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <NewReleases />
@@ -1968,14 +2020,14 @@ const Sidebar = ({
                       component={Link}
                       to="/distribution-payslip"
                       sx={{
-                        color: selectedItem === 'distribution-payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'distribution-payslip' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'distribution-payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'distribution-payslip' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'distribution-payslip' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'distribution-payslip' ? '15px' : 0,
@@ -1985,8 +2037,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'distribution-payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'distribution-payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <ReceiptLong />
@@ -1999,14 +2051,14 @@ const Sidebar = ({
                       component={Link}
                       to="/overall-payslip"
                       sx={{
-                        color: selectedItem === 'overall-payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'overall-payslip' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'overall-payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'overall-payslip' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'overall-payslip' ? '15px' : 0,
@@ -2016,8 +2068,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'overall-payslip' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'overall-payslip' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <RequestQuote />
@@ -2030,14 +2082,14 @@ const Sidebar = ({
                       component={Link}
                       to="/remittance-table"
                       sx={{
-                        color: selectedItem === 'remittance-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'remittance-table' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'remittance-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'remittance-table' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'remittance-table' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'remittance-table' ? '15px' : 0,
@@ -2047,8 +2099,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'remittance-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'remittance-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <AccountBalanceIcon />
@@ -2062,7 +2114,7 @@ const Sidebar = ({
                     component={Link} 
                     to= '/philhealth-table' 
                     sx={{
-                      color: selectedItem === 'philhealth-table' ? '#000000' : 'inherit',
+                      color: selectedItem === 'philhealth-table' ? settings.textPrimaryColor : 'inherit',
                       bgcolor: selectedItem === 'philhealth-table' ? '#FEF9E1' : 'inherit',
                       '&:hover': {
                         bgcolor: '#6D2323',
@@ -2079,8 +2131,8 @@ const Sidebar = ({
                     onClick={() => handleItemClick('philhealth-table')} 
                     >
                     <ListItemIcon sx={{ marginRight: '-1rem',
-                      color: selectedItem === 'philhealth-table' ? '#000000' : 'inherit',
-                      '&:hover': { color: '#000000' }
+                      color: selectedItem === 'philhealth-table' ? settings.textPrimaryColor : 'inherit',
+                      '&:hover': { color: settings.textPrimaryColor }
                     }}>
                       <LocalHospitalIcon />
                     </ListItemIcon>
@@ -2092,14 +2144,14 @@ const Sidebar = ({
                       component={Link}
                       to="/item-table"
                       sx={{
-                        color: selectedItem === 'item-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'item-table' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'item-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'item-table' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'item-table' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'item-table' ? '15px' : 0,
@@ -2109,8 +2161,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'item-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'item-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <CategoryIcon />
@@ -2123,14 +2175,14 @@ const Sidebar = ({
                       component={Link}
                       to="/salary-grade"
                       sx={{
-                        color: selectedItem === 'salary-grade' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'salary-grade' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'salary-grade' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'salary-grade' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'salary-grade' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'salary-grade' ? '15px' : 0,
@@ -2140,8 +2192,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'salary-grade' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'salary-grade' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <MonetizationOnIcon />
@@ -2154,14 +2206,14 @@ const Sidebar = ({
                       component={Link}
                       to="/department-table"
                       sx={{
-                        color: selectedItem === 'department-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'department-table' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'department-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'department-table' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'department-table' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'department-table' ? '15px' : 0,
@@ -2171,8 +2223,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'department-table' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'department-table' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <BusinessIcon />
@@ -2185,14 +2237,14 @@ const Sidebar = ({
                       component={Link}
                       to="/department-assignment"
                       sx={{
-                        color: selectedItem === 'department-assignment' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'department-assignment' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'department-assignment' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'department-assignment' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'department-assignment' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'department-assignment' ? '15px' : 0,
@@ -2202,8 +2254,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'department-assignment' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'department-assignment' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <BusinessCenterIcon />
@@ -2216,7 +2268,7 @@ const Sidebar = ({
                       component={Link}
                       to="/leave-table"
                       sx={{
-                        color: selectedItem === 'leave-table' ? '#000000' : '#FFFFFF',
+                        color: selectedItem === 'leave-table' ? settings.textPrimaryColor : '#FFFFFF',
                         bgcolor: selectedItem === 'leave-table' ? '#FEF9E1' : 'inherit',
                         '&:hover': {
                           bgcolor: '#6D2323',
@@ -2233,8 +2285,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'leave-table' ? '#000000' : '#FFFFFF',
-                          '&:hover': { color: '#000000' },
+                          color: selectedItem === 'leave-table' ? settings.textPrimaryColor : '#FFFFFF',
+                          '&:hover': { color: settings.textPrimaryColor },
                         }}
                       >
                         <EventNoteIcon />
@@ -2247,7 +2299,7 @@ const Sidebar = ({
                       component={Link}
                       to="/leave-assignment"
                       sx={{
-                        color: selectedItem === 'leave-assignment' ? '#000000' : '#FFFFFF',
+                        color: selectedItem === 'leave-assignment' ? settings.textPrimaryColor : '#FFFFFF',
                         bgcolor: selectedItem === 'leave-assignment' ? '#FEF9E1' : 'inherit',
                         '&:hover': {
                           bgcolor: '#6D2323',
@@ -2264,8 +2316,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'leave-assignment' ? '#000000' : '#FFFFFF',
-                          '&:hover': { color: '#000000' },
+                          color: selectedItem === 'leave-assignment' ? settings.textPrimaryColor : '#FFFFFF',
+                          '&:hover': { color: settings.textPrimaryColor },
                         }}
                       >
                         <AssignmentIndIcon />
@@ -2278,7 +2330,7 @@ const Sidebar = ({
                     component={Link}
                     to="/leave-request"
                     sx={{
-                      color: selectedItem === 'leave-request' ? '#000000' : '#FFFFFF',
+                      color: selectedItem === 'leave-request' ? settings.textPrimaryColor : '#FFFFFF',
                       bgcolor: selectedItem === 'leave-request' ? '#FEF9E1' : 'inherit',
                       '&:hover': {
                         bgcolor: '#6D2323',
@@ -2295,7 +2347,7 @@ const Sidebar = ({
                     <ListItemIcon
                       sx={{
                         marginRight: '-1rem',
-                        color: selectedItem === 'leave-request' ? '#000000' : '#FFFFFF',
+                        color: selectedItem === 'leave-request' ? settings.textPrimaryColor : '#FFFFFF',
                         '&:hover': { color: '#FFFFFF' },
                       }}
                     >
@@ -2318,15 +2370,15 @@ const Sidebar = ({
                   button
                   onClick={handleClickForms}
                   sx={{ 
-                    color: systemSettings?.textColor || '#FFFFFF', 
+                    color: settings.textSecondaryColor, 
                     cursor: 'pointer' 
                   }}
                 >
                   <ListItemIcon>
-                    <AssignmentIcon sx={{ color: systemSettings?.textColor || '#FFFFFF' }} />
+                    <AssignmentIcon sx={{ color: settings.textSecondaryColor }} />
                   </ListItemIcon>
                   <ListItemText primary="Forms" sx={{ marginLeft: '-10px' }} />
-                  <ListItemIcon sx={{ marginLeft: '10rem', color: systemSettings?.textColor || '#FFFFFF' }}>
+                  <ListItemIcon sx={{ marginLeft: '10rem', color: settings.textSecondaryColor }}>
                     {open4 ? <ExpandLess /> : <ExpandMore />}
                   </ListItemIcon>
                 </ListItem>
@@ -2338,14 +2390,14 @@ const Sidebar = ({
                       component={Link}
                       to="/assessment-clearance"
                       sx={{
-                        color: selectedItem === 'assessment-clearance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'assessment-clearance' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'assessment-clearance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'assessment-clearance' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'assessment-clearance' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'assessment-clearance' ? '15px' : 0,
@@ -2355,8 +2407,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'assessment-clearance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'assessment-clearance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2369,14 +2421,14 @@ const Sidebar = ({
                       component={Link}
                       to="/clearance"
                       sx={{
-                        color: selectedItem === 'clearance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'clearance' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'clearance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'clearance' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'clearance' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'clearance' ? '15px' : 0,
@@ -2386,8 +2438,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'clearance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'clearance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2400,14 +2452,14 @@ const Sidebar = ({
                       component={Link}
                       to="/faculty-clearance"
                       sx={{
-                        color: selectedItem === 'faculty-clearance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'faculty-clearance' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'faculty-clearance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'faculty-clearance' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'faculty-clearance' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'faculty-clearance' ? '15px' : 0,
@@ -2417,8 +2469,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'faculty-clearance' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'faculty-clearance' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2431,14 +2483,14 @@ const Sidebar = ({
                       component={Link}
                       to="/hrms-request-forms"
                       sx={{
-                        color: selectedItem === 'hrms-request-forms' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'hrms-request-forms' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'hrms-request-forms' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'hrms-request-forms' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
-                          '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
+                          '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
                         },
                         borderTopRightRadius: selectedItem === 'hrms-request-forms' ? '15px' : 0,
                         borderBottomRightRadius: selectedItem === 'hrms-request-forms' ? '15px' : 0,
@@ -2448,8 +2500,8 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'hrms-request-forms' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                          color: selectedItem === 'hrms-request-forms' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2464,19 +2516,19 @@ const Sidebar = ({
                       sx={{
                         color:
                           selectedItem === 'individual-faculty-loading'
-                            ? '#000000'
-                            : (systemSettings?.textColor || '#FFFFFF'),
+                            ? settings.textPrimaryColor
+                            : (settings.textSecondaryColor),
                         bgcolor:
                           selectedItem === 'individual-faculty-loading'
-                            ? (systemSettings?.accentColor || '#FEF9E1')
+                            ? (settings.accentColor || '#FEF9E1')
                             : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius:
@@ -2497,9 +2549,9 @@ const Sidebar = ({
                           marginRight: '-1rem',
                           color:
                             selectedItem === 'individual-faculty-loading'
-                              ? '#000000'
-                              : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                              ? settings.textPrimaryColor
+                              : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2517,19 +2569,19 @@ const Sidebar = ({
                       sx={{
                         color:
                           selectedItem === 'in-service-training'
-                            ? '#000000'
-                            : (systemSettings?.textColor || '#FFFFFF'),
+                            ? settings.textPrimaryColor
+                            : (settings.textSecondaryColor),
                         bgcolor:
                           selectedItem === 'in-service-training'
-                            ? (systemSettings?.accentColor || '#FEF9E1')
+                            ? (settings.accentColor || '#FEF9E1')
                             : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius:
@@ -2544,9 +2596,9 @@ const Sidebar = ({
                           marginRight: '-1rem',
                           color:
                             selectedItem === 'in-service-training'
-                              ? '#000000'
-                              : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                              ? settings.textPrimaryColor
+                              : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2564,17 +2616,17 @@ const Sidebar = ({
                       sx={{
                         color:
                           selectedItem === 'leave-card'
-                            ? '#000000'
-                            : (systemSettings?.textColor || '#FFFFFF'),
+                            ? settings.textPrimaryColor
+                            : (settings.textSecondaryColor),
                         bgcolor:
-                          selectedItem === 'leave-card' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                          selectedItem === 'leave-card' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius:
@@ -2589,9 +2641,9 @@ const Sidebar = ({
                           marginRight: '-1rem',
                           color:
                             selectedItem === 'leave-card'
-                              ? '#000000'
-                              : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                              ? settings.textPrimaryColor
+                              : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2609,17 +2661,17 @@ const Sidebar = ({
                       sx={{
                         color:
                           selectedItem === 'locator-slip'
-                            ? '#000000'
-                            : (systemSettings?.textColor || '#FFFFFF'),
+                            ? settings.textPrimaryColor
+                            : (settings.textSecondaryColor),
                         bgcolor:
-                          selectedItem === 'locator-slip' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                          selectedItem === 'locator-slip' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius:
@@ -2634,9 +2686,9 @@ const Sidebar = ({
                           marginRight: '-1rem',
                           color:
                             selectedItem === 'locator-slip'
-                              ? '#000000'
-                              : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                              ? settings.textPrimaryColor
+                              : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2654,19 +2706,19 @@ const Sidebar = ({
                       sx={{
                         color:
                           selectedItem === 'permission-to-teach'
-                            ? '#000000'
-                            : (systemSettings?.textColor || '#FFFFFF'),
+                            ? settings.textPrimaryColor
+                            : (settings.textSecondaryColor),
                         bgcolor:
                           selectedItem === 'permission-to-teach'
-                            ? (systemSettings?.accentColor || '#FEF9E1')
+                            ? (settings.accentColor || '#FEF9E1')
                             : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius:
@@ -2681,9 +2733,9 @@ const Sidebar = ({
                           marginRight: '-1rem',
                           color:
                             selectedItem === 'permission-to-teach'
-                              ? '#000000'
-                              : (systemSettings?.textColor || '#FFFFFF'),
-                          '&:hover': { color: systemSettings?.textColor || '#FFFFFF' },
+                              ? settings.textPrimaryColor
+                              : (settings.textSecondaryColor),
+                          '&:hover': { color: settings.textSecondaryColor },
                         }}
                       >
                         <SummarizeIcon />
@@ -2699,15 +2751,15 @@ const Sidebar = ({
                       component={Link}
                       to="/request-for-id"
                       sx={{
-                        color: selectedItem === 'request-for-id' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'request-for-id' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'request-for-id' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'request-for-id' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'request-for-id' ? '15px' : 0,
@@ -2718,7 +2770,7 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'request-for-id' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'request-for-id' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         }}
                       >
                         <SummarizeIcon />
@@ -2731,15 +2783,15 @@ const Sidebar = ({
                       component={Link}
                       to="/saln-front"
                       sx={{
-                        color: selectedItem === 'saln-front' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'saln-front' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'saln-front' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'saln-front' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'saln-front' ? '15px' : 0,
@@ -2750,7 +2802,7 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'saln-front' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'saln-front' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         }}
                       >
                         <SummarizeIcon />
@@ -2763,15 +2815,15 @@ const Sidebar = ({
                       component={Link}
                       to="/scholarship-agreement"
                       sx={{
-                        color: selectedItem === 'scholarship-agreement' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'scholarship-agreement' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'scholarship-agreement' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'scholarship-agreement' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'scholarship-agreement' ? '15px' : 0,
@@ -2782,7 +2834,7 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'scholarship-agreement' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'scholarship-agreement' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         }}
                       >
                         <SummarizeIcon />
@@ -2795,15 +2847,15 @@ const Sidebar = ({
                       component={Link}
                       to="/subject"
                       sx={{
-                        color: selectedItem === 'subject' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
-                        bgcolor: selectedItem === 'subject' ? (systemSettings?.accentColor || '#FEF9E1') : 'inherit',
+                        color: selectedItem === 'subject' ? settings.textPrimaryColor : (settings.textSecondaryColor),
+                        bgcolor: selectedItem === 'subject' ? (settings.accentColor || '#FEF9E1') : 'inherit',
                         '&:hover': {
-                          bgcolor: systemSettings?.hoverColor || '#6D2323',
-                          color: systemSettings?.textColor || '#FFFFFF',
+                          bgcolor: settings.hoverColor || '#6D2323',
+                          color: settings.textSecondaryColor,
                           borderTopRightRadius: '15px',
                           borderBottomRightRadius: '15px',
                           '& .MuiListItemIcon-root': {
-                            color: systemSettings?.textColor || '#FFFFFF',
+                            color: settings.textSecondaryColor,
                           },
                         },
                         borderTopRightRadius: selectedItem === 'subject' ? '15px' : 0,
@@ -2815,7 +2867,7 @@ const Sidebar = ({
                       <ListItemIcon
                         sx={{
                           marginRight: '-1rem',
-                          color: selectedItem === 'subject' ? '#000000' : (systemSettings?.textColor || '#FFFFFF'),
+                          color: selectedItem === 'subject' ? settings.textPrimaryColor : (settings.textSecondaryColor),
                         }}
                       >
                         <SummarizeIcon />
@@ -2842,23 +2894,23 @@ const Sidebar = ({
         sx={{
           cursor: 'pointer',
           bgcolor: 'inherit',
-          color: systemSettings?.textColor || '#FFFFFF',
+          color: settings.textSecondaryColor,
           flexShrink: 0,
           zIndex: 1201,
           mb: 7,
 
           '& .MuiListItemIcon-root': {
-            color: systemSettings?.textColor || '#FFFFFF',
+            color: settings.textSecondaryColor,
           },
           '& .MuiListItemText-primary': {
-            color: systemSettings?.textColor || '#FFFFFF',
+            color: settings.textSecondaryColor,
           },
 
           '&:hover': {
-            bgcolor: systemSettings?.hoverColor || '#6D2323',
-            color: systemSettings?.textColor || '#FFFFFF',
-            '& .MuiListItemIcon-root': { color: systemSettings?.textColor || '#FFFFFF' },
-            '& .MuiListItemText-primary': { color: systemSettings?.textColor || '#FFFFFF' },
+            bgcolor: settings.hoverColor || '#6D2323',
+            color: settings.textSecondaryColor,
+            '& .MuiListItemIcon-root': { color: settings.textSecondaryColor },
+            '& .MuiListItemText-primary': { color: settings.textSecondaryColor },
           },
         }}
       >

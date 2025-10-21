@@ -47,14 +47,6 @@ const useSystemSettings = () => {
     textSecondaryColor: '#FEF9E1', 
     hoverColor: '#6D2323',
     backgroundColor: '#FFFFFF',
-    institutionLogo: '',
-    hrisLogo: '',
-    institutionName: 'Eulogio "Amang" Rodriguez Institute of Science and Technology',
-    systemName: 'Human Resources Information System',
-    institutionAbbreviation: 'EARIST',
-    footerText: '2025 EARIST Manila - Human Resources Information System. All rights Reserved.',
-    copyrightSymbol: '©',
-    enableWatermark: true,
   });
 
   useEffect(() => {
